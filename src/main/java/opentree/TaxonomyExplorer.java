@@ -265,6 +265,14 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	}
 	
 	/**
+	 * Right now this walks from the life node through the entire graph.
+	 * When there are conflicts, this prefers the NCBI branches.
+	 */
+	public void makePreferredOTTOLRelationships(){
+		
+	}
+	
+	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
