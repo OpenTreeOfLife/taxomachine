@@ -179,6 +179,10 @@ public class TaxonomyExplorer extends TaxonomyBase{
 				conflictingnodes.add(friendnode);
 			}
 		}
+		System.out.println(conflictingnodes.size());
+		for(int i=0;i<conflictingnodes.size();i++){
+			System.out.println(conflictingnodes.get(i).getProperty("name"));
+		}
 	}
 	
 	/*
@@ -269,7 +273,36 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	 * When there are conflicts, this prefers the NCBI branches.
 	 */
 	public void makePreferredOTTOLRelationships(){
-		
+		Node firstNode = findTaxNodeByName("Dipsacales");
+		if (firstNode == null){
+			System.out.println("name not found");
+			return;
+		}
+		TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+		        .relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
+		System.out.println(firstNode.getProperty("name"));
+		for(Node friendnode : CHILDOF_TRAVERSAL.traverse(firstNode).nodes()){
+			int count = 0;
+			boolean conflict = false;
+			String endNode = "";
+			Relationship ncbirel = null;
+			Relationship ottolrel = null;
+			for(Relationship rel : friendnode.getRelationships(Direction.OUTGOING)){
+				if (endNode == "")
+					endNode = (String) rel.getEndNode().getProperty("name");
+				if ((String)rel.getEndNode().getProperty("name") != endNode){
+					conflict = true;
+				}
+				if(((String)rel.getProperty("source")).compareTo("ncbi")==0)
+					ncbirel = rel;
+				if(((String)rel.getProperty("source")).compareTo("ottol")==0)
+					ottolrel = rel;
+				count += 1;
+			}
+			if (conflict && ncbirel != null && ottolrel == null){
+				System.out.println("would make one from "+ncbirel.getStartNode().getProperty("name")+" "+ncbirel.getEndNode().getProperty("name"));
+			}
+		}
 	}
 	
 	/**

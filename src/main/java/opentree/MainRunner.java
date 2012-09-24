@@ -43,6 +43,11 @@ public class MainRunner {
 				System.out.println("arguments should be: comptaxgraph query graphdbfolder outfile");
 				return;
 			}
+		}else if(args[0].equals("makeottol")){
+			if(args.length != 2){
+				System.out.println("arguments should be: graphdbfolder");
+				return;
+			}
 		} else if(args.length != 3){
 			System.out.println("arguments should be: query graphdbfolder");
 			return;
@@ -79,6 +84,11 @@ public class MainRunner {
 			te =  new TaxonomyExplorer(graphname);
 			System.out.println("checking the names of " + query+ " against the taxonomy graph");
 			te.checkNamesInTree(query,focalgroup);
+		}else if(args[0].compareTo("makeottol")==0){
+			String graphname = args[1];
+			te =  new TaxonomyExplorer(graphname);
+			System.out.println("making ottol relationships");
+			te.makePreferredOTTOLRelationships();
 		}else{
 			System.err.println("ERROR: not a known command");
 			te.shutdownDB();
@@ -99,6 +109,7 @@ public class MainRunner {
 		System.out.println("\tinittax <filename> <sourcename> <graphdbfolder> (initializes the tax graph with a tax list)");
 		System.out.println("\taddtax <filename> <sourcename> <graphdbfolder> (adds a tax list into the tax graph)");
 		System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
+		System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
 		System.out.println("---taxquery---");
 		System.out.println("\tcomptaxtree <name> <graphdbfolder> (construct a comprehensive tax newick)");
 		System.out.println("\tcomptaxgraph <name> <graphdbfolder> <outdotfile> (construct a comprehensive taxonomy in dot)");
@@ -131,7 +142,8 @@ public class MainRunner {
 					 || args[0].compareTo("comptaxgraph") == 0
 					 || args[0].compareTo("findcycles") == 0
 					 || args[0].compareTo("jsgraph") == 0 
-					 || args[0].compareTo("checktree") == 0){
+					 || args[0].compareTo("checktree") == 0
+					 || args[0].compareTo("makeottol") == 0){
 				mr.taxonomyQueryParser(args);
 			}else {
 				System.err.println("Unrecognized command \"" + args[0] + "\"");
