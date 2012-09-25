@@ -88,7 +88,8 @@ public class MainRunner {
 			String graphname = args[1];
 			te =  new TaxonomyExplorer(graphname);
 			System.out.println("making ottol relationships");
-			te.makePreferredOTTOLRelationships();
+			te.makePreferredOTTOLRelationshipsConflicts();
+			te.makePreferredOTTOLRelationshipsNOConflicts();
 		}else{
 			System.err.println("ERROR: not a known command");
 			te.shutdownDB();
