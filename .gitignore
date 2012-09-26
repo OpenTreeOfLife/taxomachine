@@ -2,6 +2,7 @@
 .project
 .settings
 *.class
+*~
 
 # Package Files #
 *.jar
