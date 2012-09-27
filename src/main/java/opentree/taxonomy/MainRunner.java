@@ -103,7 +103,7 @@ public class MainRunner {
 	    TNRSQuery tnrs = new TNRSQuery(graphName);
 	    TNRSMatchSet results = tnrs.getMatches(searchStrings);
 	    
-	    for (Match m : results.iterator()) {
+	    for (Match m : results) {
 	        System.out.println(m.toString());
 	    }
 	    
