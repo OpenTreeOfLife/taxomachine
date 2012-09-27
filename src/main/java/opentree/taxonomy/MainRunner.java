@@ -1,7 +1,13 @@
 package opentree.taxonomy;
 
 //import org.apache.log4j.Logger;
+
+import java.util.Iterator;
+
 import org.apache.log4j.PropertyConfigurator;
+
+import opentree.tnrs.TNRSMatchSet;
+import opentree.tnrs.TNRSMatchSet.Match;
 import opentree.tnrs.TNRSQuery;
 
 public class MainRunner {
@@ -90,10 +96,16 @@ public class MainRunner {
 	}
 	
 	public void parseTNRSRequest(String args[]) {
-	    String searchString = args[1];
+	    String[] searchStrings = new String[1];
+	    searchStrings[0] = args[1];
 	    String graphName = args[2];
-	    TNRSQuery tnrsQuery = new TNRSQuery(graphName);
-	    tnrsQuery.getMatches(searchString);
+
+	    TNRSQuery tnrs = new TNRSQuery(graphName);
+	    TNRSMatchSet results = tnrs.getMatches(searchStrings);
+	    
+	    for (Match m : results.iterator()) {
+	        System.out.println(m.toString());
+	    }
 	    
 	}
 	

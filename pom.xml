@@ -37,7 +37,27 @@
       <version>4.8.1</version>
       <scope>test</scope>
     </dependency>
-</dependencies>
+    <dependency>
+    	<groupId>com.sun.jersey</groupId>
+    	<artifactId>jersey-client</artifactId>
+    	<version>1.14</version>
+    </dependency>
+    <dependency>
+    	<groupId>com.sun.jersey</groupId>
+    	<artifactId>jersey-json</artifactId>
+    	<version>1.14</version>
+    </dependency>
+    <dependency>
+    	<groupId>com.sun.jersey</groupId>
+    	<artifactId>jersey-core</artifactId>
+    	<version>1.14</version>
+    </dependency>
+    <dependency>
+    	<groupId>com.sun.xml.bind</groupId>
+    	<artifactId>jaxb-impl</artifactId>
+    	<version>2.2.7-b41</version>
+    </dependency>
+  </dependencies>
   <build>
     <plugins>
         <plugin>

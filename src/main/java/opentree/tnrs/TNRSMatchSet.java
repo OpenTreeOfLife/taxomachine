@@ -3,6 +3,7 @@ package opentree.tnrs;
 import org.neo4j.graphdb.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import opentree.taxonomy.TaxonomyExplorer;
 
@@ -15,25 +16,24 @@ import opentree.taxonomy.TaxonomyExplorer;
  * finding the best match, specialized sorting (e.g. by type of result), etc.
  *
  */
-public class TNRSMatchSet {
+public class TNRSMatchSet implements Iterable<opentree.tnrs.TNRSMatchSet.Match> {
     
 //    public static MatchDirect DIRECT_MATCH = getDirectMatch();
 
     public static final String LOCAL_SOURCE = "ottol";
+    private ArrayList<Match> _results;
+    private String _graphFilename;
+
+    //    private TaxonomyExplorer taxonomy;
     
-    private ArrayList<Match> results;
-    private String searchString;
-    private String graphFileName;
-    private TaxonomyExplorer taxonomy;
-    
-    public TNRSMatchSet(String _searchString, String _graphFileName) {
+/*    public TNRSMatchSet(String _searchString, String _graphFileName) {
         searchString = _searchString;
         graphFileName = _graphFileName;
         results = new ArrayList<Match>();
         taxonomy = new TaxonomyExplorer(graphFileName);
     }
     
-/*    public Match getBestMatch() {
+    public Match getBestMatch() {
         // return our guess for the 'correct' match; this functionality
         // could also be implemented as using Comparable or Comparator
         // interfaces to sort by criteria
@@ -44,18 +44,44 @@ public class TNRSMatchSet {
         return bestMatch;
     }
     */
-        
+
+    public TNRSMatchSet(String graphFilename) {
+        _results = new ArrayList<Match>();
+        _graphFilename = graphFilename;
+    }
+    
     public int length() {
-        return results.size();
+        return _results.size();
+    }
+
+    public String getGraphFilename() {
+        return _graphFilename;
     }
     
-    public String getGraphFileName() {
-        return graphFileName;
+    public Iterator<Match> iterator() {
+        return new MatchIterator();
+    }
+
+    private class MatchIterator implements Iterator<Match> {
+
+        int i = 0;
+        public boolean hasNext() {
+            return i < _results.size() - 1;
+        }
+
+        public Match next() {
+            return _results.get(i++);
+        }
+
+        public void remove() {
+            throw new java.lang.UnsupportedOperationException("The remove method is not supported");
+        }
+        
     }
     
-    public void addDirectMatch(Node matchedNode) {
-        MatchDirect match = new MatchDirect(matchedNode);
-        results.add(match);
+    public void addDirectMatch(String searchString, Node matchedNode) {
+        MatchDirect match = new MatchDirect(searchString, matchedNode);
+        _results.add(match);
     }
     
     /**
@@ -65,19 +91,21 @@ public class TNRSMatchSet {
      * There may be multiple matches for the same search string that map to different nodes
      * in the graph, so each match object is associated with a graph node.
      */
-    private abstract class Match {
+    public abstract class Match {
 
         // for all matches, information associating this match with a known node in the graph
-        private Node matchedNode;               // the id of the matched node in the graph
-        private String sourceName;              // the name of the source where the match was found
-        protected boolean isSynonymMatch;       // indicates direct matches to known synonyms
-        protected boolean isDirectMatch;        // indicates direct matches to known, recognized taxa
-        protected boolean isUncertainMatch;     // indicates matches that are not direct, i.e. fuzzy matches (presumably misspellings)
-        private HashMap<String,String> responseData; // other data provided by the match source
+        private String _searchString;           // the original search text queried
+        private Node _matchedNode;               // the id of the matched node in the graph
+        private String _sourceName;              // the name of the source where the match was found
+        protected boolean _isSynonymMatch;       // indicates direct matches to known synonyms
+        protected boolean _isDirectMatch;        // indicates direct matches to known, recognized taxa
+        protected boolean _isUncertainMatch;     // indicates matches that are not direct, i.e. fuzzy matches (presumably misspellings)
+        private HashMap<String,String> _responseData; // other data provided by the match source
 
-        public Match(Node _node, String _sourceName) {
-            matchedNode = _node;
-            sourceName = _sourceName;
+        public Match(String searchString, Node _node, String _sourceName) {
+            _searchString = searchString;
+            _matchedNode = _node;
+            _sourceName = _sourceName;
 
             // using Neo4j Node objects for now to represent the
             // matched nodes in the graph. it may be necessary
@@ -86,34 +114,34 @@ public class TNRSMatchSet {
         }
         
         public String getSearchString() {
-            return searchString;
+            return _searchString;
         }
         
         public long getMatchedNodeId() {
-            return matchedNode.getId();
-        }
-        
-        public String getSource() {
-            return sourceName;
+            return _matchedNode.getId();
         }
         
         public String getMatchedNodeName() {
-            return matchedNode.getProperty("name").toString();
+            return _matchedNode.getProperty("name").toString();
         }
 
+        public String getSource() {
+            return _sourceName;
+        }
+        
         public String getMatchType() {
-            if (isDirectMatch)
+            if (_isDirectMatch)
                 return "direct";
-            else if (isSynonymMatch)
+            else if (_isSynonymMatch)
                 return "synonym";
-            else if (isUncertainMatch)
+            else if (_isUncertainMatch)
                 return "uncertain";
             else
                 throw new java.lang.UnsupportedOperationException("The match " + toString() + " is of unknown type. This is an error. Quitting.");
         }
         
         public String toString() {
-            return searchString + " matched to id " + matchedNode.getId() + " in " + TNRSMatchSet.this.getGraphFileName() + " (" + getMatchType() + ")";
+            return _searchString + " matched to id " + _matchedNode.getId() + " in " + TNRSMatchSet.this.getGraphFilename() + " (" + getMatchType() + ")";
         }
     }
 
@@ -122,11 +150,11 @@ public class TNRSMatchSet {
      */
     private class MatchDirect extends Match {
         // a direct match to a node in the graph. no user interaction required for these
-        public MatchDirect(Node _matchedNode) {
-            super(_matchedNode, LOCAL_SOURCE);
-            isDirectMatch = true;
-            isSynonymMatch = false;
-            isUncertainMatch = false;
+        public MatchDirect(String searchString, Node matchedNode) {
+            super(searchString, matchedNode, LOCAL_SOURCE);
+            _isDirectMatch = true;
+            _isSynonymMatch = false;
+            _isUncertainMatch = false;
         }
     }
 
@@ -140,11 +168,11 @@ public class TNRSMatchSet {
         private int synonymTaxNodeId;       // the id of the matched synonym node in the taxonomy graph
         private String synonymTaxName;      // the name of the matched node in the taxonomy
 
-        public MatchSynonym(Node _matchedNode, String _sourceName) {
-            super(_matchedNode, _sourceName);
-            isDirectMatch = false;
-            isSynonymMatch = true;
-            isUncertainMatch = false;
+        public MatchSynonym(String searchString, Node matchedNode, String sourceName) {
+            super(searchString, matchedNode, sourceName);
+            _isDirectMatch = false;
+            _isSynonymMatch = true;
+            _isUncertainMatch = false;
         }
     }
     
@@ -154,11 +182,11 @@ public class TNRSMatchSet {
      */
     private class MatchUncertain extends Match {
 
-        public MatchUncertain(Node _matchedNode, String _sourceName) {
-            super(_matchedNode, _sourceName);
-            isDirectMatch = false;
-            isSynonymMatch = false;
-            isUncertainMatch = true;
+        public MatchUncertain(String searchString, Node matchedNode, String sourceName) {
+            super(searchString, matchedNode, sourceName);
+            _isDirectMatch = false;
+            _isSynonymMatch = false;
+            _isUncertainMatch = true;
         }        
     }
 }
