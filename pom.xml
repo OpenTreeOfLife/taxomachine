@@ -40,22 +40,22 @@
     <dependency>
     	<groupId>com.sun.jersey</groupId>
     	<artifactId>jersey-client</artifactId>
-    	<version>1.14</version>
-    </dependency>
-    <dependency>
-    	<groupId>com.sun.jersey</groupId>
-    	<artifactId>jersey-json</artifactId>
-    	<version>1.14</version>
+    	<version>1.5</version>
     </dependency>
     <dependency>
     	<groupId>com.sun.jersey</groupId>
     	<artifactId>jersey-core</artifactId>
-    	<version>1.14</version>
+    	<version>1.5</version>
     </dependency>
     <dependency>
-    	<groupId>com.sun.xml.bind</groupId>
-    	<artifactId>jaxb-impl</artifactId>
-    	<version>2.2.7-b41</version>
+    	<groupId>org.codehaus.jackson</groupId>
+    	<artifactId>jackson-core-asl</artifactId>
+    	<version>1.9.9</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.codehaus.jackson</groupId>
+    	<artifactId>jackson-mapper-asl</artifactId>
+    	<version>1.9.9</version>
     </dependency>
   </dependencies>
   <build>

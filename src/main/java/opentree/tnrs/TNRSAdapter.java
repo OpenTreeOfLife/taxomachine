@@ -1,6 +1,9 @@
 package opentree.tnrs;
 
+import java.io.IOException;
 import java.util.ArrayList;
+
+import org.codehaus.jackson.JsonParseException;
 
 public abstract class TNRSAdapter {
     

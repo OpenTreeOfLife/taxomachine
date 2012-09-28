@@ -59,28 +59,12 @@ public class TNRSMatchSet implements Iterable<opentree.tnrs.TNRSMatchSet.Match> 
     }
     
     public Iterator<Match> iterator() {
-        return new MatchIterator();
-    }
-
-    private class MatchIterator implements Iterator<Match> {
-
-        int i = 0;
-        public boolean hasNext() {
-            return i < _results.size() - 1;
-        }
-
-        public Match next() {
-            return _results.get(i++);
-        }
-
-        public void remove() {
-            throw new java.lang.UnsupportedOperationException("The remove method is not supported");
-        }
-        
+        return _results.iterator();
     }
     
     public void addDirectMatch(String searchString, Node matchedNode) {
         MatchDirect match = new MatchDirect(searchString, matchedNode);
+//        System.out.println("added a match");
         _results.add(match);
     }
     
@@ -94,12 +78,13 @@ public class TNRSMatchSet implements Iterable<opentree.tnrs.TNRSMatchSet.Match> 
     public abstract class Match {
 
         // for all matches, information associating this match with a known node in the graph
-        private String _searchString;           // the original search text queried
-        private Node _matchedNode;               // the id of the matched node in the graph
-        private String _sourceName;              // the name of the source where the match was found
-        protected boolean _isSynonymMatch;       // indicates direct matches to known synonyms
-        protected boolean _isDirectMatch;        // indicates direct matches to known, recognized taxa
-        protected boolean _isUncertainMatch;     // indicates matches that are not direct, i.e. fuzzy matches (presumably misspellings)
+        private String _searchString;               // the original search text queried
+        private Node _matchedNode;                  // the id of the matched node in the graph
+        private String _sourceName;                 // the name of the source where the match was found
+        protected boolean _isExactNode;             // indicates exact name matches to known, recognized taxa
+        protected boolean _isFuzzy;                 // indicates matches that are not direct, i.e. fuzzy matches (presumably misspellings)
+        protected boolean _isSynonym = false;       // indicates that this match is to a known synonym (not necessarily in the graph, nor necessarily pointing to a node in the graph)
+        protected boolean _isInGraph;               // for matches to nodes that exist in the graph
         private HashMap<String,String> _responseData; // other data provided by the match source
 
         public Match(String searchString, Node _node, String _sourceName) {
@@ -130,18 +115,32 @@ public class TNRSMatchSet implements Iterable<opentree.tnrs.TNRSMatchSet.Match> 
         }
         
         public String getMatchType() {
-            if (_isDirectMatch)
-                return "direct";
-            else if (_isSynonymMatch)
-                return "synonym";
-            else if (_isUncertainMatch)
-                return "uncertain";
-            else
-                throw new java.lang.UnsupportedOperationException("The match " + toString() + " is of unknown type. This is an error. Quitting.");
+            String desc = "";
+            
+            if (_isExactNode) {
+                desc += "exact node match";
+            } else {
+                if (_isFuzzy)
+                    desc += "approximate match to ";
+                else
+                    desc += "exact match to ";
+
+                if (_isSynonym)
+                    desc += "junior synonym ";
+                else
+                    desc += "non-synonym ";
+                
+                if (_isInGraph)
+                    desc += "in graph";
+                else
+                    desc += "not in graph";
+            }
+            return desc;
         }
         
         public String toString() {
-            return _searchString + " matched to id " + _matchedNode.getId() + " in " + TNRSMatchSet.this.getGraphFilename() + " (" + getMatchType() + ")";
+            return "Query '" + _searchString + "' matched to " + _matchedNode.getProperty("name") + " (id=" +
+                    _matchedNode.getId() + ") in " + TNRSMatchSet.this.getGraphFilename() + " (" + getMatchType() + ")";
         }
     }
 
@@ -152,9 +151,10 @@ public class TNRSMatchSet implements Iterable<opentree.tnrs.TNRSMatchSet.Match> 
         // a direct match to a node in the graph. no user interaction required for these
         public MatchDirect(String searchString, Node matchedNode) {
             super(searchString, matchedNode, LOCAL_SOURCE);
-            _isDirectMatch = true;
-            _isSynonymMatch = false;
-            _isUncertainMatch = false;
+            _isExactNode = true;
+            _isFuzzy = false;
+            _isSynonym = false;
+            _isInGraph = true;
         }
     }
 
@@ -170,23 +170,8 @@ public class TNRSMatchSet implements Iterable<opentree.tnrs.TNRSMatchSet.Match> 
 
         public MatchSynonym(String searchString, Node matchedNode, String sourceName) {
             super(searchString, matchedNode, sourceName);
-            _isDirectMatch = false;
-            _isSynonymMatch = true;
-            _isUncertainMatch = false;
-        }
-    }
-    
-    /**
-     * A match that does not represent a direct string match to any recognized taxon or
-     * known synonym. This is likely to happen due to misspellings.
-     */
-    private class MatchUncertain extends Match {
-
-        public MatchUncertain(String searchString, Node matchedNode, String sourceName) {
-            super(searchString, matchedNode, sourceName);
-            _isDirectMatch = false;
-            _isSynonymMatch = false;
-            _isUncertainMatch = true;
-        }        
+            _isExactNode = false;
+            _isSynonym = false;
+       }
     }
 }

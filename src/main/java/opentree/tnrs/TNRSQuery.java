@@ -1,10 +1,19 @@
 package opentree.tnrs;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.ws.rs.core.MediaType;
 
 import opentree.taxonomy.TaxonomyExplorer;
+import opentree.tnrs.adaptersupport.gnr.*;
+
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.Node;
 
 import com.sun.jersey.api.client.Client;
@@ -23,12 +32,12 @@ public class TNRSQuery {
 
     public final TNRSAdapterGNR GNR_ADAPTER = new TNRSAdapterGNR();
     
-    private String graphName;
-    private TaxonomyExplorer taxonomy;
+    private String _graphName;
+    private TaxonomyExplorer _taxonomy;
     
-    public TNRSQuery(String _graphName) {
-        graphName = _graphName;
-        taxonomy = new TaxonomyExplorer(_graphName);
+    public TNRSQuery(String graphName) {
+        _graphName = graphName;
+        _taxonomy = new TaxonomyExplorer(_graphName);
     }
     
     /**
@@ -43,12 +52,12 @@ public class TNRSQuery {
      * the local taxonomy graph.
      */
     public TNRSMatchSet getMatches(String[] searchStrings, TNRSAdapter...adapters) {
-        TNRSMatchSet results = new TNRSMatchSet(graphName);
+        TNRSMatchSet results = new TNRSMatchSet(_graphName);
         ArrayList<String> unmatchedNames = new ArrayList<String>();
         
         for (int i = 0; i < searchStrings.length; i++) {
             String thisName = searchStrings[i];
-            Node matchedNode = taxonomy.findTaxNodeByName(thisName);
+            Node matchedNode = _taxonomy.findTaxNodeByName(thisName);
             
             // first: check the graph index (simple)
             if (matchedNode != null) {
@@ -73,66 +82,61 @@ public class TNRSQuery {
     }
     
     public class TNRSAdapterGNR extends TNRSAdapter {
-
-        TNRSAdapterGNR() {
-        }
         
         public void doQuery(ArrayList<String> searchStrings) {
             int id = 0; // just a placeholder
-            String queryData = "";
+
+            // build the query
+            String queryString = "{\"data\":\"";
+            boolean isFirst = true;
             for (String s : searchStrings) {
-                queryData += id + "|" + s + "\n";
+                if (isFirst)
+                    isFirst = false;
+                else
+                    queryString += "\n";
+
+                queryString += id + "|" + s;
             }
+            queryString += "\"}";
     
+//            System.out.println(queryString);
+            
+            // set up the connection to GNR
             ClientConfig cc = new DefaultClientConfig();
             Client c = Client.create(cc);
-            
             WebResource gnr = c.resource("http://resolver.globalnames.org/name_resolvers.json");
+
+            // send the query (get the response)
+            String respJSON = gnr.accept(
+                    MediaType.APPLICATION_JSON_TYPE).
+                    type(MediaType.APPLICATION_JSON_TYPE).
+                    post(String.class, queryString);
             
-            String response = gnr.accept(
-                    MediaType.APPLICATION_JSON_TYPE,
-                    MediaType.APPLICATION_XML_TYPE).
-                    header("X-FOO", "BAR").
-                    entity(queryData, MediaType.TEXT_PLAIN_TYPE).
-                    post(String.class);
+//            System.out.println(respJSON);
+
+            // parse the JSON response
+            GNRResponse response = null;
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                response = mapper.readValue(respJSON, GNRResponse.class);
+            } catch (JsonParseException e) {
+                e.printStackTrace();
+            } catch (JsonMappingException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             
-            System.out.println(response);
-            
-            // global names data fields
-            int gni_request_id;                 // Resolver request id. Your request is stored temporarily in the database and is assigned an id.
-            String gni_url;                     // Using the url you can access your results for 7 days.
-            String[] gni_data_sources;          // A list of data source ids you used for name resolution. If no data sources were given the list is empty.
-            int gni_context_data_source_id;     // The id of a data source used to create the context.
-            String gni_context_clade;           // A lowest taxonomic level in the data source that contains 90% or more of all names found. If there are too few names to determine, this element remains empty.
-            int gni_data_source_id;             // The id of the data source where a name was found.
-            int gni_uuid;                       // An identifier for the found name string used in Global Names.
-            String gni_name_string;             // The name string found in this data source.
-            String gni_canonical_form;          // A "canonical" version of the name generated by the Global Names parser
-            String[] gni_classification_path;   // Tree path to the root if a name string was found within a data source classification.
-            int[] gni_classification_path_ids;  // Same tree path using taxon_ids (see below)
-            int gni_taxon_id;                   // An identifier supplied in the source Darwin Core Archive for the name string record
-            int gni_local_id;                   // Shows id local to the data source (if provided by the data source manager)
-            int gni_match_type;                 // Explains how resolver found the name. If the resolver cannot find names corresponding to the entire queried name string, it sequentially removes terminal portions of the name string until a match is found.
-                // 1 - Exact match
-                // 2 - Exact match by canonical form of a name
-                // 3 - Fuzzy match by canonical form
-                // 4 - Partial exact match by species part of canonical form
-                // 5 - Partial fuzzy match by species part of canonical form
-                // 6 - Exact match by genus part of a canonical form
-            int gni_prescore;                   // Displays points used to calculate the score delimited by '|' -- "Match points|Author match points|Context points". Negative points decrease the final result.
-            int gni_score;                      // A confidence score calculated for the match. 0.5 means an uncertain result that will require investigation. Results higher than 0.9 correspond to 'good' matches. Results between 0.5 and 0.9 should be taken with caution. Results less than 0.5 are likely poor matches. The scoring is described in more details on the About page
-            String status_message;              // Message associated with the status
-    
-            // may be required to validate success
-            int gni_status; // The final status of the request -- 'success' or 'failure'
-    
-            
-            // potentially unused (most are containers we just need to pull info out of)
-        //  gni_supplied_id // The id of the name string in the query (if provided).
-        //  gni_supplied_name_string // The name string in the query.
-        //  gni_context // Appears if 'with_context' parameter is set to true.
-        //  gni_data // A container for the resolution data.
-    //        results // A container for displaying results for a particular name string.
+            for (NameResult thisNameResult : response) {
+                System.out.println(thisNameResult.supplied_name_string);
+                for (GNRMatch match : thisNameResult) {
+                    Node matchedNode = _taxonomy.findTaxNodeByName(match.canonical_form);
+                    if (matchedNode != null) {
+                        
+                    }
+                }
+            }
+
         }
     }
 }
