@@ -30,7 +30,6 @@ import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
-import org.apache.log4j.Logger;
 
 
 @SuppressWarnings("deprecation")
@@ -39,8 +38,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	private ChildNumberEvaluator cne;
 	int transaction_iter = 10000;
 	
-	static Logger _LOG = Logger.getLogger(TaxonomyExplorer.class);
-	
+
 	public TaxonomyExplorer(){
 		cne = new ChildNumberEvaluator();
 		cne.setChildThreshold(100);
@@ -72,11 +70,9 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	public void exportGraphForClade(String clade_name, String out_filepath){
 		Node firstNode = findTaxNodeByName(clade_name);
 		if (firstNode == null){
-			_LOG.error("name \"" + clade_name + "\" not found");
 			return;
 		}
 		//TraversalDescription CHILDOF_TRAVERSAL = Traversal.description().relationships(RelTypes.TAXCHILDOF,Direction.INCOMING );
-		_LOG.info("Constructing graph file for " + firstNode.getProperty("name"));
 		PrintWriter out_file;
 		try {
 			out_file = new PrintWriter(new FileWriter(out_filepath));
@@ -114,8 +110,6 @@ public class TaxonomyExplorer extends TaxonomyBase{
 						src2style.put(rel_source, edge_style);
 					}
 					out_file.write("\t" + rel_start_dot_name + " -> " + rel_end_dot_name + " [" + edge_style + "] ;\n");
-					if (count % 100000 == 0)
-						_LOG.info(count + " edges written");
 				}
 			}
 			out_file.write("}\n");
