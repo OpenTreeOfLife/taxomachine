@@ -128,9 +128,9 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
                     desc += "exact match to ";
 
                 if (_isSynonym)
-                    desc += "junior synonym ";
+                    desc += "junior synonym";
                 else
-                    desc += "non-synonym ";
+                    desc += "non-synonym";
             }
             return desc;
         }

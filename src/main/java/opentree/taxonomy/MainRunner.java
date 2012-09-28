@@ -106,17 +106,20 @@ public class MainRunner {
     }
 
     public void parseTNRSRequest(String args[]) {
-        String[] searchStrings = new String[1];
-        searchStrings[0] = args[1];
+        String[] searchStrings = args[1].split("\\,");
         String graphName = args[2];
 
         TNRSQuery tnrs = new TNRSQuery(graphName);
-        TNRSMatchSet results = tnrs.getMatches(searchStrings);
+        TNRSMatchSet results = tnrs.getMatches(searchStrings, tnrs.GNR);
 
         for (TNRSMatch m : results) {
             System.out.println(m.toString());
         }
-
+        
+        System.out.println("\nNames that could not be matched:");
+        for (String name : tnrs.getUnmatchedNames()) {
+            System.out.println(name);
+        }
     }
 
     public static void printHelp() {

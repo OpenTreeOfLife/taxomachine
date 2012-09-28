@@ -1,8 +1,11 @@
 package opentree.tnrs;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.MediaType;
@@ -34,11 +37,12 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 public class TNRSQuery {
 
     public final TNRSAdapterGNR GNR = new TNRSAdapterGNR();
-    public final TNRSAdapterTaxosaurus TAXOSAURUS = new TNRSAdapterTaxosaurus();    
+    public final TNRSAdapterPhylotastic TAXOSAURUS = new TNRSAdapterPhylotastic();    
     
     private String _graphName;
     private TaxonomyExplorer _taxonomy;
     private TNRSMatchSet _results;
+    private HashSet<String> _unmatchedNames;
     
     public TNRSQuery(String graphName) {
         _graphName = graphName;
@@ -58,7 +62,7 @@ public class TNRSQuery {
      */
     public TNRSMatchSet getMatches(String[] searchStrings, TNRSAdapter...adapters) {
         _results = new TNRSMatchSet(_graphName);
-        ArrayList<String> unmatchedNames = new ArrayList<String>();
+        _unmatchedNames = new HashSet<String>();
         
         for (int i = 0; i < searchStrings.length; i++) {
             String thisName = searchStrings[i];
@@ -74,28 +78,33 @@ public class TNRSQuery {
             // third: fuzzy matching within the graph (could be fuzzy matches to junior synonyms or recognized taxa)
             
             // remember names we can't match
-            unmatchedNames.add(thisName);
+            if (_unmatchedNames.contains(thisName) == false)
+                _unmatchedNames.add(thisName);
         }
 
-        System.out.println("test1");
+        System.out.println("checkpoint 1");
 
         // fourth: call passed adapters for help with names we couldn't match
-        if (unmatchedNames.size() > 0) {
+        if (_unmatchedNames.size() > 0) {
             for(int i=0; i < adapters.length; i++) {
-                adapters[i].doQuery(unmatchedNames);
+                adapters[i].doQuery(_unmatchedNames);
             }
         }
         return _results;
     }
     
-    public class TNRSAdapterGNR extends TNRSAdapter {
+    public HashSet<String> getUnmatchedNames() {
+        return _unmatchedNames;
+    }
+    
+    private class TNRSAdapterGNR extends TNRSAdapter {
         
         String url = "http://resolver.globalnames.org/name_resolvers.json";
         
-        public void doQuery(ArrayList<String> searchStrings) {
+        public void doQuery(HashSet<String> searchStrings) {
             int id = 0; // just a placeholder
 
-            System.out.println("gnr waypoint 1");
+            System.out.println("gnr checkpoint 1");
 
             // build the query
             String queryString = "{\"data\":\"";
@@ -123,7 +132,7 @@ public class TNRSQuery {
                     type(MediaType.APPLICATION_JSON_TYPE).
                     post(String.class, queryString);
             
-            System.out.println(respJSON);
+//            System.out.println(respJSON);
 
             // parse the JSON response
             GNRResponse response = null;
@@ -138,15 +147,17 @@ public class TNRSQuery {
                 e.printStackTrace();
             }
             
-            System.out.println("got here");
+            System.out.println("gnr checkpoint 2");
             
             for (NameResult thisNameResult : response) {
                 System.out.println(thisNameResult.supplied_name_string);
                 for (GNRMatch thisMatch : thisNameResult) {
                     String matchedName = thisMatch.canonical_form;
+                    boolean thisNameMatched = false;
                     if (matchedName != null) {
                         Node matchedNode = _taxonomy.findTaxNodeByName(thisMatch.canonical_form);
                         if (matchedNode != null) {
+                            thisNameMatched = true;
                             thisMatch.matchedNode = matchedNode;
                             thisMatch.searchString = thisNameResult.supplied_name_string;
                             _results.addMatch(thisMatch);
@@ -154,16 +165,23 @@ public class TNRSQuery {
                             // check if it matches a synonym
                         }
                     }
+                    if (thisNameMatched) {
+                        for (String s : _unmatchedNames) {
+                            if (s.compareTo(matchedName) == 0) {
+                            _unmatchedNames.remove(s);
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    public class TNRSAdapterTaxosaurus extends TNRSAdapter {
+    private class TNRSAdapterPhylotastic extends TNRSAdapter {
         String submiturl = "http://taxosaurus/tnrs/submit?query=Plantago";
         String retrieveurl = "http://api.phylotastic.org/tnrs/retrieve/";
         
-        public void doQuery(ArrayList<String> searchStrings) {
+        public void doQuery(HashSet<String> searchStrings) {
 
             System.out.println("taxosaurus waypoint 1");
 
