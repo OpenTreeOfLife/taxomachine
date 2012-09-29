@@ -10,5 +10,7 @@ public abstract class TNRSMatch {
     public abstract Node getMatchedNode();
     public abstract String getSource();
     public abstract String getMatchType();
+
+    @Override
     public abstract String toString();
 }

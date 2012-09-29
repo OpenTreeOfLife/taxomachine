@@ -135,6 +135,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             return desc;
         }
         
+        @Override
         public String toString() {
             return "Query '" + _searchString + "' matched to " + _matchedNode.getProperty("name") + " (id=" +
                     _matchedNode.getId() + ") in " + TNRSMatchSet.this.getGraphFilename() + " (" + getMatchType() + ")";
