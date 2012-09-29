@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import javax.net.ssl.SSLException;
 import javax.ws.rs.core.MediaType;
@@ -26,6 +28,7 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.index.IndexHits;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
@@ -40,7 +43,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 public class TNRSQuery {
 
-    public final TNRSAdapterGNR GNR = new TNRSAdapterGNR();
+//    public final TNRSAdapterGNR GNR = new TNRSAdapterGNR();
     public final TNRSAdapteriPlant IPLANT = new TNRSAdapteriPlant();
 
     private static final long RETRY_INTERVAL = 1000L;
@@ -50,10 +53,12 @@ public class TNRSQuery {
     private TaxonomyExplorer _taxonomy;
     private TNRSMatchSet _results;
     private HashSet<String> _unmatchedNames;
-
+    private HashMap<String,Boolean> _matchedNames;
+    
     public TNRSQuery(String graphName) {
         _graphName = graphName;
         _taxonomy = new TaxonomyExplorer(_graphName);
+        _matchedNames = new HashMap<String,Boolean>();
     }
 
     /**
@@ -71,19 +76,45 @@ public class TNRSQuery {
 
         for (int i = 0; i < searchStrings.length; i++) {
             String thisName = searchStrings[i];
+            
+            if (_matchedNames.containsKey(thisName)) {
+                continue;
+            }
+            
             Node matchedNode = _taxonomy.findTaxNodeByName(thisName);
 
-            // first: check the graph index (simple)
+            // first: check the graph index. if we find a hit, we're done
             if (matchedNode != null) {
-                _results.addMatch(new TNRSDirectMatch(thisName, matchedNode));
+                _results.addMatch(new OTTolDirectMatch(thisName, matchedNode));
+                _matchedNames.put(thisName, true);
                 continue;
             }
 
-            // second: direct matches to synonyms within the graph (need to interface with stephen)
-            // third: fuzzy matching within the graph (could be fuzzy matches to junior synonyms or recognized taxa)
+            // TODO: don't try to match names twice
+            // second: direct matches to synonyms. if we find a hit, we're done
 
+            // no direct match, so we look at all other options. if we get a hit,
+            // wait until the end to remove the term
+            boolean wasMatched = false;
+
+            // (need to interface with stephen about synonyms)
+
+            // third: check for fuzzy matches to recognized taxa
+            IndexHits<Node> fuzzyMatches = _taxonomy.findTaxNodeByNameFuzzy(thisName);
+            if (fuzzyMatches.size() > 0) {
+                for (Node n : fuzzyMatches) {
+                    // TODO: record scores with fuzzy matches
+                    _results.addMatch(new OTTolApproxMatch(thisName, n, 0.5));
+                }
+                wasMatched = true;
+            }
+
+            // fourth: check for fuzzy matches to synonyms
+            
             // remember names we can't match
-            if (_unmatchedNames.contains(thisName) == false)
+            if (wasMatched)
+                _matchedNames.put(thisName, true);
+            else
                 _unmatchedNames.add(thisName);
         }
 
@@ -102,7 +133,12 @@ public class TNRSQuery {
         return _unmatchedNames;
     }
 
-    private class TNRSAdapterGNR extends TNRSAdapter {
+/*  this class has basically become obsolete. if it is ever re-implemented, it will need updating,
+    and in fact a better abstraction model that minimizes the amount of repeated code in adapters
+    would be helpful.
+      
+      private class TNRSAdapterGNR extends TNRSAdapter {
+ 
 
         String url = "http://resolver.globalnames.org/name_resolvers.json";
 
@@ -177,7 +213,7 @@ public class TNRSQuery {
                 }
             }
         }
-    }
+    } */
 
     private class TNRSAdapteriPlant extends TNRSAdapter {
         String submiturl = "http://api.phylotastic.org/tnrs/submit";
@@ -271,7 +307,7 @@ public class TNRSQuery {
                     }
 
                     System.out.println(retrieveurl + tag);
-                    HttpGet httpGet2 = new HttpGet(retrieveurl + tag);
+                    httpGet = new HttpGet(retrieveurl + tag);
                     HttpResponse response2;
                     HttpEntity entity2 = null;
                     String resultJSON;
@@ -280,7 +316,7 @@ public class TNRSQuery {
                         try {
 
                             // get the response entity
-                            response2 = httpclient.execute(httpGet2);
+                            response2 = httpclient.execute(httpGet);
                             entity2 = response2.getEntity();
 
                             // load the response string
@@ -301,11 +337,16 @@ public class TNRSQuery {
                                     }
 //                                    System.out.println(thisMatch.acceptedName);
                                 }
+                                HashSet<String> toRemove = new HashSet<String>();
                                 if (thisNameMatched) {
                                     for (String s : _unmatchedNames) {
                                         if (s.compareTo(thisSearchString) == 0) {
-                                            _unmatchedNames.remove(s);
+                                            toRemove.add(s);
+                                            break;
                                         }
+                                    }
+                                    for (String s : toRemove) {
+                                        _unmatchedNames.remove(s);
                                     }
                                 }
                             }
@@ -339,10 +380,10 @@ public class TNRSQuery {
                     httpGet.releaseConnection();
                 }
 
-            } catch (ClientProtocolException e1) {
-                e1.printStackTrace();
-            } catch (IOException e1) {
-                e1.printStackTrace();
+            } catch (ClientProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

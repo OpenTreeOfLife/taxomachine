@@ -1,5 +1,9 @@
 package opentree.taxonomy;
 
+import java.util.ArrayList;
+
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.FuzzyQuery;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
@@ -51,6 +55,17 @@ public abstract class TaxonomyBase {
 		hits.close();
 		return firstNode;
 	}
+    
+    /**
+     * @return Checks taxNodeIndex for `name` and returns an empty hit list (if the name is not found)
+     * Uses fuzzy searching.
+     */
+    public IndexHits<Node> findTaxNodeByNameFuzzy(final String name) {
+        IndexHits<Node> hits = this.taxNodeIndex.query(new FuzzyQuery(new Term("name", name)));
+        hits.close();
+        return hits;
+    }
+    
 	/**
 	 * @return Checks taxNodeIndex for `name` and returns null (if the name is not found) or 
 	 *  the node using IndexHits<Node>.getSingle()

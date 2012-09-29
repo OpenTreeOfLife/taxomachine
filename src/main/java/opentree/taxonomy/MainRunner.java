@@ -1,6 +1,9 @@
 package opentree.taxonomy;
 
+import java.util.ArrayList;
+
 import org.apache.log4j.PropertyConfigurator;
+import org.neo4j.graphdb.Node;
 
 import opentree.tnrs.*;
 
@@ -106,19 +109,28 @@ public class MainRunner {
     }
 
     public void parseTNRSRequest(String args[]) {
-        String[] searchStrings = args[1].split("\\,");
-        String graphName = args[2];
+        if (args[0].compareTo("tnrsbasic") == 0) {
+            String[] searchStrings = args[1].split("\\s*\\,\\s*");
+            String graphName = args[2];
+    
+            TNRSQuery tnrs = new TNRSQuery(graphName);
+            TNRSMatchSet results = tnrs.getMatches(searchStrings, tnrs.IPLANT);
+    
+            for (TNRSMatch m : results) {
+                System.out.println(m.toString());
+            }
+            
+            System.out.println("\nNames that could not be matched:");
+            for (String name : tnrs.getUnmatchedNames()) {
+                System.out.println(name);
+            }
 
-        TNRSQuery tnrs = new TNRSQuery(graphName);
-        TNRSMatchSet results = tnrs.getMatches(searchStrings, tnrs.IPLANT);
-
-        for (TNRSMatch m : results) {
-            System.out.println(m.toString());
-        }
-        
-        System.out.println("\nNames that could not be matched:");
-        for (String name : tnrs.getUnmatchedNames()) {
-            System.out.println(name);
+/*        } else if (args[0].compareTo("testfuzzy") == 0) {
+            TaxonomyExplorer taxonomy = new TaxonomyExplorer(args[2]);
+            ArrayList<Node> found = taxonomy.findTaxNodeByNameFuzzy(args[1]);
+            for (Node n : found) {
+                System.out.println(n.getProperty("name"));
+            } */
         }
     }
 
@@ -168,7 +180,7 @@ public class MainRunner {
             } else if (args[0].compareTo("comptaxtree") == 0 || args[0].compareTo("comptaxgraph") == 0 || args[0].compareTo("findcycles") == 0
                     || args[0].compareTo("jsgraph") == 0 || args[0].compareTo("checktree") == 0) {
                 mr.taxonomyQueryParser(args);
-            } else if (args[0].compareTo("tnrsbasic") == 0) {
+            } else if (args[0].compareTo("tnrsbasic") == 0 || args[0].compareTo("testfuzzy") == 0) {
                 mr.parseTNRSRequest(args);
             } else {
                 System.err.println("Unrecognized command \"" + args[0] + "\"");
