@@ -1,12 +1,13 @@
 package opentree.tnrs.adaptersupport.gnr;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.neo4j.graphdb.Node;
 
-import opentree.tnrs.TNRSMatchParser;
+import opentree.tnrs.TNRSHit;
 
-public class GNRMatch implements TNRSMatchParser {
+public class GNRMatch {
     public String data_source_id;
     public String gni_uuid;
     public String name_string;
@@ -20,46 +21,8 @@ public class GNRMatch implements TNRSMatchParser {
     public String url;
     public String prescore;
     public String score;
-    public String searchString = null;
-    public Node matchedNode = null;
-    
-    public Node getMatchedNode() {
-        return matchedNode;
-    }
 
-    public Node getSynonymNode() {
-        // gnr does not return any synonym information. thus, to implement this,
-        // we need to be able to look up synonyms in the graph
-        return null;
-    }
-
-    public String getSearchString() {
-        return searchString;
-    }
-
-    public String getSourceName() {
-        return "gnr";
-    }
-
-    public boolean getIsExactNode() {
-        return false;
-    }
-    
-    public boolean getIsApprox() {
-        return match_type.compareTo("1") != 0;
-    }
-    
-    public boolean getIsSynonym() {
-        // gnr does not return any synonym information. thus, to implement this,
-        // we need to be able to look up synonyms in the graph
-        return false;
-    }
-    
-    public double getScore() {
-        return Double.parseDouble(score);
-    }
-    
-    public HashMap<String, String> getOtherData() {
+    public Map<String, String> getOtherData() {
         HashMap<String, String> data = new HashMap<String, String>();
         data.put("data_source_id",data_source_id);
         data.put("name_string",name_string);

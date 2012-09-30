@@ -4,14 +4,13 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import javax.net.ssl.SSLException;
-import javax.ws.rs.core.MediaType;
+
 import opentree.taxonomy.TaxonomyExplorer;
-import opentree.tnrs.adaptersupport.gnr.*;
 import opentree.tnrs.adaptersupport.iplant.*;
+//import opentree.tnrs.adaptersupport.gnr.*;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -29,11 +28,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
+import org.codehaus.jackson.map.exc.UnrecognizedPropertyException;
 
 /**
  * @author Cody Hinchliff
@@ -48,6 +43,7 @@ public class TNRSQuery {
 
     private static final long RETRY_INTERVAL = 1000L;
     private static final long MAX_TIME = 30000L;
+    private static final double TEMP_SCORE = 0.5;
     
     private String _graphName;
     private TaxonomyExplorer _taxonomy;
@@ -81,44 +77,68 @@ public class TNRSQuery {
                 continue;
             }
             
-            Node matchedNode = _taxonomy.findTaxNodeByName(thisName);
+            // first: check the graph index. if we find any hits, we're done
+            IndexHits<Node> matchedNodes = _taxonomy.findTaxNodeByName(thisName);
+            if (matchedNodes.size() > 0) {
+                for (Node n : matchedNodes) {
 
-            // first: check the graph index. if we find a hit, we're done
-            if (matchedNode != null) {
-                _results.addMatch(new OTTolDirectMatch(thisName, matchedNode));
+                    // check to see if the matched node is a homonym
+                    IndexHits<Node> hitsForName = _taxonomy.findTaxNodeByName((String)n.getProperty("name"));
+                    boolean isHomonym = false;
+                    if (hitsForName.size() > 1)
+                        isHomonym = true;
+
+                    // add the match
+                    _results.addMatch(new TNRSHit().
+                            setMatchedNode(n).
+                            setSearchString(thisName).
+                            setIsExactNode(true).
+                            setIsHomonym(isHomonym).
+                            setSourceName("ottol"));
+                }
                 _matchedNames.put(thisName, true);
-                continue;
+                continue; // no need to look at other options
             }
 
-            // TODO: don't try to match names twice
-            // second: direct matches to synonyms. if we find a hit, we're done
-
-            // no direct match, so we look at all other options. if we get a hit,
-            // wait until the end to remove the term
-            boolean wasMatched = false;
-
+            // TODO: second: try direct matches to synonyms. if we find a hit, we're done
+            // make sure we don't try to match names twice
             // (need to interface with stephen about synonyms)
+
+            // no direct matches, so we look at all other options
+            boolean wasMatched = false;
 
             // third: check for fuzzy matches to recognized taxa
             IndexHits<Node> fuzzyMatches = _taxonomy.findTaxNodeByNameFuzzy(thisName);
             if (fuzzyMatches.size() > 0) {
                 for (Node n : fuzzyMatches) {
-                    // TODO: record scores with fuzzy matches
-                    _results.addMatch(new OTTolApproxMatch(thisName, n, 0.5));
+                    
+                    // check to see if the fuzzily matched node is a homonym
+                    IndexHits<Node> directMatches = _taxonomy.findTaxNodeByName(n.getProperty("name").toString());
+                    boolean isHomonym = false;
+                    if (directMatches.size() > 1)
+                        isHomonym = true;
+
+                    // add the match
+                    _results.addMatch(new TNRSHit().
+                            setIsApprox(true).
+                            setIsHomonym(isHomonym).
+                            setMatchedNode(n).
+                            setScore(TEMP_SCORE). // TODO: record scores with fuzzy matches
+                            setSearchString(thisName).
+                            setSourceName("ottol"));
                 }
                 wasMatched = true;
             }
 
-            // fourth: check for fuzzy matches to synonyms
+            // TODO: fourth: check for fuzzy matches to synonyms
+            // make sure we don't try to match names twice
             
-            // remember names we can't match
+            // remember names we can't match within the graph
             if (wasMatched)
                 _matchedNames.put(thisName, true);
             else
                 _unmatchedNames.add(thisName);
         }
-
-        System.out.println("checkpoint 1");
 
         // fourth: call passed adapters for help with names we couldn't match
         if (_unmatchedNames.size() > 0) {
@@ -133,95 +153,13 @@ public class TNRSQuery {
         return _unmatchedNames;
     }
 
-/*  this class has basically become obsolete. if it is ever re-implemented, it will need updating,
-    and in fact a better abstraction model that minimizes the amount of repeated code in adapters
-    would be helpful.
-      
-      private class TNRSAdapterGNR extends TNRSAdapter {
- 
-
-        String url = "http://resolver.globalnames.org/name_resolvers.json";
-
-        public void doQuery(HashSet<String> searchStrings) {
-            int id = 0; // just a placeholder
-
-            System.out.println("gnr checkpoint 1");
-
-            // build the query
-            String queryString = "{\"data\":\"";
-            boolean isFirst = true;
-            for (String s : searchStrings) {
-                if (isFirst)
-                    isFirst = false;
-                else
-                    queryString += "\n";
-
-                queryString += id + "|" + s;
-            }
-            queryString += "\"}";
-
-            System.out.println(queryString);
-
-            // set up the connection to GNR
-            ClientConfig cc = new DefaultClientConfig();
-            Client c = Client.create(cc);
-            WebResource gnr = c.resource(url);
-
-            // send the query (get the response)
-            String respJSON = gnr.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, queryString);
-
-            // System.out.println(respJSON);
-
-            // parse the JSON response
-            GNRResponse response = null;
-            ObjectMapper mapper = new ObjectMapper();
-            try {
-                response = mapper.readValue(respJSON, GNRResponse.class);
-            } catch (JsonParseException e) {
-                e.printStackTrace();
-            } catch (JsonMappingException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            System.out.println("gnr checkpoint 2");
-
-            for (GNRNameResult thisNameResult : response) {
-                System.out.println(thisNameResult.supplied_name_string);
-                for (GNRMatch thisMatch : thisNameResult) {
-                    String matchedName = thisMatch.canonical_form;
-                    boolean thisNameMatched = false;
-                    if (matchedName != null) {
-                        Node matchedNode = _taxonomy.findTaxNodeByName(thisMatch.canonical_form);
-                        if (matchedNode != null) {
-                            thisNameMatched = true;
-                            thisMatch.matchedNode = matchedNode;
-                            thisMatch.searchString = thisNameResult.supplied_name_string;
-                            _results.addMatch(thisMatch);
-                        } else {
-                            // check if it matches a synonym
-                        }
-                    }
-                    if (thisNameMatched) {
-                        for (String s : _unmatchedNames) {
-                            if (s.compareTo(matchedName) == 0) {
-                                _unmatchedNames.remove(s);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    } */
-
     private class TNRSAdapteriPlant extends TNRSAdapter {
         String submiturl = "http://api.phylotastic.org/tnrs/submit";
         String retrieveurl = "http://api.phylotastic.org/tnrs/retrieve/";
 
         public void doQuery(HashSet<String> searchStrings) {
 
-            System.out.println("iplant checkpoint 1");
+//            System.out.println("iplant checkpoint 1");
 
             DefaultHttpClient httpclient = new DefaultHttpClient();
             HttpRequestRetryHandler myRetryHandler = new HttpRequestRetryHandler() {
@@ -321,21 +259,34 @@ public class TNRSQuery {
 
                             // load the response string
                             resultJSON = EntityUtils.toString(entity2);
-//                            System.out.println(resultJSON);
                             iPlantResponse response = mapper.readValue(resultJSON, iPlantResponse.class);
 
                             for (iPlantNameResult thisNameResult : response) {
                                 String thisSearchString = thisNameResult.submittedName;
                                 boolean thisNameMatched = false;
-                                for (iPlantMatch thisMatch : thisNameResult) {
-                                    Node matchedNode = _taxonomy.findTaxNodeByName(thisMatch.acceptedName);
-                                    if (matchedNode != null) {
-                                        thisMatch.matchedNode = matchedNode;
-                                        thisMatch.searchString = thisSearchString;
+                                for (iPlantHit thisHit : thisNameResult) {
+                                    IndexHits<Node> matchedNodes = _taxonomy.findTaxNodeByName(thisHit.acceptedName);
+                                    if (matchedNodes.size() > 0) {
+                                        for (Node n : matchedNodes) {
+                                            
+                                            // check to see if the fuzzily matched node is a homonym
+                                            IndexHits<Node> directMatches = _taxonomy.findTaxNodeByName(n.getProperty("name").toString());
+                                            boolean isHomonym = false;
+                                            if (directMatches.size() > 1)
+                                                isHomonym = true;
+
+                                            // add match
+                                            _results.addMatch(new TNRSHit().
+                                                    setIsApprox(true).
+                                                    setIsHomonym(isHomonym).
+                                                    setMatchedNode(n).
+                                                    setOtherData(thisHit.getData()).
+                                                    setScore(TEMP_SCORE).
+                                                    setSearchString(thisSearchString).
+                                                    setSourceName("iplant"));
+                                        }
                                         thisNameMatched = true;
-                                        _results.addMatch(thisMatch);
                                     }
-//                                    System.out.println(thisMatch.acceptedName);
                                 }
                                 HashSet<String> toRemove = new HashSet<String>();
                                 if (thisNameMatched) {
@@ -356,7 +307,20 @@ public class TNRSQuery {
                         } catch (JsonParseException e) {
                             e.printStackTrace();
                         } catch (JsonMappingException e) {
-                            e.printStackTrace();
+                            // don't print the stack trace if we got a status message telling us to wait
+                            if (e instanceof UnrecognizedPropertyException) {
+                                String[] toks = e.getMessage().split("\\s");
+                                if (toks.length < 2) {
+                                    e.printStackTrace();
+                                } else if (toks[2].compareTo("\"message\"") != 0) {
+                                    e.printStackTrace();
+                                } else {
+                                    System.out.println("waiting for response");
+                                }
+                            }
+                            else {
+                                e.printStackTrace();
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -387,4 +351,87 @@ public class TNRSQuery {
             }
         }
     }
+
+    /*  this class has basically become obsolete. if it is ever re-implemented, it will need updating,
+    and in fact a better abstraction model that minimizes the amount of repeated code in adapters
+    would be helpful.
+      
+      private class TNRSAdapterGNR extends TNRSAdapter {
+ 
+
+        String url = "http://resolver.globalnames.org/name_resolvers.json";
+
+        public void doQuery(HashSet<String> searchStrings) {
+            int id = 0; // just a placeholder
+
+            System.out.println("gnr checkpoint 1");
+
+            // build the query
+            String queryString = "{\"data\":\"";
+            boolean isFirst = true;
+            for (String s : searchStrings) {
+                if (isFirst)
+                    isFirst = false;
+                else
+                    queryString += "\n";
+
+                queryString += id + "|" + s;
+            }
+            queryString += "\"}";
+
+            System.out.println(queryString);
+
+            // set up the connection to GNR
+            ClientConfig cc = new DefaultClientConfig();
+            Client c = Client.create(cc);
+            WebResource gnr = c.resource(url);
+
+            // send the query (get the response)
+            String respJSON = gnr.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, queryString);
+
+            // System.out.println(respJSON);
+
+            // parse the JSON response
+            GNRResponse response = null;
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                response = mapper.readValue(respJSON, GNRResponse.class);
+            } catch (JsonParseException e) {
+                e.printStackTrace();
+            } catch (JsonMappingException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            System.out.println("gnr checkpoint 2");
+
+            for (GNRNameResult thisNameResult : response) {
+                System.out.println(thisNameResult.supplied_name_string);
+                for (GNRMatch thisMatch : thisNameResult) {
+                    String matchedName = thisMatch.canonical_form;
+                    boolean thisNameMatched = false;
+                    if (matchedName != null) {
+                        Node matchedNode = _taxonomy.findTaxNodeByName(thisMatch.canonical_form);
+                        if (matchedNode != null) {
+                            thisNameMatched = true;
+                            thisMatch.matchedNode = matchedNode;
+                            thisMatch.searchString = thisNameResult.supplied_name_string;
+                            _results.addMatch(thisMatch);
+                        } else {
+                            // check if it matches a synonym
+                        }
+                    }
+                    if (thisNameMatched) {
+                        for (String s : _unmatchedNames) {
+                            if (s.compareTo(matchedName) == 0) {
+                                _unmatchedNames.remove(s);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } */
+
 }

@@ -3,12 +3,12 @@ package opentree.tnrs.adaptersupport.iplant;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class iPlantNameResult implements Iterable<iPlantMatch> {
+public class iPlantNameResult implements Iterable<iPlantHit> {
     public int matchCount;
-    public ArrayList<iPlantMatch> matches;
+    public ArrayList<iPlantHit> matches;
     public String submittedName;
     
-    public Iterator<iPlantMatch> iterator() {
+    public Iterator<iPlantHit> iterator() {
         return matches.iterator();
     }
 }

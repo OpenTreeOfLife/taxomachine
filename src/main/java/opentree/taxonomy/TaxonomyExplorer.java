@@ -47,7 +47,21 @@ public class TaxonomyExplorer extends TaxonomyBase {
      */
 
     public void exportGraphForClade(String clade_name, String out_filepath) {
-        Node firstNode = findTaxNodeByName(clade_name);
+        
+        IndexHits<Node> foundNodes = findTaxNodeByName(clade_name);
+        Node firstNode = null;
+        if (foundNodes.size() < 1) {
+            System.out.println(clade_name + " not found");
+            return;
+        } else if (foundNodes.size() > 2) {
+            System.out.println("multiple hits for " + clade_name + " (homonym). not sure how to deal with this");
+            return;
+        } else {
+            for (Node n : foundNodes) {
+                firstNode = n;
+            }
+        }
+        
         if (firstNode == null) {
             _LOG.error("name \"" + clade_name + "\" not found");
             return;
@@ -109,12 +123,21 @@ public class TaxonomyExplorer extends TaxonomyBase {
      * the name of the internal node that will be the root of the subtree that
      * is written
      */
-    public void buildTaxonomyTree(String name) {
-        Node firstNode = findTaxNodeByName(name);
-        if (firstNode == null) {
-            System.out.println("name not found");
+    public void buildTaxonomyTree(String name) {        
+        IndexHits<Node> foundNodes = findTaxNodeByName(name);
+        Node firstNode = null;
+        if (foundNodes.size() < 1) {
+            System.out.println(name + " not found");
             return;
+        } else if (foundNodes.size() > 2) {
+            System.out.println("multiple hits for " + name + ". not sure how to deal with this");
+            return;
+        } else {
+            for (Node n : foundNodes) {
+                firstNode = n;
+            }
         }
+        
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description().relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
         System.out.println(firstNode.getProperty("name"));
         JadeNode root = new JadeNode();
@@ -157,11 +180,21 @@ public class TaxonomyExplorer extends TaxonomyBase {
      * should be conflicting taxonomies
      */
     public void findTaxonomyCycles(String name) {
-        Node firstNode = findTaxNodeByName(name);
-        if (firstNode == null) {
-            System.out.println("name not found");
+
+        IndexHits<Node> foundNodes = findTaxNodeByName(name);
+        Node firstNode = null;
+        if (foundNodes.size() < 1) {
+            System.out.println(name + " not found");
             return;
+        } else if (foundNodes.size() > 2) {
+            System.out.println("multiple hits for " + name + " (homonym). not sure how to deal with this");
+            return;
+        } else {
+            for (Node n : foundNodes) {
+                firstNode = n;
+            }
         }
+        
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description().relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
         System.out.println(firstNode.getProperty("name"));
         ArrayList<Node> conflictingnodes = new ArrayList<Node>();
@@ -188,10 +221,18 @@ public class TaxonomyExplorer extends TaxonomyBase {
      * that name
      */
     public void constructJSONGraph(String name) {
-        Node firstNode = findTaxNodeByName(name);
-        if (firstNode == null) {
-            System.out.println("name not found");
+        IndexHits<Node> foundNodes = findTaxNodeByName(name);
+        Node firstNode = null;
+        if (foundNodes.size() < 1) {
+            System.out.println(name + " not found");
             return;
+        } else if (foundNodes.size() > 2) {
+            System.out.println("multiple hits for " + name + " (homonym). not sure how to deal with this");
+            return;
+        } else {
+            for (Node n : foundNodes) {
+                firstNode = n;
+            }
         }
         System.out.println(firstNode.getProperty("name"));
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description().relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
@@ -239,7 +280,22 @@ public class TaxonomyExplorer extends TaxonomyBase {
 
     public void checkNamesInTree(String treefilename, String focalgroup) {
         PathFinder<Path> pf = GraphAlgoFactory.shortestPath(Traversal.pathExpanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING), 100);
-        Node focalnode = findTaxNodeByName(focalgroup);
+//        Node focalnode = findTaxNodeByName(focalgroup);
+        
+        IndexHits<Node> foundNodes = findTaxNodeByName(focalgroup);
+        Node focalnode = null;
+        if (foundNodes.size() < 1) {
+            System.out.println(focalgroup + " not found");
+            return;
+        } else if (foundNodes.size() > 2) {
+            System.out.println("multiple hits for " + focalgroup + " (homonym). not sure how to deal with this");
+            return;
+        } else {
+            for (Node n : foundNodes) {
+                focalnode = n;
+            }
+        }
+        
         String ts = "";
         try {
             BufferedReader br = new BufferedReader(new FileReader(treefilename));

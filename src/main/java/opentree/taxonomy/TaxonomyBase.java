@@ -46,8 +46,10 @@ public abstract class TaxonomyBase {
 	
 	/**
 	 * @return Checks graphNodeIndex for `name` and returns null (if the name is not found) or 
-	 *  the node using IndexHits<Node>.getSingle()
+	 * the node using IndexHits<Node>.getSingle()
 	 * helper function primarily written to avoid forgetting to call hits.close();
+	 * 
+	 * What is the 
 	 */
     Node findGraphNodeByName(final String name) {
         IndexHits<Node> hits = this.graphNodeIndex.get("name", name);
@@ -68,14 +70,18 @@ public abstract class TaxonomyBase {
     
 	/**
 	 * @return Checks taxNodeIndex for `name` and returns null (if the name is not found) or 
-	 *  the node using IndexHits<Node>.getSingle()
+	 * the node using IndexHits<Node>.getSingle()
 	 * helper function primarily written to avoid forgetting to call hits.close();
+	 *  
+	 * the benefit of doing this might be outweighed by the difficulty of dealing with all
+	 * potential macthes here, rather than having access to them all elsewhere. Not a problem
+	 * if we can return hits after it has been closed, but that seems like weird behavior.
 	 */
-    public Node findTaxNodeByName(final String name) {
+    public IndexHits<Node> findTaxNodeByName(final String name) {
         IndexHits<Node> hits = this.taxNodeIndex.get("name", name);
-		Node firstNode = hits.getSingle();
+//		Node firstNode = hits.getSingle();
 		hits.close();
-		return firstNode;
+		return hits;
 	}
 
 }
