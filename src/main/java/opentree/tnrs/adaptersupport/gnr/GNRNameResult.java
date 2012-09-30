@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class GNRNameResult implements Iterable<GNRMatch> {
+public class GNRNameResult implements Iterable<GNRHit> {
     public String supplied_name_string;
     public String supplied_id;
-    public List<GNRMatch> results = new ArrayList<GNRMatch>();
+    public List<GNRHit> results = new ArrayList<GNRHit>();
 
-    public Iterator<GNRMatch> iterator() {
+    public Iterator<GNRHit> iterator() {
         return results.iterator();
     }
 }

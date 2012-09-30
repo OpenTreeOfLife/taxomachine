@@ -7,7 +7,7 @@ import org.neo4j.graphdb.Node;
 
 import opentree.tnrs.TNRSHit;
 
-public class GNRMatch {
+public class GNRHit {
     public String data_source_id;
     public String gni_uuid;
     public String name_string;
