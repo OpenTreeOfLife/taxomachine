@@ -1,11 +1,16 @@
 package opentree.taxonomy;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
 
 import org.apache.log4j.PropertyConfigurator;
-import org.neo4j.graphdb.Node;
+import org.forester.io.parsers.PhylogenyParser;
+import org.forester.io.parsers.util.ParserUtils;
+import org.forester.phylogeny.Phylogeny;
+import org.forester.phylogeny.PhylogenyMethods;
 
 import opentree.tnrs.*;
+import opentree.tnrs.adapters.iplant.TNRSAdapteriPlant;
 
 //import org.apache.log4j.Logger;
 
@@ -16,16 +21,16 @@ public class MainRunner {
             System.out.println("arguments should be: filename sourcename graphdbfolder");
             return;
         }
-        
+
         String filename = args[1];
         String sourcename = args[2];
         String graphname = args[3];
         TaxonomyLoader tl = new TaxonomyLoader(graphname);
-        
+
         if (args[0].compareTo("inittax") == 0) {
             System.out.println("initializing taxonomy from " + filename + " to " + graphname);
             tl.addInitialTaxonomyTableIntoGraph(filename, sourcename);
-        
+
         } else if (args[0].compareTo("addtax") == 0) {
             if (args.length != 4) {
                 System.out.println("arguments should be: filename sourcename graphdbfolder");
@@ -49,18 +54,18 @@ public class MainRunner {
                 System.out.println("arguments should be: treefile focalgroup graphdbfolder");
                 return;
             }
-        
+
         } else if (args[0].equals("comptaxgraph")) {
             if (args.length != 4) {
                 System.out.println("arguments should be: comptaxgraph query graphdbfolder outfile");
                 return;
             }
-        
+
         } else if (args.length != 3) {
             System.out.println("arguments should be: query graphdbfolder");
             return;
         }
-        
+
         TaxonomyExplorer te = null;
 
         if (args[0].compareTo("comptaxtree") == 0) {
@@ -69,21 +74,21 @@ public class MainRunner {
             te = new TaxonomyExplorer(graphname);
             System.out.println("constructing a comprehensive tax tree of " + query);
             te.buildTaxonomyTree(query);
-        
+
         } else if (args[0].compareTo("comptaxgraph") == 0) {
             String query = args[1];
             String graphname = args[2];
             String outname = args[3];
             te = new TaxonomyExplorer(graphname);
             te.exportGraphForClade(query, outname);
-        
+
         } else if (args[0].compareTo("findcycles") == 0) {
             String query = args[1];
             String graphname = args[2];
             te = new TaxonomyExplorer(graphname);
             System.out.println("finding taxonomic cycles for " + query);
             te.findTaxonomyCycles(query);
-        
+
         } else if (args[0].compareTo("jsgraph") == 0) {
             String query = args[1];
             String graphname = args[2];
@@ -109,29 +114,49 @@ public class MainRunner {
     }
 
     public void parseTNRSRequest(String args[]) {
+        String graphName = args[2];
+        TNRSQuery tnrs = new TNRSQuery(graphName);
+        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
+        TNRSMatchSet results = null;
+        
         if (args[0].compareTo("tnrsbasic") == 0) {
-            String[] searchStrings = args[1].split("\\s*\\,\\s*");
-            String graphName = args[2];
-    
-            TNRSQuery tnrs = new TNRSQuery(graphName);
-            TNRSMatchSet results = tnrs.getMatches(searchStrings, tnrs.IPLANT);
-    
-            for (TNRSMatch m : results) {
-                System.out.println(m.toString());
-            }
             
-            System.out.println("\nNames that could not be matched:");
-            for (String name : tnrs.getUnmatchedNames()) {
-                System.out.println(name);
+            // TODO: use MRCA of all provided names as query context
+            String[] searchStrings = args[1].split("\\s*\\,\\s*");
+            results = tnrs.getMatches(searchStrings, iplant);
+            
+        } else if (args[0].compareTo("tnrstree") == 0) {
+
+            // read in the treefile
+            final File treefile = new File(args[1]);
+            PhylogenyParser parser = null;
+            try {
+                parser = ParserUtils.createParserDependingOnFileType(treefile, true);
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+            Phylogeny[] phys = null;
+            try {
+                phys = PhylogenyMethods.readPhylogenies(parser, treefile);
+            } catch (final IOException e) {
+                e.printStackTrace();
             }
 
-/*        } else if (args[0].compareTo("testfuzzy") == 0) {
-            TaxonomyExplorer taxonomy = new TaxonomyExplorer(args[2]);
-            ArrayList<Node> found = taxonomy.findTaxNodeByNameFuzzy(args[1]);
-            for (Node n : found) {
-                System.out.println(n.getProperty("name"));
-            } */
+            // search for the names
+            String[] treeTipNames = phys[0].getAllExternalNodeNames();
+            results = tnrs.getMatches(treeTipNames, iplant);
+            
         }
+        
+        for (TNRSMatch m : results) {
+            System.out.println(m.toString());
+        }
+
+        System.out.println("\nNames that could not be matched:");
+        for (String name : tnrs.getUnmatchedNames()) {
+            System.out.println(name);
+        }
+
     }
 
     public static void printHelp() {
@@ -150,7 +175,8 @@ public class MainRunner {
         System.out.println("\tjsgraph <name> <graphdbfolder> (constructs a json file from tax graph)");
         System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
         System.out.println("---taxonomic name resolution services---");
-        System.out.println("\ttnrsbasic <queryname> <graphdbfolder> (check if the taxonomy graph contains queryname)");
+        System.out.println("\ttnrsbasic <querynames> <graphdbfolder> (check if the taxonomy graph contains comma-delimited names)");
+        System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)");
     }
 
     /**
@@ -159,11 +185,11 @@ public class MainRunner {
     public static void main(String[] args) {
         PropertyConfigurator.configure(System.getProperties());
         System.out.println("taxomachine version alpha.alpha.prealpha");
-        
+
         if (args.length < 2) {
             printHelp();
             System.exit(1);
-        
+
         } else if (args[0] == "help") {
             printHelp();
             System.exit(0);
@@ -180,7 +206,7 @@ public class MainRunner {
             } else if (args[0].compareTo("comptaxtree") == 0 || args[0].compareTo("comptaxgraph") == 0 || args[0].compareTo("findcycles") == 0
                     || args[0].compareTo("jsgraph") == 0 || args[0].compareTo("checktree") == 0) {
                 mr.taxonomyQueryParser(args);
-            } else if (args[0].compareTo("tnrsbasic") == 0 || args[0].compareTo("testfuzzy") == 0) {
+            } else if (args[0].compareTo("tnrsbasic") == 0 || args[0].compareTo("tnrstree") == 0) {
                 mr.parseTNRSRequest(args);
             } else {
                 System.err.println("Unrecognized command \"" + args[0] + "\"");

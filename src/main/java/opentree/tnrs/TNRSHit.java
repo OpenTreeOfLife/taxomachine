@@ -5,6 +5,14 @@ import java.util.Map;
 
 import org.neo4j.graphdb.Node;
 
+/**
+ * TNRSHit objects are mutable precursors to TNRSMatch objects. They are intended to be used as organizational containers, which temporarily hold
+ * information about matches, and they can be passed to the TNRSMatchSet method addMatch() in order to an actual TNRSMatch object to the set. They
+ * should not be used for other purposes.
+ * 
+ * @author Cody Hinchliff
+ *
+ */
 public class TNRSHit {
 
     Node _matchedNode = null;

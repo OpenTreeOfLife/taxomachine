@@ -2,6 +2,13 @@ package opentree.tnrs;
 
 import org.neo4j.graphdb.Node;
 
+/**
+ * A TNRSMatch object represents a validated hit for some query string to a recognized name or synonym in some source, and as such they
+ * contain relevant metadata for the represented match. TNRSMatch objects are returned by various methods of the TNRSMatchSet objects
+ * that contain them, and are immutable, as they represent external database records that cannot be changed except by external means.
+ * @author Cody Hinchliff
+ *
+ */
 public abstract class TNRSMatch {
 
     public abstract String getSearchString();

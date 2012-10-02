@@ -11,10 +11,8 @@ import opentree.taxonomy.TaxonomyExplorer;
 /**
  * @author Cody Hinchliff
  * 
- * A set of matches for a single query.  simple container to hold results;
- * essentially a wrapper for an ArrayList of TNRSMatch objects that represent
- * individual matches to the search string. Implements useful procedures like
- * finding the best match, specialized sorting (e.g. by type of result), etc.
+ * A set of matches resulting from a single TNRS query (which may have contained many names). These are simple containers to hold results, which
+ * they provide access to in the form of TNRSMatch objects representing individual hits for a given search string to some recognized name or synonym.
  *
  */
 public class TNRSMatchSet implements Iterable<TNRSMatch> {
@@ -29,25 +27,38 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         _graphFilename = graphFilename;
     }
     
+    /**
+     * @return the number of matches in the set
+     */
     public int length() {
         return _matches.size();
     }
 
+    /**
+     * @return the name of the queried graph
+     */
     public String getGraphFilename() {
         return _graphFilename;
     }
-    
+
+    /**
+     * @return an iterator of TNRSMatch objects containing all the matches in this set
+     */
     public Iterator<TNRSMatch> iterator() {
         return _matches.iterator();
     }
-        
+
+    /**
+     * Adds a match to the set, using the data within by the passed TNRSHit object.
+     * @param TNRSHit to be added
+     */
     public void addMatch(TNRSHit m) {
         Match match = new Match(m);
         _matches.add(match);
     }
         
     /**
-     * An abstract container type to hold results from TNRS searches.
+     * An internal container compatible with the TNRSMatch specification.
      */
     private class Match extends TNRSMatch {
 
@@ -76,26 +87,44 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             _otherData = (HashMap<String,String>)m.getOtherData();
         }
         
+        /**
+         * @return the original search string which produced this match
+         */
         public String getSearchString() {
             return _searchString;
         }
         
+        /**
+         * @return the graph database id of node to which this match points
+         */
         public long getMatchedNodeId() {
             return _matchedNode.getId();
         }
 
+        /**
+         * @return the name of the graph node to which this match points
+         */
         public String getMatchedNodeName() {
             return _matchedNode.getProperty("name").toString();
         }
         
+        /**
+         * @return the Neo4j Node object for the recognized name to which this graph points
+         */
         public Node getMatchedNode() {
             return _matchedNode;
         }
         
+        /**
+         * @return the TNRS source that produced this match
+         */
         public String getSource() {
             return _sourceName;
         }
         
+        /**
+         * @return a textual description of the type of match this is
+         */
         public String getMatchType() {
             String desc = "";
             
