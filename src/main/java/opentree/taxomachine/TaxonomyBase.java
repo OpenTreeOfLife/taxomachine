@@ -1,4 +1,4 @@
-package opentree.taxonomy;
+package opentree.taxomachine;
 
 import java.util.ArrayList;
 
@@ -23,9 +23,8 @@ public abstract class TaxonomyBase {
 	protected static enum RelTypes implements RelationshipType{
 		MRCACHILDOF, //standard rel for graph db, from node to parent
 		TAXCHILDOF, //standard rel for tax db, from node to parent
-		STREECHILDOF, //standard rel for input tree, from node to parent
-		PREFTAXCHILDOF, //relationship type for preferred relationships
-		ISCALLED // is called ,from node in graph of life to node in tax graph
+		STREECHILDOF, //standard rel for input tree, from node to parent  
+		ISCALLED // is called ,from node in graph of life to node in tax graph 
 	}
 	
 	protected static void registerShutdownHook( final EmbeddedGraphDatabase graphDb ){ //was GraphDatabaseService

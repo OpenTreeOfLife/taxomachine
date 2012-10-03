@@ -1,4 +1,4 @@
-package opentree.taxonomy;
+package opentree.taxomachine;
 
 import java.io.File;
 import java.io.IOException;
@@ -142,6 +142,9 @@ public class MainRunner {
                 e.printStackTrace();
             }
 
+            // TODO: use MRCA of tree as query context
+            // TODO: use tree structure to help differentiate homonyms
+            
             // search for the names
             String[] treeTipNames = phys[0].getAllExternalNodeNames();
             results = tnrs.getMatches(treeTipNames, iplant);

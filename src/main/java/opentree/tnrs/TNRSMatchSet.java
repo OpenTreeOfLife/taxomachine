@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import opentree.taxonomy.TaxonomyExplorer;
+import opentree.taxomachine.TaxonomyExplorer;
 
 /**
  * @author Cody Hinchliff

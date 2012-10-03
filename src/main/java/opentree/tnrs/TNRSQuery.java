@@ -3,7 +3,7 @@ package opentree.tnrs;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import opentree.taxonomy.TaxonomyExplorer;
+import opentree.taxomachine.TaxonomyExplorer;
 
 import org.forester.io.parsers.FastaParser;
 import org.neo4j.graphdb.Node;
@@ -12,7 +12,7 @@ import org.neo4j.graphdb.index.IndexHits;
 /**
  * @author Cody Hinchliff
  * 
- *         Provides methods for performing TNRS queries given a search string according to various options.
+ *         Provides methods and various options for performing TNRS queries.
  */
 
 public class TNRSQuery {
@@ -67,14 +67,14 @@ public class TNRSQuery {
                             setMatchedNode(n).
                             setSearchString(thisName).
                             setIsExactNode(true).
-                            setIsHomonym(isHomonym)
-                            .setSourceName("ottol"));
+                            setIsHomonym(isHomonym).
+                            setSourceName("ottol"));
                 }
                 _matchedNames.put(thisName, true);
                 continue; // no need to look at other options
             }
 
-            // TODO: second: try direct matches to synonyms. if we find a hit, we're done
+            // TODO: second: try direct matches to synonyms
             // make sure we don't try to match names twice
             // (need to interface with stephen about synonyms)
 

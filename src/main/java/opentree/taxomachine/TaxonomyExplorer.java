@@ -1,4 +1,4 @@
-package opentree.taxonomy;
+package opentree.taxomachine;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
