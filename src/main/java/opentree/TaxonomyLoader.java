@@ -1,4 +1,5 @@
-package opentree.taxomachine;
+package opentree;
+
 
 
 import org.neo4j.graphdb.*;

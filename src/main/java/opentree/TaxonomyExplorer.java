@@ -68,9 +68,17 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	 * @todo support other graph file formats
 	 */
 	public void exportGraphForClade(String clade_name, String out_filepath){
-		Node firstNode = findTaxNodeByName(clade_name);
-		if (firstNode == null){
+		IndexHits<Node> foundNodes = findTaxNodeByName(clade_name);
+		Node firstNode = null;
+		if (foundNodes.size() < 1) {
+            System.out.println("name '" + clade_name + "' not found. quitting.");
 			return;
+		} else if (foundNodes.size() > 1) {
+		    System.out.println("more than one node found for name '" + clade_name + "'not sure how to deal with this. quitting");
+		} else {
+		    for (Node n : foundNodes) {
+		        firstNode = n;
+		    }
 		}
 		//TraversalDescription CHILDOF_TRAVERSAL = Traversal.description().relationships(RelTypes.TAXCHILDOF,Direction.INCOMING );
 		PrintWriter out_file;
@@ -127,12 +135,18 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	 * that is written
 	 */
 	public void buildTaxonomyTree(String name){
-		Node firstNode = findTaxNodeByName(name);
-		if (firstNode == null){
-			System.out.println("name not found");
-			return;
-		}
-		TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+        IndexHits<Node> foundNodes = findTaxNodeByName(name);
+        Node firstNode = null;
+        if (foundNodes.size() < 1){
+            System.out.println("name '" + name + "' not found. quitting.");
+            return;
+        } else if (foundNodes.size() > 1) {
+            System.out.println("more than one node found for name '" + name + "'not sure how to deal with this. quitting");
+        } else {
+            for (Node n : foundNodes)
+                firstNode = n;
+        }
+        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 		        .relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
 		System.out.println(firstNode.getProperty("name"));
 		JadeNode root = new JadeNode();
@@ -172,11 +186,17 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	 * Given a Taxonomic name (as name), this will attempt to find cycles which should be conflicting taxonomies
 	 */
 	public void findTaxonomyCycles(String name){
-		Node firstNode = findTaxNodeByName(name);
-		if (firstNode == null){
-			System.out.println("name not found");
-			return;
-		}
+	    IndexHits<Node> foundNodes = findTaxNodeByName(name);
+        Node firstNode = null;
+        if (foundNodes.size() < 1){
+            System.out.println("name '" + name + "' not found. quitting.");
+            return;
+        } else if (foundNodes.size() > 1) {
+            System.out.println("more than one node found for name '" + name + "'not sure how to deal with this. quitting");
+        } else {
+            for (Node n : foundNodes)
+                firstNode = n;
+        }
 		TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 		        .relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
 		System.out.println(firstNode.getProperty("name"));
@@ -207,11 +227,17 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	 * given a taxonomic name, construct a json object of the graph surrounding that name
 	 */
 	public void constructJSONGraph(String name){
-		Node firstNode = findTaxNodeByName(name);
-		if(firstNode == null){
-			System.out.println("name not found");
-			return;
-		}
+	    IndexHits<Node> foundNodes = findTaxNodeByName(name);
+        Node firstNode = null;
+        if (foundNodes.size() < 1){
+            System.out.println("name '" + name + "' not found. quitting.");
+            return;
+        } else if (foundNodes.size() > 1) {
+            System.out.println("more than one node found for name '" + name + "'not sure how to deal with this. quitting");
+        } else {
+            for (Node n : foundNodes)
+                firstNode = n;
+        }
 		System.out.println(firstNode.getProperty("name"));
 		TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 		        .relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
@@ -415,7 +441,17 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	
 	public void checkNamesInTree(String treefilename,String focalgroup){
 		PathFinder <Path> pf = GraphAlgoFactory.shortestPath(Traversal.pathExpanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING), 100);
-		Node focalnode = findTaxNodeByName(focalgroup);
+		IndexHits<Node> foundNodes = findTaxNodeByName(focalgroup);
+        Node focalnode = null;
+        if (foundNodes.size() < 1){
+            System.out.println("name '" + focalgroup + "' not found. quitting.");
+            return;
+        } else if (foundNodes.size() > 1) {
+            System.out.println("more than one node found for name '" + focalgroup + "'not sure how to deal with this. quitting");
+        } else {
+            for (Node n : foundNodes)
+                focalnode = n;
+        }
 		String ts = "";
 		try{
 			BufferedReader br = new BufferedReader(new FileReader(treefilename));
@@ -448,11 +484,18 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	 */
 	public void makePreferredOTTOLRelationshipsConflicts(){
 		Transaction tx;
-		Node firstNode = findTaxNodeByName("life");
-		if (firstNode == null){
-			System.out.println("name not found");
-			return;
-		}
+		String name = "life";
+		IndexHits<Node> foundNodes = findTaxNodeByName(name);
+        Node firstNode = null;
+        if (foundNodes.size() < 1){
+            System.out.println("name '" + name + "' not found. quitting.");
+            return;
+        } else if (foundNodes.size() > 1) {
+            System.out.println("more than one node found for name '" + name + "'not sure how to deal with this. quitting");
+        } else {
+            for (Node n : foundNodes)
+                firstNode = n;
+        }
 		TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 				.relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
 		System.out.println(firstNode.getProperty("name"));
@@ -500,11 +543,18 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	
 	public void makePreferredOTTOLRelationshipsNOConflicts(){
 		Transaction tx;
-		Node firstNode = findTaxNodeByName("life");
-		if (firstNode == null){
-			System.out.println("name not found");
-			return;
-		}
+		String name = "life";
+		IndexHits<Node> foundNodes = findTaxNodeByName(name);
+        Node firstNode = null;
+        if (foundNodes.size() < 1){
+            System.out.println("name '" + name + "' not found. quitting.");
+            return;
+        } else if (foundNodes.size() > 1) {
+            System.out.println("more than one node found for name '" + name + "'not sure how to deal with this. quitting");
+        } else {
+            for (Node n : foundNodes)
+                firstNode = n;
+        }
 		TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 				.relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
 		System.out.println(firstNode.getProperty("name"));

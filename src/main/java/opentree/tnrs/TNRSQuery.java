@@ -3,7 +3,7 @@ package opentree.tnrs;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import opentree.taxomachine.TaxonomyExplorer;
+import opentree.TaxonomyExplorer;
 
 import org.forester.io.parsers.FastaParser;
 import org.neo4j.graphdb.Node;

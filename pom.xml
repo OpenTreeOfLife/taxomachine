@@ -97,7 +97,7 @@
             <configuration>
                 <archive>
                     <manifest>
-                        <mainClass>opentree.taxonomy.MainRunner</mainClass>
+                        <mainClass>opentree.MainRunner</mainClass>
                     </manifest>
                 </archive>
                 <descriptorRefs>

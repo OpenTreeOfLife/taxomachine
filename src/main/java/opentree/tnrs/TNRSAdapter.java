@@ -2,7 +2,7 @@ package opentree.tnrs;
 
 import java.util.Set;
 
-import opentree.taxomachine.TaxonomyExplorer;
+import opentree.TaxonomyExplorer;
 
 /**
  * This abstract class just defines the basic API for TNRS adapters, so that they will work with the TNRSQuery

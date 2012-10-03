@@ -9,7 +9,7 @@ import java.util.Set;
 
 import javax.net.ssl.SSLException;
 
-import opentree.taxomachine.TaxonomyExplorer;
+import opentree.TaxonomyExplorer;
 import opentree.tnrs.TNRSAdapter;
 import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatchSet;
