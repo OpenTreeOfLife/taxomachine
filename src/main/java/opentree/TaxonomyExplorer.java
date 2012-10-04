@@ -32,7 +32,6 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
 
-
 @SuppressWarnings("deprecation")
 public class TaxonomyExplorer extends TaxonomyBase{
 	private SpeciesEvaluator se;
@@ -46,24 +45,22 @@ public class TaxonomyExplorer extends TaxonomyBase{
 		se = new SpeciesEvaluator();
 	}
 	
-	
-	public void setEmbeddedDB(String graphname){
-		graphDb = new EmbeddedGraphDatabase( graphname ) ;
-		taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
-		graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
-	}
-
-	public void setDbService(GraphDatabaseService graphDb) {
-        taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
-        graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
-    }
-	
 	public TaxonomyExplorer(String graphname){
 		graphDb = new EmbeddedGraphDatabase( graphname );
 		taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
 		graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
 	}
-	
+  
+    public void setEmbeddedDB(String graphname){
+        graphDb = new EmbeddedGraphDatabase( graphname ) ;
+        taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
+        graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
+    }
+
+    public void setDbService(GraphDatabaseService graphDb) {
+        taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
+        graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
+    }
 	
 	/**
 	 * Writes a dot file for the taxonomy graph that is rooted at `clade_name`

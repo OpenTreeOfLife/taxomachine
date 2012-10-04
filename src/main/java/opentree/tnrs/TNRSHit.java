@@ -15,19 +15,28 @@ import org.neo4j.graphdb.Node;
  */
 public class TNRSHit {
 
-    Node _matchedNode = null;
-    Node _synonymNode = null;
-    String _searchString = "";
-    String _sourceName = "";
-    boolean _isHomonym = false;
-    boolean _isExactNode = false;
-    boolean _isApprox = false;
-    boolean _isSynonym = false;
-    HashMap<String,String> _otherData = null;
-    double _score = Double.POSITIVE_INFINITY;
+    Node _matchedNode;
+    Node _synonymNode;
+    String _searchString;
+    String _sourceName;
+    boolean _isHomonym;
+    boolean _isExactNode;
+    boolean _isApprox;
+    boolean _isSynonym;
+    HashMap<String,String> _otherData;
+    double _score;
 
     public TNRSHit() {
-        // empty constructor
+        _matchedNode = null;
+        _synonymNode = null;
+        _searchString = "";
+        _sourceName = "";
+        _isHomonym = false;
+        _isExactNode = false;
+        _isApprox = false;
+        _isSynonym = false;
+        _otherData = null;
+        _score = -1;
     }
     
     public TNRSHit setMatchedNode(Node matchedNode) {

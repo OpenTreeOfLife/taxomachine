@@ -67,7 +67,8 @@ public class TNRSQuery {
                             setSearchString(thisName).
                             setIsExactNode(true).
                             setIsHomonym(isHomonym).
-                            setSourceName("ottol"));
+                            setSourceName("ottol").
+                            setScore(1));
                 }
                 _matchedNames.put(thisName, true);
                 continue; // no need to look at other options

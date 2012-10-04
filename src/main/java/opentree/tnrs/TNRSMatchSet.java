@@ -104,11 +104,39 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             return _matchedNode;
         }
         
+        public long getSynonymNodeId() {
+            return _synonymNode.getId();
+        }
+
+        public String getSynonymNodeName() {
+            return _synonymNode.getProperty("name").toString();
+        }
+        
         /**
          * @return the TNRS source that produced this match
          */
         public String getSource() {
             return _sourceName;
+        }
+
+        public boolean getIsExactNode() {
+            return _isExactNode;
+        }
+
+        public boolean getIsApproximate() {
+            return _isApprox;
+        }
+
+        public boolean getIsSynonym() {
+            return _isSynonym;
+        }
+
+        public boolean getIsHomonym() {
+            return _isHomonym;
+        }
+
+        public double getScore() {
+            return _score;
         }
         
         /**

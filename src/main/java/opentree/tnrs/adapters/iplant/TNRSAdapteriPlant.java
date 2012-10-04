@@ -43,7 +43,7 @@ import org.neo4j.graphdb.index.IndexHits;
 public class TNRSAdapteriPlant extends TNRSAdapter {
 
     private static final long RETRY_INTERVAL = 1000L;
-    private static final long MAX_TIME = 30000L;
+    private static final long MAX_TIME = 10000L;
     private static final double TEMP_SCORE = 0.5;
 
     private static final String submiturl = "http://api.phylotastic.org/tnrs/submit";
