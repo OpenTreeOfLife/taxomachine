@@ -16,27 +16,18 @@ import java.util.List;
 public class TNRSMatchSet implements Iterable<TNRSMatch> {
     
     private List<TNRSMatch> _matches;
-    private String _graphFilename;
 
     // TODO: add sort features
 
-    public TNRSMatchSet(String graphFilename) {
+    public TNRSMatchSet() {
         _matches = new ArrayList<TNRSMatch>();
-        _graphFilename = graphFilename;
     }
     
     /**
      * @return the number of matches in the set
      */
-    public int length() {
+    public int size() {
         return _matches.size();
-    }
-
-    /**
-     * @return the name of the queried graph
-     */
-    public String getGraphFilename() {
-        return _graphFilename;
     }
 
     /**
@@ -148,8 +139,8 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
         @Override
         public String toString() {
-            return "Query '" + _searchString + "' matched by " + _sourceName + " to " + _matchedNode.getProperty("name") + " (id=" +
-                    _matchedNode.getId() + ") in " + TNRSMatchSet.this.getGraphFilename() + " (" + getMatchType() + ")";
+            return "Query '" + _searchString + "' matched by " + _sourceName + " to " + _matchedNode.getProperty("name") + "; id=" +
+                    _matchedNode.getId() + ". (" + getMatchType() + ")";
         }
     }
 }

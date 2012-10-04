@@ -5,7 +5,6 @@ import java.util.HashSet;
 
 import opentree.TaxonomyExplorer;
 
-import org.forester.io.parsers.FastaParser;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
 
@@ -19,15 +18,15 @@ public class TNRSQuery {
 
     private static final double TEMP_SCORE = 0.5;
 
-    private String _graphName;
+//    private String _graphName;
     private TaxonomyExplorer _taxonomy;
     private TNRSMatchSet _results;
     private HashSet<String> _unmatchedNames;
     private HashMap<String, Boolean> _matchedNames;
 
-    public TNRSQuery(String graphName) {
-        _graphName = graphName;
-        _taxonomy = new TaxonomyExplorer(_graphName);
+    public TNRSQuery(TaxonomyExplorer taxonomy) {
+//        _graphName = graphName;
+        _taxonomy = taxonomy;
         _matchedNames = new HashMap<String, Boolean>();
     }
 
@@ -41,7 +40,7 @@ public class TNRSQuery {
      *         performed against the local taxonomy graph.
      */
     public TNRSMatchSet getMatches(String[] searchStrings, TNRSAdapter... adapters) {
-        _results = new TNRSMatchSet(_graphName);
+        _results = new TNRSMatchSet();
         _unmatchedNames = new HashSet<String>();
 
         for (int i = 0; i < searchStrings.length; i++) {

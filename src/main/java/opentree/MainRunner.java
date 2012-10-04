@@ -1,5 +1,9 @@
 package opentree;
 
+import jade.tree.JadeTree;
+import jade.tree.TreeObject;
+import jade.tree.TreeReader;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -10,10 +14,6 @@ import opentree.tnrs.adapters.iplant.TNRSAdapteriPlant;
 
 //import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.forester.io.parsers.PhylogenyParser;
-import org.forester.io.parsers.util.ParserUtils;
-import org.forester.phylogeny.Phylogeny;
-import org.forester.phylogeny.PhylogenyMethods;
 
 public class MainRunner {
 	public void taxonomyLoadParser(String [] args){
@@ -114,7 +114,8 @@ public class MainRunner {
 
     public void parseTNRSRequest(String args[]) {
         String graphName = args[2];
-        TNRSQuery tnrs = new TNRSQuery(graphName);
+        TaxonomyExplorer taxonomy = new TaxonomyExplorer(graphName);
+        TNRSQuery tnrs = new TNRSQuery(taxonomy);
         TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
         TNRSMatchSet results = null;
         
@@ -126,27 +127,18 @@ public class MainRunner {
             
         } else if (args[0].compareTo("tnrstree") == 0) {
 
-            // read in the treefile
-            final File treefile = new File(args[1]);
-            PhylogenyParser parser = null;
-            try {
-                parser = ParserUtils.createParserDependingOnFileType(treefile, true);
-            } catch (final IOException e) {
-                e.printStackTrace();
-            }
-            Phylogeny[] phys = null;
-            try {
-                phys = PhylogenyMethods.readPhylogenies(parser, treefile);
-            } catch (final IOException e) {
-                e.printStackTrace();
-            }
+            System.out.println("not implemented");
+/*
+            TreeReader treeReader = new TreeReader();
+            JadeTree tree = treeReader.readTree(args[1]);
+
+            String[] treeTipNames = null; // get external node names from jade tree
 
             // TODO: use MRCA of tree as query context
             // TODO: use tree structure to help differentiate homonyms
             
             // search for the names
-            String[] treeTipNames = phys[0].getAllExternalNodeNames();
-            results = tnrs.getMatches(treeTipNames, iplant);
+            results = tnrs.getMatches(treeTipNames, iplant); */
             
         }
         

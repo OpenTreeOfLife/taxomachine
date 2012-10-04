@@ -17,6 +17,7 @@ import opentree.TaxonomyBase.RelTypes;
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.RelationshipType;
@@ -51,6 +52,11 @@ public class TaxonomyExplorer extends TaxonomyBase{
 		taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
 		graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
 	}
+
+	public void setDbService(GraphDatabaseService graphDb) {
+        taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
+        graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
+    }
 	
 	public TaxonomyExplorer(String graphname){
 		graphDb = new EmbeddedGraphDatabase( graphname );
