@@ -9,7 +9,7 @@ public class MainRunner {
 		String synonymfile = "";
 		if(args[0].equals("inittax") || args[0].equals("addtax")){
 			if(args.length !=  4){
-				System.out.println("arguments should be: sourcename filename synonymfile graphdbfolder");
+				System.out.println("arguments should be: sourcename filename graphdbfolder");
 				return;
 			}else{
 				graphname = args[3];
@@ -29,16 +29,16 @@ public class MainRunner {
 		TaxonomyLoader tl = new TaxonomyLoader(graphname);
 		if (args[0].compareTo("inittax") == 0){
 			System.out.println("initializing taxonomy from "+filename+" to "+graphname);
-			tl.addInitialTaxonomyTableIntoGraph(sourcename,filename,synonymfile);
+			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
 		}else if(args[0].compareTo("addtax") == 0){
 			System.out.println("adding taxonomy from "+filename+" to "+graphname);
-			tl.addAdditionalTaxonomyTableIntoGraph(sourcename, filename, synonymfile);
+			tl.addAdditionalTaxonomyToGraph(sourcename, filename, synonymfile);
 		}else if (args[0].equals("inittaxsyn")){
 			System.out.println("initializing taxonomy from "+filename+" and synonym file "+synonymfile+" to "+graphname);
-			tl.addInitialTaxonomyTableIntoGraph(sourcename,filename,synonymfile);
+			tl.addAdditionalTaxonomyToGraph(sourcename,filename,synonymfile);
 		}else if(args[0].equals("addtaxsyn")){
 			System.out.println("adding taxonomy from "+filename+"and synonym file "+synonymfile+" to "+graphname);
-			tl.addAdditionalTaxonomyTableIntoGraph(sourcename,filename,synonymfile);
+			tl.addAdditionalTaxonomyToGraph(sourcename,filename,synonymfile);
 		}else{
 			System.err.println("ERROR: not a known command");
 			tl.shutdownDB();

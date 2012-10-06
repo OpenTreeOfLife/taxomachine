@@ -2,6 +2,7 @@ package opentree;
 
 
 import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.*;
@@ -30,24 +31,36 @@ public class TaxonomyLoader extends TaxonomyBase{
 	 */
 	public TaxonomyLoader(String graphname){
 		graphDb = new EmbeddedGraphDatabase( graphname );
-		taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
+		taxNodeIndex = graphDb.index().forNodes( "taxNodes" );
+		prefTaxNodeIndex = graphDb.index().forNodes("prefTaxNodes");
+		prefSynNodeIndex = graphDb.index().forNodes("prefSynNodes");
+		synNodeIndex = graphDb.index().forNodes("synNodes");
+		taxSourceIndex = graphDb.index().forNodes("taxSources");
 	}
 	
 	
 	/**
 	 * Reads a taxonomy file with rows formatted as:
-	 *	taxon_id,parent_id,Name with spaces allowed\n
-	 * Creates the nodes and TAXCHILDOF relationship for a taxonomy tree
-	 * Node objects will get a "name" property.
-	 * The relationships will get "source", "childid", and "parentid" properties
-	 * Nodes are indexed in taxNamedNodes with their name as the value for a "name" key.
+	 *	taxon_id\t|\tparent_id\t|\tName with spaces allowed\n
+	 *
+	 * Creates nodes and TAXCHILDOF relationships for each line.
+	 * Nodes get a "name" property. Relationships get "source", "childid", "parentid" properties.
+	 * 
+	 * Nodes are indexed in taxNames "name" key and id value.
+	 * 
+	 * A metadata node is created to point to the root
+	 * 
+	 * The line that has no parent will be the root of this tree
 	 * 
 	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
 	 * @param filename file path to the taxonomy file
 	 * @param synonymfile file that holds the synonym
 	 */
-	public void addInitialTaxonomyTableIntoGraph(String sourcename, String filename, String synonymfile){
+	public void initializeTaxonomyIntoGraph(String sourcename, String filename, String synonymfile){
 		String str = "";
+		boolean synFileExists = false;
+		if(synonymfile.length()>0)
+			synFileExists = true;
 		int count = 0;
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
@@ -249,7 +262,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 	 * @param filename file path to the taxonomy file
 	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
 	 */
-	public void addAdditionalTaxonomyTableIntoGraph(String sourcename, String filename, String synonymfile){
+	public void addAdditionalTaxonomyToGraph(String sourcename, String filename, String synonymfile){
 		String str = "";
 		int count = 0;
 		HashMap<String, String> ndnames = new HashMap<String, String>(); // node number -> name
