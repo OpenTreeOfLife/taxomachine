@@ -42,10 +42,11 @@ public class TaxonomyLoader extends TaxonomyBase{
 	 * The relationships will get "source", "childid", and "parentid" properties
 	 * Nodes are indexed in taxNamedNodes with their name as the value for a "name" key.
 	 * 
-	 * @param filename file path to the taxonomy file
 	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
+	 * @param filename file path to the taxonomy file
+	 * @param synonymfile file that holds the synonym
 	 */
-	public void addInitialTaxonomyTableIntoGraph(String filename, String sourcename){
+	public void addInitialTaxonomyTableIntoGraph(String sourcename, String filename, String synonymfile){
 		String str = "";
 		int count = 0;
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
@@ -74,7 +75,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 					tx = graphDb.beginTx();
 					try{
 						for(int i=0;i<templines.size();i++){
-							String[] spls = templines.get(i).split(",");
+							String[] spls = templines.get(i).split("\t|\t");
 							if (spls[1].length() > 0){
 								Node tnode = graphDb.createNode();
 								tnode.setProperty("name", spls[2]);
@@ -94,7 +95,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 			tx = graphDb.beginTx();
 			try{
 				for(int i=0;i<templines.size();i++){
-					String[] spls = templines.get(i).split(",");
+					String[] spls = templines.get(i).split("\t|");
 					count += 1;
 					if (spls[1].length() > 0){
 						Node tnode = graphDb.createNode();
@@ -248,7 +249,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 	 * @param filename file path to the taxonomy file
 	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
 	 */
-	public void addAdditionalTaxonomyTableIntoGraph(String filename,String sourcename){
+	public void addAdditionalTaxonomyTableIntoGraph(String sourcename, String filename, String synonymfile){
 		String str = "";
 		int count = 0;
 		HashMap<String, String> ndnames = new HashMap<String, String>(); // node number -> name
@@ -585,11 +586,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 	}
 	
 	public void runittest(String filename,String filename2){
-		System.out.println("adding initial taxonomy");
-		addInitialTaxonomyTableIntoGraph(filename,"test");
-		System.out.println("adding additional taxonomies");
-		addAdditionalTaxonomyTableIntoGraph(filename2,"test");
-		shutdownDB();
+
 	}
 	
 	public static void main( String[] args ){

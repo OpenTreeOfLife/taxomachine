@@ -5,24 +5,40 @@ import org.apache.log4j.PropertyConfigurator;
 
 public class MainRunner {
 	public void taxonomyLoadParser(String [] args){
-		if(args.length < 4){
-			System.out.println("arguments should be: filename sourcename graphdbfolder");
-			return;
+		String graphname = "";
+		String synonymfile = "";
+		if(args[0].equals("inittax") || args[0].equals("addtax")){
+			if(args.length !=  4){
+				System.out.println("arguments should be: sourcename filename synonymfile graphdbfolder");
+				return;
+			}else{
+				graphname = args[3];
+			}
+		}else if(args[0].equals("inittaxsyn") || args[0].equals("addtaxsyn")){
+			if(args.length!= 5){
+				System.out.println("arguments should be: sourcename filename synonymfile graphdbfolder");
+				return;
+			}else{
+				synonymfile = args[3];
+				graphname = args[4];
+			}
+		
 		}
-		String filename = args[1];
-		String sourcename = args[2];
-		String graphname = args[3] ;
+		String sourcename = args[1];
+		String filename = args[2];
 		TaxonomyLoader tl = new TaxonomyLoader(graphname);
 		if (args[0].compareTo("inittax") == 0){
 			System.out.println("initializing taxonomy from "+filename+" to "+graphname);
-			tl.addInitialTaxonomyTableIntoGraph(filename, sourcename);
+			tl.addInitialTaxonomyTableIntoGraph(sourcename,filename,synonymfile);
 		}else if(args[0].compareTo("addtax") == 0){
-			if(args.length != 4){
-				System.out.println("arguments should be: filename sourcename graphdbfolder");
-				return;
-			}
 			System.out.println("adding taxonomy from "+filename+" to "+graphname);
-			tl.addAdditionalTaxonomyTableIntoGraph(filename,sourcename);
+			tl.addAdditionalTaxonomyTableIntoGraph(sourcename, filename, synonymfile);
+		}else if (args[0].equals("inittaxsyn")){
+			System.out.println("initializing taxonomy from "+filename+" and synonym file "+synonymfile+" to "+graphname);
+			tl.addInitialTaxonomyTableIntoGraph(sourcename,filename,synonymfile);
+		}else if(args[0].equals("addtaxsyn")){
+			System.out.println("adding taxonomy from "+filename+"and synonym file "+synonymfile+" to "+graphname);
+			tl.addAdditionalTaxonomyTableIntoGraph(sourcename,filename,synonymfile);
 		}else{
 			System.err.println("ERROR: not a known command");
 			tl.shutdownDB();
@@ -107,11 +123,13 @@ public class MainRunner {
 		System.out.println("");
 		System.out.println("commands");
 		System.out.println("---taxonomy---");
-		System.out.println("\tinittax <filename> <sourcename> <graphdbfolder> (initializes the tax graph with a tax list)");
-		System.out.println("\taddtax <filename> <sourcename> <graphdbfolder> (adds a tax list into the tax graph)");
+		System.out.println("\tinittax <sourcename> <filename> <graphdbfolder> (initializes the tax graph with a tax list)");
+		System.out.println("\taddtax <sourcename> <filename> <graphdbfolder> (adds a tax list into the tax graph)");
+		System.out.println("\tinittaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (initializes the tax graph with a list and synonym file)");
+		System.out.println("\taddtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (adds a tax list and synonym file)");
 		System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
 		System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
-		System.out.println("---taxquery---");
+		System.out.println("\n---taxquery---");
 		System.out.println("\tcomptaxtree <name> <graphdbfolder> (construct a comprehensive tax newick)");
 		System.out.println("\tcomptaxgraph <name> <graphdbfolder> <outdotfile> (construct a comprehensive taxonomy in dot)");
 		System.out.println("\tfindcycles <name> <graphdbfolder> (find cycles in tax graph)");
@@ -137,7 +155,10 @@ public class MainRunner {
 				System.err.println("ERROR: not the right arguments");
 				printHelp();
 			}
-			if(args[0].compareTo("inittax")==0 || args[0].compareTo("addtax")==0){
+			if(args[0].equals("inittax")
+					|| args[0].equals("addtax")
+					|| args[0].equals("inittaxsyn")
+					|| args[0].equals("addtaxsyn")){
 				mr.taxonomyLoadParser(args);
 			}else if(args[0].compareTo("comptaxtree") == 0 
 					 || args[0].compareTo("comptaxgraph") == 0
