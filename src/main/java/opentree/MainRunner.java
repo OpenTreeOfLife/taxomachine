@@ -35,7 +35,7 @@ public class MainRunner {
 			tl.addAdditionalTaxonomyToGraph(sourcename, filename, synonymfile);
 		}else if (args[0].equals("inittaxsyn")){
 			System.out.println("initializing taxonomy from "+filename+" and synonym file "+synonymfile+" to "+graphname);
-			tl.addAdditionalTaxonomyToGraph(sourcename,filename,synonymfile);
+			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
 		}else if(args[0].equals("addtaxsyn")){
 			System.out.println("adding taxonomy from "+filename+"and synonym file "+synonymfile+" to "+graphname);
 			tl.addAdditionalTaxonomyToGraph(sourcename,filename,synonymfile);

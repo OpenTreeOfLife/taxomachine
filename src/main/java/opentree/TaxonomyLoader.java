@@ -2,7 +2,6 @@ package opentree;
 
 
 import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.*;
@@ -10,6 +9,9 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * TaxonomyLoader is intended to control the initial creation 
@@ -58,22 +60,50 @@ public class TaxonomyLoader extends TaxonomyBase{
 	 */
 	public void initializeTaxonomyIntoGraph(String sourcename, String filename, String synonymfile){
 		String str = "";
+		int count = 0;
+		Transaction tx;
+		ArrayList<String> templines = new ArrayList<String>();
+		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
 		boolean synFileExists = false;
 		if(synonymfile.length()>0)
 			synFileExists = true;
-		int count = 0;
+		//preprocess the synonym file
+		//key is the id from the taxonomy, the array has the synonym and the type of synonym
+		if(synFileExists){
+			synonymhash = new HashMap<String,ArrayList<ArrayList<String>>>();
+			try {
+				BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
+				while((str = sbr.readLine())!=null){
+					StringTokenizer st = new StringTokenizer(str,"\t|\t");
+					String id = st.nextToken();
+					String name = st.nextToken();
+					String type = st.nextToken();
+					ArrayList<String> tar = new ArrayList<String>();
+					tar.add(name);tar.add(type);
+					if (synonymhash.get(id) == null){
+						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
+						synonymhash.put(id, ttar);
+					}
+					synonymhash.get(id).add(tar);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+			System.out.println("synonyms: "+synonymhash.size());
+		}
+		//finished processing synonym file
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
-		Transaction tx;
-		ArrayList<String> templines = new ArrayList<String>();
 		try{
-			//create the root node
 			tx = graphDb.beginTx();
+			//create the metadata node
+			Node metadatanode = null;
 			try{
-				Node node = graphDb.createNode();
-				node.setProperty("name", "root");
-				taxNodeIndex.add( node, "name", "root" );
-				dbnodes.put("0", node);
+				metadatanode = graphDb.createNode();
+				metadatanode.setProperty("source", sourcename);
+				metadatanode.setProperty("author", "no one");
+				taxSourceIndex.add(metadatanode, "source", sourcename);
 				tx.success();
 			}finally{
 				tx.finish();
@@ -88,13 +118,34 @@ public class TaxonomyLoader extends TaxonomyBase{
 					tx = graphDb.beginTx();
 					try{
 						for(int i=0;i<templines.size();i++){
-							String[] spls = templines.get(i).split("\t|\t");
-							if (spls[1].length() > 0){
-								Node tnode = graphDb.createNode();
-								tnode.setProperty("name", spls[2]);
-								taxNodeIndex.add( tnode, "name", spls[2] );
-								parents.put(spls[0], spls[1]);
-								dbnodes.put(spls[0], tnode);
+							StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
+							int numtok = st.countTokens();
+							String first = st.nextToken();
+							String second = "";
+							if(numtok == 3)
+								second = st.nextToken();
+							String third = st.nextToken();
+							Node tnode = graphDb.createNode();
+							tnode.setProperty("name", third);
+							taxNodeIndex.add( tnode, "name", third);
+							dbnodes.put(first, tnode);
+							if (numtok == 3){
+								parents.put(first, second);
+							}else{//this is the root node
+								System.out.println("created root node and metadata link");
+								metadatanode.createRelationshipTo(tnode, RelTypes.METADATAFOR);
+							}
+							//synonym processing
+							if(synFileExists){
+								if(synonymhash.get(first)!=null){
+									ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+									for(int j=0;j<syns.size();j++){
+										Node synode = graphDb.createNode();
+										synode.setProperty("name",syns.get(j).get(0));
+										synode.setProperty("nametype",syns.get(j).get(1));
+										synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+									}
+								}
 							}
 						}
 						tx.success();
@@ -108,14 +159,34 @@ public class TaxonomyLoader extends TaxonomyBase{
 			tx = graphDb.beginTx();
 			try{
 				for(int i=0;i<templines.size();i++){
-					String[] spls = templines.get(i).split("\t|");
-					count += 1;
-					if (spls[1].length() > 0){
-						Node tnode = graphDb.createNode();
-						tnode.setProperty("name", spls[2]);
-						taxNodeIndex.add( tnode, "name", spls[2] );
-						parents.put(spls[0], spls[1]);
-						dbnodes.put(spls[0], tnode);
+					StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
+					int numtok = st.countTokens();
+					String first = st.nextToken();
+					String second = "";
+					if(numtok == 3)
+						second = st.nextToken();
+					String third = st.nextToken();
+					Node tnode = graphDb.createNode();
+					tnode.setProperty("name", third);
+					taxNodeIndex.add( tnode, "name", third);
+					dbnodes.put(first, tnode);
+					if (numtok == 3){
+						parents.put(first, second);
+					}else{//this is the root node
+						System.out.println("created root node and metadata link");
+						metadatanode.createRelationshipTo(tnode, RelTypes.METADATAFOR);
+					}
+					//synonym processing
+					if(synFileExists){
+						if(synonymhash.get(first)!=null){
+							ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+							for(int j=0;j<syns.size();j++){
+								Node synode = graphDb.createNode();
+								synode.setProperty("name",syns.get(j).get(0));
+								synode.setProperty("nametype",syns.get(j).get(1));
+								synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+							}
+						}
 					}
 				}
 				tx.success();
