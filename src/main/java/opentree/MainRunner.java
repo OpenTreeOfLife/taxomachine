@@ -32,7 +32,7 @@ public class MainRunner {
 			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
 		}else if(args[0].compareTo("addtax") == 0){
 			System.out.println("adding taxonomy from "+filename+" to "+graphname);
-			tl.addAdditionalTaxonomyToGraphNEW(sourcename, "1300014", filename, synonymfile);
+			tl.addAdditionalTaxonomyToGraphNEW(sourcename, "1300014", filename, synonymfile); // '1300014' = root ID
 		}else if (args[0].equals("inittaxsyn")){
 			System.out.println("initializing taxonomy from "+filename+" and synonym file "+synonymfile+" to "+graphname);
 			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
