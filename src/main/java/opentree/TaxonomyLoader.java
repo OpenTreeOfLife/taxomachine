@@ -335,6 +335,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 		String roottaxid = "";
 		if (rootid.length() > 0){
 			rootnode = graphDb.getNodeById(Long.valueOf(rootid));
+			System.out.println(rootnode);
 		}
 		String str = "";
 		int count = 0;
@@ -441,6 +442,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 			globalchildren = children;
 			globalidnamemap = idnamemap;
 			preorderAddAdditionalTaxonomy(rootnode,rootnode,roottaxid,sourcename);
+			preorderFinishTransaction();
 			gtx.success();
 		}finally{
 			gtx.finish();
@@ -449,51 +451,92 @@ public class TaxonomyLoader extends TaxonomyBase{
 
 	HashMap<String, ArrayList<String>> globalchildren = null;
 	HashMap<String,String> globalidnamemap = null;
-	PathFinder<Path> finder = GraphAlgoFactory.allSimplePaths(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
+	PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
+	HashMap<Node,Node> lastexistingmatchparents = new HashMap<Node,Node>();
+	
+	private void preorderFinishTransaction(){
+		try{
+			gtx.success();
+		}finally{
+			gtx.finish();
+		}
+		gtx = graphDb.beginTx();		
+	}
 	
 	private void preorderAddAdditionalTaxonomy(Node lastexistingmatch, Node rootnode, String curtaxid,String sourcename) {
 		globaltranscationnum += 1;
 		//using the current node, root node, see if the children have any matches, if they do
 		//then they much be subtending of the current rootnode
-		if(globaltranscationnum % (transaction_iter/10) == 0){
+		if(globaltranscationnum % (transaction_iter/100) == 0){
 			System.out.println("preorder add: "+globaltranscationnum);
-			try{
-				gtx.success();
-			}finally{
-				gtx.finish();
-			}
-			gtx = graphDb.beginTx();
+			preorderFinishTransaction();
 		}
+		boolean verbose = false;
 		//this is the preorder part
 		ArrayList<String> childids = globalchildren.get(curtaxid);
 		if(childids != null){
 			for(int i=0;i<childids.size();i++){
+				/*if(globalidnamemap.get(childids.get(i)).equals("Lonicera")){
+					verbose = true;
+				}*/
 				//create nodes and relationships here
 				Node hitnode = null;
 				IndexHits<Node> hits = taxNodeIndex.get("name", globalidnamemap.get(childids.get(i)));
+				
 				try{
-					int distance = 100000;
+					if(verbose){
+						System.out.println("hits: "+hits.size());
+					}
 					for(Node nd : hits){
 						//check to see if there is a path from the lastexistingmatch and the hit node
 						//if there is a hit, you take the closest and report that there was ambiguity
-						Path pathit = finder.findSinglePath(nd, lastexistingmatch);
+						Node curnode = lastexistingmatch;
+						Path pathit = null;
+						boolean going = true;
+						while(going){
+							pathit = finder.findSinglePath(nd, curnode);
+							if(verbose){
+								System.out.println("node: "+nd+"("+nd.getProperty("name")+") last: "+lastexistingmatch+"("+curnode.getProperty("name")+")");
+								System.out.println("path: "+pathit);
+							}	
+							if (pathit != null){	
+								//should add the smaller distance
+								break;
+							}
+							if (lastexistingmatchparents.containsKey(curnode) == true)
+								curnode = lastexistingmatchparents.get(curnode);
+							else
+								going = false;
+						}
 						if (pathit != null){	
+							if(verbose){
+								System.out.println("MATCHED");
+								System.out.println("node: "+nd+"("+nd.getProperty("name")+") last: "+lastexistingmatch+"("+lastexistingmatch.getProperty("name")+")");
+								System.out.println("path: "+pathit);
+							}	
 							//should add the smaller distance
 							hitnode = nd;
+							lastexistingmatchparents.put(hitnode, lastexistingmatch);
 							lastexistingmatch = hitnode;
 							break;
 						}
+					}
+					if(verbose){
+						System.out.println("hit: "+hitnode);
 					}
 					//if there was no hit, need to create a node
 					if(hitnode == null){
 						hitnode = graphDb.createNode();
 						hitnode.setProperty("name", globalidnamemap.get(childids.get(i)));
-						taxNodeIndex.add(hitnode, "name", childids.get(i));
+						taxNodeIndex.add(hitnode, "name", globalidnamemap.get(childids.get(i)));
 					}
 					Relationship rel = hitnode.createRelationshipTo(rootnode, RelTypes.TAXCHILDOF);
 					rel.setProperty("source", sourcename);
 				}finally{
 					hits.close();
+				}
+				if(verbose){
+					verbose = false;
 				}
 				preorderAddAdditionalTaxonomy(lastexistingmatch,hitnode,childids.get(i),sourcename);
 			}
