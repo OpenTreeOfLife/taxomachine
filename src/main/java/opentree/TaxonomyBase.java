@@ -52,11 +52,22 @@ public abstract class TaxonomyBase {
 	 *  the node using IndexHits<Node>.getSingle()
 	 * helper function primarily written to avoid forgetting to call hits.close();
 	 */
-    Node findTaxNodeByName(final String name) {
+    public IndexHits<Node> findTaxNodeByName(final String name) {
         IndexHits<Node> hits = this.taxNodeIndex.get("name", name);
         // Node firstNode = hits.getSingle();
         hits.close();
         return hits;
     }
 
+    /**
+     * Checks taxNodeIndex for `name` and returns all hits. Uses fuzzy searching.
+     * 
+     * Strange that is allows us to return `hits` after it has been closed. 
+     * @return
+     */
+    public IndexHits<Node> findTaxNodeByNameFuzzy(final String name) {
+        IndexHits<Node> hits = this.taxNodeIndex.query(new FuzzyQuery(new Term("name", name)));
+        hits.close();
+        return hits;
+    }
 }
