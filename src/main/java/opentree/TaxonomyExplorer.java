@@ -48,7 +48,6 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	public TaxonomyExplorer(String graphname){
 		graphDb = new EmbeddedGraphDatabase( graphname );
 		taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
-		graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
 	}
   
     public void setEmbeddedDB(String graphname){

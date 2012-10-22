@@ -1,7 +1,10 @@
 package opentree;
 
 
-
+import org.neo4j.cypher.javacompat.ExecutionEngine;
+import org.neo4j.cypher.javacompat.ExecutionResult;
+import org.neo4j.graphalgo.GraphAlgoFactory;
+import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
@@ -10,6 +13,8 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.StringTokenizer;
 
 /**
  * TaxonomyLoader is intended to control the initial creation 
@@ -20,6 +25,8 @@ public class TaxonomyLoader extends TaxonomyBase{
 	static Logger _LOG = Logger.getLogger(TaxonomyLoader.class);
 	int transaction_iter = 100000;
 	int LARGE = 100000000;
+	int globaltranscationnum = 0;
+	Transaction gtx = null;
 	
 	//basic traversal method
 	final TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
@@ -31,36 +38,77 @@ public class TaxonomyLoader extends TaxonomyBase{
 	 */
 	public TaxonomyLoader(String graphname){
 		graphDb = new EmbeddedGraphDatabase( graphname );
-		taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
+		taxNodeIndex = graphDb.index().forNodes( "taxNodes" );
+		prefTaxNodeIndex = graphDb.index().forNodes("prefTaxNodes");
+		prefSynNodeIndex = graphDb.index().forNodes("prefSynNodes");
+		synNodeIndex = graphDb.index().forNodes("synNodes");
+		taxSourceIndex = graphDb.index().forNodes("taxSources");
 	}
 	
 	
 	/**
 	 * Reads a taxonomy file with rows formatted as:
-	 *	taxon_id,parent_id,Name with spaces allowed\n
-	 * Creates the nodes and TAXCHILDOF relationship for a taxonomy tree
-	 * Node objects will get a "name" property.
-	 * The relationships will get "source", "childid", and "parentid" properties
-	 * Nodes are indexed in taxNamedNodes with their name as the value for a "name" key.
+	 *	taxon_id\t|\tparent_id\t|\tName with spaces allowed\n
+	 *
+	 * Creates nodes and TAXCHILDOF relationships for each line.
+	 * Nodes get a "name" property. Relationships get "source", "childid", "parentid" properties.
 	 * 
-	 * @param filename file path to the taxonomy file
+	 * Nodes are indexed in taxNames "name" key and id value.
+	 * 
+	 * A metadata node is created to point to the root
+	 * 
+	 * The line that has no parent will be the root of this tree
+	 * 
 	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
+	 * @param filename file path to the taxonomy file
+	 * @param synonymfile file that holds the synonym
 	 */
-	public void addInitialTaxonomyTableIntoGraph(String filename, String sourcename){
+	public void initializeTaxonomyIntoGraph(String sourcename, String filename, String synonymfile){
 		String str = "";
 		int count = 0;
-		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
-		HashMap<String, String> parents = new HashMap<String, String>();
 		Transaction tx;
 		ArrayList<String> templines = new ArrayList<String>();
+		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
+		boolean synFileExists = false;
+		if(synonymfile.length()>0)
+			synFileExists = true;
+		//preprocess the synonym file
+		//key is the id from the taxonomy, the array has the synonym and the type of synonym
+		if(synFileExists){
+			synonymhash = new HashMap<String,ArrayList<ArrayList<String>>>();
+			try {
+				BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
+				while((str = sbr.readLine())!=null){
+					StringTokenizer st = new StringTokenizer(str,"\t|\t");
+					String id = st.nextToken();
+					String name = st.nextToken();
+					String type = st.nextToken();
+					ArrayList<String> tar = new ArrayList<String>();
+					tar.add(name);tar.add(type);
+					if (synonymhash.get(id) == null){
+						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
+						synonymhash.put(id, ttar);
+					}
+					synonymhash.get(id).add(tar);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+			System.out.println("synonyms: "+synonymhash.size());
+		}
+		//finished processing synonym file
+		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
+		HashMap<String, String> parents = new HashMap<String, String>();
 		try{
-			//create the root node
 			tx = graphDb.beginTx();
+			//create the metadata node
+			Node metadatanode = null;
 			try{
-				Node node = graphDb.createNode();
-				node.setProperty("name", "root");
-				taxNodeIndex.add( node, "name", "root" );
-				dbnodes.put("0", node);
+				metadatanode = graphDb.createNode();
+				metadatanode.setProperty("source", sourcename);
+				metadatanode.setProperty("author", "no one");
+				taxSourceIndex.add(metadatanode, "source", sourcename);
 				tx.success();
 			}finally{
 				tx.finish();
@@ -75,13 +123,35 @@ public class TaxonomyLoader extends TaxonomyBase{
 					tx = graphDb.beginTx();
 					try{
 						for(int i=0;i<templines.size();i++){
-							String[] spls = templines.get(i).split(",");
-							if (spls[1].length() > 0){
-								Node tnode = graphDb.createNode();
-								tnode.setProperty("name", spls[2]);
-								taxNodeIndex.add( tnode, "name", spls[2] );
-								parents.put(spls[0], spls[1]);
-								dbnodes.put(spls[0], tnode);
+							StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
+							int numtok = st.countTokens();
+							String first = st.nextToken();
+							String second = "";
+							if(numtok == 3)
+								second = st.nextToken();
+							String third = st.nextToken();
+							Node tnode = graphDb.createNode();
+							tnode.setProperty("name", third);
+							taxNodeIndex.add( tnode, "name", third);
+							dbnodes.put(first, tnode);
+							if (numtok == 3){
+								parents.put(first, second);
+							}else{//this is the root node
+								System.out.println("created root node and metadata link");
+								metadatanode.createRelationshipTo(tnode, RelTypes.METADATAFOR);
+							}
+							//synonym processing
+							if(synFileExists){
+								if(synonymhash.get(first)!=null){
+									ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+									for(int j=0;j<syns.size();j++){
+										Node synode = graphDb.createNode();
+										synode.setProperty("name",syns.get(j).get(0));
+										synode.setProperty("nametype",syns.get(j).get(1));
+										synode.setProperty("source",sourcename);
+										synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+									}
+								}
 							}
 						}
 						tx.success();
@@ -95,14 +165,35 @@ public class TaxonomyLoader extends TaxonomyBase{
 			tx = graphDb.beginTx();
 			try{
 				for(int i=0;i<templines.size();i++){
-					String[] spls = templines.get(i).split(",");
-					count += 1;
-					if (spls[1].length() > 0){
-						Node tnode = graphDb.createNode();
-						tnode.setProperty("name", spls[2]);
-						taxNodeIndex.add( tnode, "name", spls[2] );
-						parents.put(spls[0], spls[1]);
-						dbnodes.put(spls[0], tnode);
+					StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
+					int numtok = st.countTokens();
+					String first = st.nextToken();
+					String second = "";
+					if(numtok == 3)
+						second = st.nextToken();
+					String third = st.nextToken();
+					Node tnode = graphDb.createNode();
+					tnode.setProperty("name", third);
+					taxNodeIndex.add( tnode, "name", third);
+					dbnodes.put(first, tnode);
+					if (numtok == 3){
+						parents.put(first, second);
+					}else{//this is the root node
+						System.out.println("created root node and metadata link");
+						metadatanode.createRelationshipTo(tnode, RelTypes.METADATAFOR);
+					}
+					//synonym processing
+					if(synFileExists){
+						if(synonymhash.get(first)!=null){
+							ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+							for(int j=0;j<syns.size();j++){
+								Node synode = graphDb.createNode();
+								synode.setProperty("name",syns.get(j).get(0));
+								synode.setProperty("nametype",syns.get(j).get(1));
+								synode.setProperty("source",sourcename);
+								synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+							}
+						}
 					}
 				}
 				tx.success();
@@ -229,6 +320,230 @@ public class TaxonomyLoader extends TaxonomyBase{
 		}
 		return sb.toString();
 	}
+	
+	/**
+	 * The idea for this is to use a preorder traversal to insert a new taxonomy
+	 * into the graph (along with potentially new synonyms)
+	 * 
+	 * @param sourcename
+	 * @param rootid
+	 * @param filename
+	 * @param synonymfile
+	 */
+	public void addAdditionalTaxonomyToGraphNEW(String sourcename, String rootid, String filename, String synonymfile){
+		Node rootnode = null;
+		String roottaxid = "";
+		if (rootid.length() > 0){
+			rootnode = graphDb.getNodeById(Long.valueOf(rootid));
+			System.out.println(rootnode);
+		}
+		String str = "";
+		int count = 0;
+		Transaction tx;
+		ArrayList<String> templines = new ArrayList<String>();
+		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
+		boolean synFileExists = false;
+		if(synonymfile.length()>0)
+			synFileExists = true;
+		//preprocess the synonym file
+		//key is the id from the taxonomy, the array has the synonym and the type of synonym
+		if(synFileExists){
+			synonymhash = new HashMap<String,ArrayList<ArrayList<String>>>();
+			try {
+				BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
+				while((str = sbr.readLine())!=null){
+					StringTokenizer st = new StringTokenizer(str,"\t|\t");
+					String id = st.nextToken();
+					String name = st.nextToken();
+					String type = st.nextToken();
+					ArrayList<String> tar = new ArrayList<String>();
+					tar.add(name);tar.add(type);
+					if (synonymhash.get(id) == null){
+						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
+						synonymhash.put(id, ttar);
+					}
+					synonymhash.get(id).add(tar);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+			System.out.println("synonyms: "+synonymhash.size());
+		}
+		//finished processing synonym file
+		HashMap<String, String> parents = new HashMap<String, String>();
+		HashMap<String, String> idnamemap = new HashMap<String, String>();
+		HashMap<String,ArrayList<String>> children = new HashMap<String,ArrayList<String>>();
+		tx = graphDb.beginTx();
+		try{
+			//create the metadata node
+			Node metadatanode = null;
+			try{
+				metadatanode = graphDb.createNode();
+				metadatanode.setProperty("source", sourcename);
+				metadatanode.setProperty("author", "no one");
+				taxSourceIndex.add(metadatanode, "source", sourcename);
+				tx.success();
+			}finally{
+				tx.finish();
+			}
+			tx = graphDb.beginTx();
+			try{
+				BufferedReader br = new BufferedReader(new FileReader(filename));
+				while((str = br.readLine())!=null){
+					count += 1;
+					if (count % transaction_iter == 0){
+						System.out.print(count);
+						System.out.print("\n");
+					}
+					StringTokenizer st = new StringTokenizer(str,"\t|\t");
+					int numtok = st.countTokens();
+					String first = st.nextToken();
+					String second = "";
+					if(numtok == 3)
+						second = st.nextToken();
+					String third = st.nextToken();
+					idnamemap.put(first, third);
+					if (numtok == 3){
+						parents.put(first, second);
+						if(children.containsKey(second) == false){
+							ArrayList<String> tar = new ArrayList<String>();
+							children.put(second, tar);
+						}
+						children.get(second).add(first);
+					}else{//this is the root node
+						if(rootnode == null){
+							System.out.println("the root should never be null");
+							System.exit(0);
+							//if the root node is null then you need to make a new one
+							//rootnode = graphDb.createNode();
+							//rootnode.setProperty("name", third);
+						}
+						roottaxid = first;
+						System.out.println("matched root node and metadata link");
+						metadatanode.createRelationshipTo(rootnode, RelTypes.METADATAFOR);
+					}
+				}
+				br.close();
+			}catch(Exception e){
+				e.printStackTrace();
+				System.out.println("problem with infile");
+				System.exit(0);
+			}
+			tx.success();
+		}finally{
+			tx.finish();
+		}
+		//now start the preorder after the processing of the file
+		globaltranscationnum = 0;
+		gtx = graphDb.beginTx();
+		try{
+			System.out.println("sending to preorder builder");
+			globalchildren = children;
+			globalidnamemap = idnamemap;
+			preorderAddAdditionalTaxonomy(rootnode,rootnode,roottaxid,sourcename);
+			preorderFinishTransaction();
+			gtx.success();
+		}finally{
+			gtx.finish();
+		}
+	}
+
+	HashMap<String, ArrayList<String>> globalchildren = null;
+	HashMap<String,String> globalidnamemap = null;
+	PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
+	HashMap<Node,Node> lastexistingmatchparents = new HashMap<Node,Node>();
+	
+	private void preorderFinishTransaction(){
+		try{
+			gtx.success();
+		}finally{
+			gtx.finish();
+		}
+		gtx = graphDb.beginTx();		
+	}
+	
+	private void preorderAddAdditionalTaxonomy(Node lastexistingmatch, Node rootnode, String curtaxid,String sourcename) {
+		globaltranscationnum += 1;
+		//using the current node, root node, see if the children have any matches, if they do
+		//then they much be subtending of the current rootnode
+		if(globaltranscationnum % (transaction_iter/100) == 0){
+			System.out.println("preorder add: "+globaltranscationnum);
+			preorderFinishTransaction();
+		}
+		boolean verbose = false;
+		//this is the preorder part
+		ArrayList<String> childids = globalchildren.get(curtaxid);
+		if(childids != null){
+			for(int i=0;i<childids.size();i++){
+				/*if(globalidnamemap.get(childids.get(i)).equals("Lonicera")){
+					verbose = true;
+				}*/
+				//create nodes and relationships here
+				Node hitnode = null;
+				IndexHits<Node> hits = taxNodeIndex.get("name", globalidnamemap.get(childids.get(i)));
+				
+				try{
+					if(verbose){
+						System.out.println("hits: "+hits.size());
+					}
+					for(Node nd : hits){
+						//check to see if there is a path from the lastexistingmatch and the hit node
+						//if there is a hit, you take the closest and report that there was ambiguity
+						Node curnode = lastexistingmatch;
+						Path pathit = null;
+						boolean going = true;
+						while(going){
+							pathit = finder.findSinglePath(nd, curnode);
+							if(verbose){
+								System.out.println("node: "+nd+"("+nd.getProperty("name")+") last: "+lastexistingmatch+"("+curnode.getProperty("name")+")");
+								System.out.println("path: "+pathit);
+							}	
+							if (pathit != null){	
+								//should add the smaller distance
+								break;
+							}
+							if (lastexistingmatchparents.containsKey(curnode) == true)
+								curnode = lastexistingmatchparents.get(curnode);
+							else
+								going = false;
+						}
+						if (pathit != null){	
+							if(verbose){
+								System.out.println("MATCHED");
+								System.out.println("node: "+nd+"("+nd.getProperty("name")+") last: "+lastexistingmatch+"("+lastexistingmatch.getProperty("name")+")");
+								System.out.println("path: "+pathit);
+							}	
+							//should add the smaller distance
+							hitnode = nd;
+							lastexistingmatchparents.put(hitnode, lastexistingmatch);
+							lastexistingmatch = hitnode;
+							break;
+						}
+					}
+					if(verbose){
+						System.out.println("hit: "+hitnode);
+					}
+					//if there was no hit, need to create a node
+					if(hitnode == null){
+						hitnode = graphDb.createNode();
+						hitnode.setProperty("name", globalidnamemap.get(childids.get(i)));
+						taxNodeIndex.add(hitnode, "name", globalidnamemap.get(childids.get(i)));
+					}
+					Relationship rel = hitnode.createRelationshipTo(rootnode, RelTypes.TAXCHILDOF);
+					rel.setProperty("source", sourcename);
+				}finally{
+					hits.close();
+				}
+				if(verbose){
+					verbose = false;
+				}
+				preorderAddAdditionalTaxonomy(lastexistingmatch,hitnode,childids.get(i),sourcename);
+			}
+		}
+	}
+	
+
 	/**
 	 * See addInitialTaxonomyTableIntoGraph 
 	 * This function acts like addInitialTaxonomyTableIntoGraph but it 
@@ -249,7 +564,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 	 * @param filename file path to the taxonomy file
 	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
 	 */
-	public void addAdditionalTaxonomyTableIntoGraph(String filename,String sourcename){
+	public void addAdditionalTaxonomyToGraph(String sourcename, String filename, String synonymfile){
 		String str = "";
 		int count = 0;
 		HashMap<String, String> ndnames = new HashMap<String, String>(); // node number -> name
@@ -586,11 +901,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 	}
 	
 	public void runittest(String filename,String filename2){
-		System.out.println("adding initial taxonomy");
-		addInitialTaxonomyTableIntoGraph(filename,"test");
-		System.out.println("adding additional taxonomies");
-		addAdditionalTaxonomyTableIntoGraph(filename2,"test");
-		shutdownDB();
+
 	}
 	
 	public static void main( String[] args ){
