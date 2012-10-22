@@ -1,4 +1,10 @@
+.classpath
+.project
+.settings
+*.db
 *.class
+*.ServerPlugin
+*~
 
 # Package Files #
 *.jar

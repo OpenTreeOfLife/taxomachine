@@ -1,5 +1,17 @@
 package opentree;
 
+import jade.tree.JadeTree;
+import jade.tree.TreeObject;
+import jade.tree.TreeReader;
+
+import java.io.File;
+import java.io.IOException;
+
+import opentree.tnrs.TNRSMatch;
+import opentree.tnrs.TNRSMatchSet;
+import opentree.tnrs.TNRSQuery;
+import opentree.tnrs.adapters.iplant.TNRSAdapteriPlant;
+
 //import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -116,6 +128,46 @@ public class MainRunner {
 		te.shutdownDB();
 	}
 
+    public void parseTNRSRequest(String args[]) {
+        String graphName = args[2];
+        TaxonomyExplorer taxonomy = new TaxonomyExplorer(graphName);
+        TNRSQuery tnrs = new TNRSQuery(taxonomy);
+        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
+        TNRSMatchSet results = null;
+        
+        if (args[0].compareTo("tnrsbasic") == 0) {
+            
+            // TODO: use MRCA of all provided names as query context
+            String[] searchStrings = args[1].split("\\s*\\,\\s*");
+            results = tnrs.getMatches(searchStrings, iplant);
+            
+        } else if (args[0].compareTo("tnrstree") == 0) {
+
+            System.out.println("not implemented");
+/*
+            TreeReader treeReader = new TreeReader();
+            JadeTree tree = treeReader.readTree(args[1]);
+
+            String[] treeTipNames = null; // get external node names from jade tree
+
+            // TODO: use MRCA of tree as query context
+            // TODO: use tree structure to help differentiate homonyms
+            
+            // search for the names
+            results = tnrs.getMatches(treeTipNames, iplant); */
+            
+        }
+        
+        for (TNRSMatch m : results) {
+            System.out.println(m.toString());
+        }
+
+        System.out.println("\nNames that could not be matched:");
+        for (String name : tnrs.getUnmatchedNames()) {
+            System.out.println(name);
+        }
+
+    }
 	
 	public static void printHelp(){
 		System.out.println("==========================");
@@ -135,6 +187,10 @@ public class MainRunner {
 		System.out.println("\tfindcycles <name> <graphdbfolder> (find cycles in tax graph)");
 		System.out.println("\tjsgraph <name> <graphdbfolder> (constructs a json file from tax graph)");
 		System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
+        System.out.println("---taxonomic name resolution services---");
+        System.out.println("\ttnrsbasic <querynames> <graphdbfolder> (check if the taxonomy graph contains comma-delimited names)");
+        System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)");
+
 	}
 	/**
 	 * @param args
@@ -166,8 +222,10 @@ public class MainRunner {
 					|| args[0].equals("checktree")
 					|| args[0].equals("makeottol")) {
 				mr.taxonomyQueryParser(args);
-			} else {
-				System.err.println("\nERROR: unrecognized command \"" + args[0] + "\"\n");
+			} else if (args[0].compareTo("tnrsbasic") == 0 || args[0].compareTo("tnrstree") == 0) {
+			    mr.parseTNRSRequest(args);
+			}else {
+				System.err.println("Unrecognized command \"" + args[0] + "\"");
 				printHelp();
 				System.exit(1);
 			}

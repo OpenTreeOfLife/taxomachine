@@ -1,5 +1,9 @@
 package opentree;
 
+import java.util.ArrayList;
+
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.FuzzyQuery;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
@@ -7,8 +11,8 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
-/** 
- *  @todo Currently this code is identical to the code base in GraphBase
+/**
+ * @todo Currently this code is identical to the code base in GraphBase
  */
 public abstract class TaxonomyBase {
 	EmbeddedGraphDatabase graphDb; //was GraphDatabaseService
@@ -50,9 +54,9 @@ public abstract class TaxonomyBase {
 	 */
     Node findTaxNodeByName(final String name) {
         IndexHits<Node> hits = this.taxNodeIndex.get("name", name);
-		Node firstNode = hits.getSingle();
-		hits.close();
-		return firstNode;
-	}
+        // Node firstNode = hits.getSingle();
+        hits.close();
+        return hits;
+    }
 
 }
