@@ -56,7 +56,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         private Node _matchedNode;                     // the recognized taxon node we matched
         private Node _synonymNode;                      // the synonym node we matched
         private String _sourceName = "";               // the name of the source where the match was found
-        private boolean _isExactNode;                  // whether this is an exact match to known, recognized taxon
+        private boolean _isPerfectMatch;                  // whether this is an exact match to known, recognized taxon
         private boolean _isApprox;                     // whether this is a fuzzy match (presumably misspellings)
         private boolean _isSynonym;                    // whether the match points to a known synonym (not necessarily in the graph, nor necessarily pointing to a node in the graph)
         private boolean _isHomonym;                     // whether the match points to a known homonym
@@ -66,7 +66,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         public Match(TNRSHit m) {
             _matchedNode = m.getMatchedNode();
             _synonymNode = m.getSynonymNode();
-            _isExactNode = m.getIsExactNode();
+            _isPerfectMatch = m.getIsPerfectMatch();
             _isApprox = m.getIsApprox();
             _isSynonym = m.getIsSynonym();
             _isHomonym = m.getIsHomonym();
@@ -119,8 +119,8 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             return _sourceName;
         }
 
-        public boolean getIsExactNode() {
-            return _isExactNode;
+        public boolean getIsPerfectMatch() {
+            return _isPerfectMatch;
         }
 
         public boolean getIsApproximate() {
@@ -145,22 +145,28 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         public String getMatchType() {
             String desc = "";
             
-            if (_isExactNode) {
-                desc += "exact node match";
+            if (_isPerfectMatch) {
+                desc += "unambiguous match to known taxon";
+            
             } else {
-                if (_isApprox)
-                    desc += "approximate match to ";
-                else
+                
+            	if (_isApprox) {
+                	desc += "approximate match to ";
+                } else {
                     desc += "exact match to ";
+                }
 
-                if (_isSynonym)
-                    desc += "junior synonym";
-                else
-                    desc += "non-synonym";
+                if (_isSynonym) {
+                	desc += "known synonym";
+                    desc += _isApprox ? "; \"" + _synonymNode.getProperty("name") + "\"" : "";
+
+                } else {
+                	desc += "known taxon";
+
+                } if (_isHomonym) {
+	                desc += "; also a homonym";
+                }
             }
-
-            if (_isHomonym)
-                desc += "; also a homonym";
 
             return desc;
         }

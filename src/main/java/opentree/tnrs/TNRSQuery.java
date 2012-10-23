@@ -3,10 +3,16 @@ package opentree.tnrs;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import opentree.TaxonomyBase;
 import opentree.TaxonomyExplorer;
 
+import org.neo4j.graphalgo.GraphAlgoFactory;
+import org.neo4j.graphalgo.PathFinder;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.index.IndexHits;
+import org.neo4j.kernel.Traversal;
 
 /**
  * @author Cody Hinchliff
@@ -46,45 +52,97 @@ public class TNRSQuery {
         for (int i = 0; i < searchStrings.length; i++) {
             String thisName = searchStrings[i];
 
+            // determine the min fuzzy match score based on length; shorter names
+            // require lower min identities to small numbers of edit differences
+            int ql = thisName.length();
+            float minId = 0;
+            if (ql < 4)
+            	minId = (float)0.55;
+            else if (ql < 6)
+            	minId = (float)0.6;
+            else if (ql < 8)
+            	minId = (float)0.65;
+            else if (ql < 11)
+            	minId = (float)0.7;
+            else if (ql < 14)
+            	minId = (float)0.75;
+            else
+            	minId = (float)0.8;
+
             if (_matchedNames.containsKey(thisName)) {
                 continue;
             }
+            boolean wasMatched = false;
 
-            // first: check the graph index. if we find any hits, we're done
-            IndexHits<Node> matchedNodes = _taxonomy.findTaxNodeByName(thisName);
-            if (matchedNodes.size() > 0) {
-                for (Node n : matchedNodes) {
+            // first: use fuzzy matching to find possible preferred taxon nodes
+            IndexHits<Node> matchedTaxNodes = _taxonomy.findTaxNodeByNameFuzzy(thisName, minId);
+            if (matchedTaxNodes.size() > 0) {
+            	
+            	for (Node n : matchedTaxNodes) {
 
-                    // check to see if the matched node is a homonym
-                    IndexHits<Node> hitsForName = _taxonomy.findTaxNodeByName((String) n.getProperty("name"));
-                    boolean isHomonym = false;
-                    if (hitsForName.size() > 1)
-                        isHomonym = true;
+                	// check if the name is an exact match to the query
+                    boolean isFuzzy = n.getProperty("name").equals(thisName) ? false : true;
+            		
+                    // check if the matched node is a homonym
+                    IndexHits<Node> directMatches = _taxonomy.findTaxNodeByName(n.getProperty("name").toString());
+                    boolean isHomonym = directMatches.size() > 1 ? true : false;
+                    
+                    boolean isPerfectMatch = !(isHomonym || isFuzzy) ? true : false;
+           		
+                	// TODO: get the score for each hit
+                    double score = 0;
+                    if (isPerfectMatch)
+                    	score = 1;
+                    else
+                    	score = TEMP_SCORE;
 
-                    // add the match
+            		// add the match
                     _results.addMatch(new TNRSHit().
                             setMatchedNode(n).
                             setSearchString(thisName).
-                            setIsExactNode(true).
+                            setIsPerfectMatch(isPerfectMatch).
+                            setIsApprox(isFuzzy).
                             setIsHomonym(isHomonym).
                             setSourceName("ottol").
-                            setScore(1));
+                            setScore(score));
                 }
                 _matchedNames.put(thisName, true);
-                continue; // no need to look at other options
+                wasMatched = true;
             }
 
-            // TODO: second: try direct matches to synonyms
-            // make sure we don't try to match names twice
-            // (need to interface with stephen about synonyms)
+            // second: use fuzzy matching to find possible preferred synonyms
+            IndexHits<Node> matchedSynNodes = _taxonomy.findSynNodeByNameFuzzy(thisName, minId);
+            if (matchedSynNodes.size() > 0) {
+                for (Node synNode : matchedSynNodes) {
 
-            // no direct matches, so we look at all other options
-            boolean wasMatched = false;
-
+                	// check if the name is an exact match to the query
+                	boolean isApprox = synNode.getProperty("name").equals(thisName) ? false : true;
+                 	
+                	// find the node matched by this synonym
+                	Node taxNode = _taxonomy.getTaxNodeForSynNode(synNode);
+                	
+                	// TODO: get the score for each hit
+                	double score = TEMP_SCORE;
+                	
+                    // add the match
+                    _results.addMatch(new TNRSHit().
+                            setMatchedNode(taxNode).
+                            setSynonymNode(synNode).
+                            setSearchString(thisName).
+                            setIsApprox(isApprox).
+                            setIsSynonym(true).
+                            setIsPerfectMatch(false).
+                            setSourceName("ottol").
+                            setScore(score));
+                }
+                _matchedNames.put(thisName, true);
+                wasMatched = true;
+            }
+/*
             // third: check for fuzzy matches to recognized taxa
-            IndexHits<Node> fuzzyMatches = _taxonomy.findTaxNodeByNameFuzzy(thisName);
-            if (fuzzyMatches.size() > 0) {
-                for (Node n : fuzzyMatches) {
+            IndexHits<Node> fuzzyTaxMatches = _taxonomy.findTaxNodeByNameFuzzy(thisName);
+            if (fuzzyTaxMatches.size() > 0) {
+                for (Node n : fuzzyTaxMatches) {
 
                     // check to see if the fuzzily matched node is a homonym
                     IndexHits<Node> directMatches = _taxonomy.findTaxNodeByName(n.getProperty("name").toString());
@@ -104,9 +162,26 @@ public class TNRSQuery {
                 wasMatched = true;
             }
 
-            // TODO: fourth: check for fuzzy matches to synonyms
-            // make sure we don't try to match names twice
-
+            // fourth: check for fuzzy matches to synonyms
+            IndexHits<Node> fuzzySynMatches = _taxonomy.findSynNodeByNameFuzzy(thisName);
+            if (fuzzySynMatches.size() > 0) {
+                for (Node synNode : fuzzySynMatches) {
+                	// find the node matched by this synonym
+                	Node taxNode = _taxonomy.getTaxNodeForSynNode(synNode);
+                	
+                    // add the match
+                    _results.addMatch(new TNRSHit().
+                    		setIsApprox(true).
+                            setMatchedNode(taxNode).
+                            setSynonymNode(synNode).
+                            setSearchString(thisName).
+                            setIsSynonym(true).
+                            setSourceName("ottol").
+                            setScore(TEMP_SCORE));  // TODO: record scores with fuzzy matches
+                }
+                wasMatched = true;
+            } */
+            
             // remember names we can't match within the graph
             if (wasMatched)
                 _matchedNames.put(thisName, true);
@@ -114,12 +189,18 @@ public class TNRSQuery {
                 _unmatchedNames.add(thisName);
         }
 
-        // fourth: call passed adapters for help with names we couldn't match
-        if (_unmatchedNames.size() > 0) {
-            for (int i = 0; i < adapters.length; i++) {
-                adapters[i].doQuery(_unmatchedNames, _taxonomy, _results);
-            }
+        // TODO: at the moment we are just using internal matching for speed considerations
+        boolean useExternalServices = false;
+        if (useExternalServices) {
+	        // fourth: call passed adapters for help with names we couldn't match
+	        if (_unmatchedNames.size() > 0) {
+	            for (int i = 0; i < adapters.length; i++) {
+	                adapters[i].doQuery(_unmatchedNames, _taxonomy, _results);
+	            }
+	        }
         }
+
+        _taxonomy.shutdownDB();
         return _results;
     }
 

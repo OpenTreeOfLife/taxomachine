@@ -17,7 +17,7 @@ public abstract class TNRSMatch {
     public abstract long getSynonymNodeId();
     public abstract String getSynonymNodeName();
     public abstract String getSource();
-    public abstract boolean getIsExactNode();
+    public abstract boolean getIsPerfectMatch();
     public abstract boolean getIsApproximate();
     public abstract boolean getIsSynonym();
     public abstract boolean getIsHomonym();

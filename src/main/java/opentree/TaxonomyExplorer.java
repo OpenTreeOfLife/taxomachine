@@ -47,20 +47,33 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	
 	public TaxonomyExplorer(String graphname){
 		graphDb = new EmbeddedGraphDatabase( graphname );
-		taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
+		taxNodeIndex = graphDb.index().forNodes("taxNodes");
+		synNodeIndex = graphDb.index().forNodes("synNodes");
 	}
   
     public void setEmbeddedDB(String graphname){
         graphDb = new EmbeddedGraphDatabase( graphname ) ;
-        taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
-//        graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
+        taxNodeIndex = graphDb.index().forNodes( "taxNodes" );
+		synNodeIndex = graphDb.index().forNodes("synNodes");
     }
 
     public void setDbService(GraphDatabaseService graphDb) {
-        taxNodeIndex = graphDb.index().forNodes( "taxNamedNodes" );
-//        graphNodeIndex = graphDb.index().forNodes("graphNamedNodes");
+        taxNodeIndex = graphDb.index().forNodes( "taxNodes" );
+		synNodeIndex = graphDb.index().forNodes("synNodes");
     }
 	
+    public Node getTaxNodeForSynNode(Node synonymNode) {
+    	Node taxNode = null;
+    	
+        TraversalDescription SYNONYMOF_TRAVERSAL = Traversal.description()
+		        .relationships(RelTypes.SYNONYMOF,Direction.OUTGOING);
+
+        for(Node tn : SYNONYMOF_TRAVERSAL.traverse(synonymNode).nodes()){
+    	 	taxNode = tn;
+    	}
+    	return taxNode;
+    }
+    
 	/**
 	 * Writes a dot file for the taxonomy graph that is rooted at `clade_name`
 	 * 

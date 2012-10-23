@@ -20,7 +20,7 @@ public class TNRSHit {
     String _searchString;
     String _sourceName;
     boolean _isHomonym;
-    boolean _isExactNode;
+    boolean _isPerfectMatch;
     boolean _isApprox;
     boolean _isSynonym;
     HashMap<String,String> _otherData;
@@ -32,7 +32,7 @@ public class TNRSHit {
         _searchString = "";
         _sourceName = "";
         _isHomonym = false;
-        _isExactNode = false;
+        _isPerfectMatch = false;
         _isApprox = false;
         _isSynonym = false;
         _otherData = null;
@@ -45,7 +45,7 @@ public class TNRSHit {
     }
 
     public TNRSHit setSynonymNode(Node synonymNode) {
-        _matchedNode = synonymNode;
+        _synonymNode = synonymNode;
         return this;
     }
 
@@ -64,8 +64,9 @@ public class TNRSHit {
         return this;
     }
 
-    public TNRSHit setIsExactNode(boolean isExactNode) {
-        _isExactNode = isExactNode;
+    /** Indicates a hit to a node this is neither a synonym nor a homonym, and whose name is an exact match to the query */
+    public TNRSHit setIsPerfectMatch(boolean isPerfectMatch) {
+        _isPerfectMatch = isPerfectMatch;
         return this;
     }
 
@@ -111,9 +112,9 @@ public class TNRSHit {
         return _sourceName;
     }
 
-    public boolean getIsExactNode() {
+    public boolean getIsPerfectMatch() {
         // is this an exact direct match to a graph node?
-        return _isExactNode;
+        return _isPerfectMatch;
     }
 
     public boolean getIsApprox() {

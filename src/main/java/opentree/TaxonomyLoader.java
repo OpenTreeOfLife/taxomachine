@@ -25,7 +25,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 	static Logger _LOG = Logger.getLogger(TaxonomyLoader.class);
 	int transaction_iter = 100000;
 	int LARGE = 100000000;
-	int globaltranscationnum = 0;
+	int globaltransactionnum = 0;
 	Transaction gtx = null;
 	
 	//basic traversal method
@@ -125,31 +125,36 @@ public class TaxonomyLoader extends TaxonomyBase{
 						for(int i=0;i<templines.size();i++){
 							StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
 							int numtok = st.countTokens();
-							String first = st.nextToken();
-							String second = "";
+							String inputId = st.nextToken();
+							String InputParentId = "";
 							if(numtok == 3)
-								second = st.nextToken();
-							String third = st.nextToken();
+								InputParentId = st.nextToken();
+							String inputName = st.nextToken();
 							Node tnode = graphDb.createNode();
-							tnode.setProperty("name", third);
-							taxNodeIndex.add( tnode, "name", third);
-							dbnodes.put(first, tnode);
+							tnode.setProperty("name", inputName);
+							taxNodeIndex.add( tnode, "name", inputName);
+							dbnodes.put(inputId, tnode);
 							if (numtok == 3){
-								parents.put(first, second);
-							}else{//this is the root node
+								parents.put(inputId, InputParentId);
+							}else{ // this is the root node
 								System.out.println("created root node and metadata link");
 								metadatanode.createRelationshipTo(tnode, RelTypes.METADATAFOR);
 							}
-							//synonym processing
+							// synonym processing
 							if(synFileExists){
-								if(synonymhash.get(first)!=null){
-									ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+								if(synonymhash.get(inputId)!=null){
+									ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
 									for(int j=0;j<syns.size();j++){
+										
+										String synName = syns.get(j).get(0);
+										String synNameType = syns.get(j).get(1);
+										
 										Node synode = graphDb.createNode();
-										synode.setProperty("name",syns.get(j).get(0));
-										synode.setProperty("nametype",syns.get(j).get(1));
+										synode.setProperty("name",synName);
+										synode.setProperty("nametype",synNameType);
 										synode.setProperty("source",sourcename);
 										synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+										synNodeIndex.add(synode, "name", synName);
 									}
 								}
 							}
@@ -187,11 +192,16 @@ public class TaxonomyLoader extends TaxonomyBase{
 						if(synonymhash.get(first)!=null){
 							ArrayList<ArrayList<String>> syns = synonymhash.get(first);
 							for(int j=0;j<syns.size();j++){
+								
+								String synName = syns.get(j).get(0);
+								String synNameType = syns.get(j).get(1);
+								
 								Node synode = graphDb.createNode();
-								synode.setProperty("name",syns.get(j).get(0));
-								synode.setProperty("nametype",syns.get(j).get(1));
+								synode.setProperty("name",synName);
+								synode.setProperty("nametype",synNameType);
 								synode.setProperty("source",sourcename);
 								synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+								synNodeIndex.add(synode, "name", synName);
 							}
 						}
 					}
@@ -435,7 +445,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 			tx.finish();
 		}
 		//now start the preorder after the processing of the file
-		globaltranscationnum = 0;
+		globaltransactionnum = 0;
 		gtx = graphDb.beginTx();
 		try{
 			System.out.println("sending to preorder builder");
@@ -464,11 +474,11 @@ public class TaxonomyLoader extends TaxonomyBase{
 	}
 	
 	private void preorderAddAdditionalTaxonomy(Node lastexistingmatch, Node rootnode, String curtaxid,String sourcename) {
-		globaltranscationnum += 1;
+		globaltransactionnum += 1;
 		//using the current node, root node, see if the children have any matches, if they do
 		//then they much be subtending of the current rootnode
-		if(globaltranscationnum % (transaction_iter/100) == 0){
-			System.out.println("preorder add: "+globaltranscationnum);
+		if(globaltransactionnum % (transaction_iter/100) == 0){
+			System.out.println("preorder add: "+globaltransactionnum);
 			preorderFinishTransaction();
 		}
 		boolean verbose = false;

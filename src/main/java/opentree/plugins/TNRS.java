@@ -25,7 +25,6 @@ public class TNRS extends ServerPlugin {
             @Description("A comma-delimited string of names to be queried upon")
 			@Parameter(name = "queryString") String queryString) {
 	    
-//		String response = "{\"test\":\"response\"}";
         String[] searchStrings = queryString.split("\\s*\\,\\s*");
 
         TaxonomyExplorer taxonomy = new TaxonomyExplorer();
@@ -56,10 +55,10 @@ public class TNRS extends ServerPlugin {
                 
                 response += "\"matched_node_id\":" + m.getMatchedNodeId() + ",";
                 response += "\"matched_node_name\":\"" + m.getMatchedNodeName() + "\",";
-/*                response += "\"synonym_node_id\":" + m.getSynonymNodeId() + "\",";
-                response += "\"synonym_node_name\":\"" + m.getSynonymNodeName() + "\","; */
+                response += "\"synonym_node_id\":" + m.getSynonymNodeId() + "\",";
+                response += "\"synonym_node_name\":\"" + m.getSynonymNodeName() + "\",";
                 response += "\"source\":\"" + m.getSource() + "\",";
-                response += "\"is_exact_node\":\"" + m.getIsExactNode() + "\",";
+                response += "\"is_perfect_match\":\"" + m.getIsPerfectMatch() + "\",";
                 response += "\"is_approximate_node\":\"" + m.getIsApproximate() + "\",";
                 response += "\"is_synonym\":\"" + m.getIsSynonym() + "\",";
                 response += "\"is_homonym\":\"" + m.getIsHomonym() + "\",";
@@ -77,26 +76,4 @@ public class TNRS extends ServerPlugin {
         taxonomy.shutdownDB();		
         return response;
 	}
-	
-/*	@Description ("Return a JSON with the node id given a name")
-	@PluginTarget (GraphDatabaseService.class)
-	public String getNodeIDJSONFromName(@Source GraphDatabaseService graphDb,
-			@Description("Name of node to find.")
-			@Parameter( name = "nodename", optional= true ) String nodename ){
-		String retst = "";
-		System.out.println(nodename);
-		IndexHits<Node> hits = graphDb.index().forNodes("taxNamedNodes").get("name",nodename);
-		try{
-			Node firstNode = hits.next();
-			hits.close();
-			if(firstNode == null){
-				retst = "[]";
-			}else{
-				retst="[{\"nodeid\":"+firstNode.getId()+"}]";
-			}
-		}catch(java.lang.Exception jle){
-			retst = "[]";
-		}
-		return retst;
-	} */
 }
