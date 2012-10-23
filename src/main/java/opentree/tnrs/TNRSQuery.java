@@ -3,16 +3,10 @@ package opentree.tnrs;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import opentree.TaxonomyBase;
 import opentree.TaxonomyExplorer;
 
-import org.neo4j.graphalgo.GraphAlgoFactory;
-import org.neo4j.graphalgo.PathFinder;
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.index.IndexHits;
-import org.neo4j.kernel.Traversal;
 
 /**
  * @author Cody Hinchliff
