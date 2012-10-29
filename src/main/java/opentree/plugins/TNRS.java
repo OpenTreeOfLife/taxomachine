@@ -1,6 +1,10 @@
 package opentree.plugins;
 
+import java.util.ArrayList;
+
 import opentree.TaxonomyExplorer;
+import opentree.tnrs.TNRSMatch;
+import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSAdapter;
 import opentree.tnrs.TNRSQuery;
@@ -12,12 +16,15 @@ import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
+import org.neo4j.server.rest.repr.Representation;
+import org.neo4j.server.rest.repr.TNRSResultsToRepresentationConverter;
 
 public class TNRS extends ServerPlugin {
-
+	
 	@Description ("Return information on potential matches to a search query")
 	@PluginTarget (GraphDatabaseService.class)
-	public TNRSNameResult[] doTNRSForNames(@Source GraphDatabaseService graphDb,
+	public Representation doTNRSForNames(
+			@Source GraphDatabaseService graphDb,
             @Description("A comma-delimited string of names to be queried upon")
 			@Parameter(name = "queryString") String queryString) {
 	    
@@ -28,18 +35,20 @@ public class TNRS extends ServerPlugin {
         TNRSAdapter iplant = new TNRSAdapteriPlant();
 
         int nSearchStrings = searchStrings.length;
-        TNRSNameResult[] results = new TNRSNameResult[nSearchStrings];
+        ArrayList<TNRSNameResult> results = new ArrayList<TNRSNameResult>();
         
         for (int i = 0; i < nSearchStrings; i++) {
-        	results[i].queried_name = searchStrings[i];
-
-        	// TNRSQuery expects an array of names, so we create a length-1 array for each name
-        	String[] queriedName = new String[1];
-        	queriedName[1] = searchStrings[i];
+        	TNRSNameResult r = new TNRSNameResult();
+        	r.queried_name = searchStrings[i];
 
         	TNRSQuery tnrs = new TNRSQuery(taxonomy);
-            results[i].matches = tnrs.getMatches(queriedName, iplant);
+            r.matches = tnrs.getMatches(r.queried_name, iplant);
+            
+            results.add(r);
         }
+        
+        taxonomy.shutdownDB();
+        return TNRSResultsToRepresentationConverter.convert(results);
 
 /*        String response = "{\"results\":[";
         boolean first = true;
@@ -81,9 +90,7 @@ public class TNRS extends ServerPlugin {
             
             response += "]}";
         }
-        response += "]}"; */
-        
-        taxonomy.shutdownDB();		
-        return results;
-	}
+        response += "]}";
+*/
+	} 
 }

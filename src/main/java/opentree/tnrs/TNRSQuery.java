@@ -30,8 +30,16 @@ public class TNRSQuery {
         _matchedNames = new HashMap<String, Boolean>();
     }
 
+    public TNRSMatchSet getMatches(String searchString, TNRSAdapter... adapters) {
+        String[] searchStrings = new String[1];
+        searchStrings[0] = searchString;
+        System.out.println(searchString);
+        return getMatches(searchStrings, adapters);
+    }
+
+    
     /**
-     * @param searchString
+     * @param searchStrings
      * @param adapters
      * @return results
      * 
@@ -132,49 +140,6 @@ public class TNRSQuery {
                 _matchedNames.put(thisName, true);
                 wasMatched = true;
             }
-/*
-            // third: check for fuzzy matches to recognized taxa
-            IndexHits<Node> fuzzyTaxMatches = _taxonomy.findTaxNodeByNameFuzzy(thisName);
-            if (fuzzyTaxMatches.size() > 0) {
-                for (Node n : fuzzyTaxMatches) {
-
-                    // check to see if the fuzzily matched node is a homonym
-                    IndexHits<Node> directMatches = _taxonomy.findTaxNodeByName(n.getProperty("name").toString());
-                    boolean isHomonym = false;
-                    if (directMatches.size() > 1)
-                        isHomonym = true;
-
-                    // add the match
-                    _results.addMatch(new TNRSHit().
-                            setIsApprox(true).
-                            setIsHomonym(isHomonym).
-                            setMatchedNode(n).
-                            setScore(TEMP_SCORE). // TODO: record scores with fuzzy matches
-                            setSearchString(thisName).
-                            setSourceName("ottol"));
-                }
-                wasMatched = true;
-            }
-
-            // fourth: check for fuzzy matches to synonyms
-            IndexHits<Node> fuzzySynMatches = _taxonomy.findSynNodeByNameFuzzy(thisName);
-            if (fuzzySynMatches.size() > 0) {
-                for (Node synNode : fuzzySynMatches) {
-                	// find the node matched by this synonym
-                	Node taxNode = _taxonomy.getTaxNodeForSynNode(synNode);
-                	
-                    // add the match
-                    _results.addMatch(new TNRSHit().
-                    		setIsApprox(true).
-                            setMatchedNode(taxNode).
-                            setSynonymNode(synNode).
-                            setSearchString(thisName).
-                            setIsSynonym(true).
-                            setSourceName("ottol").
-                            setScore(TEMP_SCORE));  // TODO: record scores with fuzzy matches
-                }
-                wasMatched = true;
-            } */
             
             // remember names we can't match within the graph
             if (wasMatched)
@@ -183,7 +148,7 @@ public class TNRSQuery {
                 _unmatchedNames.add(thisName);
         }
 
-        // TODO: at the moment we are just using internal matching for speed considerations
+        // TODO: at the moment we are only using internal matching; not worth the extra time for external services
         boolean useExternalServices = false;
         if (useExternalServices) {
 	        // fourth: call passed adapters for help with names we couldn't match

@@ -1,6 +1,9 @@
 package opentree.tnrs;
 
 import org.neo4j.graphdb.Node;
+import org.neo4j.server.rest.repr.MappingRepresentation;
+import org.neo4j.server.rest.repr.MappingSerializer;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
