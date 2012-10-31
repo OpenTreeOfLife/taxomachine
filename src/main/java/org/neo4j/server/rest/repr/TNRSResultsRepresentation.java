@@ -23,42 +23,34 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
     }
     
     @Override
-    String serialize( RepresentationFormat format, URI baseUri, ExtensionInjector extensions )
-    {
+    String serialize( RepresentationFormat format, URI baseUri, ExtensionInjector extensions ) {
         MappingWriter writer = format.serializeMapping( type );
         Serializer.injectExtensions( writer, this, baseUri, extensions );
-        serialize( new TNRSResultsSerializer( writer, baseUri, extensions ) );
+        serialize( new MappingSerializer( writer, baseUri, extensions ) );
         writer.done();
         return format.complete( writer );
     }
     
     @Override
-    void addTo( ListSerializer serializer )
-    {
+    void addTo( ListSerializer serializer ) {
         serializer.addMapping( this );
     }
 
     @Override
-    void putTo( MappingSerializer serializer, String key )
-    {
+    void putTo( MappingSerializer serializer, String key ) {
         serializer.putMapping( key, this );
     }
 
     @Override
-    protected void serialize(MappingSerializer serializer) {
-        // TODO Auto-generated method stub
-        
+    protected void serialize(MappingSerializer serializer) {        
     }
     
-    public static TNRSResultsRepresentation map(final Map<String,Object> map)
-    {
-        return new TNRSResultsRepresentation(RepresentationType.MAP.toString())
-        {
+    public static TNRSResultsRepresentation map(final Map<String,Object> map) {
+        return new TNRSResultsRepresentation(RepresentationType.MAP.toString()) {
             @Override
             protected void serialize( final MappingSerializer serializer ) {
 
-                for(Map.Entry<String,Object> pair : map.entrySet())
-                {
+                for(Map.Entry<String,Object> pair : map.entrySet()) {
                     String key = pair.getKey();
                     Object value = pair.getValue();
                     
@@ -93,17 +85,15 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                 }
                 );
         return new ListRepresentation(RepresentationType.PROPERTIES, results);
-        
     }
     
     public static MappingRepresentation mapMatch(final TNRSMatch match) {
 
-        return new MappingRepresentation(RepresentationType.MAP.toString())
-        {
+        return new MappingRepresentation(RepresentationType.MAP.toString()) {
             @Override
             protected void serialize( final MappingSerializer serializer ) {
     
-        //      should have matchedNodeUniqueId
+                // should also have matchedNodeUniqueId, but this is not yet available
                 serializer.putNumber("matchedNodeId", match.getMatchedNodeId());
                 serializer.putString("matchedNodeName", match.getMatchedNodeName());
                 serializer.putString("sourceName", match.getSource());
@@ -116,7 +106,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
                 if (match.getIsSynonym()) {
                     serializer.putNumber("synonymNodeId", match.getSynonymNodeId());
-                    serializer.putString("synonymNodeName", match.getMatchedNodeName());
+                    serializer.putString("synonymNodeName", match.getSynonymNodeName());
                 }
             }
         };

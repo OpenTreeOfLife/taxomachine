@@ -144,8 +144,9 @@ public class MainRunner {
         } else if (args[0].compareTo("tnrstree") == 0) {
 
             System.out.println("not implemented");
-/*
-            TreeReader treeReader = new TreeReader();
+            System.exit(0);
+
+/*            TreeReader treeReader = new TreeReader();
             JadeTree tree = treeReader.readTree(args[1]);
 
             String[] treeTipNames = null; // get external node names from jade tree

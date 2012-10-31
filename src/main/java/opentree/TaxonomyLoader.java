@@ -26,10 +26,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 	int LARGE = 100000000;
 	int globaltransactionnum = 0;
 	Transaction gtx = null;
-	
-	//there are homonyms with these, so need to choose the ones that are closest to the root
-	HashSet<String> barriernames = new HashSet<String>(){{ add("Fungi"); add("Bacteria"); add("Viridiplantae");add("Metazoa");}};
-	
+		
 	//basic traversal method
 	final TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 			.relationships( RelTypes.TAXCHILDOF,Direction.OUTGOING );
@@ -554,44 +551,6 @@ public class TaxonomyLoader extends TaxonomyBase{
 		}
 	}
 	
-	private ArrayList<Node> getBarrierNodes(){
-		IndexHits<Node> hitsl = taxNodeIndex.get("name", "life");
-		if (hitsl.size() != 1){
-			System.out.println("There is a problem with getting the life node");
-			System.exit(0);
-		}
-		Node lifen = null;
-		try{
-			lifen = hitsl.getSingle();
-		}finally{
-			hitsl.close();
-		}
-		PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
-		ArrayList<Node> barnodes= new ArrayList<Node>();
-		Iterator<String> itn= barriernames.iterator();
-		while (itn.hasNext()){
-			String itns =itn.next();
-			IndexHits<Node> hits = taxNodeIndex.get("name", itns);
-			int bestcount = LARGE;
-			Node bestitem = null;
-			try{
-				for(Node node: hits){
-					Path tpath = tfinder.findSinglePath(node, lifen);
-					int pl = tpath.length();
-					if (pl < bestcount){
-						bestcount = pl;
-						bestitem = node;
-					}
-				}
-			}finally{
-				hits.close();
-			}
-			System.out.println("Found barrier: "+itns+" "+bestitem.getId());
-			barnodes.add(bestitem);
-		}
-		return barnodes;
-	}
-	
 	/**
 	 * See addInitialTaxonomyTableIntoGraph 
 	 * This function acts like addInitialTaxonomyTableIntoGraph but it 
@@ -619,15 +578,16 @@ public class TaxonomyLoader extends TaxonomyBase{
 			rootnode = graphDb.getNodeById(Long.valueOf(rootid));
 			System.out.println(rootnode);
 		}
-		ArrayList<Node> barriernodes = getBarrierNodes();
+		BarrierNodes bn = new BarrierNodes();
+		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
 		PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
 		//get what barriers in taxonomy are parent to the input root (so is this
 		//higher than plants, fungi, or animals (helps clarify homonyms
 		Node rootbarrier = null;
-		for (int i =0;i<barriernodes.size();i++){
-			Path tpath = tfinder.findSinglePath(rootnode, barriernodes.get(i));
+		for (int i =0;i<barrierNodes.size();i++){
+			Path tpath = tfinder.findSinglePath(rootnode, barrierNodes.get(i));
 			if (tpath != null)
-				rootbarrier = barriernodes.get(i);
+				rootbarrier = barrierNodes.get(i);
 		}
 		HashMap<String,Node> taxcontainedbarriersmap = new HashMap<String,Node>();
 		String str = "";
@@ -676,10 +636,11 @@ public class TaxonomyLoader extends TaxonomyBase{
 						metadatanode.createRelationshipTo(rootnode, RelTypes.METADATAFOR);
 					}
 					//check to see if the name is a barrier
-					if (barriernames.contains(name)){
-						for(int j=0;j<barriernodes.size();j++){
-							if (((String)barriernodes.get(j).getProperty("name")).equals(name)){	
-								taxcontainedbarriersmap.put(id,barriernodes.get(j));
+					HashSet<String> barrierNames = bn.getBarrierNodeNames();
+					if (barrierNames.contains(name)){
+						for(int j=0;j<barrierNodes.size();j++){
+							if (((String)barrierNodes.get(j).getProperty("name")).equals(name)){	
+								taxcontainedbarriersmap.put(id,barrierNodes.get(j));
 								System.out.println("added barrier node "+name);
 							}
 						}

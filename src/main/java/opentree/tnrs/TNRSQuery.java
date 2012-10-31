@@ -2,7 +2,10 @@ package opentree.tnrs;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Set;
 
+import opentree.TaxonSet;
 import opentree.TaxonomyExplorer;
 
 import org.neo4j.graphdb.Node;
@@ -18,16 +21,18 @@ public class TNRSQuery {
 
     private static final double TEMP_SCORE = 0.5;
 
-//    private String _graphName;
     private TaxonomyExplorer _taxonomy;
     private TNRSMatchSet _results;
     private HashSet<String> _unmatchedNames;
-    private HashMap<String, Boolean> _matchedNames;
+    private HashSet<String> _matchedNames;
+    private HashSet<Long> _matchedNodeIds;
+    private LinkedList<Node> _unambiguousTaxa;
 
     public TNRSQuery(TaxonomyExplorer taxonomy) {
-//        _graphName = graphName;
         _taxonomy = taxonomy;
-        _matchedNames = new HashMap<String, Boolean>();
+        _matchedNames = new HashSet<String>();
+        _unambiguousTaxa = new LinkedList<Node>();
+        _matchedNodeIds = new HashSet<Long>();
     }
 
     public TNRSMatchSet getMatches(String searchString, TNRSAdapter... adapters) {
@@ -43,61 +48,89 @@ public class TNRSQuery {
      * @param adapters
      * @return results
      * 
-     *         Performs a TNRS query on 'searchString', and loads the results of the query into a TNRSMatchSet object called 'results', which is returned.
-     *         'adapters' is either one or an array of TNRSAdapter objects for the sources to be queried. If no adapters are passed, then the query is only
-     *         performed against the local taxonomy graph.
+     *         Performs a TNRS query on `searchString`, a comma-delimited list of names, and loads the results of the query into a TNRSMatchSet object `results`, which is returned.
+     *         `adapters` is either one or an array of TNRSAdapter objects for the sources to be queried. If no adapters are passed, then the query is only
+     *         performed against the local taxonomy graph. (Currently adapters are deactivated for speed considerations).
      */
     public TNRSMatchSet getMatches(String[] searchStrings, TNRSAdapter... adapters) {
         _results = new TNRSMatchSet();
         _unmatchedNames = new HashSet<String>();
 
         for (int i = 0; i < searchStrings.length; i++) {
+            IndexHits<Node> directHits = _taxonomy.findTaxNodeByName(searchStrings[i]);
+            if (directHits.size() == 1)
+                for (Node n : directHits)
+                    _unambiguousTaxa.add(n);
+        }
+        
+        for (Node n : _unambiguousTaxa)
+            System.out.println(n.getProperty("name"));
+        
+        TaxonSet ts = new TaxonSet(_unambiguousTaxa);
+        Node mrca = ts.getMRCA();
+        // TODO: get closest outgoing barrier node
+
+        /* so code is in place to determine the taxon mrca of a given set of taxa. now need to determine how to
+         * use this information. one possibility is to weight potential homonym matches by their distance to the
+         * taxonomic mrca, with those falling within the defined ingroup having higher weight than those falling
+         * outside it. another question is what set of taxa to use to determine the mrca. we can remove all
+         * blatant homonyms, but what about synonyms?
+         */
+        
+//        if (mrca != null)
+//            System.out.println(mrca.getProperty("name"));
+        
+        for (int i = 0; i < searchStrings.length; i++) {
             String thisName = searchStrings[i];
 
             // determine the min fuzzy match score based on length; shorter names
             // require lower min identities to small numbers of edit differences
             int ql = thisName.length();
-            float minId = 0;
+            float minIdentity = 0;
             if (ql < 4)
-            	minId = (float)0.55;
+            	minIdentity = (float)0.55;
             else if (ql < 6)
-            	minId = (float)0.6;
+                minIdentity = (float)0.6;
             else if (ql < 8)
-            	minId = (float)0.65;
+                minIdentity = (float)0.65;
             else if (ql < 11)
-            	minId = (float)0.7;
+                minIdentity = (float)0.7;
             else if (ql < 14)
-            	minId = (float)0.75;
+                minIdentity = (float)0.75;
             else
-            	minId = (float)0.8;
+                minIdentity = (float)0.8;
 
-            if (_matchedNames.containsKey(thisName)) {
+            if (_matchedNames.contains(thisName)) {
                 continue;
             }
             boolean wasMatched = false;
 
             // first: use fuzzy matching to find possible preferred taxon nodes
-            IndexHits<Node> matchedTaxNodes = _taxonomy.findTaxNodeByNameFuzzy(thisName, minId);
+            IndexHits<Node> matchedTaxNodes = _taxonomy.findTaxNodeByNameFuzzy(thisName, minIdentity);
             if (matchedTaxNodes.size() > 0) {
             	
             	for (Node n : matchedTaxNodes) {
 
                 	// check if the name is an exact match to the query
                     boolean isFuzzy = n.getProperty("name").equals(thisName) ? false : true;
-            		
+
                     // check if the matched node is a homonym
-                    IndexHits<Node> directMatches = _taxonomy.findTaxNodeByName(n.getProperty("name").toString());
-                    boolean isHomonym = directMatches.size() > 1 ? true : false;
+                    IndexHits<Node> directHits = _taxonomy.findTaxNodeByName(n.getProperty("name").toString());
+                    boolean isHomonym = directHits.size() > 1 ? true : false;
+
+                    // TODO: if it is a homonym, find closest downstream barrier node from 
                     
-                    boolean isPerfectMatch = !(isHomonym || isFuzzy) ? true : false;
+                    boolean isPerfectMatch = (!isHomonym && !isFuzzy) ? true : false;
            		
-                	// TODO: get the score for each hit
+                	// TODO: get the score for each hit, currently using extremely coarse scoring
                     double score = 0;
                     if (isPerfectMatch)
                     	score = 1;
                     else
                     	score = TEMP_SCORE;
 
+                    // TODO: use tu.getDistToMRCA(n) function to adjust score for homonyms
+                    
             		// add the match
                     _results.addMatch(new TNRSHit().
                             setMatchedNode(n).
@@ -107,13 +140,15 @@ public class TNRSQuery {
                             setIsHomonym(isHomonym).
                             setSourceName("ottol").
                             setScore(score));
+
+                    _matchedNodeIds.add(n.getId());
                 }
-                _matchedNames.put(thisName, true);
+            	_matchedNames.add(thisName);
                 wasMatched = true;
             }
 
             // second: use fuzzy matching to find possible preferred synonyms
-            IndexHits<Node> matchedSynNodes = _taxonomy.findSynNodeByNameFuzzy(thisName, minId);
+            IndexHits<Node> matchedSynNodes = _taxonomy.findSynNodeByNameFuzzy(thisName, minIdentity);
             if (matchedSynNodes.size() > 0) {
                 for (Node synNode : matchedSynNodes) {
 
@@ -123,27 +158,34 @@ public class TNRSQuery {
                 	// find the node matched by this synonym
                 	Node taxNode = _taxonomy.getTaxNodeForSynNode(synNode);
                 	
-                	// TODO: get the score for each hit
-                	double score = TEMP_SCORE;
-                	
-                    // add the match
-                    _results.addMatch(new TNRSHit().
-                            setMatchedNode(taxNode).
-                            setSynonymNode(synNode).
-                            setSearchString(thisName).
-                            setIsApprox(isApprox).
-                            setIsSynonym(true).
-                            setIsPerfectMatch(false).
-                            setSourceName("ottol").
-                            setScore(score));
+                	// only add new matches to taxon nodes that are not already in the matched set
+                	if (_matchedNodeIds.contains(taxNode.getId()) == false) {
+                    	// TODO: get the score for each hit
+                    	double score = TEMP_SCORE;
+
+                    	// TODO: use tu.getDistToMRCA(n) function to adjust score for all synonym matches
+
+                        // add the match
+                        _results.addMatch(new TNRSHit().
+                                setMatchedNode(taxNode).
+                                setSynonymNode(synNode).
+                                setSearchString(thisName).
+                                setIsApprox(isApprox).
+                                setIsSynonym(true).
+                                setIsPerfectMatch(false).
+                                setSourceName("ottol").
+                                setScore(score));
+
+                        _matchedNodeIds.add(synNode.getId());
+                	}
                 }
-                _matchedNames.put(thisName, true);
+                _matchedNames.add(thisName);
                 wasMatched = true;
             }
             
             // remember names we can't match within the graph
             if (wasMatched)
-                _matchedNames.put(thisName, true);
+                _matchedNames.add(thisName);
             else
                 _unmatchedNames.add(thisName);
         }
@@ -163,7 +205,7 @@ public class TNRSQuery {
         return _results;
     }
 
-    public HashSet<String> getUnmatchedNames() {
+    public Set<String> getUnmatchedNames() {
         return _unmatchedNames;
     }
 }
