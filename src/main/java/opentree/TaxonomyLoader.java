@@ -578,7 +578,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 			rootnode = graphDb.getNodeById(Long.valueOf(rootid));
 			System.out.println(rootnode);
 		}
-		BarrierNodes bn = new BarrierNodes();
+		BarrierNodes bn = new BarrierNodes(graphDb);
 		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
 		PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
 		//get what barriers in taxonomy are parent to the input root (so is this

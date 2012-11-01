@@ -13,62 +13,78 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
 
 public final class BarrierNodes extends TaxonomyBase {
 
-    //there are homonyms with these, so need to choose the ones that are closest to the root
-    static final HashSet<String> barrierNames = new HashSet<String>(){{ add("Fungi"); add("Bacteria"); add("Viridiplantae");add("Metazoa");}};
+    static final HashSet<String> barrierNames = new HashSet<String>() {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+        {
+            add("Fungi");
+            add("Bacteria");
+            add("Viridiplantae");
+            add("Metazoa");
+        }
+    };
     static final int LARGE = 100000000;
 
-    public BarrierNodes() {
-        taxNodeIndex = graphDb.index().forNodes( "taxNodes" );
+    public BarrierNodes(EmbeddedGraphDatabase gdb) {
+        graphDb = gdb;
+        taxNodeIndex = graphDb.index().forNodes("taxNodes");
     }
-    
+
     public ArrayList<Node> getBarrierNodes() {
+
+        // some of the barrier names may be homonyms, so we need to choose the ones that are closest to the root
+        // first get the life node
         IndexHits<Node> hitsl = taxNodeIndex.get("name", "life");
-        if (hitsl.size() != 1){
+        if (hitsl.size() != 1) {
             System.out.println("There is a problem with getting the life node");
             System.exit(0);
         }
+
         Node lifen = null;
-        try{
+        try {
             lifen = hitsl.getSingle();
-        }finally{
+        } finally {
             hitsl.close();
         }
-        PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
-        ArrayList<Node> barnodes= new ArrayList<Node>();
-/*      Iterator<String> itn= barriernames.iterator();
-        while (itn.hasNext()){
-            String itns =itn.next(); */
+
+        // now traverse from each barrier node to life and pick the closest one
+        PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING), 10000);
+        ArrayList<Node> barnodes = new ArrayList<Node>();
 
         for (String itns : barrierNames) {
             IndexHits<Node> hits = taxNodeIndex.get("name", itns);
             int bestcount = LARGE;
             Node bestitem = null;
-            try{
-                for(Node node: hits){
+            try {
+                for (Node node : hits) {
                     Path tpath = tfinder.findSinglePath(node, lifen);
                     int pl = tpath.length();
-                    if (pl < bestcount){
+                    if (pl < bestcount) {
                         bestcount = pl;
                         bestitem = node;
                     }
                 }
-            }finally{
+            } finally {
                 hits.close();
             }
-            System.out.println("Found barrier: "+itns+" "+bestitem.getId());
+            System.out.println("Found barrier: " + itns + " " + bestitem.getId());
             barnodes.add(bestitem);
         }
+        
         return barnodes;
     }
-    
+
     public HashSet<String> getBarrierNodeNames() {
         return barrierNames;
     }
-    
+
     public boolean contains(String name) {
         return barrierNames.contains(name);
     }
