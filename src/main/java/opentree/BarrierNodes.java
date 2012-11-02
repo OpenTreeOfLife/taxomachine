@@ -1,6 +1,7 @@
 package opentree;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -20,7 +21,7 @@ public final class BarrierNodes extends TaxonomyBase {
 
     static final HashSet<String> barrierNames = new HashSet<String>() {
         /**
-         * 
+         * could possibly make this a dictionary with key as node name and value as nomenclature
          */
         private static final long serialVersionUID = 1L;
         {
@@ -28,9 +29,32 @@ public final class BarrierNodes extends TaxonomyBase {
             add("Bacteria");
             add("Viridiplantae");
             add("Metazoa");
-            add("Alveolata");//some more
+            add("Alveolata");
+            add("Rhodophyta");
+            add("Glaucocystophyceae");
+            add("Haptophyceae");
+            add("Choanoflagellida");
         }
     };
+    
+    static final HashMap<String,String> barrierNamesMap = new HashMap<String,String>() {
+        /**
+         * could possibly make this a dictionary with key as node name and value as nomenclature
+         */
+        private static final long serialVersionUID = 1L;
+        {
+            put("Fungi","ICBN");
+            put("Viridiplantae","ICBN");
+            put("Bacteria","ICNB");
+            put("Metazoa","ICZN");
+            put("Alveolata","ICZN");
+            put("Rhodophyta","ICBN");
+            put("Glaucocystophyceae","ICBN");
+            put("Haptophyceae","ICBN");
+            put("Choanoflagellida","ICZN");
+        }
+    };
+    
     static final int LARGE = 100000000;
 
     public BarrierNodes(EmbeddedGraphDatabase gdb) {
@@ -86,6 +110,10 @@ public final class BarrierNodes extends TaxonomyBase {
         return barrierNames;
     }
 
+    public HashMap<String,String> getBarrierNodeMap() {
+        return barrierNamesMap;
+    }
+    
     public boolean contains(String name) {
         return barrierNames.contains(name);
     }

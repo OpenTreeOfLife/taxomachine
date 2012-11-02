@@ -258,13 +258,14 @@ public class TaxonomyLoader extends TaxonomyBase{
 		System.out.println("setting barrier nodes");
 		BarrierNodes bn = new BarrierNodes(graphDb);
 		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
+		HashMap<String,String> barrierNodesMap = bn.getBarrierNodeMap();
 		TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
 				.relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
 		tx = graphDb.beginTx();
 		try{
 			for (int i=0;i<barrierNodes.size();i++){
 				for(Node currentNode : CHILDREN_TRAVERSAL.traverse(barrierNodes.get(i)).nodes()){
-					currentNode.setProperty("barrier", barrierNodes.get(i).getProperty("name"));
+					currentNode.setProperty("taxcode", barrierNodesMap.get(barrierNodes.get(i).getProperty("name")));
 				}
 			}
 			tx.success();
@@ -300,16 +301,49 @@ public class TaxonomyLoader extends TaxonomyBase{
 	 */
 	public void addAdditionalTaxonomyToGraph(String sourcename, String rootid, String filename, String synonymfile){
 		Node rootnode = null;
+		String str = "";
 		String roottaxid = "";
 		if (rootid.length() > 0){
 			rootnode = graphDb.getNodeById(Long.valueOf(rootid));
 			System.out.println(rootnode);
 		}
-		BarrierNodes bn = new BarrierNodes(graphDb);
-		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
 		PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
+
+		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
+		boolean synFileExists = false;
+		if(synonymfile.length()>0)
+			synFileExists = true;
+		//preprocess the synonym file
+		//key is the id from the taxonomy, the array has the synonym and the type of synonym
+		if(synFileExists){
+			synonymhash = new HashMap<String,ArrayList<ArrayList<String>>>();
+			try {
+				BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
+				while((str = sbr.readLine())!=null){
+					StringTokenizer st = new StringTokenizer(str,"\t|\t");
+					String id = st.nextToken();
+					String name = st.nextToken();
+					String type = st.nextToken();
+					ArrayList<String> tar = new ArrayList<String>();
+					tar.add(name);tar.add(type);
+					if (synonymhash.get(id) == null){
+						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
+						synonymhash.put(id, ttar);
+					}
+					synonymhash.get(id).add(tar);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+			System.out.println("synonyms: "+synonymhash.size());
+		}
+		
 		//get what barriers in taxonomy are parent to the input root (so is this
 		//higher than plants, fungi, or animals (helps clarify homonyms
+		BarrierNodes bn = new BarrierNodes(graphDb);
+		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
+		HashMap<String,String> barrierNodesMap = bn.getBarrierNodeMap();
 		Node rootbarrier = null;
 		for (int i =0;i<barrierNodes.size();i++){
 			Path tpath = tfinder.findSinglePath(rootnode, barrierNodes.get(i));
@@ -317,7 +351,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 				rootbarrier = barrierNodes.get(i);
 		}
 		HashMap<String,Node> taxcontainedbarriersmap = new HashMap<String,Node>();
-		String str = "";
+		
 		HashMap<String, String> idparentmap = new HashMap<String, String>(); // node number -> parent's number
 		HashMap<String, String> idnamemap = new HashMap<String, String>();
 		ArrayList<String> idlist = new ArrayList<String>();
@@ -417,28 +451,29 @@ public class TaxonomyLoader extends TaxonomyBase{
 						Node newnode = graphDb.createNode();
 						newnode.setProperty("name", idnamemap.get(curid));
 						if(curidbarrier != null){
-							if(curidbarrier.hasProperty("barrier"))
-								newnode.setProperty("barrier", (String)curidbarrier.getProperty("barrier"));
+							if(curidbarrier.hasProperty("taxcode"))
+								newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
 						}
 						taxNodeIndex.add( newnode, "name", idnamemap.get(curid));
 						idnodemap.put(curid,newnode);
 						acount += 1;
+//						System.out.println("new name: "+idnamemap.get(curid));
 					}else{
 						Node bestnode = null;
 						for(Node node:hits){
-							if (node.hasProperty("barrier")){
+							if (node.hasProperty("taxcode")){
 								if(curidbarrier != null){
-									if(curidbarrier.hasProperty("barrier"))
-										if (node.getProperty("barrier").equals(curidbarrier.getProperty("barrier")))
+									if(curidbarrier.hasProperty("taxcode"))
+										if (node.getProperty("taxcode").equals(curidbarrier.getProperty("taxcode")))
 											bestnode = node;
 								}else{
 									//System.out.println("name: "+idnamemap.get(curid)+" "+((String)node.getProperty("barrier")));
 									//these are often problems
 								}
 							}else{
-								if(node.hasProperty("barrier") == false)
+								if(node.hasProperty("taxcode") == false)
 									if(curidbarrier != null){
-										if(curidbarrier.hasProperty("barrier") == false)
+										if(curidbarrier.hasProperty("taxcode") == false)
 											bestnode = node;
 									}else{
 										bestnode = node;
@@ -449,8 +484,8 @@ public class TaxonomyLoader extends TaxonomyBase{
 							Node newnode = graphDb.createNode();
 							newnode.setProperty("name", idnamemap.get(curid));
 							if(curidbarrier != null){
-								if(curidbarrier.hasProperty("barrier"))
-									newnode.setProperty("barrier", (String)curidbarrier.getProperty("barrier"));
+								if(curidbarrier.hasProperty("taxcode"))
+									newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
 							}
 							taxNodeIndex.add( newnode, "name", idnamemap.get(curid));
 							idnodemap.put(curid,newnode);
@@ -472,10 +507,6 @@ public class TaxonomyLoader extends TaxonomyBase{
 			tx.finish();
 		}
 
-		ArrayList<Node> rel_nd = new ArrayList<Node>();
-		ArrayList<Node> rel_pnd = new ArrayList<Node>();
-		ArrayList<String> rel_cid = new ArrayList<String>();
-		ArrayList<String> rel_pid = new ArrayList<String>();
 		System.out.println("relationship run through");
 		tx=graphDb.beginTx();
 		try{
@@ -492,8 +523,35 @@ public class TaxonomyLoader extends TaxonomyBase{
 					rel.setProperty("childid", curid);
 					rel.setProperty("parentid", idparentmap.get(curid));
 					count += 1;
-					if (count % 10000 == 0)
+					if (count % 100000 == 0)
 						System.out.println(count);
+				}
+			}
+			tx.success();
+		}finally{
+			tx.finish();
+		}
+		//synonym processing
+		tx=graphDb.beginTx();
+		try{
+			if(synFileExists){
+				System.out.println("synonyms processing");
+				for(int i=0;i<idlist.size();i++){
+					String first = idlist.get(i);
+					if(synonymhash.get(first)!=null){
+						Node tnode = idnodemap.get(first);
+						ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+						for(int j=0;j<syns.size();j++){
+							String synName = syns.get(j).get(0);
+							String synNameType = syns.get(j).get(1);
+							Node synode = graphDb.createNode();
+							synode.setProperty("name",synName);
+							synode.setProperty("nametype",synNameType);
+							synode.setProperty("source",sourcename);
+							synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+							synNodeIndex.add(synode, "name", synName);
+						}
+					}
 				}
 			}
 			tx.success();

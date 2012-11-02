@@ -49,7 +49,7 @@ public class MainRunner {
 			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
 		} else if (args[0].equals("addtaxsyn")) {
 			System.out.println("adding taxonomy from " + filename + "and synonym file " + synonymfile + " to " + graphname);
-			tl.addAdditionalTaxonomyToGraphNEW(sourcename, "1300014", filename,synonymfile);
+			tl.addAdditionalTaxonomyToGraph(sourcename, "931568", filename,synonymfile);
 		} else {
 			System.err.println("\nERROR: not a known command");
 			tl.shutdownDB();
