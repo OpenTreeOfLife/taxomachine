@@ -84,7 +84,6 @@ public class TaxonSet implements Iterable<Node> {
         return mrca != null;
     }
     
-    @Override
     public Iterator<Node> iterator() {
         return taxa.iterator();
     }

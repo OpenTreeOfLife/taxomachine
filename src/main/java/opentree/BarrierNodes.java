@@ -28,6 +28,7 @@ public final class BarrierNodes extends TaxonomyBase {
             add("Bacteria");
             add("Viridiplantae");
             add("Metazoa");
+            add("Alveolata");//some more
         }
     };
     static final int LARGE = 100000000;
