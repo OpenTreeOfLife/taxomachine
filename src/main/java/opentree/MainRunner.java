@@ -14,6 +14,8 @@ import opentree.tnrs.adapters.iplant.TNRSAdapteriPlant;
 
 //import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.index.IndexHits;
 
 public class MainRunner {
 	public void taxonomyLoadParser(String [] args) {
@@ -82,49 +84,97 @@ public class MainRunner {
 		}
 		
 		TaxonomyExplorer te = null;
+        TNRSQuery tnrs = null;
+        Taxon taxon = null;
+
 		if (args[0].equals("comptaxtree")) {
 			String query = args[1];
-			String graphname = args[2];
-			te =  new TaxonomyExplorer(graphname);
-			System.out.println("constructing a comprehensive tax tree of " + query);
-			te.buildTaxonomyTree(query);
+            String graphname = args[2];
+
+            te =  new TaxonomyExplorer(graphname);
+            tnrs = new TNRSQuery(te);
+            TNRSMatchSet results = tnrs.getExactMatches(query);
+
+	        if (results.size() > 1) {
+	            // TODO: print results, have them pick one
+	            System.out.println("there was more than one match to that name. this case not yet implemented");
+	            System.exit(0);
+            } else {
+                taxon = new Taxon(results.iterator().next().getMatchedNode());
+    			System.out.println("constructing a comprehensive tax tree of " + query);
+    			taxon.buildTaxonomyTree();
+            }
+
 		} else if (args[0].equals("comptaxgraph")) {
 			String query = args[1];
 			String graphname = args[2];
 			String outname = args[3];
-			te =  new TaxonomyExplorer(graphname);
-			te.exportGraphForClade(query, outname);
+			
+            te = new TaxonomyExplorer(graphname);
+            tnrs = new TNRSQuery(te);
+            TNRSMatchSet results = tnrs.getExactMatches(query);
+
+            if (results.size() > 1) {
+                // TODO: print results, have them pick one
+                System.out.println("there was more than one match to that name. this case not yet implemented");
+                System.exit(0);
+            } else {
+                taxon = new Taxon(results.iterator().next().getMatchedNode());
+                System.out.println("exporting the subgraph for clade " + query);
+                taxon.exportGraphForClade(outname);
+            }
+            
 		} else if (args[0].equals("findcycles")) {
 			String query = args[1];
 			String graphname = args[2];
-			te =  new TaxonomyExplorer(graphname);
-			System.out.println("finding taxonomic cycles for " + query);
+			
+            te =  new TaxonomyExplorer(graphname);
+
+            System.out.println("finding taxonomic cycles for " + query);
 			te.findTaxonomyCycles(query);
+
 		} else if (args[0].equals("jsgraph")) {
 			String query = args[1];
 			String graphname = args[2];
-			te =  new TaxonomyExplorer(graphname);
-			System.out.println("constructing json graph data for " + query);
-			te.constructJSONGraph(query);
+			
+            te = new TaxonomyExplorer(graphname);
+            tnrs = new TNRSQuery(te);
+            TNRSMatchSet results = tnrs.getExactMatches(query);
+			
+            if (results.size() > 1) {
+                // TODO: print results, have them pick one
+                System.out.println("there was more than one match to that name. this case not yet implemented");
+                System.exit(0);
+            } else {
+                taxon = new Taxon(results.iterator().next().getMatchedNode());
+    			System.out.println("constructing json graph data for " + query);
+    			taxon.constructJSONGraph();
+            }
+
 		} else if (args[0].equals("checktree")) {
-			String query = args[1];
+		    System.out.println("ERROR: this option is deprecated. use `tnrstree` option instead");
+	        System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)");
+/*			String query = args[1];
 			String focalgroup = args[2];
 			String graphname = args[3];
 			te =  new TaxonomyExplorer(graphname);
 			System.out.println("checking the names of " + query + " against the taxonomy graph");
-			te.checkNamesInTree(query,focalgroup);
+			te.checkNamesInTree(query,focalgroup); */
+
 		} else if (args[0].equals("makeottol")) {
 			String graphname = args[1];
 			te =  new TaxonomyExplorer(graphname);
 			System.out.println("making ottol relationships");
 			te.makePreferredOTTOLRelationshipsConflicts();
 			te.makePreferredOTTOLRelationshipsNOConflicts();
+
 		} else {
 			System.err.println("\nERROR: not a known command\n");
 			//te.shutdownDB(); // can only be null here
 			printHelp();
 			System.exit(1);
 		}
+
 		te.shutdownDB();
 	}
 
@@ -132,14 +182,14 @@ public class MainRunner {
         String graphName = args[2];
         TaxonomyExplorer taxonomy = new TaxonomyExplorer(graphName);
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
-        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
+//        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
         TNRSMatchSet results = null;
         
         if (args[0].compareTo("tnrsbasic") == 0) {
             
             // TODO: use MRCA of all provided names as query context
             String[] searchStrings = args[1].split("\\s*\\,\\s*");
-            results = tnrs.getMatches(searchStrings, iplant);
+            results = tnrs.getAllMatches(searchStrings);
             
         } else if (args[0].compareTo("tnrstree") == 0) {
 
@@ -188,7 +238,7 @@ public class MainRunner {
 		System.out.println("\tfindcycles <name> <graphdbfolder> (find cycles in tax graph)");
 		System.out.println("\tjsgraph <name> <graphdbfolder> (constructs a json file from tax graph)");
 		System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
-        System.out.println("---taxonomic name resolution services---");
+        System.out.println("\n---taxonomic name resolution services---");
         System.out.println("\ttnrsbasic <querynames> <graphdbfolder> (check if the taxonomy graph contains comma-delimited names)");
         System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)");
 

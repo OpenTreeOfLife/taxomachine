@@ -14,6 +14,8 @@ import jade.tree.JadeTree;
 import jade.tree.TreeReader;
 import opentree.TaxonomyBase.RelTypes;
 
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.FuzzyQuery;
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphdb.Direction;
@@ -58,22 +60,93 @@ public class TaxonomyExplorer extends TaxonomyBase{
     }
 
     public void setDbService(GraphDatabaseService graphDb) {
-        taxNodeIndex = graphDb.index().forNodes( "taxNodes" );
+        taxNodeIndex = graphDb.index().forNodes("taxNodes");
 		synNodeIndex = graphDb.index().forNodes("synNodes");
     }
 	
-    public Node getTaxNodeForSynNode(Node synonymNode) {
-    	Node taxNode = null;
-    	
-        TraversalDescription SYNONYMOF_TRAVERSAL = Traversal.description()
-		        .relationships(RelTypes.SYNONYMOF,Direction.OUTGOING);
+    /**
+     * Checks taxNodeIndex for `name` and returns null (if the name is not found) or an IndexHits<Node> object containing the found nodes. Helper function
+     * primarily written to avoid forgetting to call hits.close(). Somewhat disconcerting that we return `hits` after it has been closed, but it works. Would be
+     * helpful to validate that this is expected behavior.
+     * 
+     * @return
+     */
+    public IndexHits<Node> findTaxNodesByName(final String name) {
+        IndexHits<Node> hits = taxNodeIndex.get("name", name); // TODO: change to preferred nodes when this is functional
+        hits.close();
+        return hits;
+    }
 
-        for(Node tn : SYNONYMOF_TRAVERSAL.traverse(synonymNode).nodes()){
-    	 	taxNode = tn;
-    	}
-    	return taxNode;
+    /**
+     * Checks synNodeIndex for `name` and returns null (if the name is not found) or an IndexHits<Node> object containing the found nodes. Helper function
+     * primarily written to avoid forgetting to call hits.close(). Somewhat disconcerting that we return `hits` after it has been closed, but it works. Would be
+     * helpful to validate that this is expected behavior.
+     * 
+     * @return
+     */
+    public IndexHits<Node> findSynNodesByName(final String name) {
+        IndexHits<Node> hits = synNodeIndex.get("name", name); // TODO: change to preferred nodes when this is functional
+        hits.close();
+        return hits;
+    }
+
+    /**
+     * Checks taxNodeIndex for `name` and returns all hits. Uses fuzzy searching. Returns null (if the name is not found) or an IndexHits<Node> object
+     * containing the found nodes. Helper function primarily written to avoid forgetting to call hits.close(). Somewhat disconcerting that we return `hits`
+     * after it has been closed, but it works. Would be helpful to validate that this is expected behavior.
+     * 
+     * @return
+     */
+    public IndexHits<Node> findTaxNodesByNameFuzzy(final String name, float minIdentity) {
+        IndexHits<Node> hits = taxNodeIndex.query(new FuzzyQuery(new Term("name", name), minIdentity)); // TODO: change to preferred nodes when this is functional
+        hits.close();
+        return hits;
+    }
+
+    /**
+     * A wrapper that uses the default minimum identity score for fuzzy matches
+     * @param name
+     * @return
+     */
+    public IndexHits<Node> findTaxNodesByNameFuzzy(final String name) {
+        return findTaxNodesByNameFuzzy(name, DEFAULT_FUZZYMATCH_IDENTITY);
     }
     
+    /**
+     * Checks synNodeIndex for `name` and returns all hits. Uses fuzzy searching. Returns null (if the name is not found) or an IndexHits<Node> object
+     * containing the found nodes. Helper function primarily written to avoid forgetting to call hits.close(). Somewhat disconcerting that we return `hits`
+     * after it has been closed, but it works. Would be helpful to validate that this is expected behavior.
+     * 
+     * @return
+     */
+    public IndexHits<Node> findSynNodesByNameFuzzy(final String name, float minIdentity) {
+     // TODO: change to use preferred nodes only when this becomes functional
+        IndexHits<Node> hits = synNodeIndex.query(new FuzzyQuery(new Term("name", name), minIdentity));
+        hits.close();
+        return hits;
+    }
+    
+    /**
+     * A wrapper that uses the default minimum identity score for fuzzy matches
+     * @param name
+     * @return
+     */
+    public IndexHits<Node> findSynNodesByNameFuzzy(final String name) {
+        return findSynNodesByNameFuzzy(name, DEFAULT_FUZZYMATCH_IDENTITY);
+    }
+    
+    public Node getTaxNodeForSynNode(Node synonymNode) {
+    	
+        TraversalDescription synonymTraversal = Traversal.description()
+		        .relationships(RelTypes.SYNONYMOF, Direction.OUTGOING);
+
+        Node taxNode = null;
+        for(Node tn : synonymTraversal.traverse(synonymNode).nodes())
+    	 	taxNode = tn;
+
+        return taxNode;
+    }
+/*&    
 	/**
 	 * Writes a dot file for the taxonomy graph that is rooted at `clade_name`
 	 * 
@@ -81,7 +154,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	 * 		the root of the subtree that is written
 	 * @param out_filepath - the filepath to create
 	 * @todo support other graph file formats
-	 */
+	 *
 	public void exportGraphForClade(String clade_name, String out_filepath){
 		IndexHits<Node> foundNodes = findTaxNodeByName(clade_name);
 		Node firstNode = null;
@@ -140,15 +213,16 @@ public class TaxonomyExplorer extends TaxonomyBase{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
+	} */
 
+    /*
 	/**
 	 * This essentially uses every relationship and constructs a newick tree (hardcoded to taxtree.tre file)
 	 * 
 	 * It would be trivial to only include certain relationship sources
 	 * @ name the name of the internal node that will be the root of the subtree 
 	 * that is written
-	 */
+	 *
 	public void buildTaxonomyTree(String name){
         IndexHits<Node> foundNodes = findTaxNodeByName(name);
         Node firstNode = null;
@@ -195,13 +269,13 @@ public class TaxonomyExplorer extends TaxonomyBase{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
+	} */
 	
 	/*
 	 * Given a Taxonomic name (as name), this will attempt to find cycles which should be conflicting taxonomies
 	 */
-	public void findTaxonomyCycles(String name){
-	    IndexHits<Node> foundNodes = findTaxNodeByName(name);
+	public void findTaxonomyCycles(String name) {
+	    IndexHits<Node> foundNodes = findTaxNodesByName(name);
         Node firstNode = null;
         if (foundNodes.size() < 1){
             System.out.println("name '" + name + "' not found. quitting.");
@@ -241,7 +315,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	/*
 	 * given a taxonomic name, construct a json object of the graph surrounding that name
 	 */
-	public void constructJSONGraph(String name){
+/*	public void constructJSONGraph(String name){
 	    IndexHits<Node> foundNodes = findTaxNodeByName(name);
         Node firstNode = null;
         if (foundNodes.size() < 1){
@@ -344,7 +418,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 					/*just for last ditch efforts
 					 * if(pf.findSinglePath(rel.getEndNode(), firstNode) != null || visited.contains(rel.getEndNode())){
 						preferred = rel;
-					}*/
+					}*
 				}
 			}
 			if(keep == null){
@@ -447,16 +521,20 @@ public class TaxonomyExplorer extends TaxonomyBase{
 		ret += tree.getRoot().getJSON(false);
 		ret += ",{\"domsource\":\""+sourcename+"\"}]\n";
 		return ret;
-	}
+	} */
 	
+	/*
 	public void runittest(){
 		buildTaxonomyTree("Lonicera");
 		shutdownDB();
-	}
+	} */
 	
-	public void checkNamesInTree(String treefilename,String focalgroup){
-		PathFinder <Path> pf = GraphAlgoFactory.shortestPath(Traversal.pathExpanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING), 100);
-		IndexHits<Node> foundNodes = findTaxNodeByName(focalgroup);
+	
+	
+	/* TODO: THIS SHOULD BE REPLACED BY TNRS CHECK TREE FUNCTION
+    public void checkNamesInTree(String treefilename,String focalgroup){
+        PathFinder <Path> pf = GraphAlgoFactory.shortestPath(Traversal.pathExpanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING), 100);
+        IndexHits<Node> foundNodes = findTaxNodeByName(focalgroup);
         Node focalnode = null;
         if (foundNodes.size() < 1){
             System.out.println("name '" + focalgroup + "' not found. quitting.");
@@ -466,32 +544,32 @@ public class TaxonomyExplorer extends TaxonomyBase{
         } else {
             for (Node n : foundNodes)
                 focalnode = n;
+        } 
+        String ts = "";
+        try{
+            BufferedReader br = new BufferedReader(new FileReader(treefilename));
+            ts = br.readLine();
+            br.close();
+        }catch(IOException ioe){
+            System.out.println("problem reading tree");
         }
-		String ts = "";
-		try{
-			BufferedReader br = new BufferedReader(new FileReader(treefilename));
-			ts = br.readLine();
-			br.close();
-		}catch(IOException ioe){
-			System.out.println("problem reading tree");
-		}
-		TreeReader tr = new TreeReader();
-		JadeTree jt = tr.readTree(ts);
-		System.out.println("tree read");
-		for(int i=0;i<jt.getExternalNodeCount();i++){
-			IndexHits<Node> hits = taxNodeIndex.get("name", jt.getExternalNode(i).getName().replace("_"," "));
-			int numh = hits.size();
-			if (numh == 0)
-				System.out.println(jt.getExternalNode(i).getName()+" gets NO hits");
-			if (numh > 1){
-				System.out.println(jt.getExternalNode(i).getName()+" gets "+numh+" hits");
-				for(Node tnode : hits){
-					Path tpath = pf.findSinglePath(tnode, focalnode);
-				}
-			}
-			hits.close();
-		}
-	}
+        TreeReader tr = new TreeReader();
+        JadeTree jt = tr.readTree(ts);
+        System.out.println("tree read");
+        for(int i=0;i<jt.getExternalNodeCount();i++){
+            IndexHits<Node> hits = taxNodeIndex.get("name", jt.getExternalNode(i).getName().replace("_"," "));
+            int numh = hits.size();
+            if (numh == 0)
+                System.out.println(jt.getExternalNode(i).getName()+" gets NO hits");
+            if (numh > 1){
+                System.out.println(jt.getExternalNode(i).getName()+" gets "+numh+" hits");
+                for(Node tnode : hits){
+                    Path tpath = pf.findSinglePath(tnode, focalnode);
+                }
+            }
+            hits.close();
+        }
+    } */
 	
 	/**
 	 * Right now this walks from the life node through the entire graph.
@@ -500,7 +578,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	public void makePreferredOTTOLRelationshipsConflicts(){
 		Transaction tx;
 		String name = "life";
-		IndexHits<Node> foundNodes = findTaxNodeByName(name);
+		IndexHits<Node> foundNodes = findTaxNodesByName(name);
         Node firstNode = null;
         if (foundNodes.size() < 1){
             System.out.println("name '" + name + "' not found. quitting.");
@@ -559,7 +637,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	public void makePreferredOTTOLRelationshipsNOConflicts(){
 		Transaction tx;
 		String name = "life";
-		IndexHits<Node> foundNodes = findTaxNodeByName(name);
+		IndexHits<Node> foundNodes = findTaxNodesByName(name);
         Node firstNode = null;
         if (foundNodes.size() < 1){
             System.out.println("name '" + name + "' not found. quitting.");
@@ -631,7 +709,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 		System.out.println("unit testing taxonomy explorer");
 	    String DB_PATH ="/home/smitty/Dropbox/projects/AVATOL/graphtests/neo4j-community-1.8.M02/data/graph.db";
 	    TaxonomyExplorer a = new TaxonomyExplorer(DB_PATH);
-	    a.runittest();
+//	    a.runittest();
 	}
 
 }

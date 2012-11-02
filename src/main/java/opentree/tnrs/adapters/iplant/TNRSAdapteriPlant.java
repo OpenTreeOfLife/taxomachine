@@ -157,12 +157,12 @@ public class TNRSAdapteriPlant extends TNRSAdapter {
                             String thisSearchString = thisNameResult.submittedName;
                             boolean thisNameMatched = false;
                             for (iPlantHit thisHit : thisNameResult) {
-                                IndexHits<Node> matchedNodes = taxonomy.findTaxNodeByName(thisHit.acceptedName);
+                                IndexHits<Node> matchedNodes = taxonomy.findTaxNodesByName(thisHit.acceptedName);
                                 if (matchedNodes.size() > 0) {
                                     for (Node n : matchedNodes) {
                                         
                                         // check to see if the fuzzily matched node is a homonym
-                                        IndexHits<Node> directMatches = taxonomy.findTaxNodeByName(n.getProperty("name").toString());
+                                        IndexHits<Node> directMatches = taxonomy.findTaxNodesByName(n.getProperty("name").toString());
                                         boolean isHomonym = false;
                                         if (directMatches.size() > 1)
                                             isHomonym = true;

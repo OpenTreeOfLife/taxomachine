@@ -42,8 +42,9 @@ public final class BarrierNodes extends TaxonomyBase {
         // some of the barrier names may be homonyms, so we need to choose the ones that are closest to the root
         // first get the life node
         IndexHits<Node> hitsl = taxNodeIndex.get("name", "life");
+        
         if (hitsl.size() != 1) {
-            System.out.println("There is a problem with getting the life node");
+            System.out.println("There was a problem attempting to getting the life node");
             System.exit(0);
         }
 

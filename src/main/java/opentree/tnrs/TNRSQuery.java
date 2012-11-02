@@ -1,10 +1,13 @@
 package opentree.tnrs;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
+import opentree.BarrierNodes;
+import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.TaxonomyExplorer;
 
@@ -35,14 +38,46 @@ public class TNRSQuery {
         _matchedNodeIds = new HashSet<Long>();
     }
 
-    public TNRSMatchSet getMatches(String searchString, TNRSAdapter... adapters) {
-        String[] searchStrings = new String[1];
-        searchStrings[0] = searchString;
-        System.out.println(searchString);
-        return getMatches(searchStrings, adapters);
+    /**
+     *  Do a TNRS query returning exact matches only for an array of names `searchStrings'
+     *  
+     * @param searchStrings
+     * @param adapters
+     * @return results
+     */
+    public TNRSMatchSet getExactMatches(String[] searchStrings) {
+        boolean exactOnly = true;
+        return getMatches(searchStrings, exactOnly, (TNRSAdapter)null);
     }
 
-    
+    /**
+     *  Do a TNRS query returning exact matches only for a single name `searchString'
+     *  
+     * @param searchString
+     * @param adapters
+     * @return results
+     */
+    public TNRSMatchSet getExactMatches(String searchString) {
+        String[] searchStrings = new String[1];
+        searchStrings[0] = searchString;
+        boolean exactOnly = true;
+        return getMatches(searchStrings, exactOnly, (TNRSAdapter)null);
+    }
+
+    /**
+     *  Do a TNRS query returning all matches for a single name `searchString'
+     *  
+     * @param searchString
+     * @param adapters
+     * @return results
+     */
+    public TNRSMatchSet getAllMatches(String searchString) {
+        String[] searchStrings = new String[1];
+        searchStrings[0] = searchString;
+        boolean exactOnly = false;
+        return getMatches(searchStrings, exactOnly, (TNRSAdapter)null);
+    }
+
     /**
      * @param searchStrings
      * @param adapters
@@ -50,14 +85,19 @@ public class TNRSQuery {
      * 
      *         Performs a TNRS query on `searchString`, a comma-delimited list of names, and loads the results of the query into a TNRSMatchSet object `results`, which is returned.
      *         `adapters` is either one or an array of TNRSAdapter objects for the sources to be queried. If no adapters are passed, then the query is only
-     *         performed against the local taxonomy graph. (Currently adapters are deactivated for speed considerations).
+     *         performed against the local taxonomy graph. (Adapters are currently deactivated for speed considerations).
      */
-    public TNRSMatchSet getMatches(String[] searchStrings, TNRSAdapter... adapters) {
+    public TNRSMatchSet getAllMatches(String[] searchStrings, TNRSAdapter... adapters) {
+        boolean exactOnly = false;
+        return getMatches(searchStrings, exactOnly, adapters);
+    }
+    
+    private TNRSMatchSet getMatches(String[] searchStrings, boolean exactOnly, TNRSAdapter... adapters) {
         _results = new TNRSMatchSet();
         _unmatchedNames = new HashSet<String>();
 
         for (int i = 0; i < searchStrings.length; i++) {
-            IndexHits<Node> directHits = _taxonomy.findTaxNodeByName(searchStrings[i]);
+            IndexHits<Node> directHits = _taxonomy.findTaxNodesByName(searchStrings[i]);
             if (directHits.size() == 1)
                 for (Node n : directHits)
                     _unambiguousTaxa.add(n);
@@ -67,7 +107,13 @@ public class TNRSQuery {
             System.out.println(n.getProperty("name"));
         
         TaxonSet ts = new TaxonSet(_unambiguousTaxa);
-        Node mrca = ts.getMRCA();
+        
+        Taxon mrca;
+        if (ts.size() > 0)
+            mrca = ts.getMRCA();
+        
+        BarrierNodes bn = new BarrierNodes(_taxonomy.getGraphDB());
+        ArrayList<Node> barrierNodes = bn.getBarrierNodes();
         // TODO: get closest outgoing barrier node
 
         /* so code is in place to determine the taxon mrca of a given set of taxa. now need to determine how to
@@ -105,8 +151,13 @@ public class TNRSQuery {
             }
             boolean wasMatched = false;
 
-            // first: use fuzzy matching to find possible preferred taxon nodes
-            IndexHits<Node> matchedTaxNodes = _taxonomy.findTaxNodeByNameFuzzy(thisName, minIdentity);
+            // first: find possible preferred taxon nodes, use fuzzy matching if specified
+            IndexHits<Node> matchedTaxNodes;
+            if (exactOnly)
+                matchedTaxNodes = _taxonomy.findTaxNodesByName(thisName);
+            else
+                matchedTaxNodes = _taxonomy.findTaxNodesByNameFuzzy(thisName, minIdentity);
+
             if (matchedTaxNodes.size() > 0) {
             	
             	for (Node n : matchedTaxNodes) {
@@ -115,7 +166,7 @@ public class TNRSQuery {
                     boolean isFuzzy = n.getProperty("name").equals(thisName) ? false : true;
 
                     // check if the matched node is a homonym
-                    IndexHits<Node> directHits = _taxonomy.findTaxNodeByName(n.getProperty("name").toString());
+                    IndexHits<Node> directHits = _taxonomy.findTaxNodesByName(n.getProperty("name").toString());
                     boolean isHomonym = directHits.size() > 1 ? true : false;
 
                     // TODO: if it is a homonym, find closest downstream barrier node from 
@@ -147,8 +198,13 @@ public class TNRSQuery {
                 wasMatched = true;
             }
 
-            // second: use fuzzy matching to find possible preferred synonyms
-            IndexHits<Node> matchedSynNodes = _taxonomy.findSynNodeByNameFuzzy(thisName, minIdentity);
+            // second: find possible preferred synonyms, use fuzzy matching if specified
+            IndexHits<Node> matchedSynNodes;
+            if (exactOnly)
+                matchedSynNodes = _taxonomy.findSynNodesByName(thisName);
+            else
+                matchedSynNodes = _taxonomy.findSynNodesByNameFuzzy(thisName, minIdentity);
+
             if (matchedSynNodes.size() > 0) {
                 for (Node synNode : matchedSynNodes) {
 
