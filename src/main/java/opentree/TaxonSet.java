@@ -24,15 +24,9 @@ public class TaxonSet implements Iterable<Node> {
     
     public TaxonSet (List<Node> inTaxa) {
         taxa = (LinkedList<Node>)inTaxa;
-        path = new ArrayList<Node>();
-        hierarchy = Traversal.description()
-                .depthFirst()
-                .relationships( RelTypes.TAXCHILDOF, Direction.OUTGOING );
         mrca = null;
     }
     
-    public Node getMRCA() {
-        
     public Taxon getMRCA() {
        
         if (hasMRCA()) {
