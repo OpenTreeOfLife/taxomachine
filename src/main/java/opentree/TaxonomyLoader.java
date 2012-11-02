@@ -12,7 +12,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.StringTokenizer;
 
 /**
@@ -255,58 +254,19 @@ public class TaxonomyLoader extends TaxonomyBase{
 				tx.finish();
 			}
 		}catch(IOException ioe){}
-	}
-	
-	/**
-	 * Returns a pair of integers that reflect the indices of element in the lists
-	 * 	that match (lowest index of an element in keylist, and its match in
-	 *	list1). 
-	 * 
-	 * @param keylist first array of strings to search
-	 * @param list1 second array of strings to search
-	 * @return pair of ints [i, j] where i is 1 + the index of the first 
-	 *		element in keylist that has a match in list1, and j is 1 + the
-	 *		lowest index for any element in list1 that matches the element in 
-	 *		keylist. Returns [LARGE, LARGE] if no matching strings are found.
-	 */
-	private ArrayList<Integer> stepsToMatch(ArrayList<String> keylist, ArrayList<String> list1){
-		int count1 = 0;
-		ArrayList<Integer> ret = new ArrayList<Integer>();
-		for (int i=0;i < keylist.size(); i++){
-			count1 += 1;
-			int count2 = 0;
-			for (int j=0; j< list1.size();j++){
-				count2 += 1;
-				if (list1.get(j).compareTo(keylist.get(i)) == 0){
-					ret.add(count1);ret.add(count2);
-					return ret;
-				}
-			}
-		}
-		ret.add(LARGE);ret.add(LARGE);
-		return ret;
-	}
-	
-	/**
-	 * Helper function used by addAdditionalTaxonomyTableIntoGraph
-	 * adds the nodes as new Node objects into this.graphDb
-	 * addnodes and addnodesids are matched lists of the node names and node ids
-	 *
-	 * @param addnodes list of names to added
-	 * @param addnodesids list of ids associated with the nodes to added
-	 * @param addednodes map of ids to the newly created node objects
-	 */
-	private void addBatchOfNewNodes(ArrayList<String> name_list, ArrayList<String> id_list, HashMap<String,Node> addednodes) {
-		assert name_list.size() == id_list.size();
-		Transaction tx;
+		//mark all of the barrier nodes with additional metadata
+		System.out.println("setting barrier nodes");
+		BarrierNodes bn = new BarrierNodes(graphDb);
+		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
+		HashMap<String,String> barrierNodesMap = bn.getBarrierNodeMap();
+		TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
+				.relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
 		tx = graphDb.beginTx();
 		try{
-			for(int i = 0; i < name_list.size(); i++){
-				Node tnode = graphDb.createNode();
-				tnode.setProperty("name", name_list.get(i));
-				taxNodeIndex.add( tnode, "name", name_list.get(i));
-				_LOG.debug("Added " + name_list.get(i));
-				addednodes.put(id_list.get(i), tnode);
+			for (int i=0;i<barrierNodes.size();i++){
+				for(Node currentNode : CHILDREN_TRAVERSAL.traverse(barrierNodes.get(i)).nodes()){
+					currentNode.setProperty("taxcode", barrierNodesMap.get(barrierNodes.get(i).getProperty("name")));
+				}
 			}
 			tx.success();
 		}finally{
@@ -314,41 +274,41 @@ public class TaxonomyLoader extends TaxonomyBase{
 		}
 	}
 	
-	private String taxonPathAsString(ArrayList<String> path) {
-		StringBuffer sb = new StringBuffer();
-		boolean first = true;
-		for (String tax_name : path ) {
-			if (first) {
-				first = false;
-			}
-			else {
-				sb.append(" -> ");
-			}
-			sb.append(tax_name);
-		}
-		return sb.toString();
-	}
+	HashMap<String, ArrayList<String>> globalchildren = null;
+	HashMap<String,String> globalidnamemap = null;
+	PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
+	HashMap<Node,Node> lastexistingmatchparents = new HashMap<Node,Node>();
 	
 	/**
-	 * The idea for this is to use a preorder traversal to insert a new taxonomy
-	 * into the graph (along with potentially new synonyms)
+	 * See addInitialTaxonomyTableIntoGraph 
+	 * This function acts like addInitialTaxonomyTableIntoGraph but it 
+	 *	can be called for a taxonomy that is not the first taxonomy in the graph
 	 * 
-	 * @param sourcename
-	 * @param rootid
-	 * @param filename
-	 * @param synonymfile
+	 * Rather than each line resulting in a new node, only names that have not
+	 *		 been encountered before will result in new node objects.
+	 *
+	 * To connect a subtree from the new taxonomy to the taxonomy tree the 
+	 *	taxNodeIndex of the existing graph is checked the new name. If multiple
+	 *	nodes have been assigned the name, then the one with the lowest score
+	 *	is assumed to be the closest match (the score is calculated by counting
+	 *	the number of nodes traversed in the path new->anc* + the number of 
+	 *	nodes in old->anc* where "anc*" denotes the lowest ancestor in
+	 *	the new taxon's ancestor path that has a match in the old graph (and
+	 *	the TAXCHILDOF is the relationship on the path).
+	 *	
+	 * @param filename file path to the taxonomy file
+	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
 	 */
-	public void addAdditionalTaxonomyToGraphNEW(String sourcename, String rootid, String filename, String synonymfile){
+	public void addAdditionalTaxonomyToGraph(String sourcename, String rootid, String filename, String synonymfile){
 		Node rootnode = null;
+		String str = "";
 		String roottaxid = "";
 		if (rootid.length() > 0){
 			rootnode = graphDb.getNodeById(Long.valueOf(rootid));
 			System.out.println(rootnode);
 		}
-		String str = "";
-		int count = 0;
-		Transaction tx;
-		ArrayList<String> templines = new ArrayList<String>();
+		PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
+
 		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
 		boolean synFileExists = false;
 		if(synonymfile.length()>0)
@@ -378,211 +338,12 @@ public class TaxonomyLoader extends TaxonomyBase{
 			}
 			System.out.println("synonyms: "+synonymhash.size());
 		}
-		//finished processing synonym file
-		HashMap<String, String> parents = new HashMap<String, String>();
-		HashMap<String, String> idnamemap = new HashMap<String, String>();
-		HashMap<String,ArrayList<String>> children = new HashMap<String,ArrayList<String>>();
-		tx = graphDb.beginTx();
-		try{
-			//create the metadata node
-			Node metadatanode = null;
-			try{
-				metadatanode = graphDb.createNode();
-				metadatanode.setProperty("source", sourcename);
-				metadatanode.setProperty("author", "no one");
-				taxSourceIndex.add(metadatanode, "source", sourcename);
-				tx.success();
-			}finally{
-				tx.finish();
-			}
-			tx = graphDb.beginTx();
-			try{
-				BufferedReader br = new BufferedReader(new FileReader(filename));
-				while((str = br.readLine())!=null){
-					count += 1;
-					if (count % transaction_iter == 0){
-						System.out.print(count);
-						System.out.print("\n");
-					}
-					StringTokenizer st = new StringTokenizer(str,"\t|\t");
-					int numtok = st.countTokens();
-					String first = st.nextToken();
-					String second = "";
-					if(numtok == 3)
-						second = st.nextToken();
-					String third = st.nextToken();
-					idnamemap.put(first, third);
-					if (numtok == 3){
-						parents.put(first, second);
-						if(children.containsKey(second) == false){
-							ArrayList<String> tar = new ArrayList<String>();
-							children.put(second, tar);
-						}
-						children.get(second).add(first);
-					}else{//this is the root node
-						if(rootnode == null){
-							System.out.println("the root should never be null");
-							System.exit(0);
-							//if the root node is null then you need to make a new one
-							//rootnode = graphDb.createNode();
-							//rootnode.setProperty("name", third);
-						}
-						roottaxid = first;
-						System.out.println("matched root node and metadata link");
-						metadatanode.createRelationshipTo(rootnode, RelTypes.METADATAFOR);
-					}
-				}
-				br.close();
-			}catch(Exception e){
-				e.printStackTrace();
-				System.out.println("problem with infile");
-				System.exit(0);
-			}
-			tx.success();
-		}finally{
-			tx.finish();
-		}
-		//now start the preorder after the processing of the file
-		globaltransactionnum = 0;
-		gtx = graphDb.beginTx();
-		try{
-			System.out.println("sending to preorder builder");
-			globalchildren = children;
-			globalidnamemap = idnamemap;
-			preorderAddAdditionalTaxonomy(rootnode,rootnode,roottaxid,sourcename);
-			preorderFinishTransaction();
-			gtx.success();
-		}finally{
-			gtx.finish();
-		}
-	}
-
-	HashMap<String, ArrayList<String>> globalchildren = null;
-	HashMap<String,String> globalidnamemap = null;
-	PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
-	HashMap<Node,Node> lastexistingmatchparents = new HashMap<Node,Node>();
-	
-	private void preorderFinishTransaction(){
-		try{
-			gtx.success();
-		}finally{
-			gtx.finish();
-		}
-		gtx = graphDb.beginTx();		
-	}
-	
-	private void preorderAddAdditionalTaxonomy(Node lastexistingmatch, Node rootnode, String curtaxid,String sourcename) {
-		globaltransactionnum += 1;
-		//using the current node, root node, see if the children have any matches, if they do
-		//then they much be subtending of the current rootnode
-		if(globaltransactionnum % (transaction_iter/100) == 0){
-			System.out.println("preorder add: "+globaltransactionnum);
-			preorderFinishTransaction();
-		}
-		boolean verbose = false;
-		//this is the preorder part
-		ArrayList<String> childids = globalchildren.get(curtaxid);
-		if(childids != null){
-			for(int i=0;i<childids.size();i++){
-				/*if(globalidnamemap.get(childids.get(i)).equals("Lonicera")){
-					verbose = true;
-				}*/
-				//create nodes and relationships here
-				Node hitnode = null;
-				IndexHits<Node> hits = taxNodeIndex.get("name", globalidnamemap.get(childids.get(i)));
-				
-				try{
-					if(verbose){
-						System.out.println("hits: "+hits.size());
-					}
-					for(Node nd : hits){
-						//check to see if there is a path from the lastexistingmatch and the hit node
-						//if there is a hit, you take the closest and report that there was ambiguity
-						Node curnode = lastexistingmatch;
-						Path pathit = null;
-						boolean going = true;
-						while(going){
-							pathit = finder.findSinglePath(nd, curnode);
-							if(verbose){
-								System.out.println("node: "+nd+"("+nd.getProperty("name")+") last: "+lastexistingmatch+"("+curnode.getProperty("name")+")");
-								System.out.println("path: "+pathit);
-							}	
-							if (pathit != null){	
-								//should add the smaller distance
-								break;
-							}
-							if (lastexistingmatchparents.containsKey(curnode) == true)
-								curnode = lastexistingmatchparents.get(curnode);
-							else
-								going = false;
-						}
-						if (pathit != null){	
-							if(verbose){
-								System.out.println("MATCHED");
-								System.out.println("node: "+nd+"("+nd.getProperty("name")+") last: "+lastexistingmatch+"("+lastexistingmatch.getProperty("name")+")");
-								System.out.println("path: "+pathit);
-							}	
-							//should add the smaller distance
-							hitnode = nd;
-							lastexistingmatchparents.put(hitnode, lastexistingmatch);
-							lastexistingmatch = hitnode;
-							break;
-						}
-					}
-					if(verbose){
-						System.out.println("hit: "+hitnode);
-					}
-					//if there was no hit, need to create a node
-					if(hitnode == null){
-						hitnode = graphDb.createNode();
-						hitnode.setProperty("name", globalidnamemap.get(childids.get(i)));
-						taxNodeIndex.add(hitnode, "name", globalidnamemap.get(childids.get(i)));
-					}
-					Relationship rel = hitnode.createRelationshipTo(rootnode, RelTypes.TAXCHILDOF);
-					rel.setProperty("source", sourcename);
-				}finally{
-					hits.close();
-				}
-				if(verbose){
-					verbose = false;
-				}
-				preorderAddAdditionalTaxonomy(lastexistingmatch,hitnode,childids.get(i),sourcename);
-			}
-		}
-	}
-	
-	/**
-	 * See addInitialTaxonomyTableIntoGraph 
-	 * This function acts like addInitialTaxonomyTableIntoGraph but it 
-	 *	can be called for a taxonomy that is not the first taxonomy in the graph
-	 * 
-	 * Rather than each line resulting in a new node, only names that have not
-	 *		 been encountered before will result in new node objects.
-	 *
-	 * To connect a subtree from the new taxonomy to the taxonomy tree the 
-	 *	taxNodeIndex of the existing graph is checked the new name. If multiple
-	 *	nodes have been assigned the name, then the one with the lowest score
-	 *	is assumed to be the closest match (the score is calculated by counting
-	 *	the number of nodes traversed in the path new->anc* + the number of 
-	 *	nodes in old->anc* where "anc*" denotes the lowest ancestor in
-	 *	the new taxon's ancestor path that has a match in the old graph (and
-	 *	the TAXCHILDOF is the relationship on the path).
-	 *	
-	 * @param filename file path to the taxonomy file
-	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
-	 */
-	public void addAdditionalTaxonomyToGraph(String sourcename, String rootid, String filename, String synonymfile){
-		Node rootnode = null;
-		String roottaxid = "";
-		if (rootid.length() > 0){
-			rootnode = graphDb.getNodeById(Long.valueOf(rootid));
-			System.out.println(rootnode);
-		}
-		BarrierNodes bn = new BarrierNodes(graphDb);
-		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
-		PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
+		
 		//get what barriers in taxonomy are parent to the input root (so is this
 		//higher than plants, fungi, or animals (helps clarify homonyms
+		BarrierNodes bn = new BarrierNodes(graphDb);
+		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
+		HashMap<String,String> barrierNodesMap = bn.getBarrierNodeMap();
 		Node rootbarrier = null;
 		for (int i =0;i<barrierNodes.size();i++){
 			Path tpath = tfinder.findSinglePath(rootnode, barrierNodes.get(i));
@@ -590,7 +351,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 				rootbarrier = barrierNodes.get(i);
 		}
 		HashMap<String,Node> taxcontainedbarriersmap = new HashMap<String,Node>();
-		String str = "";
+		
 		HashMap<String, String> idparentmap = new HashMap<String, String>(); // node number -> parent's number
 		HashMap<String, String> idnamemap = new HashMap<String, String>();
 		ArrayList<String> idlist = new ArrayList<String>();
@@ -598,17 +359,11 @@ public class TaxonomyLoader extends TaxonomyBase{
 		//GET NODE
 		tx = graphDb.beginTx();
 		try{
-			tx = graphDb.beginTx();
 			Node metadatanode = null;
-			try{
-				metadatanode = graphDb.createNode();
-				metadatanode.setProperty("source", sourcename);
-				metadatanode.setProperty("author", "no one");
-				taxSourceIndex.add(metadatanode, "source", sourcename);
-				tx.success();
-			}finally{
-				tx.finish();
-			}
+			metadatanode = graphDb.createNode();
+			metadatanode.setProperty("source", sourcename);
+			metadatanode.setProperty("author", "no one");
+			taxSourceIndex.add(metadatanode, "source", sourcename);
 			try{
 				BufferedReader br = new BufferedReader(new FileReader(filename));
 				while((str = br.readLine())!=null){
@@ -662,306 +417,147 @@ public class TaxonomyLoader extends TaxonomyBase{
 		HashMap<String,Node> idnodemap = new HashMap<String,Node>();
 		int count = 0;
 		int acount = 0;
-		for(int i=0;i<idlist.size();i++){
-			String curid = idlist.get(i);
-			boolean badpath = false;
-			Node curidbarrier = null;
-			ArrayList<String> path1 = new ArrayList<String>();
-			while(curid.equals(roottaxid)==false){
-				if(idparentmap.containsKey(curid)==false){
-					badpath = true;
-					break;
-				}else{
-					if(taxcontainedbarriersmap.containsKey(curid))
-						curidbarrier = taxcontainedbarriersmap.get(curid);
-					curid = idparentmap.get(curid);
-					path1.add(curid);
-				}
-			}
-			curid = idlist.get(i);
-			if(curidbarrier == null){
-				curidbarrier = rootbarrier;
-			}
-			if(badpath){
-				System.out.println("bad path: "+idlist.get(i)+" "+idnamemap.get(curid));
-				continue;
-			}
-			//get any hits
-			IndexHits<Node> hits = taxNodeIndex.get("name", idnamemap.get(curid));
-			try{
-				if(hits.size()==0){//no hit
-					//make node
-					//add properties
-					//add to idnodemap
-//					System.out.println("node to make "+curid);
-					acount += 1;
-				}else{
-					int bestpath = 10000000;
-					Node bestnode = null;
-					if(curidbarrier == null)
-						curidbarrier = rootnode;
-					for(Node node:hits){
-						Path patht = tfinder.findSinglePath(node, curidbarrier);
-						if (patht != null){
-							if (patht.length()<bestpath){
-								bestpath = patht.length();
-								bestnode = node;
-							}
-						}
-					}
-					if(bestnode == null){
-						//make node 
-						//add properties
-						//add to idnodemap
-//						System.out.println("node to make " +idnamemap.get(curid));
-						acount += 1;
+		tx=graphDb.beginTx();
+		try{
+			for(int i=0;i<idlist.size();i++){
+				String curid = idlist.get(i);
+				boolean badpath = false;
+				Node curidbarrier = null;
+				ArrayList<String> path1 = new ArrayList<String>();
+				while(curid.equals(roottaxid)==false){
+					if(idparentmap.containsKey(curid)==false){
+						badpath = true;
+						break;
 					}else{
-						//idnodemap.put(curid,bestnode);
-						
+						if(taxcontainedbarriersmap.containsKey(curid))
+							curidbarrier = taxcontainedbarriersmap.get(curid);
+						curid = idparentmap.get(curid);
+						path1.add(curid);
 					}
 				}
-			}finally{
-				hits.close();
-			}
-			count += 1;
-			if (count % 10000 == 0)
-				System.out.println(count+" "+acount);
-		}
-		
-		ArrayList<Node> rel_nd = new ArrayList<Node>();
-		ArrayList<Node> rel_pnd = new ArrayList<Node>();
-		ArrayList<String> rel_cid = new ArrayList<String>();
-		ArrayList<String> rel_pid = new ArrayList<String>();
-		System.out.println("relationship run through");
-		for(int i=0;i<idlist.size();i++){
-			String curid = idlist.get(i);
-			if(idparentmap.containsKey(curid)){//not the root
-				//get the node
-				//make the relationship
-			}
-		}
-		/*		
-				Node matchnode = null;
-				int bestcount = LARGE;
-				Node bestitem = null;
-				ArrayList<String> bestpath = null;
-				ArrayList<Node> bestpathitems= null;
-				IndexHits<Node> hits = taxNodeIndex.get("name", strname);
-				ArrayList<String> path2 = null;
-				ArrayList<Node> path2items = null;
-			
-				 //get the best hit by walking the parents
-				 
-				if(addednodes.containsKey((String)nameid) == false){//name was not added this time around
-					try{
-						for(Node node: hits){
-							path2 = new ArrayList<String> ();
-							path2items = new ArrayList<Node> ();
-							//get shortest path
-							for(Node currentNode : CHILDOF_TRAVERSAL.traverse(node).nodes()){
-//								_LOG.trace("+"+((String) currentNode.getProperty("name")));
-								if(((String) currentNode.getProperty("name")).compareTo(strname) != 0){
-									path2.add((String)currentNode.getProperty("name"));
-									path2items.add(currentNode);
-//									_LOG.trace((String)currentNode.getProperty("name"));
-								}
-							}
-							ArrayList<Integer> itemcounts = stepsToMatch(path1,path2);
-							//if(GeneralUtils.sum_ints(itemcounts.get(node)) < bestcount || first == true){
-							if(itemcounts.get(0) < bestcount){
-								bestcount = itemcounts.get(0);
-								bestitem = node;
-								bestpath = new ArrayList<String>(path2);
-								bestpathitems = new ArrayList<Node>(path2items);
-							}
-							path2.clear();
-							path2items.clear();
-//							_LOG.trace(bestcount);
-							//_LOG.trace("after:"+bestpath.get(1));
-						}
-					}finally{
-						hits.close();
-					}
-					//if the match is worse than the threshold, make a new node
-					if (bestitem == null){
-						System.out.println("adding duplicate "+strname);
-						System.out.println(path1);
-						hits = taxNodeIndex.get("name", strname);
-						for(Node node: hits){
-							path2 = new ArrayList<String> ();
-							path2items = new ArrayList<Node> ();
-							System.out.println("node: " +node.getProperty("name"));
-							//get shortest path
-							for(Node currentNode : CHILDOF_TRAVERSAL.traverse(node).nodes()){
-								System.out.println("currentnode: "+currentNode.getProperty("name"));
-								if(((String) currentNode.getProperty("name")).compareTo(strname) != 0){
-									path2.add((String)currentNode.getProperty("name"));
-									path2items.add(currentNode);
-								}
-							}
-							ArrayList<Integer> itemcounts = stepsToMatch(path1,path2);
-							System.out.println(itemcounts);
-							System.out.println(path2);
-						}
-						hits.close();
-						_LOG.warn("adding duplicate " + strname);
-//						if(_LOG.isDebugEnabled()) {
-//							_LOG.debug("path1:    " + strname + " -> " + this.taxonPathAsString(path1));
-//							_LOG.debug("bestpath: " + strname + " -> " + this.taxonPathAsString(bestpath));
-//							_LOG.debug("bestcount = " + bestcount + " path1.size() - bestcount =" + (path1.size() - bestcount));
-//						}
-						tx = graphDb.beginTx();
-						try{
-							Node tnode = graphDb.createNode();
-							tnode.setProperty("name", strname);
-							taxNodeIndex.add( tnode, "name", strname);
-							bestitem = tnode;
-							bestpath = new ArrayList<String>();
-							bestpathitems = new ArrayList<Node>();
-							tx.success();
-							addednodes.put(nameid, tnode);
-						}finally{
-							tx.finish();
-						}
-					}
-				}//name was added this time around
-				else{
-					bestitem = addednodes.get(nameid);
-					bestpath = new ArrayList<String>();
-					bestpathitems = new ArrayList<Node>();
+				curid = idlist.get(i);
+				if(curidbarrier == null){
+					curidbarrier = rootbarrier;
 				}
-				
-				matchnode = bestitem;
-				if(spls[1].compareTo("0") != 0){
-					Node matchnodeparent = null;
-					for(int i=0;i<bestpath.size();i++){
-						if(bestpath.get(i).compareTo(strparentname) == 0){
-							matchnodeparent = bestpathitems.get(i);
-//							break;
+				//			System.out.print(curidbarrier);
+				if(badpath){
+					System.out.println("bad path: "+idlist.get(i)+" "+idnamemap.get(curid));
+					continue;
+				}
+				//get any hits
+				IndexHits<Node> hits = taxNodeIndex.get("name", idnamemap.get(curid));
+				try{
+					if(hits.size()==0){//no hit
+						Node newnode = graphDb.createNode();
+						newnode.setProperty("name", idnamemap.get(curid));
+						if(curidbarrier != null){
+							if(curidbarrier.hasProperty("taxcode"))
+								newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
 						}
-//						_LOG.trace("="+bestpath.get(i)+" "+strparentname);
-					}
-					//do the same as above with the parent
-					if(matchnodeparent == null && addednodes.containsKey(strparentid) == false){
-						path1.remove(0);
-						bestcount = LARGE;
-						bestitem = null;
-						hits = taxNodeIndex.get("name", strparentname);
-						if(strparentname.compareTo("life")==0){//special case for the life node in the graph
-							if (hits.size()>1){
-								System.out.println("too many life nodes. what's the deal");
+						taxNodeIndex.add( newnode, "name", idnamemap.get(curid));
+						idnodemap.put(curid,newnode);
+						acount += 1;
+//						System.out.println("new name: "+idnamemap.get(curid));
+					}else{
+						Node bestnode = null;
+						for(Node node:hits){
+							if (node.hasProperty("taxcode")){
+								if(curidbarrier != null){
+									if(curidbarrier.hasProperty("taxcode"))
+										if (node.getProperty("taxcode").equals(curidbarrier.getProperty("taxcode")))
+											bestnode = node;
+								}else{
+									//System.out.println("name: "+idnamemap.get(curid)+" "+((String)node.getProperty("barrier")));
+									//these are often problems
+								}
+							}else{
+								if(node.hasProperty("taxcode") == false)
+									if(curidbarrier != null){
+										if(curidbarrier.hasProperty("taxcode") == false)
+											bestnode = node;
+									}else{
+										bestnode = node;
+									}
 							}
-							bestitem = hits.getSingle();
-							path2 = null;
-							path2items = null;
+						}
+						if(bestnode == null){
+							Node newnode = graphDb.createNode();
+							newnode.setProperty("name", idnamemap.get(curid));
+							if(curidbarrier != null){
+								if(curidbarrier.hasProperty("taxcode"))
+									newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
+							}
+							taxNodeIndex.add( newnode, "name", idnamemap.get(curid));
+							idnodemap.put(curid,newnode);
+							System.out.println("node to make " +idnamemap.get(curid) + " "+curidbarrier+ " "+curid);
+							acount += 1;
 						}else{
-							path2 = null;
-							path2items = null;
-							
-							 //get the best hit by walking the parents
-							 
-							try{
-								for(Node node: hits){
-									path2 = new ArrayList<String> ();
-									path2items = new ArrayList<Node> ();
-									//get shortest path
-									for(Node currentNode : CHILDOF_TRAVERSAL.traverse(node).nodes()){
-										if(((String) currentNode.getProperty("name")).compareTo(strparentname) != 0){
-											path2.add((String)currentNode.getProperty("name"));
-	//										_LOG.trace("path2: "+(String)currentNode.getProperty("name"));
-											path2items.add(currentNode);
-										}
-									}
-									ArrayList<Integer> itemcounts = stepsToMatch(path1,path2);
-	//								_LOG.trace(itemcounts.get(0));
-									if(itemcounts.get(0) < bestcount){
-										bestcount = itemcounts.get(0);
-										bestitem = node;
-									}
-									path2.clear();
-									path2items.clear();
-	//								_LOG.trace(bestcount);
-								}
-							}finally{
-								hits.close();
-							}
+							idnodemap.put(curid,bestnode);
 						}
-						//if the match is worse than the threshold, make a new node
-//						_LOG.trace(path1.size()+" "+(path1.size()-bestcount));
-						if (bestitem == null){
-							System.out.println("adding duplicate parent "+strparentname);
-//							if(_LOG.isDebugEnabled()) {
-//								_LOG.debug("path1:    " + strname + " -> " + this.taxonPathAsString(path1));
-//								_LOG.debug("bestcount = " + bestcount + " path1.size() - bestcount =" + (path1.size() - bestcount));
-//							}
-							tx = graphDb.beginTx();
-							try{
-								Node tnode = graphDb.createNode();
-								tnode.setProperty("name", strparentname);
-								taxNodeIndex.add( tnode, "name", strparentname);
-								bestitem = tnode;
-								tx.success();
-								addednodes.put(strparentid, tnode);
-							}finally{
-								tx.finish();
-							}
-						}
-						matchnodeparent = bestitem;
-					}else if (addednodes.containsKey(strparentid) == true){
-						matchnodeparent = addednodes.get(strparentid);
 					}
-					rel_nd.add(matchnode);
-					rel_pnd.add(matchnodeparent);
-					rel_cid.add(spls[0]);
-					rel_pid.add(spls[1]);
+				}finally{
+					hits.close();
 				}
+				count += 1;
+				if (count % 10000 == 0)
+					System.out.println(count+" "+acount);
+			}
+			tx.success();
+		}finally{
+			tx.finish();
+		}
 
-				if(count % transaction_iter == 0){
-					System.out.println(count);
-					tx = graphDb.beginTx();
-					try{
-						for(int i=0;i<rel_nd.size();i++){
-							try{
-							Relationship rel = rel_nd.get(i).createRelationshipTo(rel_pnd.get(i), RelTypes.TAXCHILDOF);
-							rel.setProperty("source", sourcename);
-							rel.setProperty("childid", rel_cid.get(i));
-							rel.setProperty("parentid", rel_pid.get(i));
-							}catch(java.lang.Exception jle){
-								System.out.println(rel_cid.get(i) +" "+rel_pid.get(i));
-								System.out.println(rel_nd.get(i).getProperty("name")+" "+rel_pnd.get(i).getProperty("name"));
-								System.exit(0);
-							}
+		System.out.println("relationship run through");
+		tx=graphDb.beginTx();
+		try{
+			count = 0;
+			for(int i=0;i<idlist.size();i++){
+				String curid = idlist.get(i);
+				if(idparentmap.containsKey(curid)){//not the root
+					//get the node
+					//make the relationship
+					Node tnode = idnodemap.get(curid);
+					Node tnodep = idnodemap.get(idparentmap.get(curid));
+					Relationship rel = tnode.createRelationshipTo(tnodep, RelTypes.TAXCHILDOF);
+					rel.setProperty("source", sourcename);
+					rel.setProperty("childid", curid);
+					rel.setProperty("parentid", idparentmap.get(curid));
+					count += 1;
+					if (count % 100000 == 0)
+						System.out.println(count);
+				}
+			}
+			tx.success();
+		}finally{
+			tx.finish();
+		}
+		//synonym processing
+		tx=graphDb.beginTx();
+		try{
+			if(synFileExists){
+				System.out.println("synonyms processing");
+				for(int i=0;i<idlist.size();i++){
+					String first = idlist.get(i);
+					if(synonymhash.get(first)!=null){
+						Node tnode = idnodemap.get(first);
+						ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+						for(int j=0;j<syns.size();j++){
+							String synName = syns.get(j).get(0);
+							String synNameType = syns.get(j).get(1);
+							Node synode = graphDb.createNode();
+							synode.setProperty("name",synName);
+							synode.setProperty("nametype",synNameType);
+							synode.setProperty("source",sourcename);
+							synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+							synNodeIndex.add(synode, "name", synName);
 						}
-						rel_nd.clear();
-						rel_pnd.clear();
-						rel_cid.clear();
-						rel_pid.clear();
-						tx.success();
-					}finally{
-						tx.finish();
 					}
 				}
-				path1.clear();
 			}
-			tx = graphDb.beginTx();
-			try{
-				for(int i=0;i<rel_nd.size();i++){
-					Relationship rel = rel_nd.get(i).createRelationshipTo(rel_pnd.get(i), RelTypes.TAXCHILDOF);
-					rel.setProperty("source", sourcename);
-					rel.setProperty("childid", rel_cid.get(i));
-					rel.setProperty("parentid", rel_pid.get(i));
-				}
-				rel_nd.clear();
-				rel_pnd.clear();
-				rel_cid.clear();
-				rel_pid.clear();
-				tx.success();
-			}finally{
-				tx.finish();
-			}
-			br.close();
-		}catch(IOException ioe){}
-		*/
+			tx.success();
+		}finally{
+			tx.finish();
+		}
 	}
 	
 	public void runittest(String filename,String filename2){
