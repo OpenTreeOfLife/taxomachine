@@ -15,6 +15,7 @@ public abstract class TaxonomyBase {
     protected static Index<Node> synNodeIndex;
     protected static Index<Node> taxSourceIndex;
     final static float DEFAULT_FUZZYMATCH_IDENTITY = (float) 0.70;
+    final static String LIFE_NODE_NAME = "life";
 
     protected static enum RelTypes implements RelationshipType {
         TAXCHILDOF, // standard rel for tax db, from node to parent

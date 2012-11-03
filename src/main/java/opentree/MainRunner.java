@@ -170,7 +170,6 @@ public class MainRunner {
 
 		} else {
 			System.err.println("\nERROR: not a known command\n");
-			//te.shutdownDB(); // can only be null here
 			printHelp();
 			System.exit(1);
 		}
@@ -187,7 +186,6 @@ public class MainRunner {
         
         if (args[0].compareTo("tnrsbasic") == 0) {
             
-            // TODO: use MRCA of all provided names as query context
             String[] searchStrings = args[1].split("\\s*\\,\\s*");
             results = tnrs.getAllMatches(searchStrings);
             
