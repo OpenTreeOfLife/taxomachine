@@ -271,6 +271,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 				Relationship ottolrel = null;
 				for(Relationship rel : friendnode.getRelationships(Direction.OUTGOING)){
 					if (rel.getEndNode() == rel.getStartNode()){
+						System.out.println("CYCLE!"+rel.getEndNode()+" "+rel.getStartNode()+" "+rel);
 						continue;
 					}else{
 						if (endNode == "")
@@ -285,17 +286,17 @@ public class TaxonomyExplorer extends TaxonomyBase{
 				if (conflict && ncbirel != null){
 					count += 1;
 //					System.out.println("would make one from "+ncbirel.getStartNode().getProperty("name")+" "+ncbirel.getEndNode().getProperty("name"));
-					if(ncbirel.getStartNode()!=ncbirel.getEndNode()){
+					if(ncbirel.getStartNode().getId()!=ncbirel.getEndNode().getId()){
 						ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelTypes.PREFTAXCHILDOF);
 						Relationship newrel2 = ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelTypes.TAXCHILDOF);
 						newrel2.setProperty("source", "ottol");
 					}else{
 						System.out.println("would make cycle from "+ncbirel.getEndNode().getProperty("name"));
+						System.exit(0);//NEED TO EXIT BECAUSE THIS IS A PROBLEM
 					}
-					
+					if(count % transaction_iter == 0)
+						System.out.println(count);
 				}
-				if(count % transaction_iter == 0)
-					System.out.println(count);
 			}
 			tx.success();
 		}finally{
@@ -327,11 +328,14 @@ public class TaxonomyExplorer extends TaxonomyBase{
 				if(friendnode.hasRelationship(Direction.INCOMING) == false){//is tip
 					Node curnode = friendnode;
 					while(curnode.hasRelationship(Direction.OUTGOING)){
+//						System.out.println(curnode);
+						Node startcur = curnode;
 //						System.out.println(curnode.getProperty("name"));
 						if(curnode.hasRelationship(Direction.OUTGOING,RelTypes.PREFTAXCHILDOF)){
 							Relationship trel = curnode.getSingleRelationship(RelTypes.PREFTAXCHILDOF, Direction.OUTGOING);
 //							System.out.println(trel.getStartNode().getId()+" "+trel.getEndNode().getId());
 							if(trel.getStartNode().getId() == trel.getEndNode().getId()){
+								System.out.println("pointing to itself "+trel+" "+trel.getStartNode().getId()+" "+trel.getEndNode().getId());
 								break;
 							}
 							curnode = trel.getEndNode();
@@ -339,8 +343,9 @@ public class TaxonomyExplorer extends TaxonomyBase{
 							Node endnode = null;
 							for(Relationship trel: curnode.getRelationships(RelTypes.TAXCHILDOF,Direction.OUTGOING)){
 //								System.out.println(trel.getProperty("source")+" "+trel.getStartNode().getProperty("name")+" "+trel.getEndNode().getProperty("name"));
-								if (trel.getEndNode() == curnode){
-									continue;
+								if (trel.getStartNode().getId() == trel.getEndNode().getId()){
+									System.out.println("pointing to itself "+trel+" "+trel.getStartNode().getId()+" "+trel.getEndNode().getId());
+									break;
 								}else{
 									endnode = trel.getEndNode();
 									break;
@@ -355,6 +360,11 @@ public class TaxonomyExplorer extends TaxonomyBase{
 							newrel2.setProperty("source", "ottol");
 							curnode = endnode;
 							count += 1;
+						}
+						if (startcur == curnode){
+							System.out.println(startcur);
+							System.out.println("THERE IS A PROBLEM");
+							System.exit(0);
 						}
 					}
 				}
