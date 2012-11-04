@@ -24,10 +24,14 @@ import opentree.tnrs.TNRSResults;
 
 //import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+
+/*
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.util.ParserUtils;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
+*/
+
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
 
@@ -234,7 +238,7 @@ public class MainRunner {
                 treeTipNames[i] = (tree.getExternalNode(i).getName());
             } */
             
-
+/*
             // read in the treefile
             final File treefile = new File(args[1]);
             PhylogenyParser parser = null;
@@ -258,7 +262,7 @@ public class MainRunner {
             
             // search for the names
             results = tnrs.getAllMatches(phys[0].getAllExternalNodeNames());
-            
+            */
         }
         
         for (TNRSNameResult nameResult : results) {
