@@ -1,14 +1,8 @@
 package opentree.plugins;
 
-import java.util.ArrayList;
-
 import opentree.TaxonomyExplorer;
-import opentree.tnrs.TNRSMatch;
-import opentree.tnrs.TNRSMatchSet;
-import opentree.tnrs.TNRSNameResult;
-import opentree.tnrs.TNRSAdapter;
 import opentree.tnrs.TNRSQuery;
-import opentree.tnrs.adapters.iplant.TNRSAdapteriPlant;
+import opentree.tnrs.TNRSResults;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.server.plugins.Description;
@@ -33,26 +27,29 @@ public class TNRS extends ServerPlugin {
         TaxonomyExplorer taxonomy = new TaxonomyExplorer();
         taxonomy.setDbService(graphDb);
 
-        int nSearchStrings = searchStrings.length;
-        ArrayList<TNRSNameResult> results = new ArrayList<TNRSNameResult>();
+//        int nSearchStrings = searchStrings.length;
+//        ArrayList<TNRSNameResult> results = new ArrayList<TNRSNameResult>();
         
         // Need to instantiate the TNRS object using all names
         // Get the context and the MRCA of the names, and get all the results
         
-        for (int i = 0; i < nSearchStrings; i++) {
+//        for (int i = 0; i < nSearchStrings; i++) {
             
             // then for each name, just get those results
             // would be useful to be able to return the results return
             // as an iterator of TNRSNameResult objects
             
-        	TNRSNameResult r = new TNRSNameResult();
-        	r.queried_name = searchStrings[i];
+//        	TNRSNameResult r = new TNRSNameResult();
+//        	r.queried_name = searchStrings[i];
 
-        	TNRSQuery tnrs = new TNRSQuery(taxonomy);
-            r.matches = tnrs.getAllMatches(r.queried_name);
+//        	TNRSQuery tnrs = new TNRSQuery(taxonomy);
+//            r.matches = tnrs.getAllMatches(r.queried_name);
             
-            results.add(r);
-        }
+//            results.add(r);
+//        }
+ 
+        TNRSQuery tnrs = new TNRSQuery(taxonomy);
+        TNRSResults results = tnrs.getAllMatches(searchStrings);
         
         taxonomy.shutdownDB();
         return TNRSResultsToRepresentationConverter.convert(results);

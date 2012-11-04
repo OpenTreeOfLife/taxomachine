@@ -1,4 +1,4 @@
-package opentree.tnrs.adapters.gnr;
+package opentree.tnrs.adaptersupport.gnr;
 
 import java.util.ArrayList;
 import java.util.Iterator;

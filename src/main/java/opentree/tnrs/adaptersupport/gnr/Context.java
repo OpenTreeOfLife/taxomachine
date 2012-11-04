@@ -1,4 +1,4 @@
-package opentree.tnrs.adapters.gnr;
+package opentree.tnrs.adaptersupport.gnr;
 
 public class Context {
     public int context_data_source_id;

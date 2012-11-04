@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import opentree.TaxonomyBase.RelTypes;
 import opentree.tnrs.TNRSQuery;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;
@@ -26,18 +27,42 @@ import org.neo4j.kernel.Traversal;
 
 public class Taxon extends TaxonomyBase {
 
-    private final Node node;
+    private final Node taxNode;
     private ChildNumberEvaluator cne;
     private SpeciesEvaluator se;
 
     public Taxon(Node n) {
-        node = n;
+        taxNode = n;
     }
 
     public Node getNode() {
-        return node;
+        return taxNode;
     }
 
+    public String getName() {
+        return taxNode.getProperty("name").toString();
+    }
+    
+    public boolean isPreferredTaxChildOf(Taxon parent) {
+        TraversalDescription hierarchy = Traversal.description()
+                .depthFirst()
+//                .relationships( RelTypes.PREFTAXCHILDOF, Direction.OUTGOING ); // TODO: use preferred rels (have to have preottol to get them)
+                .relationships( RelTypes.TAXCHILDOF, Direction.OUTGOING );
+        
+        Long pid = parent.getNode().getId();
+//        System.out.println("mrca = " + parent.getName());
+        
+        for (Node n : hierarchy.traverse(taxNode).nodes()) {
+//            System.out.println("comparing " + n.getProperty("name") + " to " + parent.getName());
+            if (n.getId() == pid) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    
     /**
      * Writes a dot file for the taxonomy graph that is rooted at `clade_name`
      * 
@@ -59,7 +84,7 @@ public class Taxon extends TaxonomyBase {
             int count = 0;
 
             // TODO: switch this to use TraversalDescription object
-            for (Node nd : node.traverse(Traverser.Order.BREADTH_FIRST,
+            for (Node nd : taxNode.traverse(Traverser.Order.BREADTH_FIRST,
                     StopEvaluator.END_OF_GRAPH,
                     ReturnableEvaluator.ALL,
                     RelTypes.TAXCHILDOF,
@@ -108,13 +133,13 @@ public class Taxon extends TaxonomyBase {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
-        System.out.println(node.getProperty("name"));
+        System.out.println(taxNode.getProperty("name"));
         JadeNode root = new JadeNode();
-        root.setName(((String) node.getProperty("name")).replace(" ", "_"));
+        root.setName(((String) taxNode.getProperty("name")).replace(" ", "_"));
         HashMap<Node, JadeNode> nodes = new HashMap<Node, JadeNode>();
-        nodes.put(node, root);
+        nodes.put(taxNode, root);
         int count = 0;
-        for (Relationship friendrel : CHILDOF_TRAVERSAL.traverse(node).relationships()) {
+        for (Relationship friendrel : CHILDOF_TRAVERSAL.traverse(taxNode).relationships()) {
             count += 1;
             if (nodes.containsKey(friendrel.getStartNode()) == false) {
                 JadeNode node = new JadeNode();
@@ -146,13 +171,13 @@ public class Taxon extends TaxonomyBase {
 
     public void constructJSONGraph() {
 
-        System.out.println(node.getProperty("name"));
+        System.out.println(taxNode.getProperty("name"));
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
         HashMap<Node, Integer> nodenumbers = new HashMap<Node, Integer>();
         HashMap<Integer, Node> numbernodes = new HashMap<Integer, Node>();
         int count = 0;
-        for (Node friendnode : CHILDOF_TRAVERSAL.traverse(node).nodes()) {
+        for (Node friendnode : CHILDOF_TRAVERSAL.traverse(taxNode).nodes()) {
             if (friendnode.hasRelationship(Direction.INCOMING)) {
                 nodenumbers.put(friendnode, count);
                 numbernodes.put(count, friendnode);
@@ -187,9 +212,9 @@ public class Taxon extends TaxonomyBase {
     }
 
     public String constructJSONAltRels(String domsource, ArrayList<Long> altrels) {
-        cne.setStartNode(node);
+        cne.setStartNode(taxNode);
         cne.setChildThreshold(200);
-        se.setStartNode(node);
+        se.setStartNode(taxNode);
         int maxdepth = 3;
         boolean taxonomy = true;
         RelationshipType defaultchildtype = RelTypes.TAXCHILDOF;
@@ -201,22 +226,22 @@ public class Taxon extends TaxonomyBase {
         PathFinder<Path> pf = GraphAlgoFactory.shortestPath(Traversal.pathExpanderForTypes(defaultchildtype, Direction.OUTGOING), 100);
         JadeNode root = new JadeNode();
         if (taxonomy == false)
-            root.setName((String) node.getProperty("name"));
+            root.setName((String) taxNode.getProperty("name"));
         else
-            root.setName((String) node.getProperty("name"));
+            root.setName((String) taxNode.getProperty("name"));
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(defaultchildtype, Direction.INCOMING);
         ArrayList<Node> visited = new ArrayList<Node>();
         ArrayList<Relationship> keepers = new ArrayList<Relationship>();
         HashMap<Node, JadeNode> nodejademap = new HashMap<Node, JadeNode>();
         HashMap<JadeNode, Node> jadeparentmap = new HashMap<JadeNode, Node>();
-        nodejademap.put(node, root);
-        root.assocObject("nodeid", node.getId());
+        nodejademap.put(taxNode, root);
+        root.assocObject("nodeid", taxNode.getId());
         // These are the altrels that actually made it in the tree
         ArrayList<Long> returnrels = new ArrayList<Long>();
-        for (Node friendnode : CHILDOF_TRAVERSAL.depthFirst().evaluator(Evaluators.toDepth(maxdepth)).evaluator(cne).evaluator(se).traverse(node).nodes()) {
+        for (Node friendnode : CHILDOF_TRAVERSAL.depthFirst().evaluator(Evaluators.toDepth(maxdepth)).evaluator(cne).evaluator(se).traverse(taxNode).nodes()) {
             // System.out.println("visiting: "+friendnode.getProperty("name"));
-            if (friendnode == node)
+            if (friendnode == taxNode)
                 continue;
             Relationship keep = null;
             Relationship spreferred = null;
@@ -271,7 +296,7 @@ public class Taxon extends TaxonomyBase {
             nodejademap.put(friendnode, newnode);
             keepers.add(keep);
             visited.add(friendnode);
-            if (node != friendnode && pf.findSinglePath(keep.getStartNode(), node) != null) {
+            if (taxNode != friendnode && pf.findSinglePath(keep.getStartNode(), taxNode) != null) {
                 jadeparentmap.put(newnode, keep.getEndNode());
             }
         }
@@ -312,7 +337,7 @@ public class Taxon extends TaxonomyBase {
 
         // get the parent so we can move back one node
         Node parFirstNode = null;
-        for (Relationship rels : node.getRelationships(Direction.OUTGOING, defaultsourcetype)) {
+        for (Relationship rels : taxNode.getRelationships(Direction.OUTGOING, defaultsourcetype)) {
             if (((String) rels.getProperty("source")).compareTo(sourcename) == 0) {
                 parFirstNode = rels.getEndNode();
                 break;
@@ -347,7 +372,7 @@ public class Taxon extends TaxonomyBase {
         TaxonomyExplorer te = new TaxonomyExplorer();
         TNRSQuery tnrs = new TNRSQuery(te);
 
-        Taxon lonicera = new Taxon(tnrs.getExactMatches("Lonicera").iterator().next().getMatchedNode());
+        Taxon lonicera = new Taxon(tnrs.getExactMatches("Lonicera").iterator().next().getMatches().iterator().next().getMatchedNode());
         lonicera.buildTaxonomyTree();
 
         shutdownDB();

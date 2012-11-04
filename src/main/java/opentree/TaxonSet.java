@@ -1,19 +1,13 @@
 package opentree;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
-
 import opentree.TaxonomyBase.RelTypes;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
@@ -72,19 +66,6 @@ public class TaxonSet implements Iterable<Node> {
         // keep an internal copy of the mrca, we may need it later
         mrca = new Taxon(mrcaNode);
         return new Taxon(mrcaNode);
-    }
-
-    public int getDistToMRCA(Node n) {
-
-        if (hasMRCA() == false)
-            getMRCA();
-        
-        int d = 0;
-        // TODO: calculate the distance of n to the mrca
-        // positive distance is outgoing only (for taxa that are contained by the ingroup),
-        // negative distance is total incoming/outgoing; used if the taxon is not within the ingroup
-
-        return d;
     }
     
     public boolean hasMRCA() {

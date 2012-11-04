@@ -15,6 +15,6 @@ import opentree.TaxonomyExplorer;
  */
 public abstract class TNRSAdapter {
     
-    public abstract void doQuery(Set<String> searchStrings, TaxonomyExplorer taxonomy, TNRSMatchSet results);
+    public abstract void doQuery(Set<String> searchStrings, TaxonomyExplorer taxonomy, TNRSResults results);
 
 }

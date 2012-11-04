@@ -3,6 +3,8 @@ package opentree.tnrs;
 import java.util.HashMap;
 import java.util.Map;
 
+import opentree.Taxon;
+
 import org.neo4j.graphdb.Node;
 
 /**
@@ -39,8 +41,8 @@ public class TNRSHit {
         _score = -1;
     }
     
-    public TNRSHit setMatchedNode(Node matchedNode) {
-        _matchedNode = matchedNode;
+    public TNRSHit setMatchedTaxon(Taxon matchedTaxon) {
+        _matchedNode = matchedTaxon.getNode();
         return this;
     }
 

@@ -1,4 +1,4 @@
-package opentree.tnrs.adapters.gnr;
+package opentree.tnrs;
 
 /**
  * An adapter used by TNRSQuery to perform searches against the Global Names Resolver. This class is basically

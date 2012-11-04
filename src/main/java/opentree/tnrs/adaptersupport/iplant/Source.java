@@ -1,4 +1,4 @@
-package opentree.tnrs.adapters.iplant;
+package opentree.tnrs.adaptersupport.iplant;
 
 public class Source {
     public String status;

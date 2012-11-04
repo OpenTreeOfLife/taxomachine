@@ -101,6 +101,30 @@ public class JadeTree {
 	}
 
 	/**
+	 * @return an iterator over all external nodes
+	 */
+	public Iterable<JadeNode> iterateExternalNodes() {
+	    return new Iterable<JadeNode>() {
+            @Override
+            public Iterator<JadeNode> iterator() {
+                return externalNodes.iterator();
+            }
+	    };
+	}
+
+	/**
+     * @return an iterator over all external nodes
+     */
+    public Iterable<JadeNode> iterateInternalNodes() {
+        return new Iterable<JadeNode>() {
+            @Override
+            public Iterator<JadeNode> iterator() {
+                return internalNodes.iterator();
+            }
+        };
+    }
+	
+	/**
 	 * @return a leaf with name `name` or null
 	 * O(N) lookup.
 	 */

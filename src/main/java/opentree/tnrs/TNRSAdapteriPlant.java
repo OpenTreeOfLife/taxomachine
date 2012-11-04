@@ -1,4 +1,4 @@
-package opentree.tnrs.adapters.iplant;
+package opentree.tnrs;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -9,10 +9,17 @@ import java.util.Set;
 
 import javax.net.ssl.SSLException;
 
+import opentree.Taxon;
 import opentree.TaxonomyExplorer;
 import opentree.tnrs.TNRSAdapter;
 import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatchSet;
+import opentree.tnrs.TNRSNameResult;
+import opentree.tnrs.TNRSResults;
+import opentree.tnrs.adaptersupport.iplant.StatusMessage;
+import opentree.tnrs.adaptersupport.iplant.iPlantHit;
+import opentree.tnrs.adaptersupport.iplant.iPlantNameResult;
+import opentree.tnrs.adaptersupport.iplant.iPlantResponse;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -51,7 +58,7 @@ public class TNRSAdapteriPlant extends TNRSAdapter {
     
     public TNRSAdapteriPlant() {}
 
-    public void doQuery(Set<String> searchStrings, TaxonomyExplorer taxonomy, TNRSMatchSet results) {
+    public void doQuery(Set<String> searchStrings, TaxonomyExplorer taxonomy, TNRSResults results) {
 
         DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpRequestRetryHandler myRetryHandler = new HttpRequestRetryHandler() {
@@ -156,10 +163,14 @@ public class TNRSAdapteriPlant extends TNRSAdapter {
                         for (iPlantNameResult thisNameResult : response) {
                             String thisSearchString = thisNameResult.submittedName;
                             boolean thisNameMatched = false;
+                            TNRSMatchSet matches = new TNRSMatchSet();
+                            
                             for (iPlantHit thisHit : thisNameResult) {
                                 IndexHits<Node> matchedNodes = taxonomy.findTaxNodesByName(thisHit.acceptedName);
                                 if (matchedNodes.size() > 0) {
                                     for (Node n : matchedNodes) {
+                                        
+                                        Taxon matchedTaxon = new Taxon(n);
                                         
                                         // check to see if the fuzzily matched node is a homonym
                                         IndexHits<Node> directMatches = taxonomy.findTaxNodesByName(n.getProperty("name").toString());
@@ -168,10 +179,10 @@ public class TNRSAdapteriPlant extends TNRSAdapter {
                                             isHomonym = true;
 
                                         // add match
-                                        results.addMatch(new TNRSHit().
+                                        matches.addMatch(new TNRSHit().
                                                 setIsApprox(true).
                                                 setIsHomonym(isHomonym).
-                                                setMatchedNode(n).
+                                                setMatchedTaxon(matchedTaxon).
                                                 setOtherData(thisHit.getData()).
                                                 setScore(TEMP_SCORE).
                                                 setSearchString(thisSearchString).
@@ -180,6 +191,7 @@ public class TNRSAdapteriPlant extends TNRSAdapter {
                                     thisNameMatched = true;
                                 }
                             }
+                            results.addNameResult(new TNRSNameResult(thisSearchString, matches));
                             HashSet<String> toRemove = new HashSet<String>();
                             if (thisNameMatched) {
                                 for (String s : searchStrings) {

@@ -41,10 +41,10 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
     }
 
     /**
-     * Adds a match to the set, using the data within by the passed TNRSHit object.
+     * Adds a match to the set, using the data within the passed TNRSHit object.
      * @param TNRSHit to be added
      */
-    public void addMatch(TNRSHit m) {
+    protected void addMatch(TNRSHit m) {
         Match match = new Match(m);
         _matches.add(match);
     }
@@ -154,7 +154,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
          */
         public String getMatchType() {
             String desc = "";
-            
+                        
             if (_isPerfectMatch) {
                 desc += "unambiguous match to known taxon";
             
@@ -183,8 +183,8 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
         @Override
         public String toString() {
-            return "Query '" + _searchString + "' matched by " + _sourceName + " to " + _matchedNode.getProperty("name") + "; id=" +
-                    _matchedNode.getId() + ". (" + getMatchType() + ")";
+            return "Query '" + _searchString + "' matched by " + _sourceName + " to " + _matchedNode.getProperty("name") + " (id=" +
+                    _matchedNode.getId() + "), score " + String.valueOf(_score) + "; (" + getMatchType() + ")";
         }
     }
 }

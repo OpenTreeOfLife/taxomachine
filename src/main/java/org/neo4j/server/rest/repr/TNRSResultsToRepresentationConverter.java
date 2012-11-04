@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import opentree.tnrs.TNRSNameResult;
+import opentree.tnrs.TNRSResults;
 
 import org.neo4j.helpers.collection.FirstItemIterable;
 import org.neo4j.helpers.collection.IterableWrapper;
@@ -14,12 +15,12 @@ import org.neo4j.server.rest.repr.ListRepresentation;
 import org.neo4j.server.rest.repr.MappingRepresentation;
 import org.neo4j.server.rest.repr.Representation;
 import org.neo4j.server.rest.repr.RepresentationType;
-import org.neo4j.server.rest.repr.TNRSResultsRepresentation;
+import org.neo4j.server.rest.repr.TNRSNameResultRepresentation;
 import org.neo4j.server.rest.repr.ValueRepresentation;
 
 public class TNRSResultsToRepresentationConverter {
 
-    public static Representation convert(final Object data)
+    public static Representation convert(final TNRSResults results)
     {
 
         // if ( data instanceof Table ) { return new GremlinTableRepresentation( (Table) data ); }
@@ -31,7 +32,7 @@ public class TNRSResultsToRepresentationConverter {
         // return getIteratorRepresentation(iterator);
         // }
 
-        return getListRepresentation((Iterable) data);
+        return getListRepresentation(results);
 
         // if ( data instanceof Map ) { return getMapRepresentation( (Map) data ); }
 
@@ -55,8 +56,8 @@ public class TNRSResultsToRepresentationConverter {
         return MappingRepresentation.stringMap(RepresentationType.MAP.toString(), data);
     }
 
-    public static MappingRepresentation getTNRSResultsRepresentation(Map<String,Object> data) {
-      return TNRSResultsRepresentation.map(data);
+    public static MappingRepresentation getTNRSNameResultRepresentation(Map<String,Object> data) {
+      return TNRSNameResultRepresentation.map(data);
     }
     
 /*    public static MappingRepresentation getTNRSMatchRepresentation(TNRSMatch match) {
@@ -143,9 +144,9 @@ public class TNRSResultsToRepresentationConverter {
             return ValueRepresentation.number(((Integer) result).intValue());
         } else if (result instanceof TNRSNameResult) {
             HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
-            nameResultMap.put("queried_name", ((TNRSNameResult) result).queried_name);
-            nameResultMap.put("matches", ((TNRSNameResult) result).matches);
-            return getTNRSResultsRepresentation(nameResultMap);
+            nameResultMap.put("queried_name", ((TNRSNameResult) result).getQueriedName());
+            nameResultMap.put("matches", ((TNRSNameResult) result).getMatches());
+            return getTNRSNameResultRepresentation(nameResultMap);
         } else {
             return ValueRepresentation.string(result.toString());
         }

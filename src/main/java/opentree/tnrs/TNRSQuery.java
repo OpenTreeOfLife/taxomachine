@@ -1,17 +1,13 @@
 package opentree.tnrs;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
-import java.util.Set;
-
-import opentree.BarrierNodes;
 import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.TaxonomyExplorer;
+import opentree.utils.Levenshtein;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
@@ -24,88 +20,94 @@ import org.neo4j.graphdb.index.IndexHits;
 
 public class TNRSQuery {
 
-    private static final double TEMP_SCORE = 0.5;
+//    private static final double TEMP_SCORE = 0.75;
     private static final double NOMEN_CODE_SUPERMAJORITY_PROPORTION = 0.75;
+    private static final double DISTANT_HOMONYM_SCORE_SCALAR = 0.25;
+    private static final double DEFAULT_MIN_SCORE = 0.01;
+
+    private static final int SHORT_NAME_LENGTH = 9;
+    private static final int MEDIUM_NAME_LENGTH = 14;
+    private static final int LONG_NAME_LENGTH = 19;
+
+    private static final String DEFAULT_TAXONOMY_NAME = "ottol";
     private static final String UNDETERMINED = "undetermined";
 
     private TaxonomyExplorer _taxonomy;
     private TNRSResults _results;
     private HashSet<String> _queriedNames;
-//    private HashSet<String> _unmatchedNames;
-//    private HashSet<String> _matchedNames;
-//    private HashSet<Long> _matchedNodeIds;
-//    private LinkedList<Node> _unambiguousTaxonNodes;
+    private HashSet<Long> _matchedNodeIds;
+    private double _minScore;
     
     public TNRSQuery(TaxonomyExplorer taxonomy) {
         _taxonomy = taxonomy;
-        initialize();
+        _minScore = DEFAULT_MIN_SCORE; // TODO: make it possible for client to set this
+        clearResults();
     }
     
-    private void initialize() {
+    private void clearResults() {
         _queriedNames = new HashSet<String>();
         _results = new TNRSResults();
-//        _matchedNames = new HashSet<String>();
-//        _matchedNodeIds = new HashSet<Long>();
-//        _unmatchedNames = new HashSet<String>();
+        _matchedNodeIds = new HashSet<Long>();
     }
+
+    // TODO: create independent methods that leverage external adapters to match names
+
     
     /**
-     *  Do a TNRS query returning exact matches only for an array of names `searchStrings'
-     *  
+     * Performs an internal TNRS query for *ONLY* exact name matches to strings within `searchStrings`.
+     *         
      * @param searchStrings
-     * @param adapters
      * @return results
+     * 
      */
     public TNRSResults getExactMatches(String[] searchStrings) {
         boolean exactOnly = true;
-        return getMatches(searchStrings, exactOnly, (TNRSAdapter)null);
+        return getResults(searchStrings, exactOnly, (TNRSAdapter)null);
     }
 
     /**
-     *  Do a TNRS query returning exact matches only for a single name `searchString'
-     *  
+     * Performs an internal TNRS query for *ONLY* exact name matches to `searchString`.
+     *         
      * @param searchString
-     * @param adapters
      * @return results
+     * 
      */
     public TNRSResults getExactMatches(String searchString) {
         String[] searchStrings = new String[1];
         searchStrings[0] = searchString;
         boolean exactOnly = true;
-        return getMatches(searchStrings, exactOnly, (TNRSAdapter)null);
+        return getResults(searchStrings, exactOnly, (TNRSAdapter)null);
     }
 
     /**
-     *  Do a TNRS query returning all matches for a single name `searchString'
-     *  
-     * @param searchString
-     * @param adapters
+     * Performs a full internal TNRS query on a single name `searchString`, finding exact and approximate matches.
+     *         
+     * @param searchStrings
      * @return results
+     * 
      */
     public TNRSResults getAllMatches(String searchString) {
         String[] searchStrings = new String[1];
         searchStrings[0] = searchString;
         boolean exactOnly = false;
-        return getMatches(searchStrings, exactOnly, (TNRSAdapter)null);
+        return getResults(searchStrings, exactOnly, (TNRSAdapter)null);
     }
 
     /**
+     * Performs a full internal TNRS query on an array of names `searchStrings`, finding exact and approximate matches.
+     *
      * @param searchStrings
-     * @param adapters
      * @return results
      * 
-     *         Performs a TNRS query on `searchString`, a comma-delimited list of names, and loads the results of the query into a TNRSMatchSet object `results`, which is returned.
-     *         `adapters` is either one or an array of TNRSAdapter objects for the sources to be queried. If no adapters are passed, then the query is only
-     *         performed against the local taxonomy graph. (Adapters are currently deactivated for speed considerations).
      */
-    public TNRSResults getAllMatches(String[] searchStrings, TNRSAdapter... adapters) {
+    public TNRSResults getAllMatches(String[] searchStrings) {
         boolean exactOnly = false;
-        return getMatches(searchStrings, exactOnly, adapters);
+        return getResults(searchStrings, exactOnly, (TNRSAdapter)null);
     }
     
-    private TNRSResults getMatches(String[] searchStrings, boolean exactOnly, TNRSAdapter... adapters) {
+    private TNRSResults getResults(String[] searchStrings, boolean exactOnly, TNRSAdapter... adapters) {
 
-        initialize();
+        clearResults();
 
         // add the names to be queried
         for (String name : searchStrings)
@@ -117,14 +119,17 @@ public class TNRSQuery {
         
         // find unambiguous names, count occurrences of nomenclatural codes within these names
         for (int i = 0; i < searchStrings.length; i++) {
-            IndexHits<Node> directHits = _taxonomy.findTaxNodesByName(searchStrings[i]);
+            String thisName = searchStrings[i];
+            IndexHits<Node> directHits = _taxonomy.findTaxNodesByName(thisName);
 
             if (directHits.size() == 1) { // neither a homonym nor synonym
                 for (Node n : directHits) {
                     unambiguousTaxonNodes.add(n);
+                    _results.addUnambiguousName(thisName);
 
                     // update the count for the nomenclatural code govering this name
-                    String thisCode = n.getProperty("taxCode").toString();
+                    String thisCode = n.getProperty("taxcode").toString();
+//                    System.out.println(n.getProperty("taxcode"));
                     if (codeFreqs.containsKey(thisCode)) {
                         int count = codeFreqs.get(thisCode) + 1;
                         codeFreqs.put(thisCode, count);
@@ -136,19 +141,11 @@ public class TNRSQuery {
         }
         TaxonSet ts = new TaxonSet(unambiguousTaxonNodes);
         
-        // find mrca of unambiguous names
-        Taxon mrca;
-        if (ts.size() > 0)
-            mrca = ts.getMRCA();
-        else
-            mrca = new Taxon(_taxonomy.getLifeNode());
-
         // find prevalent nomenclatural code (if any)
+        // TODO: make it possible for user to assign a governing code rather than guessing it
         String prevalentCode = "";
         for (Entry<String, Integer> i : codeFreqs.entrySet()) {
-            // TODO: make it possible for user to set req'd supermajority prop via query data
-            // actually, should probably make it possible to assign a context name rather than setting this value
-            if ((i.getValue() / _queriedNames.size()) >= NOMEN_CODE_SUPERMAJORITY_PROPORTION) {
+            if ((i.getValue() / (double)_queriedNames.size()) >= NOMEN_CODE_SUPERMAJORITY_PROPORTION) {
                 prevalentCode = i.getKey();
                 break;
             }
@@ -158,126 +155,207 @@ public class TNRSQuery {
         } else {
             _results.setGoverningCode(prevalentCode);
         }
+        
+        System.out.println("governingCode = " + _results.getGoverningCode());
 
+        // find mrca of unambiguous names
+        Taxon mrca;
+        if (ts.size() > 0)
+            mrca = ts.getMRCA();
+        else
+            mrca = new Taxon(_taxonomy.getLifeNode());
+        
+        System.out.println("mrca = " + mrca + " " + mrca.getName());
+        
         // now do TNRS on each name
-        for (String thisName : _queriedNames) {
+        for (String queriedName : _queriedNames) {
 
-            // prepare for TNRS on this name
-            float minIdentity = getMinIdentity(thisName);
+            float minIdentity = getMinIdentity(queriedName);
             boolean wasMatched = false;
             TNRSMatchSet matches = new TNRSMatchSet();
             
             // first: find possible preferred taxon nodes, use fuzzy matching if specified
             IndexHits<Node> matchedTaxNodes;
             if (exactOnly)
-                matchedTaxNodes = _taxonomy.findTaxNodesByName(thisName);
+                matchedTaxNodes = _taxonomy.findTaxNodesByName(queriedName);
             else
-                matchedTaxNodes = _taxonomy.findTaxNodesByNameFuzzy(thisName, minIdentity);
+                matchedTaxNodes = _taxonomy.findTaxNodesByNameFuzzy(queriedName, minIdentity);
 
             if (matchedTaxNodes.size() > 0) {
-            	
-            	for (Node n : matchedTaxNodes) {
+                wasMatched = true;
 
+                // process all the matches to taxon nodes
+                for (Node n : matchedTaxNodes) {
+
+                    Taxon matchedTaxon = new Taxon(n);
+                    double baseScore = 1;
                     double scoreModifier = 1;
 
-                	// check if the name is an exact match to the query
-                    boolean isFuzzy = n.getProperty("name").equals(thisName) ? false : true;
+                	// check if the matched node name is an exact match to the query
+                    boolean isFuzzy;
+                    if (matchedTaxon.getName().equals(queriedName)) {
+                        isFuzzy = false;
+                    } else {
+                        isFuzzy = true;
 
+                        // use edit distance to calculate base score for fuzzy matches
+                        System.out.println("comparing " + queriedName + " to " + matchedTaxon.getName());
+                        double l = Levenshtein.absDistance(queriedName, matchedTaxon.getName());
+                        System.out.println("l = " + String.valueOf(l));
+                        double s = Math.min(matchedTaxon.getName().length(), queriedName.length());
+                        System.out.println("s = " + String.valueOf(s));
+                        baseScore = (s - l) / s;
+                        System.out.println("baseScore = " + String.valueOf(baseScore));
+                        
+                        if (matchedTaxon.isPreferredTaxChildOf(mrca) == false) {
+
+                            ////////////////////////////////////////////////////////////////////////////////////
+                            // TODO: provide mrca_hard_context option to exclude matches outside of mrca scope
+                            // (needs corresponding option for providing taxon name for scoped mrca itself)
+                            ////////////////////////////////////////////////////////////////////////////////////
+                            
+                            int d = _taxonomy.getPreferredInternodalDistance(n, mrca.getNode());
+                            scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
+                            System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
+                        }
+                    }
+                    
                     // check if the matched node is a homonym
                     IndexHits<Node> directHits = _taxonomy.findTaxNodesByName(n.getProperty("name").toString());
                     boolean isHomonym;
                     if (directHits.size() > 1) {
                         isHomonym = true;
-                        if (_results.getGoverningCode() != n.getProperty("taxCode"))
-                            scoreModifier *= 0.5; // de-weight homonyms outside prevalent nomenclature
+                        System.out.println("Comparing = '" + _results.getGoverningCode() + "' to '" + n.getProperty("taxcode") + "'");
+                        if (_results.getGoverningCode().equals(n.getProperty("taxcode").toString()) == false) {
+                            
+                            ////////////////////////////////////////////////////////////////////////////////////
+                            // TODO: provide nomen_code_hard_context option to exclude homonyms outside of nomenclature scope
+                            // (needs corresponding option for providing scoped nomenclature code itself)
+                            ////////////////////////////////////////////////////////////////////////////////////
+                            
+                            scoreModifier *= DISTANT_HOMONYM_SCORE_SCALAR; // down-weight homonyms outside prevalent nomenclature
+                            System.out.println("Distant homonym; scoreModifier adjusted down to = " + String.valueOf(scoreModifier));
+                        }
                     } else {
                         isHomonym = false;
                     }
                     
                     // remember perfect matches
                     boolean isPerfectMatch = (!isHomonym && !isFuzzy) ? true : false;
-           		
-                	// TODO: get the score for each hit, currently using extremely coarse scoring
-                    double baseScore = 0;
-                    if (isPerfectMatch)
-                    	baseScore = 1;
-                    else
-                    	baseScore = TEMP_SCORE;
+           		                    
+                    // add the match if it scores high enough
+                    double score = baseScore * scoreModifier;
+                    if (score >= _minScore) {
+                        matches.addMatch(new TNRSHit().
+                                setMatchedTaxon(matchedTaxon).
+                                setSearchString(queriedName).
+                                setIsPerfectMatch(isPerfectMatch).
+                                setIsApprox(isFuzzy).
+                                setIsHomonym(isHomonym).
+                                setSourceName(DEFAULT_TAXONOMY_NAME).
+                                setScore(score));
+                    }
 
-                    // weight fuzzy matches by abs distance to mrca
-                    
-                    
-            		// add the match
-                    matches.addMatch(new TNRSHit().
-                            setMatchedNode(n).
-                            setSearchString(thisName).
-                            setIsPerfectMatch(isPerfectMatch).
-                            setIsApprox(isFuzzy).
-                            setIsHomonym(isHomonym).
-                            setSourceName("ottol").
-                            setScore(baseScore * scoreModifier));
-
+                    // remember matched taxon nodes so we don't add them again later
                     _matchedNodeIds.add(n.getId());
                 }
-            	_matchedNames.add(thisName);
-                wasMatched = true;
             }
 
             // second: find possible preferred synonyms, use fuzzy matching if specified
             IndexHits<Node> matchedSynNodes;
             if (exactOnly)
-                matchedSynNodes = _taxonomy.findSynNodesByName(thisName);
+                matchedSynNodes = _taxonomy.findSynNodesByName(queriedName);
             else
-                matchedSynNodes = _taxonomy.findSynNodesByNameFuzzy(thisName, minIdentity);
+                matchedSynNodes = _taxonomy.findSynNodesByNameFuzzy(queriedName, minIdentity);
 
             if (matchedSynNodes.size() > 0) {
+                wasMatched = true;
+
+                // process all matches to synonym nodes
                 for (Node synNode : matchedSynNodes) {
 
-                	// check if the name is an exact match to the query
-                	boolean isApprox = synNode.getProperty("name").equals(thisName) ? false : true;
-                 	
-                	// find the node matched by this synonym
-                	Node taxNode = _taxonomy.getTaxNodeForSynNode(synNode);
-                	
-                	// only add new matches to taxon nodes that are not already in the matched set
-                	if (_matchedNodeIds.contains(taxNode.getId()) == false) {
-                    	// TODO: get the score for each hit
-                    	double score = TEMP_SCORE;
+                    String synonymName = synNode.getProperty("name").toString();
+                    double scoreModifier = 1;
+                    double baseScore = 1;
 
-                    	// TODO: use tu.getDistToMRCA(n) function to adjust score for all synonym matches
+                    // get the taxon matched by this synonym
+                    Taxon matchedTaxon = new Taxon(_taxonomy.getTaxNodeForSynNode(synNode));
+                    
+                	// only add new matches to taxon nodes that are not already in the matched set
+                	if (_matchedNodeIds.contains(matchedTaxon.getNode().getId()) == false) {
+
+                        // check if the matched synonym name is an exact match to the query
+                        boolean isFuzzy;
+                        if (synonymName.equals(queriedName)) {
+                            isFuzzy = false;
+                        } else {
+                            isFuzzy = true;
+                            
+                            // use edit distance to calculate base score for fuzzy matches
+                            System.out.println("comparing " + queriedName + " to " + synonymName);
+                            double l = Levenshtein.absDistance(queriedName, synonymName);
+                            System.out.println("l = " + String.valueOf(l));
+//                            System.out.println("length of queried name = " + queriedName.length());
+//                            System.out.println("length of synonym name = " + synonymName.length());
+                            double s = Math.min(synonymName.length(), queriedName.length());
+                            System.out.println("s = " + String.valueOf(s));
+                            baseScore = (s - l) / s;
+                            System.out.println("baseScore = " + String.valueOf(baseScore));
+                            
+                            
+                            if (matchedTaxon.isPreferredTaxChildOf(mrca) == false) {
+
+                                System.out.println(matchedTaxon.getName() + " is not a child of " + mrca.getName());
+                                ////////////////////////////////////////////////////////////////////////////////////
+                                // TODO: provide mrca_hard_context option to exclude matches outside of mrca scope
+                                // (needs corresponding option for providing taxon name for scoped mrca itself)
+                                ////////////////////////////////////////////////////////////////////////////////////
+                                
+                                int d = _taxonomy.getPreferredInternodalDistance(matchedTaxon.getNode(), mrca.getNode());
+                                System.out.println("d = " + String.valueOf(d));
+                                scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
+                                System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
+
+                            }
+                        }
 
                         // add the match
-                        _results.addMatch(new TNRSHit().
-                                setMatchedNode(taxNode).
-                                setSynonymNode(synNode).
-                                setSearchString(thisName).
-                                setIsApprox(isApprox).
-                                setIsSynonym(true).
-                                setIsPerfectMatch(false).
-                                setSourceName("ottol").
-                                setScore(score));
-
+                        double score = baseScore * scoreModifier;
+                        if (score >= _minScore) {
+                            matches.addMatch(new TNRSHit().
+                                    setMatchedTaxon(matchedTaxon).
+                                    setSynonymNode(synNode).
+                                    setSearchString(queriedName).
+                                    setIsApprox(isFuzzy).
+                                    setIsSynonym(true).
+                                    setIsPerfectMatch(false).
+                                    setSourceName(DEFAULT_TAXONOMY_NAME).
+                                    setScore(score));
+                        }
+                        
                         _matchedNodeIds.add(synNode.getId());
                 	}
                 }
-                _matchedNames.add(thisName);
-                wasMatched = true;
             }
             
-            // remember names we can't match within the graph
-            if (wasMatched)
-                _matchedNames.add(thisName);
-            else
-                _unmatchedNames.add(thisName);
+            if (wasMatched) {
+                // record all results found for this
+                _results.addNameResult(new TNRSNameResult(queriedName, matches));
+
+            } else {
+                // remember names we couldn't match
+                _results.addUnmatchedName(queriedName);
+            }
         }
 
-        // TODO: at the moment we are only using internal matching; not worth the extra time for external services
+        // at the moment we are only using internal matching; not worth the extra time for external services
+        // TODO: make this an optional feature
         boolean useExternalServices = false;
         if (useExternalServices) {
 	        // fourth: call passed adapters for help with names we couldn't match
-	        if (_unmatchedNames.size() > 0) {
+	        if (_results.getUnmatchedNames().size() > 0) {
 	            for (int i = 0; i < adapters.length; i++) {
-	                adapters[i].doQuery(_unmatchedNames, _taxonomy, _results);
+	                adapters[i].doQuery(_results.getUnmatchedNames(), _taxonomy, _results);
 	            }
 	        }
         }
@@ -286,15 +364,32 @@ public class TNRSQuery {
         return _results;
     }
 
+    /**
+     * Returns a minimum identity score used for fuzzy matching that is based on the length of the string. 
+     * For the matching to work well, shorter names need lower minimum identity than longer ones, because
+     * fewer edit differences have a bigger impact on the the identity proportion of short strings.
+     * 
+     * @param name
+     * @return minIdentity
+     */
     public float getMinIdentity(String name) {
-
-        // The required minimum identity for fuzzy matches is based on the length of the string. 
-        // Shorter names need lower scores to work well, because fewer edit differences have a
-        // bigger impact on the the identity proportion when compared with other strings.
         
-        int ql = name.length();
+        float ql = name.length();
 
+        int maxEdits = 4;
+
+        if (ql < SHORT_NAME_LENGTH)
+            maxEdits = 1;
+        else if (ql < MEDIUM_NAME_LENGTH)
+            maxEdits = 2;
+        else if (ql < LONG_NAME_LENGTH)
+            maxEdits = 3;
+            
+        return (ql - (maxEdits + 1)) / ql;
+            
+/*
         float minId = 0;
+
         if (ql < 4)
             minId = (float)0.55;
         else if (ql < 6)
@@ -308,6 +403,6 @@ public class TNRSQuery {
         else
             minId = (float)0.8;
         
-        return minId;
+        return minId;  */
     }
 }

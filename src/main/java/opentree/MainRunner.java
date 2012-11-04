@@ -1,19 +1,33 @@
 package opentree;
 
+import jade.tree.JadeNode;
 import jade.tree.JadeTree;
 import jade.tree.TreeObject;
 import jade.tree.TreeReader;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 
+import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSMatchSet;
+import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSQuery;
-import opentree.tnrs.adapters.iplant.TNRSAdapteriPlant;
+import opentree.tnrs.TNRSResults;
 
 //import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.forester.io.parsers.PhylogenyParser;
+import org.forester.io.parsers.util.ParserUtils;
+import org.forester.phylogeny.Phylogeny;
+import org.forester.phylogeny.PhylogenyMethods;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
 
@@ -61,7 +75,6 @@ public class MainRunner {
 		tl.shutdownDB();
 	}
 	
-	
 	public void taxonomyQueryParser(String [] args) {
 		if (args[0].equals("checktree")) {
 			if (args.length != 4) {
@@ -93,36 +106,30 @@ public class MainRunner {
 
             te =  new TaxonomyExplorer(graphname);
             tnrs = new TNRSQuery(te);
-            TNRSMatchSet results = tnrs.getExactMatches(query);
-
-	        if (results.size() > 1) {
-	            // TODO: print results, have them pick one
-	            System.out.println("there was more than one match to that name. this case not yet implemented");
-	            System.exit(0);
-            } else {
-                taxon = new Taxon(results.iterator().next().getMatchedNode());
-    			System.out.println("constructing a comprehensive tax tree of " + query);
-    			taxon.buildTaxonomyTree();
+            try {
+                taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
+            } catch (MultipleHitsException ex) {
+                System.out.println("There was more than one match for that name");
             }
+
+            System.out.println("constructing a comprehensive tax tree of " + query);
+    		taxon.buildTaxonomyTree();
 
 		} else if (args[0].equals("comptaxgraph")) {
 			String query = args[1];
 			String graphname = args[2];
 			String outname = args[3];
 			
-            te = new TaxonomyExplorer(graphname);
+            te =  new TaxonomyExplorer(graphname);
             tnrs = new TNRSQuery(te);
-            TNRSMatchSet results = tnrs.getExactMatches(query);
-
-            if (results.size() > 1) {
-                // TODO: print results, have them pick one
-                System.out.println("there was more than one match to that name. this case not yet implemented");
-                System.exit(0);
-            } else {
-                taxon = new Taxon(results.iterator().next().getMatchedNode());
-                System.out.println("exporting the subgraph for clade " + query);
-                taxon.exportGraphForClade(outname);
+            try {
+                taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
+            } catch (MultipleHitsException ex) {
+                System.out.println("There was more than one match for that name");
             }
+
+            System.out.println("exporting the subgraph for clade " + query);
+            taxon.exportGraphForClade(outname);
             
 		} else if (args[0].equals("findcycles")) {
 			String query = args[1];
@@ -137,19 +144,16 @@ public class MainRunner {
 			String query = args[1];
 			String graphname = args[2];
 			
-            te = new TaxonomyExplorer(graphname);
+            te =  new TaxonomyExplorer(graphname);
             tnrs = new TNRSQuery(te);
-            TNRSMatchSet results = tnrs.getExactMatches(query);
-			
-            if (results.size() > 1) {
-                // TODO: print results, have them pick one
-                System.out.println("there was more than one match to that name. this case not yet implemented");
-                System.exit(0);
-            } else {
-                taxon = new Taxon(results.iterator().next().getMatchedNode());
-    			System.out.println("constructing json graph data for " + query);
-    			taxon.constructJSONGraph();
+            try {
+                taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
+            } catch (MultipleHitsException ex) {
+                System.out.println("There was more than one match for that name");
             }
+
+			System.out.println("constructing json graph data for " + query);
+			taxon.constructJSONGraph();
 
 		} else if (args[0].equals("checktree")) {
 		    System.out.println("ERROR: this option is deprecated. use `tnrstree` option instead");
@@ -178,11 +182,24 @@ public class MainRunner {
 	}
 
     public void parseTNRSRequest(String args[]) {
+        
+        if (args[0].equals("tnrsbasic")) {
+            if (args.length != 3) {
+                System.out.println("arguments should be: namestring graphdbfolder");
+                return;
+            }
+        } else if (args[0].equals("tnrstree")) {
+            if (args.length != 3) {
+                System.out.println("arguments should be: treefile graphdbfolder");
+                return;
+            }
+        }
+
         String graphName = args[2];
         TaxonomyExplorer taxonomy = new TaxonomyExplorer(graphName);
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
 //        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
-        TNRSMatchSet results = null;
+        TNRSResults results = (TNRSResults)null;
         
         if (args[0].compareTo("tnrsbasic") == 0) {
             
@@ -191,28 +208,68 @@ public class MainRunner {
             
         } else if (args[0].compareTo("tnrstree") == 0) {
 
-            System.out.println("not implemented");
-            System.exit(0);
+/*
+            String treeString = "";
+            try {
+            
+                FileInputStream ins = new FileInputStream(args[1]);
+                BufferedReader infile = new BufferedReader(new InputStreamReader(ins));
+                treeString += infile.readLine();
+                infile.close();
+            
+            } catch (FileNotFoundException e) {
+                System.out.println("The specified treefile could not be found.");
+                System.exit(0);
+            } catch (IOException e) {
+                System.out.println("There was a problem reading the treefile.");
+                e.printStackTrace();
+            }
+            
+            TreeReader treeReader = new TreeReader();
+            JadeTree tree = treeReader.readTree(treeString);
 
-/*            TreeReader treeReader = new TreeReader();
-            JadeTree tree = treeReader.readTree(args[1]);
+            // get external node names from jade tree
+            String[] treeTipNames = new String[tree.getExternalNodeCount()];
+            for (int i = 0; i < tree.getExternalNodeCount(); i++) {
+                treeTipNames[i] = (tree.getExternalNode(i).getName());
+            } */
+            
 
-            String[] treeTipNames = null; // get external node names from jade tree
-
+            // read in the treefile
+            final File treefile = new File(args[1]);
+            PhylogenyParser parser = null;
+            try {
+                parser = ParserUtils.createParserDependingOnFileType(treefile, true);
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+            Phylogeny[] phys = null;
+            try {
+                phys = PhylogenyMethods.readPhylogenies(parser, treefile);
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+            
             // TODO: use MRCA of tree as query context
             // TODO: use tree structure to help differentiate homonyms
+            String[] tipNames = phys[0].getAllExternalNodeNames();
+            for (int i = 0; i < tipNames.length; i++ )
+                System.out.println(tipNames[i]);
             
             // search for the names
-            results = tnrs.getMatches(treeTipNames, iplant); */
+            results = tnrs.getAllMatches(phys[0].getAllExternalNodeNames());
             
         }
         
-        for (TNRSMatch m : results) {
-            System.out.println(m.toString());
+        for (TNRSNameResult nameResult : results) {
+            System.out.println(nameResult.getQueriedName());
+            for (TNRSMatch m : nameResult) {
+                System.out.println("\t" + m.toString());
+            }
         }
 
         System.out.println("\nNames that could not be matched:");
-        for (String name : tnrs.getUnmatchedNames()) {
+        for (String name : results.getUnmatchedNames()) {
             System.out.println(name);
         }
 

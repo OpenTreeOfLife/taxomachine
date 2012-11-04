@@ -12,13 +12,13 @@ import org.neo4j.helpers.collection.IteratorWrapper;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSMatchSet;
 
-public class TNRSResultsRepresentation extends MappingRepresentation {
+public class TNRSNameResultRepresentation extends MappingRepresentation {
 
-    public TNRSResultsRepresentation(RepresentationType type) {
+    public TNRSNameResultRepresentation(RepresentationType type) {
         super(type);
     }
 
-    TNRSResultsRepresentation(String type) {
+    TNRSNameResultRepresentation(String type) {
         super(type);
     }
     
@@ -45,8 +45,8 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
     protected void serialize(MappingSerializer serializer) {        
     }
     
-    public static TNRSResultsRepresentation map(final Map<String,Object> map) {
-        return new TNRSResultsRepresentation(RepresentationType.MAP.toString()) {
+    public static TNRSNameResultRepresentation map(final Map<String,Object> map) {
+        return new TNRSNameResultRepresentation(RepresentationType.MAP.toString()) {
             @Override
             protected void serialize( final MappingSerializer serializer ) {
 

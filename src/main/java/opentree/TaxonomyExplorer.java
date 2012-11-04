@@ -1,35 +1,16 @@
 package opentree;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-
-import jade.tree.JadeNode;
-import jade.tree.JadeTree;
-import jade.tree.TreeReader;
-import opentree.TaxonomyBase.RelTypes;
-
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.FuzzyQuery;
 import org.neo4j.graphalgo.GraphAlgoFactory;
-import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.StopEvaluator;
-import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.Traverser;
 import org.neo4j.graphdb.index.IndexHits;
-import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
@@ -39,7 +20,6 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	private SpeciesEvaluator se;
 	private ChildNumberEvaluator cne;
 	int transaction_iter = 10000;
-	
 
 	public TaxonomyExplorer(){
 		cne = new ChildNumberEvaluator();
@@ -150,15 +130,24 @@ public class TaxonomyExplorer extends TaxonomyBase{
 
         return taxNode;
     }
-	
-    public int getInternodalDistance(Node n1, Node n2, RelationshipType relType) {
-        
-        TraversalDescription synonymTraversal = Traversal.description()
-                .relationships(RelTypes.SYNONYMOF, Direction.OUTGOING);
-        
-        return 0;
-    }
     
+    public int getPreferredInternodalDistance(Node n1, Node n2) {
+        
+/*        TraversalDescription td = Traversal.description()
+                .relationships(relType, Direction.BOTH).depthFirst().; */
+        
+//        System.out.println("Node 1: " + n1.getProperty("name") + " " + n1.getId() + ", Node 2: " + n2.getProperty("name") + " " + n2.getId());
+/*        
+        ExecutionEngine engine = new ExecutionEngine( graphDb );
+//      ExecutionResult result = engine.execute( "start n=node(1), m=node(2) return n, m" );
+        ExecutionResult result = engine.execute( "START n=node("+n1.getId()+"), m=node("+n2.getId()+") MATCH p = shortestPath(n--m) RETURN p" );
+        System.out.println( result ); */
+        
+        Path p = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.BOTH), 10000).findSinglePath(n1, n2);
+//        System.out.println(p);
+        return p.length();
+    }
+        
 	/*
 	 * Given a Taxonomic name (as name), this will attempt to find cycles which should be conflicting taxonomies
 	 */
