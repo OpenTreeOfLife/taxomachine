@@ -1,23 +1,7 @@
 package opentree;
 
-import jade.tree.JadeNode;
-import jade.tree.JadeTree;
-import jade.tree.TreeObject;
-import jade.tree.TreeReader;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSMatch;
-import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSQuery;
 import opentree.tnrs.TNRSResults;
@@ -31,9 +15,6 @@ import org.forester.io.parsers.util.ParserUtils;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
 */
-
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.index.IndexHits;
 
 public class MainRunner {
     

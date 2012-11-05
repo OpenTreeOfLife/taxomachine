@@ -21,9 +21,9 @@ import org.neo4j.graphdb.index.IndexHits;
 public class TNRSQuery {
 
 //    private static final double TEMP_SCORE = 0.75;
-    private static final double NOMEN_CODE_SUPERMAJORITY_PROPORTION = 0.75;
-    private static final double DISTANT_HOMONYM_SCORE_SCALAR = 0.25;
+    private static final double DEFAULT_NOMEN_CODE_SUPERMAJORITY_PROPORTION = 0.75;
     private static final double DEFAULT_MIN_SCORE = 0.01;
+    private static final double DISTANT_HOMONYM_SCORE_SCALAR = 0.25;
 
     private static final int SHORT_NAME_LENGTH = 9;
     private static final int MEDIUM_NAME_LENGTH = 14;
@@ -52,7 +52,6 @@ public class TNRSQuery {
 
     // TODO: create independent methods that leverage external adapters to match names
 
-    
     /**
      * Performs an internal TNRS query for *ONLY* exact name matches to strings within `searchStrings`.
      *         
@@ -145,7 +144,7 @@ public class TNRSQuery {
         // TODO: make it possible for user to assign a governing code rather than guessing it
         String prevalentCode = "";
         for (Entry<String, Integer> i : codeFreqs.entrySet()) {
-            if ((i.getValue() / (double)_queriedNames.size()) >= NOMEN_CODE_SUPERMAJORITY_PROPORTION) {
+            if ((i.getValue() / (double)_queriedNames.size()) >= DEFAULT_NOMEN_CODE_SUPERMAJORITY_PROPORTION) {
                 prevalentCode = i.getKey();
                 break;
             }
@@ -364,9 +363,8 @@ public class TNRSQuery {
     }
 
     /**
-     * Returns a minimum identity score used for fuzzy matching that is based on the length of the string. 
-     * For the matching to work well, shorter names need lower minimum identity than longer ones, because
-     * fewer edit differences have a bigger impact on the the identity proportion of short strings.
+     * Returns a minimum identity score used for fuzzy matching that limits the number
+     * of edit differences based on the length of the string. 
      * 
      * @param name
      * @return minIdentity
@@ -385,23 +383,5 @@ public class TNRSQuery {
             maxEdits = 3;
             
         return (ql - (maxEdits + 1)) / ql;
-            
-/*
-        float minId = 0;
-
-        if (ql < 4)
-            minId = (float)0.55;
-        else if (ql < 6)
-            minId = (float)0.6;
-        else if (ql < 8)
-            minId = (float)0.65;
-        else if (ql < 11)
-            minId = (float)0.7;
-        else if (ql < 14)
-            minId = (float)0.75;
-        else
-            minId = (float)0.8;
-        
-        return minId;  */
     }
 }

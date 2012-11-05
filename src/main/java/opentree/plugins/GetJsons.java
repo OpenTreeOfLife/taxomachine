@@ -1,9 +1,16 @@
 package opentree.plugins;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
+import opentree.GraphDatabaseAgent;
 import opentree.Taxon;
 import opentree.TaxonomyBrowser;
+import opentree.tnrs.MultipleHitsException;
+import opentree.tnrs.TNRSMatch;
+import opentree.tnrs.TNRSNameResult;
+import opentree.tnrs.TNRSQuery;
+import opentree.tnrs.TNRSResults;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -14,6 +21,7 @@ import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
+import org.neo4j.server.rest.repr.OpentreeRepresentationConverter;
 
 public class GetJsons extends ServerPlugin {
 
@@ -49,24 +57,25 @@ public class GetJsons extends ServerPlugin {
         return retst;
     }
 
-    @Description("Return a JSON with the node id given a name")
+    @Description("Return a JSON with node ids given a name")
     @PluginTarget(GraphDatabaseService.class)
-    public String getNodeIDJSONFromName(@Source GraphDatabaseService graphDb,
+    public Object getNodeIDJSONFromName(@Source GraphDatabaseService graphDb,
             @Description("Name of node to find.") @Parameter(name = "nodename", optional = true) String nodename) {
-        String retst = "";
-        System.out.println(nodename);
-        IndexHits<Node> hits = graphDb.index().forNodes("taxNamedNodes").get("name", nodename);
-        try {
-            Node firstNode = hits.next();
-            hits.close();
-            if (firstNode == null) {
-                retst = "[]";
-            } else {
-                retst = "[{\"nodeid\":" + firstNode.getId() + "}]";
-            }
-        } catch (java.lang.Exception jle) {
-            retst = "[]";
-        }
-        return retst;
+
+        HashMap<String,String> results = new HashMap<String, String>();
+
+        GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
+        TaxonomyBrowser taxonomy = new TaxonomyBrowser(gdb);
+        TNRSQuery tnrs = new TNRSQuery(taxonomy);
+        
+        TNRSNameResult matches = tnrs.getExactMatches(nodename).iterator().next();
+
+        for (TNRSMatch m : matches)
+            results.put("nodeid",String.valueOf(m.getMatchedNode().getId()));
+
+        if (results.size() < 1)
+            results.put("error", "Could not find any taxon by that name");
+
+        return OpentreeRepresentationConverter.convert(results);
     }
 }
