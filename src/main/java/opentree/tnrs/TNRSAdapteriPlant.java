@@ -10,7 +10,7 @@ import java.util.Set;
 import javax.net.ssl.SSLException;
 
 import opentree.Taxon;
-import opentree.TaxonomyExplorer;
+import opentree.TaxonomyBrowser;
 import opentree.tnrs.TNRSAdapter;
 import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatchSet;
@@ -58,7 +58,7 @@ public class TNRSAdapteriPlant extends TNRSAdapter {
     
     public TNRSAdapteriPlant() {}
 
-    public void doQuery(Set<String> searchStrings, TaxonomyExplorer taxonomy, TNRSResults results) {
+    public void doQuery(Set<String> searchStrings, TaxonomyBrowser taxonomy, TNRSResults results) {
 
         DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpRequestRetryHandler myRetryHandler = new HttpRequestRetryHandler() {

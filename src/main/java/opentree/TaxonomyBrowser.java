@@ -1,6 +1,7 @@
 package opentree;
 
 import java.util.ArrayList;
+
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.FuzzyQuery;
 import org.neo4j.graphalgo.GraphAlgoFactory;
@@ -16,8 +17,10 @@ import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
 
 @SuppressWarnings("deprecation")
-public class TaxonomyExplorer extends TaxonomyBase{
-	private SpeciesEvaluator se;
+public class TaxonomyBrowser extends Taxonomy {
+
+//    private static TaxonomyAgent taxonomy;
+    private SpeciesEvaluator se;
 	private ChildNumberEvaluator cne;
 	int transaction_iter = 10000;
 
@@ -27,7 +30,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 //		se = new SpeciesEvaluator();
 //	}
 	
-	public TaxonomyExplorer(String graphname){
+/*	public TaxonomyExplorer(String graphname){
 	    super(graphname);
 
 	    cne = new ChildNumberEvaluator();
@@ -48,7 +51,11 @@ public class TaxonomyExplorer extends TaxonomyBase{
 //        graphDb = gdb.;
 //	      taxNodeIndex = graphDb.index().forNodes("taxNodes");
 //	      synNodeIndex = graphDb.index().forNodes("synNodes");
-    }
+    } */
+	
+	public TaxonomyBrowser (GraphDatabaseAgent t) {
+	    super(t);
+	}
 
 //    public void setEmbeddedDB(String graphname){
 //        graphDb = new EmbeddedGraphDatabase( graphname ) ;
@@ -389,7 +396,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	public static void main(String[] args) {
 //		System.out.println("unit testing taxonomy explorer");
 //	    String DB_PATH ="/home/smitty/Dropbox/projects/AVATOL/graphtests/neo4j-community-1.8.M02/data/graph.db";
-//	    TaxonomyExplorer a = new TaxonomyExplorer(DB_PATH);
+//	    TaxonomyBrowser a = new TaxonomyBrowser(DB_PATH);
 //	    a.runittest();
 	}
 

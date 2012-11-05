@@ -8,7 +8,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import opentree.TaxonomyBase.RelTypes;
+import opentree.Taxonomy.RelTypes;
 import opentree.tnrs.TNRSQuery;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;

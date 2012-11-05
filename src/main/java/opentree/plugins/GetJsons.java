@@ -3,7 +3,7 @@ package opentree.plugins;
 import java.util.ArrayList;
 
 import opentree.Taxon;
-import opentree.TaxonomyExplorer;
+import opentree.TaxonomyBrowser;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;

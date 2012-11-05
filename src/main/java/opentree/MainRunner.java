@@ -36,7 +36,10 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
 
 public class MainRunner {
-	public void taxonomyLoadParser(String [] args) {
+    
+    private static GraphDatabaseAgent taxdb;
+
+    public void taxonomyLoadParser(String [] args) {
 		String graphname = "";
 		String synonymfile = "";
 		if (args[0].equals("inittax") || args[0].equals("addtax")) {
@@ -57,7 +60,10 @@ public class MainRunner {
 		}
 		String sourcename = args[1];
 		String filename = args[2];
-		TaxonomyLoader tl = new TaxonomyLoader(graphname);
+
+		taxdb = new GraphDatabaseAgent(graphname);
+		TaxonomyLoader tl = new TaxonomyLoader(taxdb);
+
 		if (args[0].equals("inittax")) {
 			System.out.println("initializing taxonomy from " + filename + " to " + graphname);
 			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
@@ -72,15 +78,16 @@ public class MainRunner {
 			tl.addAdditionalTaxonomyToGraph(sourcename, "931568", filename,synonymfile);
 		} else {
 			System.err.println("\nERROR: not a known command");
-			tl.shutdownDB();
+			taxdb.shutdownDb();
 			printHelp();
 			System.exit(1);
 		}
-		tl.shutdownDB();
+		taxdb.shutdownDb();
 	}
 	
 	public void taxonomyQueryParser(String [] args) {
-		if (args[0].equals("checktree")) {
+		
+	    if (args[0].equals("checktree")) {
 			if (args.length != 4) {
 				System.out.println("arguments should be: treefile focalgroup graphdbfolder");
 				return;
@@ -100,7 +107,7 @@ public class MainRunner {
 			return;
 		}
 		
-		TaxonomyExplorer te = null;
+		TaxonomyBrowser te = null;
         TNRSQuery tnrs = null;
         Taxon taxon = null;
 
@@ -108,7 +115,8 @@ public class MainRunner {
 			String query = args[1];
             String graphname = args[2];
 
-            te =  new TaxonomyExplorer(graphname);
+            taxdb = new GraphDatabaseAgent(graphname);
+            te =  new TaxonomyBrowser(taxdb);
             tnrs = new TNRSQuery(te);
             try {
                 taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
@@ -124,7 +132,8 @@ public class MainRunner {
 			String graphname = args[2];
 			String outname = args[3];
 			
-            te =  new TaxonomyExplorer(graphname);
+            taxdb = new GraphDatabaseAgent(graphname);
+            te =  new TaxonomyBrowser(taxdb);
             tnrs = new TNRSQuery(te);
             try {
                 taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
@@ -139,7 +148,8 @@ public class MainRunner {
 			String query = args[1];
 			String graphname = args[2];
 			
-            te =  new TaxonomyExplorer(graphname);
+            taxdb = new GraphDatabaseAgent(graphname);
+            te =  new TaxonomyBrowser(taxdb);
 
             System.out.println("finding taxonomic cycles for " + query);
 			te.findTaxonomyCycles(query);
@@ -148,7 +158,8 @@ public class MainRunner {
 			String query = args[1];
 			String graphname = args[2];
 			
-            te =  new TaxonomyExplorer(graphname);
+            taxdb = new GraphDatabaseAgent(graphname);
+            te =  new TaxonomyBrowser(taxdb);
             tnrs = new TNRSQuery(te);
             try {
                 taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
@@ -171,7 +182,8 @@ public class MainRunner {
 
 		} else if (args[0].equals("makeottol")) {
 			String graphname = args[1];
-			te =  new TaxonomyExplorer(graphname);
+            taxdb = new GraphDatabaseAgent(graphname);
+            te =  new TaxonomyBrowser(taxdb);
 			System.out.println("making ottol relationships");
 			te.makePreferredOTTOLRelationshipsConflicts();
 			te.makePreferredOTTOLRelationshipsNOConflicts();
@@ -182,7 +194,7 @@ public class MainRunner {
 			System.exit(1);
 		}
 
-		te.shutdownDB();
+		taxdb.shutdownDb();
 	}
 
     public void parseTNRSRequest(String args[]) {
@@ -200,7 +212,8 @@ public class MainRunner {
         }
 
         String graphName = args[2];
-        TaxonomyExplorer taxonomy = new TaxonomyExplorer(graphName);
+        taxdb = new GraphDatabaseAgent(graphName);
+        TaxonomyBrowser taxonomy = new TaxonomyBrowser(taxdb);
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
 //        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
         TNRSResults results = (TNRSResults)null;

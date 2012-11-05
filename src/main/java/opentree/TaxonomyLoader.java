@@ -3,7 +3,6 @@ package opentree;
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.*;
@@ -19,8 +18,10 @@ import java.util.StringTokenizer;
  * and addition of taxonomies to the taxonomy graph.
  *
  */
-public class TaxonomyLoader extends TaxonomyBase{
-	static Logger _LOG = Logger.getLogger(TaxonomyLoader.class);
+public class TaxonomyLoader extends Taxonomy {
+
+    static Logger _LOG = Logger.getLogger(TaxonomyLoader.class);
+//	static TaxonomyBase taxonomy;
 	int transaction_iter = 100000;
 	int LARGE = 100000000;
 	int globaltransactionnum = 0;
@@ -36,10 +37,12 @@ public class TaxonomyLoader extends TaxonomyBase{
 	 * Initializer assume that the graph is being used as embedded
 	 * @param graphname directory path to embedded graph
 	 */
-	public TaxonomyLoader(String _graphname){
+	/*	public TaxonomyLoader(String _graphname){
 	    super(_graphname);
-	    graphname = _graphname;
-	    
+	    graphname = _graphname; */
+	TaxonomyLoader(GraphDatabaseAgent t) {
+	    super(t);
+	
 //		graphDb = new EmbeddedGraphDatabase( graphname );
 /*		taxNodeIndex = getIndex(NodeIndex.TAXON_BY_NAME);
 		prefTaxNodeIndex = getIndex(NodeIndex.PREFERRED_TAXON_BY_NAME);
@@ -266,7 +269,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 		}catch(IOException ioe){}
 		//mark all of the barrier nodes with additional metadata
 		System.out.println("setting barrier nodes");
-		BarrierNodes bn = new BarrierNodes(graphname);
+		BarrierNodes bn = new BarrierNodes(this);
 		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
 		HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
 		TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
@@ -351,7 +354,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 		
 		//get what barriers in taxonomy are parent to the input root (so is this
 		//higher than plants, fungi, or animals (helps clarify homonyms
-		BarrierNodes bn = new BarrierNodes(graphname);
+		BarrierNodes bn = new BarrierNodes(this);
 		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
 		HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
 		Node rootbarrier = null;
@@ -401,7 +404,7 @@ public class TaxonomyLoader extends TaxonomyBase{
 						metadatanode.createRelationshipTo(rootnode, RelTypes.METADATAFOR);
 					}
 					//check to see if the name is a barrier
-					HashSet<String> barrierNames = (HashSet<String>)bn.getBarrierNodeNames();
+					HashSet<String> barrierNames = (HashSet<String>) bn.getBarrierNodeNames();
 					if (barrierNames.contains(name)){
 						for(int j=0;j<barrierNodes.size();j++){
 							if (((String)barrierNodes.get(j).getProperty("name")).equals(name)){	
@@ -576,8 +579,9 @@ public class TaxonomyLoader extends TaxonomyBase{
 	
 	public static void main( String[] args ){
 		System.out.println( "unit testing taxonomy loader" );
-		String DB_PATH ="/home/smitty/Dropbox/projects/AVATOL/graphtests/neo4j-community-1.8.M02/data/graph.db";
-		TaxonomyLoader a = new TaxonomyLoader(DB_PATH);
+		final String DB_PATH = "/home/smitty/Dropbox/projects/AVATOL/graphtests/neo4j-community-1.8.M02/data/graph.db";
+		GraphDatabaseAgent taxdb = new GraphDatabaseAgent(DB_PATH);
+		TaxonomyLoader a = new TaxonomyLoader(taxdb);
 		//String filename = "/media/data/Dropbox/projects/AVATOL/graphtests/taxonomies/union4.txt";
 		String filename =  "/home/smitty/Dropbox/projects/AVATOL/graphtests/taxonomies/col_acc.txt";
 		String filename2 = "/home/smitty/Dropbox/projects/AVATOL/graphtests/taxonomies/ncbi_no_env_samples.txt";

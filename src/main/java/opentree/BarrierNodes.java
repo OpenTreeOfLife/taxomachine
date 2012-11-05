@@ -2,8 +2,12 @@ package opentree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import opentree.Taxonomy.NodeIndex;
+import opentree.Taxonomy.RelTypes;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
@@ -14,10 +18,11 @@ import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
 
-public final class BarrierNodes extends TaxonomyBase {
+public final class BarrierNodes /*extends TaxonomyBase */{
 
     private static final int LARGE = 100000000;
-
+    private static Taxonomy taxonomy;
+    
     /**
      * Key is node name and value is governing nomenclature.
      */
@@ -35,13 +40,17 @@ public final class BarrierNodes extends TaxonomyBase {
             put("Choanoflagellida","ICZN");
         }
     };
-    
+    /*
     public BarrierNodes(EmbeddedGraphDatabase gdb) {
         super(gdb);
     }
 
     public BarrierNodes(String gdbname) {
         super(gdbname);
+    } */
+
+    public BarrierNodes(Taxonomy t) {
+        taxonomy = t;
     }
     
     /**
@@ -51,7 +60,7 @@ public final class BarrierNodes extends TaxonomyBase {
      */
     public ArrayList<Node> getBarrierNodes() {
 
-        Node lifen = getLifeNode();
+        Node lifen = taxonomy.getLifeNode();
 
         // now traverse from each barrier node to life and pick the closest one
         PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING), 10000);
@@ -85,7 +94,12 @@ public final class BarrierNodes extends TaxonomyBase {
      * @return barrierNames
      */
     public Set<String> getBarrierNodeNames() {
-        return barrierNamesMap.keySet();
+        Set<String> bn = barrierNamesMap.keySet();
+        HashSet<String> barrierNames = new HashSet<String>();
+        for (String name : bn) {
+            barrierNames.add(name);
+        }
+        return barrierNames;
     }
 
     /**

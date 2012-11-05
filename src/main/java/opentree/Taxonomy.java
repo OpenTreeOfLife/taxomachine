@@ -8,15 +8,20 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
-public abstract class TaxonomyBase {
+public /*abstract */ class Taxonomy {
 
-    private static EmbeddedGraphDatabase embeddedGraphDb;
+/*    private static EmbeddedGraphDatabase embeddedGraphDb;
     private static GraphDatabaseService graphDbService;
-    private static boolean usingService;
+    private static boolean usingService; */
 
-    final static float DEFAULT_FUZZYMATCH_IDENTITY = (float) 0.70;
+    private static GraphDatabaseAgent graphDb;
+    public final static float DEFAULT_FUZZYMATCH_IDENTITY = (float) 0.70;
     final static String LIFE_NODE_NAME = "life";
 
+    public Taxonomy(GraphDatabaseAgent t) {
+        graphDb = t;
+    }
+    /*
     public TaxonomyBase(String graphname) {
         embeddedGraphDb = new EmbeddedGraphDatabase( graphname );
         usingService = false;
@@ -30,7 +35,7 @@ public abstract class TaxonomyBase {
     public TaxonomyBase(GraphDatabaseService graphdb ) {
         graphDbService = graphdb;
         usingService = true;
-    }
+    } */
 
 //    protected static Index<Relationship> sourceRelIndex;
 
@@ -45,7 +50,7 @@ public abstract class TaxonomyBase {
      * @author cody
      *
      */
-    protected static enum NodeIndex implements Index<Node> {
+    public static enum NodeIndex implements Index<Node> {
         TAXON_BY_NAME ("taxNodes"),
         SYNONYM_BY_NAME ("synNodes"),
         PREFERRED_TAXON_BY_NAME ("prefTaxNodes"),
@@ -54,11 +59,12 @@ public abstract class TaxonomyBase {
         
         public final Index<Node> index;
         NodeIndex (String indexName) {
-            if (usingService) {
-                this.index = graphDbService.index().forNodes(indexName);
-            } else {
-                this.index = embeddedGraphDb.index().forNodes(indexName);
-            }
+            this.index = graphDb.getNodeIndex(indexName);
+            //            if (usingService) {
+//                this.index = graphDbService.index().forNodes(indexName);
+//            } else {
+//                this.index = embeddedGraphDb.index().forNodes(indexName);
+//            }
         }
 
         @Override
@@ -147,31 +153,13 @@ public abstract class TaxonomyBase {
         PREFTAXCHILDOF// relationship type for preferred relationships
     }
         
-    protected static void registerShutdownHook(
-        final EmbeddedGraphDatabase graphDb) { // was GraphDatabaseService
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-            
-                @Override
-                public void run() {
-                    graphDb.shutdown();
-                }
-            });
-    }
-
     public Node getLifeNode() {
         IndexHits<Node> r = NodeIndex.TAXON_BY_NAME.get("name", LIFE_NODE_NAME);
         r.close();
         return r.getSingle();
     }
     
-    public void shutdownDB() {
-        if (usingService == false)
-            registerShutdownHook(embeddedGraphDb);
-        else
-            throw new java.lang.UnsupportedOperationException("Using database service; closing not implemented");
-    }
-
-    public EmbeddedGraphDatabase getGraphDb() {
+/*    public EmbeddedGraphDatabase getGraphDb() {
         if (usingService == false)
             return embeddedGraphDb;
         else
@@ -183,32 +171,35 @@ public abstract class TaxonomyBase {
             return graphDbService;
         else
             return null;
-    }
+    } 
     
     public boolean isUsingService() {
         return usingService;
-    }
+    } */
     
     // wrappers for relevant underlying database methods
     
     public Node createNode() {
-        if (usingService)
-            return graphDbService.createNode();
+        return graphDb.createNode();
+        /*        if (usingService)
+            return taxonomy.createNode();
         else
-            return embeddedGraphDb.createNode();        
+            return embeddedGraphDb.createNode();        */
     }
     
     public Transaction beginTx() {
-        if (usingService)
+        return graphDb.beginTx();
+        /*        if (usingService)
             return graphDbService.beginTx();
         else
-            return embeddedGraphDb.beginTx();
+            return embeddedGraphDb.beginTx(); */
     }
     
     public Node getNodeById(Long arg0) {
-        if (usingService)
+        return graphDb.getNodeById(arg0);
+/*        if (usingService)
             return graphDbService.getNodeById(arg0);
         else
-            return embeddedGraphDb.getNodeById(arg0);
+            return embeddedGraphDb.getNodeById(arg0); */
     }
 }

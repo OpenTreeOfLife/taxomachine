@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.Map.Entry;
 import opentree.Taxon;
 import opentree.TaxonSet;
-import opentree.TaxonomyExplorer;
+import opentree.TaxonomyBrowser;
 import opentree.utils.Levenshtein;
 
 import org.neo4j.graphdb.Node;
@@ -32,13 +32,13 @@ public class TNRSQuery {
     private static final String DEFAULT_TAXONOMY_NAME = "ottol";
     private static final String UNDETERMINED = "undetermined";
 
-    private TaxonomyExplorer _taxonomy;
+    private TaxonomyBrowser _taxonomy;
     private TNRSResults _results;
     private HashSet<String> _queriedNames;
     private HashSet<Long> _matchedNodeIds;
     private double _minScore;
     
-    public TNRSQuery(TaxonomyExplorer taxonomy) {
+    public TNRSQuery(TaxonomyBrowser taxonomy) {
         _taxonomy = taxonomy;
         _minScore = DEFAULT_MIN_SCORE; // TODO: make it possible for client to set this
         clearResults();
@@ -360,7 +360,6 @@ public class TNRSQuery {
 	        }
         }
 
-        _taxonomy.shutdownDB();
         return _results;
     }
 

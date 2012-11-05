@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import opentree.TaxonomyBase.RelTypes;
+import opentree.Taxonomy.RelTypes;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
