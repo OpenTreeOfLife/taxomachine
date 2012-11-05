@@ -25,7 +25,7 @@ import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
-public class Taxon extends TaxonomyBase {
+public class Taxon /*extends TaxonomyBase */{
 
     private final Node taxNode;
     private ChildNumberEvaluator cne;
@@ -368,7 +368,7 @@ public class Taxon extends TaxonomyBase {
         return ret;
     }
 
-    public void runittest() {
+/*    public void runittest() {
         TaxonomyExplorer te = new TaxonomyExplorer();
         TNRSQuery tnrs = new TNRSQuery(te);
 
@@ -376,5 +376,5 @@ public class Taxon extends TaxonomyBase {
         lonicera.buildTaxonomyTree();
 
         shutdownDB();
-    }
+    } */
 }

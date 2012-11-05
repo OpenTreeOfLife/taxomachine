@@ -21,33 +21,46 @@ public class TaxonomyExplorer extends TaxonomyBase{
 	private ChildNumberEvaluator cne;
 	int transaction_iter = 10000;
 
-	public TaxonomyExplorer(){
-		cne = new ChildNumberEvaluator();
-		cne.setChildThreshold(100);
-		se = new SpeciesEvaluator();
-	}
+//	public TaxonomyExplorer() {
+//		cne = new ChildNumberEvaluator();
+//		cne.setChildThreshold(100);
+//		se = new SpeciesEvaluator();
+//	}
 	
 	public TaxonomyExplorer(String graphname){
-		graphDb = new EmbeddedGraphDatabase( graphname );
-		taxNodeIndex = graphDb.index().forNodes("taxNodes");
-		synNodeIndex = graphDb.index().forNodes("synNodes");
+	    super(graphname);
+
+	    cne = new ChildNumberEvaluator();
+        cne.setChildThreshold(100);
+        se = new SpeciesEvaluator();
+//		graphDb = new EmbeddedGraphDatabase( graphname );
+//		taxNodeIndex = graphDb.index().forNodes("taxNodes");
+//		synNodeIndex = graphDb.index().forNodes("synNodes");
 	}
-  
-    public void setEmbeddedDB(String graphname){
-        graphDb = new EmbeddedGraphDatabase( graphname ) ;
-        taxNodeIndex = graphDb.index().forNodes( "taxNodes" );
-		synNodeIndex = graphDb.index().forNodes("synNodes");
+
+   public TaxonomyExplorer(GraphDatabaseService gdb){
+       super(gdb);
+
+       cne = new ChildNumberEvaluator();
+       cne.setChildThreshold(100);
+       se = new SpeciesEvaluator();
+
+//        graphDb = gdb.;
+//	      taxNodeIndex = graphDb.index().forNodes("taxNodes");
+//	      synNodeIndex = graphDb.index().forNodes("synNodes");
     }
 
-    public void setDbService(GraphDatabaseService graphDb) {
-        taxNodeIndex = graphDb.index().forNodes("taxNodes");
-		synNodeIndex = graphDb.index().forNodes("synNodes");
-    }
+//    public void setEmbeddedDB(String graphname){
+//        graphDb = new EmbeddedGraphDatabase( graphname ) ;
+//        taxNodeIndex = graphDb.index().forNodes( "taxNodes" );
+//		synNodeIndex = graphDb.index().forNodes("synNodes");
+//    }
+
+//    public void setDbService(GraphDatabaseService graphDb) {
+//        taxNodeIndex = graphDb.index().forNodes("taxNodes");
+//		synNodeIndex = graphDb.index().forNodes("synNodes");
+//    }
 	
-    public Node getLifeNode() {
-        return taxNodeIndex.get("name", LIFE_NODE_NAME).getSingle();
-    }
-    
     /**
      * Checks taxNodeIndex for `name` and returns null (if the name is not found) or an IndexHits<Node> object containing the found nodes. Helper function
      * primarily written to avoid forgetting to call hits.close(). Somewhat disconcerting that we return `hits` after it has been closed, but it works. Would be
@@ -56,7 +69,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
      * @return
      */
     public IndexHits<Node> findTaxNodesByName(final String name) {
-        IndexHits<Node> hits = taxNodeIndex.get("name", name); // TODO: change to preferred nodes when this is functional
+        IndexHits<Node> hits = NodeIndex.TAXON_BY_NAME.get("name", name); // TODO: change to preferred nodes when this is functional
         hits.close();
         return hits;
     }
@@ -69,7 +82,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
      * @return
      */
     public IndexHits<Node> findSynNodesByName(final String name) {
-        IndexHits<Node> hits = synNodeIndex.get("name", name); // TODO: change to preferred nodes when this is functional
+        IndexHits<Node> hits = NodeIndex.SYNONYM_BY_NAME.get("name", name); // TODO: change to preferred nodes when this is functional
         hits.close();
         return hits;
     }
@@ -82,7 +95,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
      * @return
      */
     public IndexHits<Node> findTaxNodesByNameFuzzy(final String name, float minIdentity) {
-        IndexHits<Node> hits = taxNodeIndex.query(new FuzzyQuery(new Term("name", name), minIdentity)); // TODO: change to preferred nodes when this is functional
+        IndexHits<Node> hits = NodeIndex.TAXON_BY_NAME.query(new FuzzyQuery(new Term("name", name), minIdentity)); // TODO: change to preferred nodes when this is functional
         hits.close();
         return hits;
     }
@@ -105,7 +118,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
      */
     public IndexHits<Node> findSynNodesByNameFuzzy(final String name, float minIdentity) {
      // TODO: change to use preferred nodes only when this becomes functional
-        IndexHits<Node> hits = synNodeIndex.query(new FuzzyQuery(new Term("name", name), minIdentity));
+        IndexHits<Node> hits = NodeIndex.SYNONYM_BY_NAME.query(new FuzzyQuery(new Term("name", name), minIdentity));
         hits.close();
         return hits;
     }
@@ -251,7 +264,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 				.relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
 		System.out.println(firstNode.getProperty("name"));
 		int count = 0;
-		tx = graphDb.beginTx();
+		tx = beginTx();
 		try{
 			for(Node friendnode : CHILDOF_TRAVERSAL.traverse(firstNode).nodes()){
 				boolean conflict = false;
@@ -311,7 +324,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 				.relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
 		System.out.println(firstNode.getProperty("name"));
 		int count = 0;
-		tx = graphDb.beginTx();
+		tx = beginTx();
 		try{
 			for(Node friendnode : CHILDOF_TRAVERSAL.traverse(firstNode).nodes()){
 				if(friendnode.hasRelationship(Direction.INCOMING) == false){//is tip
@@ -361,7 +374,7 @@ public class TaxonomyExplorer extends TaxonomyBase{
 					System.out.println(count);
 					tx.success();
 					tx.finish();
-					tx = graphDb.beginTx();
+					tx = beginTx();
 				}
 			}
 			tx.success();

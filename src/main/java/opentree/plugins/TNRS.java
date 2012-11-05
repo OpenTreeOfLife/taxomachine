@@ -24,8 +24,8 @@ public class TNRS extends ServerPlugin {
 	    
         String[] searchStrings = queryString.split("\\s*\\,\\s*");
 
-        TaxonomyExplorer taxonomy = new TaxonomyExplorer();
-        taxonomy.setDbService(graphDb);
+        TaxonomyExplorer taxonomy = new TaxonomyExplorer(graphDb);
+//        taxonomy.setDbService(graphDb);
 
 //        int nSearchStrings = searchStrings.length;
 //        ArrayList<TNRSNameResult> results = new ArrayList<TNRSNameResult>();
