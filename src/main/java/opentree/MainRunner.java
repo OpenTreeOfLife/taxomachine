@@ -202,6 +202,8 @@ public class MainRunner {
         if (args[0].compareTo("tnrsbasic") == 0) {
             
             String[] searchStrings = args[1].split("\\s*\\,\\s*");
+            for (int i = 0; i < searchStrings.length; i++)
+                System.out.println(searchStrings[i]);
             results = tnrs.getAllMatches(searchStrings);
             
         } else if (args[0].compareTo("tnrstree") == 0) {
