@@ -22,6 +22,7 @@ import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.OpentreeRepresentationConverter;
+import org.neo4j.server.rest.repr.Representation;
 
 public class GetJsons extends ServerPlugin {
 
@@ -59,7 +60,7 @@ public class GetJsons extends ServerPlugin {
 
     @Description("Return a JSON with node ids given a name")
     @PluginTarget(GraphDatabaseService.class)
-    public Object getNodeIDJSONFromName(@Source GraphDatabaseService graphDb,
+    public Representation getNodeIDJSONFromName(@Source GraphDatabaseService graphDb,
             @Description("Name of node to find.") @Parameter(name = "nodename", optional = true) String nodename) {
 
         HashMap<String,String> results = new HashMap<String, String>();
