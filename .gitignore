@@ -5,6 +5,7 @@
 *.class
 *.ServerPlugin
 *~
+data/*
 
 # Package Files #
 *.jar
