@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import opentree.GraphDatabaseAgent;
 import opentree.Taxon;
+import opentree.Taxonomy;
 import opentree.TaxonomyCombiner;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
@@ -55,21 +56,22 @@ public class GetJsons extends ServerPlugin {
         return retst;
     }
 
+    @SuppressWarnings("unchecked")
     @Description("Return a JSON with node ids for nodes matching a name")
     @PluginTarget(GraphDatabaseService.class)
     public Representation getNodeIDJSONFromName(@Source GraphDatabaseService graphDb,
             @Description("Name of node to find.") @Parameter(name = "nodename", optional = true) String nodename) {
 
-        HashMap<String,String> results = new HashMap<String, String>();
+        HashMap<String,Object> results = new HashMap<String, Object>();
+        results.put("nodeid", new ArrayList<Long>());
 
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
-        TaxonomyCombiner taxonomy = new TaxonomyCombiner(gdb);
-        TNRSQuery tnrs = new TNRSQuery(taxonomy);
+        TNRSQuery tnrs = new TNRSQuery(new Taxonomy(gdb));
         
         TNRSNameResult matches = tnrs.getExactMatches(nodename).iterator().next();
 
         for (TNRSMatch m : matches)
-            results.put("nodeid",String.valueOf(m.getMatchedNode().getId()));
+            ((ArrayList<Long>)results.get("nodeid")).add(m.getMatchedNode().getId());
 
         if (results.size() < 1)
             results.put("error", "Could not find any taxon by that name");

@@ -21,6 +21,7 @@ public class TNRSHit {
     Node _synonymNode;
     String _searchString;
     String _sourceName;
+    String _nomenCode;
     boolean _isHomonym;
     boolean _isPerfectMatch;
     boolean _isApprox;
@@ -33,6 +34,7 @@ public class TNRSHit {
         _synonymNode = null;
         _searchString = "";
         _sourceName = "";
+        _nomenCode = "undetermined";
         _isHomonym = false;
         _isPerfectMatch = false;
         _isApprox = false;
@@ -61,6 +63,11 @@ public class TNRSHit {
         return this;
     }
 
+    public TNRSHit setNomenCode(String nomenCode) {
+        _nomenCode = nomenCode;
+        return this;
+    }
+    
     public TNRSHit setIsHomonym(boolean isHomonym) {
         _isHomonym = isHomonym;
         return this;
@@ -98,6 +105,10 @@ public class TNRSHit {
     
     public String getSearchString() {
         return _searchString;
+    }
+    
+    public String getNomenCode() {
+        return _nomenCode;
     }
     
     public boolean getIsHomonym() {

@@ -75,16 +75,6 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                 }
  
                 serializer.putList("results", OpentreeRepresentationConverter.getListRepresentation(results));
-                
-//                        HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
-//                        nameResultMap.put("queried_name", ((TNRSNameResult) value).getQueriedName());
-//                        nameResultMap.put("matches", ((TNRSNameResult) value).getMatches());
-//                        serializer.putList(results, nameResults)(nameResultMap));
-/*                    } else if (value instanceof TNRSMatchSet) {
-                        serializer.putList(key, getMatchSet((TNRSMatchSet)value));
-                    } else if (value instanceof TNRSMatch) {
-                        serializer.putMapping(key, mapMatch((TNRSMatch)value)); */
-//                    }
             }
         };
     }
@@ -103,16 +93,8 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                     String key = pair.getKey();
                     Object value = pair.getValue();
                     
-//                    if (value instanceof Boolean) {
-//                        serializer.putBoolean(key, (Boolean) value);
                     if (value instanceof String) {
                         serializer.putString(key, (String) value);
-//                    } else if (value instanceof Map) {
-//                       serializer.putMapping(key, (MappingRepresentation) value);
-//                    } else if (value instanceof List) {
-//                        serializer.putList(key, (ListRepresentation) value);
-//                    } else if (value instanceof Float || value instanceof Double || value instanceof Long || value instanceof Integer) {
-//                        serializer.putNumber(key, (Number) value);
                     } else if (value instanceof TNRSMatchSet) {
                         serializer.putList(key, getMatchSetRepresentation((TNRSMatchSet)value));
                     } else if (value instanceof TNRSMatch) {
@@ -146,6 +128,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                 serializer.putNumber("matchedNodeId", match.getMatchedNode().getId());
                 serializer.putString("matchedNodeName", match.getMatchedNode().getProperty("name").toString());
                 serializer.putString("sourceName", match.getSource());
+                serializer.putString("nomenCode", match.getNomenCode());
                 serializer.putBoolean("isPerfectMatch", match.getIsPerfectMatch());
                 serializer.putBoolean("isApprox", match.getIsApproximate());
                 serializer.putBoolean("isSynonym", match.getIsSynonym());

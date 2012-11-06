@@ -55,10 +55,11 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
     private class Match extends TNRSMatch {
 
         // for all matches, information associating this match with a known node in the graph
-        private String _searchString = "";             // the original search text queried
+        private String _searchString;                   // the original search text queried
         private Node _matchedNode;                     // the recognized taxon node we matched
         private Node _synonymNode;                      // the synonym node we matched
-        private String _sourceName = "";               // the name of the source where the match was found
+        private String _sourceName;                     // the name of the source where the match was found
+        private String _nomenCode;                      // the nomenclatural code under which this match is defined
         private boolean _isPerfectMatch;                  // whether this is an exact match to known, recognized taxon
         private boolean _isApprox;                     // whether this is a fuzzy match (presumably misspellings)
         private boolean _isSynonym;                    // whether the match points to a known synonym (not necessarily in the graph, nor necessarily pointing to a node in the graph)
@@ -70,10 +71,11 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             _matchedNode = m.getMatchedNode();
             _synonymNode = m.getSynonymNode();
             _isPerfectMatch = m.getIsPerfectMatch();
+            _sourceName = m.getSourceName();
+            _nomenCode = m.getNomenCode();
             _isApprox = m.getIsApprox();
             _isSynonym = m.getIsSynonym();
             _isHomonym = m.getIsHomonym();
-            _sourceName = m.getSourceName();
             _searchString = m.getSearchString();
             _score = m.getScore();
             _otherData = (HashMap<String,String>)m.getOtherData();
@@ -100,19 +102,23 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             return _synonymNode;
         }
         
-        /**
-         * @return the TNRS source that produced this match
-         */
-        public String getSource() {
-            return _sourceName;
-        }
-
         public boolean getIsPerfectMatch() {
             return _isPerfectMatch;
         }
 
         public boolean getIsApproximate() {
             return _isApprox;
+        }
+
+        /**
+         * @return the TNRS source that produced this match
+         */
+        public String getSource() {
+            return _sourceName;
+        }
+        
+        public String getNomenCode() {
+            return _nomenCode;
         }
 
         public boolean getIsSynonym() {

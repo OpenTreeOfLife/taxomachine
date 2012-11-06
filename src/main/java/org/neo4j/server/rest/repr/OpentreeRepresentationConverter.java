@@ -47,7 +47,7 @@ public class OpentreeRepresentationConverter {
     }
 
     public static MappingRepresentation getMapRepresentation(Map data) {
-        return MappingRepresentation.stringMap(RepresentationType.MAP.toString(), data);
+        return GeneralizedMappingRepresentation.getMapRepresentation(data);
     }
 
     public static MappingRepresentation getTNRSNameResultRepresentation(TNRSNameResult nameResult) {

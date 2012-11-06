@@ -35,6 +35,8 @@ public class Taxon {
 
     public Taxon(Node n) {
         taxNode = n;
+        cne = new ChildNumberEvaluator();
+        se = new SpeciesEvaluator();
     }
 
     public Node getNode() {
