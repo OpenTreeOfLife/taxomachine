@@ -6,9 +6,14 @@ import java.util.LinkedList;
 import java.util.Map.Entry;
 import opentree.Taxon;
 import opentree.TaxonSet;
-import opentree.TaxonomyBrowser;
+import opentree.Taxonomy;
+import opentree.TaxonomyCombiner;
+import opentree.Taxonomy.NodeIndex;
+import opentree.Taxonomy.RelTypes;
 import opentree.utils.Levenshtein;
 
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.FuzzyQuery;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
 
@@ -24,6 +29,7 @@ public class TNRSQuery {
     private static final double DEFAULT_NOMEN_CODE_SUPERMAJORITY_PROPORTION = 0.75;
     private static final double DEFAULT_MIN_SCORE = 0.01;
     private static final double DISTANT_HOMONYM_SCORE_SCALAR = 0.25;
+    private static final double DEFAULT_FUZZY_MATCH_IDENTITY = 0.8;
 
     private static final int SHORT_NAME_LENGTH = 9;
     private static final int MEDIUM_NAME_LENGTH = 14;
@@ -32,13 +38,15 @@ public class TNRSQuery {
     private static final String DEFAULT_TAXONOMY_NAME = "ottol";
     private static final String UNDETERMINED = "undetermined";
 
-    private TaxonomyBrowser _taxonomy;
+//    private Taxonomy _taxonomy;
+    private Taxonomy _taxonomy;
     private TNRSResults _results;
     private HashSet<String> _queriedNames;
     private HashSet<Long> _matchedNodeIds;
     private double _minScore;
     
-    public TNRSQuery(TaxonomyBrowser taxonomy) {
+    public TNRSQuery(Taxonomy taxonomy) {
+//        _taxonomy = taxonomy;
         _taxonomy = taxonomy;
         _minScore = DEFAULT_MIN_SCORE; // TODO: make it possible for client to set this
         clearResults();
@@ -119,7 +127,7 @@ public class TNRSQuery {
         // find unambiguous names, count occurrences of nomenclatural codes within these names
         for (int i = 0; i < searchStrings.length; i++) {
             String thisName = searchStrings[i];
-            IndexHits<Node> directHits = _taxonomy.findTaxNodesByName(thisName);
+            IndexHits<Node> directHits = NodeIndex.PREFERRED_TAXON_BY_NAME.get("name", thisName);
 
             if (directHits.size() == 1) { // neither a homonym nor synonym
                 for (Node n : directHits) {
@@ -157,10 +165,10 @@ public class TNRSQuery {
         
         System.out.println("governingCode = " + _results.getGoverningCode());
 
-        // find mrca of unambiguous names
+        // find lica of unambiguous names
         Taxon mrca;
         if (ts.size() > 0)
-            mrca = ts.getMRCA();
+            mrca = ts.getLICA();
         else
             mrca = new Taxon(_taxonomy.getLifeNode());
         
@@ -175,11 +183,12 @@ public class TNRSQuery {
             
             // first: find possible preferred taxon nodes, use fuzzy matching if specified
             IndexHits<Node> matchedTaxNodes;
-            if (exactOnly)
-                matchedTaxNodes = _taxonomy.findTaxNodesByName(queriedName);
-            else
-                matchedTaxNodes = _taxonomy.findTaxNodesByNameFuzzy(queriedName, minIdentity);
-
+            if (exactOnly) {
+                matchedTaxNodes = NodeIndex.PREFERRED_TAXON_BY_NAME.get("name", queriedName);
+            } else {
+                matchedTaxNodes = NodeIndex.PREFERRED_TAXON_BY_NAME.query(new FuzzyQuery(new Term("name", queriedName), minIdentity));
+            }
+            
             if (matchedTaxNodes.size() > 0) {
                 wasMatched = true;
 
@@ -199,7 +208,7 @@ public class TNRSQuery {
 
                         // use edit distance to calculate base score for fuzzy matches
                         System.out.println("comparing " + queriedName + " to " + matchedTaxon.getName());
-                        double l = Levenshtein.absDistance(queriedName, matchedTaxon.getName());
+                        double l = Levenshtein.distance(queriedName, matchedTaxon.getName());
                         System.out.println("l = " + String.valueOf(l));
                         double s = Math.min(matchedTaxon.getName().length(), queriedName.length());
                         System.out.println("s = " + String.valueOf(s));
@@ -213,14 +222,14 @@ public class TNRSQuery {
                             // (needs corresponding option for providing taxon name for scoped mrca itself)
                             ////////////////////////////////////////////////////////////////////////////////////
                             
-                            int d = _taxonomy.getPreferredInternodalDistance(n, mrca.getNode());
+                            int d = _taxonomy.getInternodalDistThroughMRCA(n, mrca.getNode(), RelTypes.PREFTAXCHILDOF);
                             scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
                             System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
                         }
                     }
                     
                     // check if the matched node is a homonym
-                    IndexHits<Node> directHits = _taxonomy.findTaxNodesByName(n.getProperty("name").toString());
+                    IndexHits<Node> directHits = NodeIndex.PREFERRED_TAXON_BY_NAME.get("name", n.getProperty("name"));
                     boolean isHomonym;
                     if (directHits.size() > 1) {
                         isHomonym = true;
@@ -263,9 +272,9 @@ public class TNRSQuery {
             // second: find possible preferred synonyms, use fuzzy matching if specified
             IndexHits<Node> matchedSynNodes;
             if (exactOnly)
-                matchedSynNodes = _taxonomy.findSynNodesByName(queriedName);
+                matchedSynNodes = NodeIndex.PREFERRED_SYNONYM_BY_NAME.get("name", queriedName);
             else
-                matchedSynNodes = _taxonomy.findSynNodesByNameFuzzy(queriedName, minIdentity);
+                matchedSynNodes = NodeIndex.PREFERRED_SYNONYM_BY_NAME.query(new FuzzyQuery(new Term("name", queriedName), minIdentity));
 
             if (matchedSynNodes.size() > 0) {
                 wasMatched = true;
@@ -292,7 +301,7 @@ public class TNRSQuery {
                             
                             // use edit distance to calculate base score for fuzzy matches
                             System.out.println("comparing " + queriedName + " to " + synonymName);
-                            double l = Levenshtein.absDistance(queriedName, synonymName);
+                            double l = Levenshtein.distance(queriedName, synonymName);
                             System.out.println("l = " + String.valueOf(l));
 //                            System.out.println("length of queried name = " + queriedName.length());
 //                            System.out.println("length of synonym name = " + synonymName.length());
@@ -310,7 +319,7 @@ public class TNRSQuery {
                                 // (needs corresponding option for providing taxon name for scoped mrca itself)
                                 ////////////////////////////////////////////////////////////////////////////////////
                                 
-                                int d = _taxonomy.getPreferredInternodalDistance(matchedTaxon.getNode(), mrca.getNode());
+                                int d = _taxonomy.getInternodalDistThroughMRCA(matchedTaxon.getNode(), mrca.getNode(), RelTypes.PREFTAXCHILDOF);
                                 System.out.println("d = " + String.valueOf(d));
                                 scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
                                 System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
@@ -349,6 +358,7 @@ public class TNRSQuery {
 
         // at the moment we are only using internal matching; not worth the extra time for external services
         // TODO: make this an optional feature
+        // TODO: make this accessible via other methods
         boolean useExternalServices = false;
         if (useExternalServices) {
 	        // fourth: call passed adapters for help with names we couldn't match

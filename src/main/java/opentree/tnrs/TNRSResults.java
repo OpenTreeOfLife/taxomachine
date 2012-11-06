@@ -25,7 +25,7 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 	    return resultsCopy.values().iterator();
 	}
 
-	////////////////////// getters
+	// getters
 	
 	public Set<String> getMatchedNames() {
 	    return results.keySet();
@@ -55,12 +55,12 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
         TNRSMatchSet firstMatches = results.values().iterator().next().getMatches();
 
         if (results.size() > 1 || firstMatches.size() > 1)
-            throw new MultipleHitsException();
+            throw new MultipleHitsException("Attempt to use getSingleMatch() when more than one match was found");
 
         return firstMatches.iterator().next();
     }
 
-    ///////////////////// setters
+    // setters
     
     protected void addNameResult(TNRSNameResult result) {
         results.put(result.getQueriedName(), result);

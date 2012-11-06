@@ -15,10 +15,9 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.index.IndexHits;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
 
-public final class BarrierNodes /*extends TaxonomyBase */{
+public final class BarrierNodes {
 
     private static final int LARGE = 100000000;
     private static Taxonomy taxonomy;
@@ -40,14 +39,6 @@ public final class BarrierNodes /*extends TaxonomyBase */{
             put("Choanoflagellida","ICZN");
         }
     };
-    /*
-    public BarrierNodes(EmbeddedGraphDatabase gdb) {
-        super(gdb);
-    }
-
-    public BarrierNodes(String gdbname) {
-        super(gdbname);
-    } */
 
     public BarrierNodes(Taxonomy t) {
         taxonomy = t;
@@ -62,7 +53,7 @@ public final class BarrierNodes /*extends TaxonomyBase */{
 
         Node lifen = taxonomy.getLifeNode();
 
-        // now traverse from each barrier node to life and pick the closest one
+        // traverse from each barrier node to life and pick the closest one
         PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING), 10000);
         ArrayList<Node> barnodes = new ArrayList<Node>();
 

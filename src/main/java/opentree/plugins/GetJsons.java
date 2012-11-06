@@ -5,17 +5,14 @@ import java.util.HashMap;
 
 import opentree.GraphDatabaseAgent;
 import opentree.Taxon;
-import opentree.TaxonomyBrowser;
-import opentree.tnrs.MultipleHitsException;
+import opentree.TaxonomyCombiner;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSQuery;
-import opentree.tnrs.TNRSResults;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.server.plugins.Description;
 import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
@@ -58,7 +55,7 @@ public class GetJsons extends ServerPlugin {
         return retst;
     }
 
-    @Description("Return a JSON with node ids given a name")
+    @Description("Return a JSON with node ids for nodes matching a name")
     @PluginTarget(GraphDatabaseService.class)
     public Representation getNodeIDJSONFromName(@Source GraphDatabaseService graphDb,
             @Description("Name of node to find.") @Parameter(name = "nodename", optional = true) String nodename) {
@@ -66,7 +63,7 @@ public class GetJsons extends ServerPlugin {
         HashMap<String,String> results = new HashMap<String, String>();
 
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
-        TaxonomyBrowser taxonomy = new TaxonomyBrowser(gdb);
+        TaxonomyCombiner taxonomy = new TaxonomyCombiner(gdb);
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
         
         TNRSNameResult matches = tnrs.getExactMatches(nodename).iterator().next();

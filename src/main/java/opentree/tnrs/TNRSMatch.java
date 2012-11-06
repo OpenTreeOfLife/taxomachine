@@ -11,12 +11,8 @@ import org.neo4j.graphdb.Node;
  */
 public abstract class TNRSMatch {
     public abstract String getSearchString();
-/*    public abstract long getMatchedNodeId();
-    public abstract String getMatchedNodeName(); */
     public abstract Node getMatchedNode();    
     public abstract Node getSynonymNode();
-/*    public abstract long getSynonymNodeId();
-    public abstract String getSynonymNodeName(); */
     public abstract String getSource();
     public abstract boolean getIsPerfectMatch();
     public abstract boolean getIsApproximate();

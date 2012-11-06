@@ -1,9 +1,9 @@
 package org.neo4j.server.rest.repr;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
 
@@ -15,7 +15,6 @@ import org.neo4j.server.rest.repr.ListRepresentation;
 import org.neo4j.server.rest.repr.MappingRepresentation;
 import org.neo4j.server.rest.repr.Representation;
 import org.neo4j.server.rest.repr.RepresentationType;
-import org.neo4j.server.rest.repr.TNRSNameResultRepresentation;
 import org.neo4j.server.rest.repr.ValueRepresentation;
 
 public class OpentreeRepresentationConverter {
@@ -25,16 +24,23 @@ public class OpentreeRepresentationConverter {
 
         // if ( data instanceof Table ) { return new GremlinTableRepresentation( (Table) data ); }
 
-        if (data instanceof Iterable) {
-            return getListRepresentation((Iterable) data);
+        // TNRSResults are iterable, but need special attention, so only check for iterable if it isn't TNRSResults
+        if (data instanceof TNRSResults) {
+            return getTNRSResultsRepresentation((TNRSResults) data);
+
+        } else if (data instanceof Iterable) {
+                return getListRepresentation((Iterable) data);
+        
         }
         
         if (data instanceof Iterator) {
             Iterator iterator = (Iterator) data;
             return getIteratorRepresentation(iterator);
         }
-
-        if ( data instanceof Map ) { return getMapRepresentation( (Map) data ); }
+        
+        if (data instanceof Map) {
+            return getMapRepresentation( (Map) data );
+        }
 
         return getSingleRepresentation(data);
 
@@ -44,8 +50,12 @@ public class OpentreeRepresentationConverter {
         return MappingRepresentation.stringMap(RepresentationType.MAP.toString(), data);
     }
 
-    public static MappingRepresentation getTNRSNameResultRepresentation(Map<String,Object> data) {
-      return TNRSNameResultRepresentation.map(data);
+    public static MappingRepresentation getTNRSNameResultRepresentation(TNRSNameResult nameResult) {
+      return TNRSResultsRepresentation.getNameResultRepresentation(nameResult);
+    }
+
+    public static Representation getTNRSResultsRepresentation(TNRSResults results) {
+        return TNRSResultsRepresentation.getResultsRepresentation(results);
     }
     
 /*    public static MappingRepresentation getTNRSMatchRepresentation(TNRSMatch match) {
@@ -85,13 +95,18 @@ public class OpentreeRepresentationConverter {
          */
         return new FirstItemIterable<Representation>(
                 new IterableWrapper<Representation, Object>(data) {
+
                     @Override
                     protected Representation underlyingObjectToObject(Object value) {
-                        if (value instanceof Iterable) {
+
+                        if (value instanceof TNRSNameResult) {
+                            return getTNRSNameResultRepresentation((TNRSNameResult)value);
+ 
+                        } else if (value instanceof Iterable) {
                             final FirstItemIterable<Representation> nested = convertValuesToRepresentations((Iterable) value);
                             return new ListRepresentation(getType(nested), nested);
-                        }
-                        else {
+                        
+                        } else {
                             return getSingleRepresentation(value);
                         }
                     }
@@ -106,15 +121,9 @@ public class OpentreeRepresentationConverter {
         return representation.getRepresentationType();
     }
 
-    /*
-     * static Representation getTNRSRepresentation(Object data) {
-     * 
-     * Representation repr; return repr; }
-     */
-
-    static Representation getSingleRepresentation(Object result)
+    static Representation getSingleRepresentation(Object data)
     {
-        if (result == null)
+        if (data == null) {
             return ValueRepresentation.string("null");
         /*
          * if ( result instanceof Neo4jVertex ) { return new NodeRepresentation( ( (Neo4jVertex) result ).getRawVertex() ); } else if ( result instanceof
@@ -123,20 +132,24 @@ public class OpentreeRepresentationConverter {
          * result ); } else if ( result instanceof Relationship ) { return new RelationshipRepresentation( (Relationship) result ); } else if ( result
          * instanceof Neo4jGraph ) { return ValueRepresentation.string( ( (Neo4jGraph) result ).getRawGraph().toString() ); }
          */
-        else if (result instanceof Double || result instanceof Float) {
-            return ValueRepresentation.number(((Number) result).doubleValue());
-        }
-        else if (result instanceof Long) {
-            return ValueRepresentation.number(((Long) result).longValue());
-        } else if (result instanceof Integer) {
-            return ValueRepresentation.number(((Integer) result).intValue());
-        } else if (result instanceof TNRSNameResult) {
-            HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
-            nameResultMap.put("queried_name", ((TNRSNameResult) result).getQueriedName());
-            nameResultMap.put("matches", ((TNRSNameResult) result).getMatches());
-            return getTNRSNameResultRepresentation(nameResultMap);
+        
+        } else if (data instanceof TNRSNameResult) {
+            return getTNRSNameResultRepresentation((TNRSNameResult) data);
+    
+        } else if (data instanceof TNRSMatchSet) {
+            return getListRepresentation((TNRSMatchSet) data);
+        
+        } else if (data instanceof Double || data instanceof Float) {
+            return ValueRepresentation.number(((Number) data).doubleValue());
+        
+        } else if (data instanceof Long) {
+            return ValueRepresentation.number(((Long) data).longValue());
+
+        } else if (data instanceof Integer) {
+            return ValueRepresentation.number(((Integer) data).intValue());
+           
         } else {
-            return ValueRepresentation.string(result.toString());
+            return ValueRepresentation.string(data.toString());
         }
     }
 }

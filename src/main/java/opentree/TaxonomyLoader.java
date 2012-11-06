@@ -29,26 +29,12 @@ public class TaxonomyLoader extends Taxonomy {
 	
 	static String graphname;
 	
-	//basic traversal method
+	// basic traversal method
 	final TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 			.relationships( RelTypes.TAXCHILDOF,Direction.OUTGOING );
 	
-	/**
-	 * Initializer assume that the graph is being used as embedded
-	 * @param graphname directory path to embedded graph
-	 */
-	/*	public TaxonomyLoader(String _graphname){
-	    super(_graphname);
-	    graphname = _graphname; */
 	TaxonomyLoader(GraphDatabaseAgent t) {
 	    super(t);
-	
-//		graphDb = new EmbeddedGraphDatabase( graphname );
-/*		taxNodeIndex = getIndex(NodeIndex.TAXON_BY_NAME);
-		prefTaxNodeIndex = getIndex(NodeIndex.PREFERRED_TAXON_BY_NAME);
-		prefSynNodeIndex = getIndex(NodeIndex.PREFERRED_SYNONYM_BY_NAME);
-		synNodeIndex = getIndex(NodeIndex.SYNONYM_BY_NAME);
-		taxSourceIndex = getIndex(NodeIndex.TAX_SOURCES); */
 	}
 	
 	/**

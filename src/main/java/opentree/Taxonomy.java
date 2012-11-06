@@ -1,18 +1,17 @@
 package opentree;
 
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.kernel.Traversal;
 
-public /*abstract */ class Taxonomy {
-
-/*    private static EmbeddedGraphDatabase embeddedGraphDb;
-    private static GraphDatabaseService graphDbService;
-    private static boolean usingService; */
+public class Taxonomy {
 
     private static GraphDatabaseAgent graphDb;
     public final static float DEFAULT_FUZZYMATCH_IDENTITY = (float) 0.70;
@@ -21,29 +20,6 @@ public /*abstract */ class Taxonomy {
     public Taxonomy(GraphDatabaseAgent t) {
         graphDb = t;
     }
-    /*
-    public TaxonomyBase(String graphname) {
-        embeddedGraphDb = new EmbeddedGraphDatabase( graphname );
-        usingService = false;
-    }
-
-    public TaxonomyBase(EmbeddedGraphDatabase graphdb ) {
-        embeddedGraphDb = graphdb;
-        usingService = false;
-    }
-    
-    public TaxonomyBase(GraphDatabaseService graphdb ) {
-        graphDbService = graphdb;
-        usingService = true;
-    } */
-
-//    protected static Index<Relationship> sourceRelIndex;
-
-/*    protected static Index<Node> taxNodeIndex;
-    protected static Index<Node> prefTaxNodeIndex;
-    protected static Index<Node> prefSynNodeIndex;
-    protected static Index<Node> synNodeIndex;
-    protected static Index<Node> taxSourceIndex; */
 
     /**
      * A wrapper for simplifying access to node indexes.
@@ -51,20 +27,15 @@ public /*abstract */ class Taxonomy {
      *
      */
     public static enum NodeIndex implements Index<Node> {
-        TAXON_BY_NAME ("taxNodes"),
-        SYNONYM_BY_NAME ("synNodes"),
-        PREFERRED_TAXON_BY_NAME ("prefTaxNodes"),
-        PREFERRED_SYNONYM_BY_NAME ("prefSynNodes"),
-        TAX_SOURCES ("taxSources");
+        TAXON_BY_NAME ("taxNodes"), // all taxon nodes
+        SYNONYM_BY_NAME ("synNodes"), // all synonym nodes
+        PREFERRED_TAXON_BY_NAME ("prefTaxNodes"), // taxon nodes with preferred relationships
+        PREFERRED_SYNONYM_BY_NAME ("prefSynNodes"), // synonym nodes attached to preferred taxon nodes
+        TAX_SOURCES ("taxSources"); // ?
         
         public final Index<Node> index;
         NodeIndex (String indexName) {
             this.index = graphDb.getNodeIndex(indexName);
-            //            if (usingService) {
-//                this.index = graphDbService.index().forNodes(indexName);
-//            } else {
-//                this.index = embeddedGraphDb.index().forNodes(indexName);
-//            }
         }
 
         @Override
@@ -103,8 +74,8 @@ public /*abstract */ class Taxonomy {
         }
 
         @Override
-        public void add(Node arg0, String arg1, Object arg2) {
-            index.add(arg0, arg1, arg2);
+        public void add(Node node, String key, Object value) {
+            index.add(node, key, value);
         }
 
         @Override
@@ -113,13 +84,13 @@ public /*abstract */ class Taxonomy {
         }
 
         @Override
-        public Node putIfAbsent(Node arg0, String arg1, Object arg2) {
-            return index.putIfAbsent(arg0, arg1, arg2);
+        public Node putIfAbsent(Node node, String key, Object value) {
+            return index.putIfAbsent(node, key, value);
         }
 
         @Override
-        public void remove(Node arg0) {
-            index.remove(arg0);
+        public void remove(Node node) {
+            index.remove(node);
         }
 
         @Override
@@ -133,73 +104,166 @@ public /*abstract */ class Taxonomy {
         }
     }
 
-/*    protected static enum RelIndex {
+    protected static enum RelIndex implements Index<Relationship> {
         SOURCE_TYPE ("taxSources");
         
         public final Index<Relationship> index;
         RelIndex (String indexName) {
-            this.index = graphDb.index().forRelationships(indexName);;
+            this.index = graphDb.getRelIndex(indexName);
+        }
+
+        @Override
+        public IndexHits<Relationship> get(String arg0, Object arg1) {
+            return index.get(arg0, arg1);
+        }
+
+        @Override
+        public Class<Relationship> getEntityType() {
+            return index.getEntityType();
+        }
+
+        @Override
+        public GraphDatabaseService getGraphDatabase() {
+            return index.getGraphDatabase();
+        }
+
+        @Override
+        public String getName() {
+            return index.getName();
+        }
+
+        @Override
+        public boolean isWriteable() {
+            return index.isWriteable();
+        }
+
+        @Override
+        public IndexHits<Relationship> query(Object arg0) {
+            return index.query(arg0);
+        }
+
+        @Override
+        public IndexHits<Relationship> query(String arg0, Object arg1) {
+            return index.query(arg0, arg1);
+        }
+
+        @Override
+        public void add(Relationship rel, String key, Object value) {
+            index.add(rel, key, value);
         }
         
-        public void add (Relationship r, String property, String key) {
-            index.add(r, property, key);
+        @Override
+        public void delete() {
+            index.delete();
         }
-    } */
+
+        @Override
+        public Relationship putIfAbsent(Relationship arg0, String arg1, Object arg2) {
+            return index.putIfAbsent(arg0, arg1, arg2);
+        }
+
+        @Override
+        public void remove(Relationship arg0) {
+            index.remove(arg0);
+        }
+
+        @Override
+        public void remove(Relationship arg0, String arg1) {
+            index.remove(arg0, arg1);
+        }
+
+        @Override
+        public void remove(Relationship arg0, String arg1, Object arg2) {
+            index.remove(arg0, arg1, arg2);
+        }
+    }
     
-    protected static enum RelTypes implements RelationshipType {
+    public static enum RelTypes implements RelationshipType {
         TAXCHILDOF, // standard rel for tax db, from node to parent
         SYNONYMOF, // relationship for synonyms
         METADATAFOR, // relationship connecting a metadata node to the root of a taxonomy
         PREFTAXCHILDOF// relationship type for preferred relationships
     }
-        
+    
+    // general taxonomy access methods
+    
     public Node getLifeNode() {
         IndexHits<Node> r = NodeIndex.TAXON_BY_NAME.get("name", LIFE_NODE_NAME);
         r.close();
         return r.getSingle();
     }
     
-/*    public EmbeddedGraphDatabase getGraphDb() {
-        if (usingService == false)
-            return embeddedGraphDb;
-        else
-            return null;
+    /**
+     * Just get the recognized taxon node that is associated with a given synonym node.
+     * 
+     * @param synonymNode
+     * @return taxNode
+     */
+    public Node getTaxNodeForSynNode(Node synonymNode) {
+
+        TraversalDescription synonymTraversal = Traversal.description()
+                .relationships(RelTypes.SYNONYMOF, Direction.OUTGOING);
+
+        Node taxNode = null;
+        for (Node tn : synonymTraversal.traverse(synonymNode).nodes())
+            taxNode = tn;
+
+        return taxNode;
     }
     
-    public GraphDatabaseService getGraphDbService() {
-        if (usingService)
-            return graphDbService;
-        else
-            return null;
-    } 
-    
-    public boolean isUsingService() {
-        return usingService;
-    } */
+    /**
+     * Finds the directed internodal distance between `n1` and `n2` along relationships of type `relType` by tracing the paths to the LICA
+     * of n1 and n2. Not that this method using direction to find the LICA, and will likely fail when the outgoing paths from the n1 and n2
+     * do not intersect.
+     * @param n1
+     * @param n2
+     * @param relType
+     * @return distance
+     */
+    public int getInternodalDistThroughMRCA(Node n1, Node n2, RelationshipType relType) {
+
+        System.out.println("Node 1: " + n1.getProperty("name") + " " + n1.getId() + ", Node 2: " + n2.getProperty("name") + " " + n2.getId());
+
+        TraversalDescription hierarchy = Traversal.description()
+                .depthFirst()
+                .relationships(relType, Direction.OUTGOING);
+
+        Iterable<Node> firstPath = hierarchy.traverse(n1).nodes();
+        Iterable<Node> secondPath = hierarchy.traverse(n2).nodes();
+
+        int i = 0;
+        boolean matched = false;
+        count: for (Node n : firstPath) {
+
+            int j = 0;
+            for (Node m : secondPath) {
+                if (n.getId() == m.getId())
+                    matched = true;
+                j++;
+            }
+
+            if (matched) {
+                i += j;
+                break count;
+            }
+
+            i++;
+        }
+
+        return i;
+    }
     
     // wrappers for relevant underlying database methods
     
     public Node createNode() {
         return graphDb.createNode();
-        /*        if (usingService)
-            return taxonomy.createNode();
-        else
-            return embeddedGraphDb.createNode();        */
     }
     
     public Transaction beginTx() {
         return graphDb.beginTx();
-        /*        if (usingService)
-            return graphDbService.beginTx();
-        else
-            return embeddedGraphDb.beginTx(); */
     }
     
     public Node getNodeById(Long arg0) {
         return graphDb.getNodeById(arg0);
-/*        if (usingService)
-            return graphDbService.getNodeById(arg0);
-        else
-            return embeddedGraphDb.getNodeById(arg0); */
     }
 }

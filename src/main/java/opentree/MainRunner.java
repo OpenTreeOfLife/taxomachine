@@ -88,7 +88,7 @@ public class MainRunner {
 			return;
 		}
 		
-		TaxonomyBrowser te = null;
+		TaxonomyCombiner te = null;
         TNRSQuery tnrs = null;
         Taxon taxon = null;
 
@@ -97,7 +97,7 @@ public class MainRunner {
             String graphname = args[2];
 
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyBrowser(taxdb);
+            te =  new TaxonomyCombiner(taxdb);
             tnrs = new TNRSQuery(te);
             try {
                 taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
@@ -114,7 +114,7 @@ public class MainRunner {
 			String outname = args[3];
 			
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyBrowser(taxdb);
+            te =  new TaxonomyCombiner(taxdb);
             tnrs = new TNRSQuery(te);
             try {
                 taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
@@ -130,7 +130,7 @@ public class MainRunner {
 			String graphname = args[2];
 			
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyBrowser(taxdb);
+            te =  new TaxonomyCombiner(taxdb);
 
             System.out.println("finding taxonomic cycles for " + query);
 			te.findTaxonomyCycles(query);
@@ -140,7 +140,7 @@ public class MainRunner {
 			String graphname = args[2];
 			
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyBrowser(taxdb);
+            te =  new TaxonomyCombiner(taxdb);
             tnrs = new TNRSQuery(te);
             try {
                 taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
@@ -164,7 +164,7 @@ public class MainRunner {
 		} else if (args[0].equals("makeottol")) {
 			String graphname = args[1];
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyBrowser(taxdb);
+            te =  new TaxonomyCombiner(taxdb);
 			System.out.println("making ottol relationships");
 			te.makePreferredOTTOLRelationshipsConflicts();
 			te.makePreferredOTTOLRelationshipsNOConflicts();
@@ -194,7 +194,7 @@ public class MainRunner {
 
         String graphName = args[2];
         taxdb = new GraphDatabaseAgent(graphName);
-        TaxonomyBrowser taxonomy = new TaxonomyBrowser(taxdb);
+        TaxonomyCombiner taxonomy = new TaxonomyCombiner(taxdb);
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
 //        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
         TNRSResults results = (TNRSResults)null;

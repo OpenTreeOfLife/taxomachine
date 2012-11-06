@@ -14,26 +14,43 @@ import org.neo4j.kernel.Traversal;
 public class TaxonSet implements Iterable<Node> {
 
     private final LinkedList<Node> taxa;
-    private Taxon mrca;
+    private Taxon lica;
     
     public TaxonSet (List<Node> inTaxa) {
         taxa = (LinkedList<Node>)inTaxa;
-        mrca = null;
+        lica = null;
+    }
+
+    public TaxonSet (Node[] inTaxa) {
+        taxa = new LinkedList<Node>();
+        for (int i = 0; i < inTaxa.length; i++)
+            taxa.add(inTaxa[i]);
+        lica = null;
     }
     
-    public Taxon getMRCA() {
+    public Taxon getLICA() {
+        boolean usePreferredRels = true;
+        return getLICA(usePreferredRels);
+    }
+    
+    public Taxon getLICA(boolean usePreferredRels) {
        
-        if (hasMRCA()) {
-            return new Taxon(mrca.getNode());
-        }
+        Taxonomy.RelTypes relType;
+        if (usePreferredRels)
+            relType = RelTypes.PREFTAXCHILDOF;
+        else
+            relType = RelTypes.TAXCHILDOF;
         
-        Node mrcaNode;
+        if (hasLICA())
+            return new Taxon(lica.getNode());
+        
+        Node licaNode;
         if (taxa.size() == 0) {
             throw new java.lang.InternalError("Attempt to find the mrca of zero taxa");
 
         } else if (taxa.size() == 1) {
             // if there is only one taxon, then it is the mrca
-            mrcaNode = taxa.peek();
+            licaNode = taxa.peek();
         
         } else {
             // find the mrca of all taxa
@@ -41,7 +58,7 @@ public class TaxonSet implements Iterable<Node> {
             Node firstNode = temptaxa.poll();
             TraversalDescription hierarchy = Traversal.description()
                     .depthFirst()
-                    .relationships( RelTypes.TAXCHILDOF, Direction.OUTGOING );
+                    .relationships( relType, Direction.OUTGOING );
 
             // first get the full path to root from an arbitrary taxon in the set
             ArrayList<Node> path = new ArrayList<Node>();
@@ -60,16 +77,16 @@ public class TaxonSet implements Iterable<Node> {
                     }
                 }
             }
-            mrcaNode = path.get(i);
+            licaNode = path.get(i);
         }
 
         // keep an internal copy of the mrca, we may need it later
-        mrca = new Taxon(mrcaNode);
-        return new Taxon(mrcaNode);
+        lica = new Taxon(licaNode);
+        return new Taxon(licaNode);
     }
     
-    public boolean hasMRCA() {
-        return mrca != null;
+    public boolean hasLICA() {
+        return lica != null;
     }
     
     public int size() {

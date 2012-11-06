@@ -2,6 +2,7 @@ package opentree;
 
 import jade.tree.JadeNode;
 import jade.tree.JadeTree;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import opentree.Taxonomy.RelTypes;
+import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSQuery;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;
@@ -25,7 +27,7 @@ import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
-public class Taxon /*extends TaxonomyBase */{
+public class Taxon {
 
     private final Node taxNode;
     private ChildNumberEvaluator cne;
@@ -44,20 +46,16 @@ public class Taxon /*extends TaxonomyBase */{
     }
     
     public boolean isPreferredTaxChildOf(Taxon parent) {
+    
         TraversalDescription hierarchy = Traversal.description()
                 .depthFirst()
-//                .relationships( RelTypes.PREFTAXCHILDOF, Direction.OUTGOING ); // TODO: use preferred rels (have to have preottol to get them)
-                .relationships( RelTypes.TAXCHILDOF, Direction.OUTGOING );
+                .relationships( RelTypes.PREFTAXCHILDOF, Direction.OUTGOING );
         
         Long pid = parent.getNode().getId();
-//        System.out.println("mrca = " + parent.getName());
         
-        for (Node n : hierarchy.traverse(taxNode).nodes()) {
-//            System.out.println("comparing " + n.getProperty("name") + " to " + parent.getName());
-            if (n.getId() == pid) {
+        for (Node n : hierarchy.traverse(taxNode).nodes())
+            if (n.getId() == pid)
                 return true;
-            }
-        }
         
         return false;
     }
@@ -68,56 +66,57 @@ public class Taxon /*extends TaxonomyBase */{
      * 
      * @param clade_name
      *            - the name of the internal node in taxNodeIndex that will be the root of the subtree that is written
-     * @param out_filepath
+     * @param outFilepath
      *            - the filepath to create
      * @todo support other graph file formats
      */
-    public void exportGraphForClade(String out_filepath) {
+    public void exportGraphForClade(String outFilepath) {
 
-        // TraversalDescription CHILDOF_TRAVERSAL = Traversal.description().relationships(RelTypes.TAXCHILDOF,Direction.INCOMING );
-        PrintWriter out_file;
+        PrintWriter outFile;
         try {
-            out_file = new PrintWriter(new FileWriter(out_filepath));
-            out_file.write("strict digraph  {\n\trankdir = RL ;\n");
-            HashMap<String, String> src2style = new HashMap<String, String>();
-            HashMap<Node, String> nd2dot_name = new HashMap<Node, String>();
-            int count = 0;
+            outFile = new PrintWriter(new FileWriter(outFilepath));
+            outFile.write("strict digraph  {\n\trankdir = RL ;\n");
+            HashMap<String, String> sourceToStyleMap = new HashMap<String, String>();
+            HashMap<Node, String> nodeToNameMap = new HashMap<Node, String>();
+//            int count = 0;
 
             // TODO: switch this to use TraversalDescription object
-            for (Node nd : taxNode.traverse(Traverser.Order.BREADTH_FIRST,
+/*            for (Node nd : taxNode.traverse(Traverser.Order.BREADTH_FIRST,
                     StopEvaluator.END_OF_GRAPH,
                     ReturnableEvaluator.ALL,
                     RelTypes.TAXCHILDOF,
-                    Direction.INCOMING)) {
+                    Direction.INCOMING)) */ 
+            for (Node nd : Traversal.description()
+                .relationships(RelTypes.PREFTAXCHILDOF, Direction.INCOMING).breadthFirst().traverse(taxNode).nodes()) {
                 for (Relationship rel : nd.getRelationships(RelTypes.TAXCHILDOF, Direction.INCOMING)) {
-                    count += 1;
-                    Node rel_start = rel.getStartNode();
-                    String rel_start_name = ((String) rel_start.getProperty("name"));
-                    String rel_start_dot_name = nd2dot_name.get(rel_start);
-                    if (rel_start_dot_name == null) {
-                        rel_start_dot_name = "n" + (1 + nd2dot_name.size());
-                        nd2dot_name.put(rel_start, rel_start_dot_name);
-                        out_file.write("\t" + rel_start_dot_name + " [label=\"" + rel_start_name + "\"] ;\n");
+//                    count += 1;
+                    Node startNode = rel.getStartNode();
+                    String sName = ((String) startNode.getProperty("name"));
+                    String sDotName = nodeToNameMap.get(startNode);
+                    if (sDotName == null) {
+                        sDotName = "n" + (1 + nodeToNameMap.size());
+                        nodeToNameMap.put(startNode, sDotName);
+                        outFile.write("\t" + sDotName + " [label=\"" + sName + "\"] ;\n");
                     }
-                    Node rel_end = rel.getEndNode();
-                    String rel_end_name = ((String) rel_end.getProperty("name"));
-                    String rel_end_dot_name = nd2dot_name.get(rel_end);
-                    if (rel_end_dot_name == null) {
-                        rel_end_dot_name = "n" + (1 + nd2dot_name.size());
-                        nd2dot_name.put(rel_end, rel_end_dot_name);
-                        out_file.write("\t" + rel_end_dot_name + " [label=\"" + rel_end_name + "\"] ;\n");
+                    Node endNode = rel.getEndNode();
+                    String eName = ((String) endNode.getProperty("name"));
+                    String eDotName = nodeToNameMap.get(endNode);
+                    if (eDotName == null) {
+                        eDotName = "n" + (1 + nodeToNameMap.size());
+                        nodeToNameMap.put(endNode, eDotName);
+                        outFile.write("\t" + eDotName + " [label=\"" + eName + "\"] ;\n");
                     }
-                    String rel_source = ((String) rel.getProperty("source"));
-                    String edge_style = src2style.get(rel_source);
-                    if (edge_style == null) {
-                        edge_style = "color=black"; // @TMP
-                        src2style.put(rel_source, edge_style);
+                    String relSource = ((String) rel.getProperty("source"));
+                    String edgeStyle = sourceToStyleMap.get(relSource);
+                    if (edgeStyle == null) {
+                        edgeStyle = "color=black"; // @TMP
+                        sourceToStyleMap.put(relSource, edgeStyle);
                     }
-                    out_file.write("\t" + rel_start_dot_name + " -> " + rel_end_dot_name + " [" + edge_style + "] ;\n");
+                    outFile.write("\t" + sDotName + " -> " + eDotName + " [" + edgeStyle + "] ;\n");
                 }
             }
-            out_file.write("}\n");
-            out_file.close();
+            outFile.write("}\n");
+            outFile.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -139,21 +138,21 @@ public class Taxon /*extends TaxonomyBase */{
         HashMap<Node, JadeNode> nodes = new HashMap<Node, JadeNode>();
         nodes.put(taxNode, root);
         int count = 0;
-        for (Relationship friendrel : CHILDOF_TRAVERSAL.traverse(taxNode).relationships()) {
+        for (Relationship rel : CHILDOF_TRAVERSAL.traverse(taxNode).relationships()) {
             count += 1;
-            if (nodes.containsKey(friendrel.getStartNode()) == false) {
+            if (nodes.containsKey(rel.getStartNode()) == false) {
                 JadeNode node = new JadeNode();
-                node.setName(((String) friendrel.getStartNode().getProperty("name")).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
+                node.setName(((String) rel.getStartNode().getProperty("name")).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
                         .replace(":", "_"));
-                nodes.put(friendrel.getStartNode(), node);
+                nodes.put(rel.getStartNode(), node);
             }
-            if (nodes.containsKey(friendrel.getEndNode()) == false) {
+            if (nodes.containsKey(rel.getEndNode()) == false) {
                 JadeNode node = new JadeNode();
-                node.setName(((String) friendrel.getEndNode().getProperty("name")).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
+                node.setName(((String) rel.getEndNode().getProperty("name")).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
                         .replace(":", "_"));
-                nodes.put(friendrel.getEndNode(), node);
+                nodes.put(rel.getEndNode(), node);
             }
-            nodes.get(friendrel.getEndNode()).addChild(nodes.get(friendrel.getStartNode()));
+            nodes.get(rel.getEndNode()).addChild(nodes.get(rel.getStartNode()));
             if (count % 100000 == 0)
                 System.out.println(count);
         }
@@ -177,10 +176,10 @@ public class Taxon /*extends TaxonomyBase */{
         HashMap<Node, Integer> nodenumbers = new HashMap<Node, Integer>();
         HashMap<Integer, Node> numbernodes = new HashMap<Integer, Node>();
         int count = 0;
-        for (Node friendnode : CHILDOF_TRAVERSAL.traverse(taxNode).nodes()) {
-            if (friendnode.hasRelationship(Direction.INCOMING)) {
-                nodenumbers.put(friendnode, count);
-                numbernodes.put(count, friendnode);
+        for (Node n : CHILDOF_TRAVERSAL.traverse(taxNode).nodes()) {
+            if (n.hasRelationship(Direction.INCOMING)) {
+                nodenumbers.put(n, count);
+                numbernodes.put(count, n);
                 count += 1;
             }
         }
@@ -368,13 +367,21 @@ public class Taxon /*extends TaxonomyBase */{
         return ret;
     }
 
-/*    public void runittest() {
-        TaxonomyExplorer te = new TaxonomyExplorer();
-        TNRSQuery tnrs = new TNRSQuery(te);
+    public void runittest() {
 
-        Taxon lonicera = new Taxon(tnrs.getExactMatches("Lonicera").iterator().next().getMatches().iterator().next().getMatchedNode());
+        String pathToGraphDb = "";
+        GraphDatabaseAgent gdb = new GraphDatabaseAgent(pathToGraphDb);
+        TNRSQuery tnrs = new TNRSQuery(new Taxonomy(gdb));
+
+        Taxon lonicera = null;
+        try {
+            lonicera = new Taxon(tnrs.getExactMatches("Lonicera").getSingleMatch().getMatchedNode());
+        } catch (MultipleHitsException e) {
+            e.printStackTrace();
+        }
+
         lonicera.buildTaxonomyTree();
 
-        shutdownDB();
-    } */
+        gdb.shutdownDb();
+    }
 }

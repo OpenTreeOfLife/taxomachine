@@ -86,20 +86,6 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             return _searchString;
         }
         
-/*        /**
-         * @return the graph database id of node to which this match points
-         *
-        public long getMatchedNodeId() {
-            return _matchedNode.getId();
-        }
-
-        /**
-         * @return the name of the graph node to which this match points
-         *
-        public String getMatchedNodeName() {
-            return _matchedNode.getProperty("name").toString();
-        } */
-        
         /**
          * @return the Neo4j Node object for the recognized name to which this match points
          */
@@ -113,14 +99,6 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         public Node getSynonymNode() {
             return _synonymNode;
         }
-        
-/*        public long getSynonymNodeId() {
-            return _synonymNode.getId();
-        }
-
-        public String getSynonymNodeName() {
-            return _synonymNode.getProperty("name").toString();
-        } */
         
         /**
          * @return the TNRS source that produced this match

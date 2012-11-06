@@ -2,15 +2,12 @@ package opentree;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 public class GraphDatabaseAgent {
-    /*
-     * public Index<Node> getNodeIndex(String indexName); public Node createNode(); public Node getNodeById(Long arg0); public Transaction beginTx(); public
-     * void shutdownDb();
-     */
 
     private static EmbeddedGraphDatabase embeddedGraphDb;
     private static GraphDatabaseService graphDbService;
@@ -38,6 +35,13 @@ public class GraphDatabaseAgent {
             return graphDbService.index().forNodes(indexName);
     }
 
+    public Index<Relationship> getRelIndex(String indexName) {
+        if (embedded)
+            return embeddedGraphDb.index().forRelationships(indexName);
+        else
+            return graphDbService.index().forRelationships(indexName);
+    }
+    
     public Node createNode() {
         if (embedded)
             return embeddedGraphDb.createNode();

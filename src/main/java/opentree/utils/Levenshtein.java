@@ -50,8 +50,4 @@ public final class Levenshtein {
         // as we are to return the last number on the lowest row
         return mat1[a.length()];
     }
-
-    public static int absDistance(String a, String b) {
-        return Math.abs(distance(a, b));
-    }
 }

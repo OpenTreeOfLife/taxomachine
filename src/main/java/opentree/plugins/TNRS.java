@@ -1,7 +1,7 @@
 package opentree.plugins;
 
 import opentree.GraphDatabaseAgent;
-import opentree.TaxonomyBrowser;
+import opentree.TaxonomyCombiner;
 import opentree.tnrs.TNRSQuery;
 import opentree.tnrs.TNRSResults;
 
@@ -26,7 +26,7 @@ public class TNRS extends ServerPlugin {
         String[] searchStrings = queryString.split("\\s*\\,\\s*");
 
         GraphDatabaseAgent taxService = new GraphDatabaseAgent(graphDb);
-        TaxonomyBrowser taxonomy = new TaxonomyBrowser(taxService);
+        TaxonomyCombiner taxonomy = new TaxonomyCombiner(taxService);
  
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
         TNRSResults results = tnrs.getAllMatches(searchStrings);
