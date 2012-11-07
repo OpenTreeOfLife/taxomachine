@@ -136,7 +136,6 @@ public class TNRSQuery {
 
                     // update the count for the nomenclatural code govering this name
                     String thisCode = n.getProperty("taxcode").toString();
-//                    System.out.println(n.getProperty("taxcode"));
                     if (codeFreqs.containsKey(thisCode)) {
                         int count = codeFreqs.get(thisCode) + 1;
                         codeFreqs.put(thisCode, count);
@@ -207,13 +206,13 @@ public class TNRSQuery {
                         isFuzzy = true;
 
                         // use edit distance to calculate base score for fuzzy matches
-                        System.out.println("comparing " + queriedName + " to " + matchedTaxon.getName());
+//                        System.out.println("comparing " + queriedName + " to " + matchedTaxon.getName());
                         double l = Levenshtein.distance(queriedName, matchedTaxon.getName());
-                        System.out.println("l = " + String.valueOf(l));
+//                        System.out.println("l = " + String.valueOf(l));
                         double s = Math.min(matchedTaxon.getName().length(), queriedName.length());
-                        System.out.println("s = " + String.valueOf(s));
+//                        System.out.println("s = " + String.valueOf(s));
                         baseScore = (s - l) / s;
-                        System.out.println("baseScore = " + String.valueOf(baseScore));
+//                        System.out.println("baseScore = " + String.valueOf(baseScore));
                         
                         if (matchedTaxon.isPreferredTaxChildOf(mrca) == false) {
 
@@ -233,7 +232,7 @@ public class TNRSQuery {
                     boolean isHomonym;
                     if (directHits.size() > 1) {
                         isHomonym = true;
-                        System.out.println("Comparing = '" + _results.getGoverningCode() + "' to '" + n.getProperty("taxcode") + "'");
+//                        System.out.println("Comparing = '" + _results.getGoverningCode() + "' to '" + n.getProperty("taxcode") + "'");
                         if (_results.getGoverningCode().equals(n.getProperty("taxcode").toString()) == false) {
                             
                             ////////////////////////////////////////////////////////////////////////////////////
@@ -242,7 +241,7 @@ public class TNRSQuery {
                             ////////////////////////////////////////////////////////////////////////////////////
                             
                             scoreModifier *= DISTANT_HOMONYM_SCORE_SCALAR; // down-weight homonyms outside prevalent nomenclature
-                            System.out.println("Distant homonym; scoreModifier adjusted down to = " + String.valueOf(scoreModifier));
+//                            System.out.println("Distant homonym; scoreModifier adjusted down to = " + String.valueOf(scoreModifier));
                         }
                     } else {
                         isHomonym = false;
@@ -260,6 +259,7 @@ public class TNRSQuery {
                                 setIsPerfectMatch(isPerfectMatch).
                                 setIsApprox(isFuzzy).
                                 setIsHomonym(isHomonym).
+                                setNomenCode(matchedTaxon.getNomenCode()).
                                 setSourceName(DEFAULT_TAXONOMY_NAME).
                                 setScore(score));
                     }
@@ -300,15 +300,15 @@ public class TNRSQuery {
                             isFuzzy = true;
                             
                             // use edit distance to calculate base score for fuzzy matches
-                            System.out.println("comparing " + queriedName + " to " + synonymName);
+//                            System.out.println("comparing " + queriedName + " to " + synonymName);
                             double l = Levenshtein.distance(queriedName, synonymName);
-                            System.out.println("l = " + String.valueOf(l));
+//                            System.out.println("l = " + String.valueOf(l));
 //                            System.out.println("length of queried name = " + queriedName.length());
 //                            System.out.println("length of synonym name = " + synonymName.length());
                             double s = Math.min(synonymName.length(), queriedName.length());
-                            System.out.println("s = " + String.valueOf(s));
+//                            System.out.println("s = " + String.valueOf(s));
                             baseScore = (s - l) / s;
-                            System.out.println("baseScore = " + String.valueOf(baseScore));
+//                            System.out.println("baseScore = " + String.valueOf(baseScore));
                             
                             
                             if (matchedTaxon.isPreferredTaxChildOf(mrca) == false) {
@@ -320,9 +320,9 @@ public class TNRSQuery {
                                 ////////////////////////////////////////////////////////////////////////////////////
                                 
                                 int d = _taxonomy.getInternodalDistThroughMRCA(matchedTaxon.getNode(), mrca.getNode(), RelTypes.PREFTAXCHILDOF);
-                                System.out.println("d = " + String.valueOf(d));
+//                                System.out.println("d = " + String.valueOf(d));
                                 scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
-                                System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
+//                                System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
 
                             }
                         }
@@ -337,6 +337,7 @@ public class TNRSQuery {
                                     setIsApprox(isFuzzy).
                                     setIsSynonym(true).
                                     setIsPerfectMatch(false).
+                                    setNomenCode(matchedTaxon.getNomenCode()).
                                     setSourceName(DEFAULT_TAXONOMY_NAME).
                                     setScore(score));
                         }

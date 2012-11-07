@@ -43,6 +43,10 @@ public class Taxon {
         return taxNode;
     }
 
+    public String getNomenCode() {
+        return (String) taxNode.getProperty("taxcode");
+    }
+    
     public String getName() {
         return taxNode.getProperty("name").toString();
     }

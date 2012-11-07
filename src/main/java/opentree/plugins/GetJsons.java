@@ -26,10 +26,50 @@ public class GetJsons extends ServerPlugin {
 
     @Description("Return a JSON with alternative TAXONOMIC relationships noted and returned")
     @PluginTarget(Node.class)
+    public String getConflictTaxJsonAltRel(@Source Node target,
+            @Parameter(name = "domsource", optional = true) @Description("The dominant source.") 
+                String domsource,
+            @Parameter(name = "altrels", optional = true) @Description("The list of alternative relationships to prefer.")
+                Long[] altrels,
+            @Parameter(name = "nubrel", optional = true) @Description("A new relationship nub.")
+                Long nubRelId) {
+
+        String retst = "";
+        Taxon taxon;
+        
+        if (nubRelId != null) {
+            
+            Relationship rel = target.getGraphDatabase().getRelationshipById(nubRelId);
+            ArrayList<Long> rels = new ArrayList<Long>();
+            if (altrels != null)
+                for (int i = 0; i < altrels.length; i++) {
+                    rels.add(altrels[i]);
+                }
+            taxon = new Taxon(rel.getEndNode());
+            retst = taxon.constructJSONAltRels((String) rel.getProperty("source"), rels);
+
+        } else {
+
+            taxon = new Taxon(target);
+            ArrayList<Long> rels = new ArrayList<Long>();
+            if (altrels != null)
+                for (int i = 0; i < altrels.length; i++) {
+                    rels.add(altrels[i]);
+                }
+            retst = taxon.constructJSONAltRels(domsource, rels);
+        }
+
+        return retst;
+
+    }
+
+/*    @Description("Return a JSON with alternative TAXONOMIC relationships noted and returned")
+    @PluginTarget(Node.class)
     public String getConflictTaxJsonAltRel(@Source Node source,
             @Description("The dominant source.") @Parameter(name = "domsource", optional = true) String domsource,
             @Description("The list of alternative relationships to prefer.") @Parameter(name = "altrels", optional = true) Long[] altrels,
-            @Description("A new relationship nub.") @Parameter(name = "nubrel", optional = true) Long nubrel) {
+            @Description("A new relationship nub.") @Parameter(name = "nubrel", optional = true) Long nubrel,
+            @Description("A new relationship nub.") @Parameter(name = "nodeid", optional = true) Long nodeId) {
         String retst = "";
 //        TaxonomyExplorer te = new TaxonomyExplorer();
         Taxon taxon;
@@ -45,16 +85,25 @@ public class GetJsons extends ServerPlugin {
             retst = taxon.constructJSONAltRels((String) rel.getProperty("source"), rels);
 
         } else {
-            ArrayList<Long> rels = new ArrayList<Long>();
+/*            ArrayList<Long> rels = new ArrayList<Long>();
             if (altrels != null)
                 for (int i = 0; i < altrels.length; i++) {
                     rels.add(altrels[i]);
                 }
             taxon = new Taxon(source);
+            retst = taxon.constructJSONAltRels(domsource, rels); *
+            
+            taxon = new Taxon(source.getGraphDatabase().getNodeById(nodeId));
+            ArrayList<Long> rels = new ArrayList<Long>();
+            if (altrels != null)
+                for (int i = 0; i < altrels.length; i++) {
+                    rels.add(altrels[i]);
+                }
             retst = taxon.constructJSONAltRels(domsource, rels);
+
         }
         return retst;
-    }
+    } */
 
     @SuppressWarnings("unchecked")
     @Description("Return a JSON with node ids for nodes matching a name")
