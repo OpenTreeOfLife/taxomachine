@@ -24,9 +24,9 @@ https://launchpad.net/~natecarlson/+archive/maven3
 
 To install Maven 3 using this PPA, use the following commands:
 
-sudo apt-add-repository ppa:natecarlson/maven3
-sudo apt-get update
-sudo apt-get install maven3
+	sudo apt-add-repository ppa:natecarlson/maven3
+	sudo apt-get update
+	sudo apt-get install maven3
 
 Usage
 --------------
