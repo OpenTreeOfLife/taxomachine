@@ -4,7 +4,7 @@ Taxomachine is a tool for merging, exploring, and exporting taxonomies for use w
 
 Installation
 ---------------
-taxomachine is managed by Maven v. 3 (including the dependencies). In order to compile and build treemachine, it is easiest to let Maven v. 2 do the hard work.
+taxomachine is managed by Maven v. 3 (including the dependencies). In order to compile and build treemachine, it is easiest to let Maven do the hard work.
 
 On Ubuntu you can install Maven with:
 
