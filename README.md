@@ -3,57 +3,41 @@ opentree-taxomachine
 Taxomachine is a tool for merging, exploring, and exporting taxonomies for use with the Open Tree of Life project. 
 
 Installation
-===============
-taxomachine is managed by Maven v. 2 (including the dependencies). In order to compile and build treemachine, it is easiest to let Maven v. 2 do the hard work.
+---------------
+taxomachine is managed by Maven v. 3 (including the dependencies). In order to compile and build treemachine, it is easiest to let Maven v. 2 do the hard work.
 
-On Ubuntu you can install Maven v. 2 with:
+On Ubuntu you can install Maven with:
 
-	sudo apt-get install maven2
+	sudo apt-get install maven
 
-It is also necessary to install the forester library. Directions follow:
+It is also necessary to install the forester library, which must be installed into a local repo. To install forester, run the script:
 
-Installing forester
---------------
-Taxomachine uses the forester library for reading trees, which must be installed into a local repo. To install forester, run the command:
-
-	./mvn_install_forester.sh
+	sh mvn_install_forester.sh
 
 This will install forester into a local maven repo inside of the ~/.m2 directory. This only needs to be done once unless you clear out your ~./m2 directory.
 
-Installing Maven 3
+Compiling
 --------------
 
-The server plugin must be compiled as a shaded jar, and this functionality now requires the use of Maven 3, which is not yet available via the default Ubuntu apt repositories.
-
-For users of Ubuntu 12.04, Nate Carlson has provided a custom PPA that can be used to greatly simplify the installation process. See the following page for information on this PPA:
-https://launchpad.net/~natecarlson/+archive/maven3
-
-To install Maven 3 on Ubuntu 12.04 using this PPA, use the following commands:
-
-	sudo apt-add-repository ppa:natecarlson/maven3
-	sudo apt-get update
-	sudo apt-get install maven3
-
-For other Ubuntu versions:
-
-...
-
-Compiling
-==============
-
-Once Maven v.2 is installed, you can compile the standalone program with:
+Once Maven is installed and the local forester repo has been successfully added, you can compile the standalone program with:
 
 	sh mvn_cmdline.sh
 
-Compiling the server plugin requires Maven 3. See the above section for more information. Once Maven 3 is installed, you may compile the server plugin with:
+Or the server plugin with:
 
 	sh mvn_serverplugins.sh
 
-You will then need to place the plugin within the neo4j plugins directory and restart the neo4j server before neo4j will expose its functionality.
+Installing the server plugin
+--------------
+
+To expose the functionality of the server plugin, you must place it into your neo4j plugins directory, and restart the neo4j server. For example:
+
+	mv target/opentree-neo4j-plugins-0.0.1-SNAPSHOT.jar /opt/neo4j-community-1.8/plugins
+	/opt/neo4j-community-1.8/bin/neo4j restart
 
 Usage
 --------------
-To see the help message run:
+For the standalone version, view the help message by running:
 
 	java -jar taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 
