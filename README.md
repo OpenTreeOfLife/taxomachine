@@ -15,18 +15,24 @@ Once Maven v. 2 is installed, you can compile with:
 	
 	sh mvn_cmdline.sh
 
-Installing Maven 3
---------------
-The server plugin must be compiled as a shaded jar, and this functionality now requires the use of Maven 3, which is not yet available via the default Ubuntu apt repositories. Fortunately, Nate Carlson has provided a custom PPA that can be used to greatly simplify the installation process.
+Installing Maven 3--------------
+
+The server plugin must be compiled as a shaded jar, and this functionality now requires the use of Maven 3, which is not yet available via the default Ubuntu apt repositories.
+
+For users of Ubuntu 12.04, Nate Carlson has provided a custom PPA that can be used to greatly simplify the installation process.
 
 See the following page for information about Nate Carlson's Maven 3 PPA:
 https://launchpad.net/~natecarlson/+archive/maven3
 
-To install Maven 3 using this PPA, use the following commands:
+To install Maven 3 on Ubuntu 12.04 using this PPA, use the following commands:
 
 	sudo apt-add-repository ppa:natecarlson/maven3
 	sudo apt-get update
 	sudo apt-get install maven3
+
+For other Ubuntu versions:
+
+...
 
 Usage
 --------------
