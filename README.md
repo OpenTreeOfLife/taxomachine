@@ -15,7 +15,8 @@ Once Maven v. 2 is installed, you can compile with:
 	
 	sh mvn_cmdline.sh
 
-Installing Maven 3--------------
+Installing Maven 3
+--------------
 
 The server plugin must be compiled as a shaded jar, and this functionality now requires the use of Maven 3, which is not yet available via the default Ubuntu apt repositories.
 
