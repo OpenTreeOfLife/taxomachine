@@ -20,9 +20,7 @@ Installing Maven 3
 
 The server plugin must be compiled as a shaded jar, and this functionality now requires the use of Maven 3, which is not yet available via the default Ubuntu apt repositories.
 
-For users of Ubuntu 12.04, Nate Carlson has provided a custom PPA that can be used to greatly simplify the installation process.
-
-See the following page for information about Nate Carlson's Maven 3 PPA:
+For users of Ubuntu 12.04, Nate Carlson has provided a custom PPA that can be used to greatly simplify the installation process. See the following page for information on this PPA:
 https://launchpad.net/~natecarlson/+archive/maven3
 
 To install Maven 3 on Ubuntu 12.04 using this PPA, use the following commands:
