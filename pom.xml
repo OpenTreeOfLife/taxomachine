@@ -14,11 +14,11 @@
         <artifactId>neo4j</artifactId>
         <version>1.8</version>
     </dependency>
-    <!--dependency>
+    <dependency>
         <groupId>org.forester</groupId>
         <artifactId>forester</artifactId>
         <version>1.005</version>
-    </dependency-->
+    </dependency>
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>server-api</artifactId>
