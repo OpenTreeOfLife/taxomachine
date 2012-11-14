@@ -10,6 +10,8 @@ import opentree.tnrs.TNRSQuery;
 import opentree.tnrs.TNRSResults;
 
 //import org.apache.log4j.Logger;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import org.apache.log4j.PropertyConfigurator;
 
 import org.forester.io.parsers.PhylogenyParser;
@@ -23,7 +25,7 @@ public class MainRunner {
     
     private static GraphDatabaseAgent taxdb;
 
-    public void taxonomyLoadParser(String [] args) {
+	public void taxonomyLoadParser(String [] args) throws FileNotFoundException, IOException {
 		String graphname = "";
 		String synonymfile = "";
 		if (args[0].equals("inittax") || args[0].equals("addtax")) {
@@ -319,37 +321,43 @@ public class MainRunner {
 	public static void main(String[] args) {
 		PropertyConfigurator.configure(System.getProperties());
 		System.out.println("taxomachine version alpha.alpha.prealpha");
-		
-		if (args.length == 0 || args[0].equals("help")) {
-			printHelp();
-			System.exit(0);
-		} else if (args.length < 2) {
-			System.err.println("\nERROR: expecting multiple arguments\n");
-			printHelp();
-			System.exit(1);
-		} else {
-			System.out.println("\nThings will happen here!\n");
-			MainRunner mr = new MainRunner();
-			
-			if (args[0].equals("inittax")
-					|| args[0].equals("addtax")
-					|| args[0].equals("inittaxsyn")
-					|| args[0].equals("addtaxsyn")) {
-				mr.taxonomyLoadParser(args);
-			} else if (args[0].equals("comptaxtree")
-					|| args[0].equals("comptaxgraph")
-					|| args[0].equals("findcycles")
-					|| args[0].equals("jsgraph") 
-					|| args[0].equals("checktree")
-					|| args[0].equals("makeottol")) {
-				mr.taxonomyQueryParser(args);
-			} else if (args[0].compareTo("tnrsbasic") == 0 || args[0].compareTo("tnrstree") == 0) {
-			    mr.parseTNRSRequest(args);
-			}else {
-				System.err.println("Unrecognized command \"" + args[0] + "\"");
+		try {
+			if (args.length == 0 || args[0].equals("help")) {
+				printHelp();
+				System.exit(0);
+			} else if (args.length < 2) {
+				System.err.println("\nERROR: expecting multiple arguments\n");
 				printHelp();
 				System.exit(1);
+			} else {
+				System.out.println("\nThings will happen here!\n");
+				MainRunner mr = new MainRunner();
+				
+				if (args[0].equals("inittax")
+						|| args[0].equals("addtax")
+						|| args[0].equals("inittaxsyn")
+						|| args[0].equals("addtaxsyn")) {
+					mr.taxonomyLoadParser(args);
+				} else if (args[0].equals("comptaxtree")
+						|| args[0].equals("comptaxgraph")
+						|| args[0].equals("findcycles")
+						|| args[0].equals("jsgraph") 
+						|| args[0].equals("checktree")
+						|| args[0].equals("makeottol")) {
+					mr.taxonomyQueryParser(args);
+				} else if (args[0].compareTo("tnrsbasic") == 0 || args[0].compareTo("tnrstree") == 0) {
+					mr.parseTNRSRequest(args);
+				}else {
+					System.err.println("Unrecognized command \"" + args[0] + "\"");
+					printHelp();
+					System.exit(1);
+				}
 			}
+		}
+		catch (Throwable x) {
+			System.err.println("\nExiting due to an exception:\n " + x.getMessage() + "\nStack trace:\n");
+			x.printStackTrace(System.err);
+			System.exit(2);
 		}
 	}
 }

@@ -54,72 +54,73 @@ public class TaxonomyLoader extends Taxonomy {
 	 * @param filename file path to the taxonomy file
 	 * @param synonymfile file that holds the synonym
 	 */
-	public void initializeTaxonomyIntoGraph(String sourcename, String filename, String synonymfile){
+	public void initializeTaxonomyIntoGraph(String sourcename, String filename, String synonymfile) {
 		String str = "";
 		int count = 0;
 		Transaction tx;
 		ArrayList<String> templines = new ArrayList<String>();
 		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
 		boolean synFileExists = false;
-		if(synonymfile.length()>0)
+		if (synonymfile.length() > 0)
 			synFileExists = true;
 		//preprocess the synonym file
 		//key is the id from the taxonomy, the array has the synonym and the type of synonym
-		if(synFileExists){
+		if (synFileExists) {
 			synonymhash = new HashMap<String,ArrayList<ArrayList<String>>>();
 			try {
 				BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
-				while((str = sbr.readLine())!=null){
+				while ((str = sbr.readLine())!=null) {
 					StringTokenizer st = new StringTokenizer(str,"\t|\t");
 					String id = st.nextToken();
 					String name = st.nextToken();
 					String type = st.nextToken();
 					ArrayList<String> tar = new ArrayList<String>();
 					tar.add(name);tar.add(type);
-					if (synonymhash.get(id) == null){
+					if (synonymhash.get(id) == null) {
 						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
 						synonymhash.put(id, ttar);
 					}
 					synonymhash.get(id).add(tar);
 				}
+				sbr.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(0);
 			}
-			System.out.println("synonyms: "+synonymhash.size());
+			System.out.println("synonyms: " + synonymhash.size());
 		}
 		//finished processing synonym file
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
-		try{
+		try {
 			tx = beginTx();
 			//create the metadata node
 			Node metadatanode = null;
-			try{
+			try {
 				metadatanode = createNode();
 				metadatanode.setProperty("source", sourcename);
 				metadatanode.setProperty("author", "no one");
 				//taxSourceIndex.add(metadatanode, "source", sourcename);
 				NodeIndex.TAX_SOURCES.add(metadatanode, "source", sourcename);
                 tx.success();
-			}finally{
+			} finally {
 				tx.finish();
 			}
 			BufferedReader br = new BufferedReader(new FileReader(filename));
-			while((str = br.readLine())!=null){
+			while ((str = br.readLine()) != null) {
 				count += 1;
 				templines.add(str);
-				if (count % transaction_iter == 0){
+				if (count % transaction_iter == 0) {
 					System.out.print(count);
 					System.out.print("\n");
 					tx = beginTx();
-					try{
-						for(int i=0;i<templines.size();i++){
+					try {
+						for (int i=0;i<templines.size();i++) {
 							StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
 							int numtok = st.countTokens();
 							String inputId = st.nextToken();
 							String InputParentId = "";
-							if(numtok == 3)
+							if (numtok == 3)
 								InputParentId = st.nextToken();
 							String inputName = st.nextToken();
 							Node tnode = createNode();
@@ -127,17 +128,17 @@ public class TaxonomyLoader extends Taxonomy {
 							//taxNodeIndex.add( tnode, "name", inputName);
 							NodeIndex.TAXON_BY_NAME.add(tnode, "name", inputName);
                             dbnodes.put(inputId, tnode);
-							if (numtok == 3){
+							if (numtok == 3) {
 								parents.put(inputId, InputParentId);
-							}else{ // this is the root node
+							} else { // this is the root node
 								System.out.println("created root node and metadata link");
 								metadatanode.createRelationshipTo(tnode, RelTypes.METADATAFOR);
 							}
 							// synonym processing
-							if(synFileExists){
-								if(synonymhash.get(inputId)!=null){
+							if (synFileExists) {
+								if (synonymhash.get(inputId)!=null) {
 									ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
-									for(int j=0;j<syns.size();j++){
+									for (int j=0;j<syns.size();j++) {
 										
 										String synName = syns.get(j).get(0);
 										String synNameType = syns.get(j).get(1);
@@ -154,7 +155,7 @@ public class TaxonomyLoader extends Taxonomy {
 							}
 						}
 						tx.success();
-					}finally{
+					} finally {
 						tx.finish();
 					}
 					templines.clear();
@@ -162,13 +163,13 @@ public class TaxonomyLoader extends Taxonomy {
 			}
 			br.close();
 			tx = beginTx();
-			try{
-				for(int i=0;i<templines.size();i++){
+			try {
+				for (int i=0;i<templines.size();i++) {
 					StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
 					int numtok = st.countTokens();
 					String first = st.nextToken();
 					String second = "";
-					if(numtok == 3)
+					if (numtok == 3)
 						second = st.nextToken();
 					String third = st.nextToken();
 					Node tnode = createNode();
@@ -176,17 +177,17 @@ public class TaxonomyLoader extends Taxonomy {
 					//taxNodeIndex.add( tnode, "name", third);
 					NodeIndex.TAXON_BY_NAME.add( tnode, "name", third);
                     dbnodes.put(first, tnode);
-					if (numtok == 3){
+					if (numtok == 3) {
 						parents.put(first, second);
-					}else{//this is the root node
+					} else {//this is the root node
 						System.out.println("created root node and metadata link");
 						metadatanode.createRelationshipTo(tnode, RelTypes.METADATAFOR);
 					}
 					//synonym processing
-					if(synFileExists){
-						if(synonymhash.get(first)!=null){
+					if (synFileExists) {
+						if (synonymhash.get(first)!=null) {
 							ArrayList<ArrayList<String>> syns = synonymhash.get(first);
-							for(int j=0;j<syns.size();j++){
+							for (int j=0;j<syns.size();j++) {
 								
 								String synName = syns.get(j).get(0);
 								String synNameType = syns.get(j).get(1);
@@ -203,56 +204,56 @@ public class TaxonomyLoader extends Taxonomy {
 					}
 				}
 				tx.success();
-			}finally{
+			} finally {
 				tx.finish();
 			}
 			templines.clear();
 			//add the relationships
 			ArrayList<String> temppar = new ArrayList<String>();
 			count = 0;
-			for(String key: dbnodes.keySet()){
+			for (String key: dbnodes.keySet()) {
 				count += 1;
 				temppar.add(key);
-				if (count % transaction_iter == 0){
+				if (count % transaction_iter == 0) {
 					System.out.println(count);
 					tx = beginTx();
-					try{
-						for (int i=0;i<temppar.size();i++){
+					try {
+						for (int i=0;i<temppar.size();i++) {
 							try {
 								Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelTypes.TAXCHILDOF);
 								rel.setProperty("source", sourcename);
 								rel.setProperty("childid",temppar.get(i));
 								rel.setProperty("parentid",parents.get(temppar.get(i)));
-							}catch(java.lang.IllegalArgumentException io){
+							} catch(java.lang.IllegalArgumentException io) {
 //								System.out.println(temppar.get(i));
 								continue;
 							}
 						}
 						tx.success();
-					}finally{
+					} finally {
 						tx.finish();
 					}
 					temppar.clear();
 				}
 			}
 			tx = beginTx();
-			try{
-				for (int i=0;i<temppar.size();i++){
+			try {
+				for (int i=0;i<temppar.size();i++) {
 					try {
 						Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelTypes.TAXCHILDOF);
 						rel.setProperty("source", sourcename);
 						rel.setProperty("childid",temppar.get(i));
 						rel.setProperty("parentid",parents.get(temppar.get(i)));
-					}catch(java.lang.IllegalArgumentException io){
+					} catch(java.lang.IllegalArgumentException io) {
 //						System.out.println(temppar.get(i));
 						continue;
 					}
 				}
 				tx.success();
-			}finally{
+			} finally {
 				tx.finish();
 			}
-		}catch(IOException ioe){}
+		} catch(IOException ioe) {}
 		//mark all of the barrier nodes with additional metadata
 		System.out.println("setting barrier nodes");
 		BarrierNodes bn = new BarrierNodes(this);
@@ -261,14 +262,14 @@ public class TaxonomyLoader extends Taxonomy {
 		TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
 				.relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
 		tx = beginTx();
-		try{
-			for (int i=0;i<barrierNodes.size();i++){
-				for(Node currentNode : CHILDREN_TRAVERSAL.traverse(barrierNodes.get(i)).nodes()){
+		try {
+			for (int i=0;i<barrierNodes.size();i++) {
+				for (Node currentNode : CHILDREN_TRAVERSAL.traverse(barrierNodes.get(i)).nodes()) {
 					currentNode.setProperty("taxcode", barrierNodesMap.get(barrierNodes.get(i).getProperty("name")));
 				}
 			}
 			tx.success();
-		}finally{
+		} finally {
 			tx.finish();
 		}
 	}
@@ -298,11 +299,11 @@ public class TaxonomyLoader extends Taxonomy {
 	 * @param filename file path to the taxonomy file
 	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
 	 */
-	public void addAdditionalTaxonomyToGraph(String sourcename, String rootid, String filename, String synonymfile){
+	public void addAdditionalTaxonomyToGraph(String sourcename, String rootid, String filename, String synonymfile) {
 		Node rootnode = null;
 		String str = "";
 		String roottaxid = "";
-		if (rootid.length() > 0){
+		if (rootid.length() > 0) {
 			rootnode = getNodeById(Long.valueOf(rootid));
 			System.out.println(rootnode);
 		}
@@ -310,27 +311,28 @@ public class TaxonomyLoader extends Taxonomy {
 
 		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
 		boolean synFileExists = false;
-		if(synonymfile.length()>0)
+		if (synonymfile.length()>0)
 			synFileExists = true;
 		//preprocess the synonym file
 		//key is the id from the taxonomy, the array has the synonym and the type of synonym
-		if(synFileExists){
+		if (synFileExists) {
 			synonymhash = new HashMap<String,ArrayList<ArrayList<String>>>();
 			try {
 				BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
-				while((str = sbr.readLine())!=null){
+				while ((str = sbr.readLine())!=null) {
 					StringTokenizer st = new StringTokenizer(str,"\t|\t");
 					String id = st.nextToken();
 					String name = st.nextToken();
 					String type = st.nextToken();
 					ArrayList<String> tar = new ArrayList<String>();
 					tar.add(name);tar.add(type);
-					if (synonymhash.get(id) == null){
+					if (synonymhash.get(id) == null) {
 						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
 						synonymhash.put(id, ttar);
 					}
 					synonymhash.get(id).add(tar);
 				}
+				sbr.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(0);
@@ -344,7 +346,7 @@ public class TaxonomyLoader extends Taxonomy {
 		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
 		HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
 		Node rootbarrier = null;
-		for (int i =0;i<barrierNodes.size();i++){
+		for (int i =0;i<barrierNodes.size();i++) {
 			Path tpath = tfinder.findSinglePath(rootnode, barrierNodes.get(i));
 			if (tpath != null)
 				rootbarrier = barrierNodes.get(i);
@@ -357,28 +359,28 @@ public class TaxonomyLoader extends Taxonomy {
 		Transaction tx;
 		//GET NODE
 		tx = beginTx();
-		try{
+		try {
 			Node metadatanode = null;
 			metadatanode = createNode();
 			metadatanode.setProperty("source", sourcename);
 			metadatanode.setProperty("author", "no one");
 			NodeIndex.TAX_SOURCES.add(metadatanode, "source", sourcename);
-			try{
+			try {
 				BufferedReader br = new BufferedReader(new FileReader(filename));
-				while((str = br.readLine())!=null){
+				while ((str = br.readLine())!=null) {
 					StringTokenizer st = new StringTokenizer(str,"\t|\t");
 					int numtok = st.countTokens();
 					String id = st.nextToken();
 					idlist.add(id);
 					String parid = "";
-					if(numtok == 3)
+					if (numtok == 3)
 						parid = st.nextToken();
 					String name = st.nextToken();
 					idnamemap.put(id, name);
-					if (numtok == 3){
+					if (numtok == 3) {
 						idparentmap.put(id, parid);
-					}else{//this is the root node
-						if(rootnode == null){
+					} else {//this is the root node
+						if (rootnode == null) {
 							System.out.println("the root should never be null");
 							System.exit(0);
 							//if the root node is null then you need to make a new one
@@ -391,9 +393,9 @@ public class TaxonomyLoader extends Taxonomy {
 					}
 					//check to see if the name is a barrier
 					HashSet<String> barrierNames = (HashSet<String>) bn.getBarrierNodeNames();
-					if (barrierNames.contains(name)){
-						for(int j=0;j<barrierNodes.size();j++){
-							if (((String)barrierNodes.get(j).getProperty("name")).equals(name)){	
+					if (barrierNames.contains(name)) {
+						for (int j=0;j<barrierNodes.size();j++) {
+							if (((String)barrierNodes.get(j).getProperty("name")).equals(name)) {	
 								taxcontainedbarriersmap.put(id,barrierNodes.get(j));
 								System.out.println("added barrier node "+name);
 							}
@@ -401,13 +403,13 @@ public class TaxonomyLoader extends Taxonomy {
 					}
 				}
 				br.close();
-			}catch(Exception e){
+			} catch(Exception e) {
 				e.printStackTrace();
 				System.out.println("problem with infile");
 				System.exit(0);
 			}
 			tx.success();
-		}finally{
+		} finally {
 			tx.finish();
 		}
 	
@@ -417,84 +419,84 @@ public class TaxonomyLoader extends Taxonomy {
 		int count = 0;
 		int acount = 0;
 		tx=beginTx();
-		try{
-			for(int i=0;i<idlist.size();i++){
+		try {
+			for (int i=0;i<idlist.size();i++) {
 				String curid = idlist.get(i);
 				boolean badpath = false;
 				Node curidbarrier = null;
 				ArrayList<String> path1 = new ArrayList<String>();
-				while(curid.equals(roottaxid)==false){
-					if(idparentmap.containsKey(curid)==false){
+				while (curid.equals(roottaxid)==false) {
+					if (idparentmap.containsKey(curid)==false) {
 						badpath = true;
 						break;
-					}else{
-						if(taxcontainedbarriersmap.containsKey(curid))
+					} else {
+						if (taxcontainedbarriersmap.containsKey(curid))
 							curidbarrier = taxcontainedbarriersmap.get(curid);
 						curid = idparentmap.get(curid);
 						path1.add(curid);
 					}
 				}
 				curid = idlist.get(i);
-				if(curidbarrier == null){
+				if (curidbarrier == null) {
 					curidbarrier = rootbarrier;
 				}
 				//			System.out.print(curidbarrier);
-				if(badpath){
+				if (badpath) {
 					System.out.println("bad path: "+idlist.get(i)+" "+idnamemap.get(curid));
 					continue;
 				}
 				//get any hits
 				IndexHits<Node> hits = NodeIndex.TAXON_BY_NAME.get("name", idnamemap.get(curid));
-				try{
-					if(hits.size()==0){//no hit
+				try {
+					if (hits.size()==0) {//no hit
 						Node newnode = createNode();
 						newnode.setProperty("name", idnamemap.get(curid));
-						if(curidbarrier != null){
-							if(curidbarrier.hasProperty("taxcode"))
+						if (curidbarrier != null) {
+							if (curidbarrier.hasProperty("taxcode"))
 								newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
 						}
 						NodeIndex.TAXON_BY_NAME.add( newnode, "name", idnamemap.get(curid));
 						idnodemap.put(curid,newnode);
 						acount += 1;
 //						System.out.println("new name: "+idnamemap.get(curid));
-					}else{
+					} else {
 						Node bestnode = null;
-						for(Node node:hits){
-							if (node.hasProperty("taxcode")){
-								if(curidbarrier != null){
-									if(curidbarrier.hasProperty("taxcode"))
+						for (Node node:hits) {
+							if (node.hasProperty("taxcode")) {
+								if (curidbarrier != null) {
+									if (curidbarrier.hasProperty("taxcode"))
 										if (node.getProperty("taxcode").equals(curidbarrier.getProperty("taxcode")))
 											bestnode = node;
-								}else{
+								} else {
 									//System.out.println("name: "+idnamemap.get(curid)+" "+((String)node.getProperty("barrier")));
 									//these are often problems
 								}
-							}else{
-								if(node.hasProperty("taxcode") == false)
-									if(curidbarrier != null){
-										if(curidbarrier.hasProperty("taxcode") == false)
+							} else {
+								if (node.hasProperty("taxcode") == false)
+									if (curidbarrier != null) {
+										if (curidbarrier.hasProperty("taxcode") == false)
 											bestnode = node;
-									}else{
+									} else {
 										bestnode = node;
 									}
 							}
 						}
-						if(bestnode == null){
+						if (bestnode == null) {
 							Node newnode = createNode();
 							newnode.setProperty("name", idnamemap.get(curid));
-							if(curidbarrier != null){
-								if(curidbarrier.hasProperty("taxcode"))
+							if (curidbarrier != null) {
+								if (curidbarrier.hasProperty("taxcode"))
 									newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
 							}
 							NodeIndex.TAXON_BY_NAME.add( newnode, "name", idnamemap.get(curid));
 							idnodemap.put(curid,newnode);
 							System.out.println("node to make " +idnamemap.get(curid) + " "+curidbarrier+ " "+curid);
 							acount += 1;
-						}else{
+						} else {
 							idnodemap.put(curid,bestnode);
 						}
 					}
-				}finally{
+				} finally {
 					hits.close();
 				}
 				count += 1;
@@ -502,17 +504,17 @@ public class TaxonomyLoader extends Taxonomy {
 					System.out.println(count+" "+acount);
 			}
 			tx.success();
-		}finally{
+		} finally {
 			tx.finish();
 		}
 
 		System.out.println("relationship run through");
 		tx=beginTx();
-		try{
+		try {
 			count = 0;
-			for(int i=0;i<idlist.size();i++){
+			for (int i=0;i<idlist.size();i++) {
 				String curid = idlist.get(i);
-				if(idparentmap.containsKey(curid)){//not the root
+				if (idparentmap.containsKey(curid)) {//not the root
 					//get the node
 					//make the relationship
 					Node tnode = idnodemap.get(curid);
@@ -527,20 +529,20 @@ public class TaxonomyLoader extends Taxonomy {
 				}
 			}
 			tx.success();
-		}finally{
+		} finally {
 			tx.finish();
 		}
 		//synonym processing
 		tx=beginTx();
-		try{
-			if(synFileExists){
+		try {
+			if (synFileExists) {
 				System.out.println("synonyms processing");
-				for(int i=0;i<idlist.size();i++){
+				for (int i=0;i<idlist.size();i++) {
 					String first = idlist.get(i);
-					if(synonymhash.get(first)!=null){
+					if (synonymhash.get(first)!=null) {
 						Node tnode = idnodemap.get(first);
 						ArrayList<ArrayList<String>> syns = synonymhash.get(first);
-						for(int j=0;j<syns.size();j++){
+						for (int j=0;j<syns.size();j++) {
 							String synName = syns.get(j).get(0);
 							String synNameType = syns.get(j).get(1);
 							Node synode = createNode();
@@ -554,16 +556,16 @@ public class TaxonomyLoader extends Taxonomy {
 				}
 			}
 			tx.success();
-		}finally{
+		} finally {
 			tx.finish();
 		}
 	}
 	
-	public void runittest(String filename,String filename2){
+	public void runittest(String filename,String filename2) {
 
 	}
 	
-	public static void main( String[] args ){
+	public static void main( String[] args ) {
 		System.out.println( "unit testing taxonomy loader" );
 		final String DB_PATH = "/home/smitty/Dropbox/projects/AVATOL/graphtests/neo4j-community-1.8.M02/data/graph.db";
 		GraphDatabaseAgent taxdb = new GraphDatabaseAgent(DB_PATH);
