@@ -6,7 +6,7 @@ import java.util.HashMap;
 import opentree.GraphDatabaseAgent;
 import opentree.Taxon;
 import opentree.Taxonomy;
-import opentree.TaxonomyCombiner;
+import opentree.TaxonomySynthesizer;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSQuery;

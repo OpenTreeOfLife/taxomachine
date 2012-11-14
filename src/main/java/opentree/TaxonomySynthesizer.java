@@ -12,11 +12,11 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
-public class TaxonomyCombiner extends Taxonomy {
+public class TaxonomySynthesizer extends Taxonomy {
 
     int transaction_iter = 10000;
 
-    public TaxonomyCombiner(GraphDatabaseAgent t) {
+    public TaxonomySynthesizer(GraphDatabaseAgent t) {
         super(t);
     }
 

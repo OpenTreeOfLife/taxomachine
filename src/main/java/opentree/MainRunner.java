@@ -16,6 +16,7 @@ import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.util.ParserUtils;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
+import org.neo4j.graphdb.Node;
 
 
 public class MainRunner {
@@ -47,18 +48,30 @@ public class MainRunner {
 		taxdb = new GraphDatabaseAgent(graphname);
 		TaxonomyLoader tl = new TaxonomyLoader(taxdb);
 
+        // currently we are assuming that we always want to add taxonomies to the root of the taxonomy
+		// (i.e. the life node), but this will have to be changed to add taxonomies that are more
+		// specific, such as Hibbett's fungal stuff
+		Node lifeNode = tl.getLifeNode();
+		String incomingRootNodeId = null;
+		if (lifeNode != null)
+		    incomingRootNodeId = String.valueOf(lifeNode.getId());
+		
 		if (args[0].equals("inittax")) {
 			System.out.println("initializing taxonomy from " + filename + " to " + graphname);
 			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
+
 		} else if(args[0].equals("addtax")) {
 			System.out.println("adding taxonomy from " + filename + " to "+ graphname);
-			tl.addAdditionalTaxonomyToGraph(sourcename, "931568",filename, synonymfile); // '916235' = viri ID '931568' = root id
+			tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId ,filename, synonymfile);
+
 		} else if (args[0].equals("inittaxsyn")) {
 			System.out.println("initializing taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
 			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
+
 		} else if (args[0].equals("addtaxsyn")) {
 			System.out.println("adding taxonomy from " + filename + "and synonym file " + synonymfile + " to " + graphname);
-			tl.addAdditionalTaxonomyToGraph(sourcename, "931568", filename,synonymfile);
+			tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId, filename,synonymfile);
+
 		} else {
 			System.err.println("\nERROR: not a known command");
 			taxdb.shutdownDb();
@@ -90,7 +103,7 @@ public class MainRunner {
 			return;
 		}
 		
-		TaxonomyCombiner te = null;
+		TaxonomySynthesizer te = null;
         TNRSQuery tnrs = null;
         Taxon taxon = null;
 
@@ -99,7 +112,7 @@ public class MainRunner {
             String graphname = args[2];
 
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyCombiner(taxdb);
+            te =  new TaxonomySynthesizer(taxdb);
             tnrs = new TNRSQuery(te);
             try {
                 taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
@@ -116,7 +129,7 @@ public class MainRunner {
 			String outname = args[3];
 			
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyCombiner(taxdb);
+            te =  new TaxonomySynthesizer(taxdb);
             tnrs = new TNRSQuery(te);
             try {
                 taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
@@ -132,7 +145,7 @@ public class MainRunner {
 			String graphname = args[2];
 			
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyCombiner(taxdb);
+            te =  new TaxonomySynthesizer(taxdb);
 
             System.out.println("finding taxonomic cycles for " + query);
 			te.findTaxonomyCycles(query);
@@ -142,7 +155,7 @@ public class MainRunner {
 			String graphname = args[2];
 			
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyCombiner(taxdb);
+            te =  new TaxonomySynthesizer(taxdb);
             tnrs = new TNRSQuery(te);
             try {
                 taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
@@ -166,7 +179,7 @@ public class MainRunner {
 		} else if (args[0].equals("makeottol")) {
 			String graphname = args[1];
             taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomyCombiner(taxdb);
+            te =  new TaxonomySynthesizer(taxdb);
 			System.out.println("making ottol relationships");
 			te.makePreferredOTTOLRelationshipsConflicts();
 			te.makePreferredOTTOLRelationshipsNOConflicts();
@@ -196,7 +209,7 @@ public class MainRunner {
 
         String graphName = args[2];
         taxdb = new GraphDatabaseAgent(graphName);
-        TaxonomyCombiner taxonomy = new TaxonomyCombiner(taxdb);
+        TaxonomySynthesizer taxonomy = new TaxonomySynthesizer(taxdb);
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
 //        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
         TNRSResults results = (TNRSResults)null;

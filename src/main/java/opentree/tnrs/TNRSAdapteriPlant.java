@@ -12,7 +12,7 @@ import javax.net.ssl.SSLException;
 import opentree.Taxon;
 import opentree.Taxonomy;
 import opentree.Taxonomy.NodeIndex;
-import opentree.TaxonomyCombiner;
+import opentree.TaxonomySynthesizer;
 import opentree.tnrs.TNRSAdapter;
 import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatchSet;

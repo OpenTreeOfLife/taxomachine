@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.Taxonomy;
-import opentree.TaxonomyCombiner;
+import opentree.TaxonomySynthesizer;
 import opentree.Taxonomy.NodeIndex;
 import opentree.Taxonomy.RelTypes;
 import opentree.utils.Levenshtein;

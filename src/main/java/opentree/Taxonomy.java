@@ -189,6 +189,7 @@ public class Taxonomy {
     
     public Node getLifeNode() {
         IndexHits<Node> r = NodeIndex.TAXON_BY_NAME.get("name", LIFE_NODE_NAME);
+        
         r.close();
         return r.getSingle();
     }
@@ -213,8 +214,8 @@ public class Taxonomy {
     
     /**
      * Finds the directed internodal distance between `n1` and `n2` along relationships of type `relType` by tracing the paths to the LICA
-     * of n1 and n2. Not that this method using direction to find the LICA, and will likely fail when the outgoing paths from the n1 and n2
-     * do not intersect.
+     * of n1 and n2. Note that this method uses direction to find the LICA, and will not behave properly if the outgoing paths along the
+     * specified relType from n1 and n2 do not intersect.
      * @param n1
      * @param n2
      * @param relType
