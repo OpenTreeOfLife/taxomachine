@@ -129,7 +129,7 @@ public class JadeTree {
 	 * O(N) lookup.
 	 */
 	public JadeNode getExternalNode(String name) {
-		Iterator go = externalNodes.iterator();
+		Iterator<JadeNode> go = externalNodes.iterator();
 		while (go.hasNext()) {
 			JadeNode ne = (JadeNode) go.next();
 			if (ne.getName().compareTo(name) == 0) {
@@ -152,7 +152,7 @@ public class JadeTree {
 	 * O(N) lookup.
 	 */
 	public JadeNode getInternalNode(String name) {
-		Iterator go = internalNodes.iterator();
+		Iterator<JadeNode> go = internalNodes.iterator();
 		while (go.hasNext()) {
 			JadeNode ne = (JadeNode) go.next();
 			if (ne.getName().compareTo(name) == 0) {
@@ -462,7 +462,6 @@ public class JadeTree {
 	 *
 	 */
 	private static JadeNode getMRCATraverse(JadeNode curn1, JadeNode curn2) {
-		JadeNode mrca = null;
 		//get path to root for first node
 		ArrayList<JadeNode> path1 = new ArrayList<JadeNode>();
 		JadeNode parent = curn1;
