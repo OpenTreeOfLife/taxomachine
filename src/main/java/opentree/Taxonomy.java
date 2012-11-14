@@ -31,7 +31,9 @@ public class Taxonomy {
         SYNONYM_BY_NAME ("synNodes"), // all synonym nodes
         PREFERRED_TAXON_BY_NAME ("prefTaxNodes"), // taxon nodes with preferred relationships
         PREFERRED_SYNONYM_BY_NAME ("prefSynNodes"), // synonym nodes attached to preferred taxon nodes
-        TAX_SOURCES ("taxSources"); // ?
+        TAX_SOURCES ("taxSources"), // ?
+        TAX_STATUS ("taxStatus"),
+        TAX_RANK ("taxRank");
         
         public final Index<Node> index;
         NodeIndex (String indexName) {
