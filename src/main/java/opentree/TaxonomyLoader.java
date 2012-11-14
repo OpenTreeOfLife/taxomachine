@@ -1,11 +1,31 @@
 package opentree;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
+import org.apache.log4j.Logger;
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
-import org.neo4j.kernel.*;
+import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.kernel.Traversal;
 import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.ArrayList;
@@ -20,7 +40,7 @@ import java.util.StringTokenizer;
  */
 public class TaxonomyLoader extends Taxonomy {
 
-    static Logger _LOG = Logger.getLogger(TaxonomyLoader.class);
+	static Logger _LOG = Logger.getLogger(TaxonomyLoader.class);
 //	static TaxonomyBase taxonomy;
 	int transaction_iter = 100000;
 	int LARGE = 100000000;
@@ -34,7 +54,499 @@ public class TaxonomyLoader extends Taxonomy {
 			.relationships( RelTypes.TAXCHILDOF,Direction.OUTGOING );
 	
 	TaxonomyLoader(GraphDatabaseAgent t) {
-	    super(t);
+		super(t);
+	}
+	
+	/**
+	 * Returns a node representing the specified combination of taxonomic and nomenclatural status. This may result
+	 *	in the addition of a node to the graph (and taxStatusIndex), or it could simply return a previously created
+	 *	node from taxStatusIndex
+	 * @param taxonomicStatus - 
+	 * @param nomenclaturalStatus
+	 * @param pendingTx - if not null, the any node created by this operation will *not* be associated with 
+	 *	success and finish being called on the transaction object. If pendindTx is null, then a transaction object
+	 *	will be created and finalized for any node creation. 
+	 * @return 
+	 */
+	protected Node getNodeForTaxNomStatus(String taxonomicStatus, String nomenclaturalStatus, Transaction pendingTx) {
+		String key = taxonomicStatus + "|" + nomenclaturalStatus;
+		IndexHits<Node> ih = NodeIndex.TAX_STATUS.get("status", key);
+		if (ih.size() == 0) {
+			boolean closeTx = false;
+			if (pendingTx == null) {
+				pendingTx = beginTx();
+				closeTx = true;
+			}
+			//create the metadata node
+			Node snode = null;
+			try{
+				snode = createNode();
+				snode.setProperty("taxStatus", taxonomicStatus);
+				snode.setProperty("nomenStatus", nomenclaturalStatus);
+				NodeIndex.TAX_STATUS.add(snode, "status", key);
+				if (closeTx) {
+					pendingTx.success();
+				}
+			}finally{
+				if (closeTx) {
+					pendingTx.finish();
+				}
+			}
+			return snode;
+		}
+		else {
+			assert(ih.size() == 1);
+			return ih.getSingle();
+		}
+	}
+	/**
+	 * 
+	 * @param taxonomicRank
+	 * @param pendingTx
+	 * @return
+	 */
+	protected Node getNodeForTaxRank(String taxonomicRank, Transaction pendingTx) {
+		IndexHits<Node> ih = NodeIndex.TAX_RANK.get("rank", taxonomicRank);
+		if (ih.size() == 0) {
+			boolean closeTx = false;
+			if (pendingTx == null) {
+				pendingTx = beginTx();
+				closeTx = true;
+			}
+			//create the metadata node
+			Node snode = null;
+			try{
+				snode = createNode();
+				snode.setProperty("rank", taxonomicRank);
+				NodeIndex.TAX_RANK.add(snode, "rank", taxonomicRank);
+				if (closeTx) {
+					pendingTx.success();
+				}
+			}finally{
+				if (closeTx) {
+					pendingTx.finish();
+				}
+			}
+			return snode;
+		}
+		else {
+			assert(ih.size() == 1);
+			return ih.getSingle();
+		}
+	}
+	
+	/**
+	 * Reads a Synonomy rows formatted as:
+	 * id\t|\tname\t|\tsynonym_type
+	 * @param synonymfile filepath of the synonym file
+	 * @returns hash with ID as key and the value is an array list of  [name, type] pairs (also as ArrayList objects).
+	 */
+	private HashMap<String,ArrayList<ArrayList<String>>> readSynonymsFile(String synonymfile) throws FileNotFoundException, IOException {
+		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = new HashMap<String,ArrayList<ArrayList<String>>>();
+		String str = "";
+		BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
+		while((str = sbr.readLine())!=null){
+			StringTokenizer st = new StringTokenizer(str,"\t|\t");
+			String id = st.nextToken();
+			String name = st.nextToken();
+			String type = st.nextToken();
+			ArrayList<String> tar = new ArrayList<String>();
+			tar.add(name);
+			tar.add(type);
+			if (synonymhash.get(id) == null){
+				ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
+				synonymhash.put(id, ttar);
+			}
+			synonymhash.get(id).add(tar);
+		}
+		return synonymhash;
+	}
+	
+	private Node createTaxonomySourceMetadataNode(Properties prop) {
+		String sourcename = prop.getProperty("name");
+		String sourceversion = prop.getProperty("version");
+		Transaction tx = beginTx();
+		//create the metadata node
+		Node metadatanode = null;
+		try{
+			metadatanode = createNode();
+			metadatanode.setProperty("source", sourcename);
+			metadatanode.setProperty("version", sourceversion);
+			metadatanode.setProperty("author", "no one");
+			NodeIndex.TAX_SOURCES.add(metadatanode, "source", sourcename);
+			tx.success();
+		}finally{
+			tx.finish();
+		}
+		return metadatanode;
+	}
+	
+	private void commitNewTaxonomyRelationships(ArrayList<String> temppar, 
+			HashMap<String, Node> dbnodes,
+			HashMap<String, String> parents, 
+			Properties prop) {
+		Transaction tx = beginTx();
+		String sourcename = prop.getProperty("name");
+		try{
+			for (int i=0;i<temppar.size();i++){
+				try {
+					Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelTypes.TAXCHILDOF);
+					rel.setProperty("source", sourcename);
+					rel.setProperty("childid",temppar.get(i));
+					rel.setProperty("parentid",parents.get(temppar.get(i)));
+				}catch(java.lang.IllegalArgumentException io){
+					//System.out.println(temppar.get(i));
+					continue;
+				}
+			}
+			tx.success();
+		}finally{
+			tx.finish();
+		}
+	}
+	
+	private Node createNewTaxonomyNode(String taxonName) {
+		Node tnode = createNode();
+		tnode.setProperty("name", taxonName);
+		NodeIndex.TAXON_BY_NAME.add( tnode, "name", taxonName);
+		return tnode;
+	}
+
+	
+	/**
+	 * Reads a file in the format:
+	 * id	| parentID	|	name
+	 * and fills dbnodes and parents with the id to Node and id to parent ID lookup info
+	 * 
+	 * @param filename file to be read
+	 * @param synonymfile if not an empty string, this should be a synonym file
+	 * @param metadatanode Node in the graph that corresponds to this source
+	 * @param dbnodes taxonomic source id to graph node map
+	 * @param parents taxonomic source id to parent taxonomic source id
+	 * @param prop Properties object that has been initialize with info relevant to this source.
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	private void readTabPipeTabDelimited(String filename, 
+								 String synonymfile,
+								 Node metadatanode,
+								 HashMap<String, Node> dbnodes,
+								 HashMap<String, String> parents,
+								 Properties prop) throws FileNotFoundException, IOException {
+
+		// key is the id from the taxonomy, the array has the synonym and the type of synonym
+		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
+		boolean synFileExists = false;
+		if(synonymfile.length()>0)
+			synFileExists = true;
+		if(synFileExists){
+			synonymhash = readSynonymsFile(synonymfile);
+			System.out.println("synonyms: " + synonymhash.size());
+		}
+
+		String str = "";
+		ArrayList<String> templines = new ArrayList<String>();
+
+		BufferedReader br = new BufferedReader(new FileReader(filename));
+		ArrayList<Node> parentless;
+		int count = 0;
+		while((str = br.readLine())!=null){
+			count += 1;
+			templines.add(str);
+			if (count % transaction_iter == 0){
+				System.out.print(count);
+				System.out.print("\n");
+				parentless = initCommitLinesToGraph(templines,
+													synonymhash,
+													dbnodes,
+													parents,
+													prop);
+				for (Node rootNd : parentless) {
+					System.out.println("created root node and metadata link");
+					metadatanode.createRelationshipTo(rootNd, RelTypes.METADATAFOR);
+				}
+				templines.clear();
+			}
+		}
+		br.close();
+		parentless = initCommitLinesToGraph(templines,
+											synonymhash,
+											dbnodes,
+											parents,
+											prop);
+		for (Node rootNd : parentless) {
+			System.out.println("created root node and metadata link");
+			metadatanode.createRelationshipTo(rootNd, RelTypes.METADATAFOR);
+		}
+		templines.clear();
+	}
+
+	/**
+	 * Reads the GBIF taxonomy
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	private void readGBIF(String archiveDir, 
+						  Node metadatanode,
+						  HashMap<String, Node> dbnodes,
+						  HashMap<String, String> parents,
+						  Properties prop) throws FileNotFoundException, IOException {
+		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = new HashMap<String,ArrayList<ArrayList<String>>>();
+		ArrayList<Node> parentless = new ArrayList<Node>();
+		Pattern tabPattern = Pattern.compile("\t");
+		BufferedReader br = new BufferedReader(new FileReader(archiveDir));
+		int count = 0;
+		String str = "";
+		Transaction tx = beginTx();
+		try {
+			while((str = br.readLine()) != null) {
+				// -1 indicates that the array can be any length, and trailing empty matches are *not* discarded
+				String [] tokenList = tabPattern.split(str, -1); 
+				String acceptedNameUsageIDStr = tokenList[2];
+				/*
+					System.out.println("\"" + str + "\"");
+
+					System.out.println("length = " + tokenList.length);
+					for (int ii = 0; ii < tokenList.length; ++ii) {
+						System.out.println("\"" + tokenList[ii] + "\"");
+					}
+				 */
+				if ("".equals(acceptedNameUsageIDStr)) {
+					String gbifIDStr = tokenList[0];
+					String parentNameUsageIDStr = tokenList[1];
+					//String scientificNameStr = tokenList[3];
+					//String namePublishedInStr = tokenList[11];
+					//String nameAccordingToStr = tokenList[12];
+
+					String taxonRankStr = tokenList[5];
+					Node rankNode = getNodeForTaxRank(taxonRankStr, tx);
+
+					String taxonomicStatusStr = tokenList[6];
+					String nomenclaturalStatusStr = tokenList[7];
+					Node tnStatNode = getNodeForTaxNomStatus(taxonomicStatusStr, nomenclaturalStatusStr, tx);
+
+					String canonicalNameStr = tokenList[4];
+					Node tnode = createNewTaxonomyNode(canonicalNameStr);
+					dbnodes.put(gbifIDStr, tnode);
+					if ("".equals(parentNameUsageIDStr)) {
+						parentless.add(tnode);
+					}
+					else {
+						parents.put(gbifIDStr, parentNameUsageIDStr);
+					}
+					tnode.setProperty("gbif_ID", gbifIDStr);
+					tnode.setProperty("gbif_parentNameUsageID", parentNameUsageIDStr);
+					//tnode.setProperty("gbif_scientificName", scientificNameStr);
+					tnode.setProperty("gbif_canonicalName", canonicalNameStr);
+					tnode.setProperty("gbif_taxonRank", rankNode.getId());
+					tnode.setProperty("gbif_taxNomStatus", tnStatNode.getId());
+					//tnode.setProperty("gbif_namePublishedIn", namePublishedInStr);
+					//tnode.setProperty("gbif_nameAccordingTo", nameAccordingToStr);
+					/*
+						String genusStr = tokenList[8];
+						String specificEpithetStr = tokenList[9];
+						String infraspecificEpithetStr = tokenList[10];
+						String kingdomStr = tokenList[13];
+						String phylumStr = tokenList[14];
+						String classStr = tokenList[15];
+						String orderStr = tokenList[16];
+						String familyStr = tokenList[17];
+						recordTaxon(tnode, kingdomStr, phylumStr, classStr, orderStr, familyStr, genusStr, specificEpithetStr, infraspecificEpithetStr);
+					 */
+
+					count += 1;
+					if (count % transaction_iter == 0){
+
+						tx.success();
+						tx.finish();
+						tx = beginTx();
+						System.err.println("Ingested " + count + " accepted names.");
+					}
+				}
+				else {
+					ArrayList<String> tar = new ArrayList<String>(Arrays.asList(tokenList));
+					if (synonymhash.get(acceptedNameUsageIDStr) == null){
+						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
+						synonymhash.put(acceptedNameUsageIDStr, ttar);
+					}
+					synonymhash.get(acceptedNameUsageIDStr).add(tar);
+				}
+
+			}
+			tx.success();
+			System.err.println("Ingested " + count + " accepted names.");
+
+		} finally {
+			tx.finish();
+		}
+
+		// At this point, all of the rows without "acceptedNameUsageID" fields will have been ingested
+		//	and recorded in dbnodes.
+		// All rows with a acceptedNameUsageID field will be stored in synonymhash where the key
+		//	is the id of the accepted name
+		// We'll add them the synonym nodes for all of the (presumably valid) names here 
+		tx = beginTx();
+		String sourcename = prop.getProperty("name");
+		HashMap<String, Node> synNameToSynNode = new HashMap<String, Node>();
+		try {
+			count = 0;
+			for (String key : dbnodes.keySet()) {
+				ArrayList<ArrayList<String>> syns = synonymhash.get(key);
+				if (syns != null) {
+					Node validNode = dbnodes.get(key);
+					for (int j = 0; j < syns.size(); j++) {
+						count += 1;
+						ArrayList<String> row = syns.get(j);
+						createGBIFSynonymNodeHelper(row, validNode, synNameToSynNode, sourcename);
+						if (count % transaction_iter == 0){
+							System.err.println("Ingested " + count + " synonyms.");
+							tx.success();
+							tx.finish();
+							tx = beginTx();
+						}
+					}
+					synonymhash.remove(key);
+				}
+			}
+			System.err.println("Ingested " + count + " synonyms.");
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+
+		// Now we will add any nodes flagged as that refer to an acceptedNameUsageID, but for which that ID was 
+		//	not in dbnodes. These are cases of "indirect" synonyms in the GBIF taxonomy ( A is valid, B->A, and C->B rather than C->A)
+		int prevNumIndirect = -1;
+		int numIndirect = 0;
+		tx = beginTx();
+		try {
+			while (numIndirect != prevNumIndirect) {
+				prevNumIndirect = numIndirect;
+				HashSet<String> toDel = new HashSet<String>(); 
+				for (String key : synonymhash.keySet()) {
+					Node n = synNameToSynNode.get(key); 
+					if (n != null) {
+						toDel.add(key);
+						Node validNode = null;
+						for (Relationship rel : n.getRelationships(Direction.OUTGOING, RelTypes.SYNONYMOF)) {
+							assert(validNode == null); // there should only be one outgoing SYNONYMOF relationship...
+							validNode = rel.getEndNode();
+						}
+						assert(validNode != null);
+
+						numIndirect += 1;
+						ArrayList<ArrayList<String>> syns = synonymhash.get(key);
+						for (int j = 0; j < syns.size(); j++) {
+							count += 1;
+							ArrayList<String> row = syns.get(j);
+							createGBIFSynonymNodeHelper(row, validNode, synNameToSynNode, sourcename);
+							System.err.println("Indirect synonym " + row.get(0) + " -> " + validNode.getProperty("name") + "\n");
+
+							if (count % transaction_iter == 0){
+								System.err.println("Ingested " + count + " synonyms.");
+								tx.success();
+								tx.finish();
+								tx = beginTx();
+							}
+						}
+					}
+				}
+				for (String dk : toDel) {
+					synonymhash.remove(dk);
+				}
+			}
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+		// warn about any synonyms that were not connected to the graph...
+		for (String key : synonymhash.keySet()) {
+			ArrayList<ArrayList<String>> syns = synonymhash.get(key);
+			for (int j = 0; j < syns.size(); j++) {
+				ArrayList<String> row = syns.get(j);
+				System.err.println("Synonym of disconnected name " + row.get(0) + "\n");
+			}
+		}
+
+		//
+		tx = beginTx();
+		try {
+			for (Node rootNd : parentless) {
+				System.out.println("created root node and metadata link");
+				metadatanode.createRelationshipTo(rootNd, RelTypes.METADATAFOR);
+			}
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+	}
+	/**
+	 * @note Assumes that the caller is wrapping this call in a transaction!
+	 * @param row
+	 * @param validNode
+	 * @param synNameToSynNode
+	 * @param sourcename
+	 * @return
+	 */
+	private Node createGBIFSynonymNodeHelper(ArrayList<String> row, Node validNode, HashMap<String, Node> synNameToSynNode, String sourcename){
+		Node synode = createNode();
+		String gbifIDStr = row.get(0);
+		String canonicalNameStr = row.get(4);
+		String taxonomicStatusStr = row.get(6);
+		synode.setProperty("name", canonicalNameStr);
+		synode.setProperty("nametype", taxonomicStatusStr);
+		synode.setProperty("gbif_ID", gbifIDStr);
+		synode.setProperty("source", sourcename);
+		Relationship rel = synode.createRelationshipTo(validNode, RelTypes.SYNONYMOF);
+		rel.setProperty("source", sourcename);
+		synNameToSynNode.put(gbifIDStr, synode);
+		return synode;
+	}
+
+	private ArrayList<Node> initCommitLinesToGraph(ArrayList<String> templines, 
+			HashMap<String,ArrayList<ArrayList<String>>> synonymhash,
+			HashMap<String, Node> dbnodes,
+			HashMap<String, String> parents,
+			Properties prop) {
+		boolean synFileExists = synonymhash.isEmpty();
+		String sourcename = (String) prop.getProperty("name");
+		Transaction tx = beginTx();
+		ArrayList<Node> parentless = new ArrayList<Node>();
+		try{
+			for(int i=0;i<templines.size();i++){
+				StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
+				int numtok = st.countTokens();
+				String first = st.nextToken();
+				String second = "";
+				if(numtok == 3)
+					second = st.nextToken();
+				String third = st.nextToken();
+				Node tnode = createNewTaxonomyNode(third);
+				dbnodes.put(first, tnode);
+				if (numtok == 3){
+					parents.put(first, second);
+				}else{//this is the root node
+					parentless.add(tnode);
+				}
+				//synonym processing
+				if(synFileExists){
+					if(synonymhash.get(first)!=null){
+						ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+						for(int j=0;j<syns.size();j++){
+							Node synode = createNode();
+							synode.setProperty("name", syns.get(j).get(0));
+							synode.setProperty("nametype", syns.get(j).get(1));
+							synode.setProperty("source", sourcename);
+							synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+						}
+					}
+				}
+			}
+			tx.success();
+		}finally{
+			tx.finish();
+		}
+		return parentless;
 	}
 	
 	/**
@@ -54,7 +566,81 @@ public class TaxonomyLoader extends Taxonomy {
 	 * @param filename file path to the taxonomy file
 	 * @param synonymfile file that holds the synonym
 	 */
-	public void initializeTaxonomyIntoGraph(String sourcename, String filename, String synonymfile) {
+	public void initializeTaxonomyIntoGraphProperty(String propfilename,
+											String filename,
+											String synonymfile)
+											throws FileNotFoundException, IOException {
+		FileInputStream prop_in_stream = new FileInputStream(propfilename);
+		Properties prop = new Properties();
+		prop.load(prop_in_stream);
+		String sourceformat = prop.getProperty("format");
+		
+		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
+		HashMap<String, String> parents = new HashMap<String, String>();
+		Node metadatanode = createTaxonomySourceMetadataNode(prop);
+		if (sourceformat.equalsIgnoreCase("DWC")) {
+			// Darwin core file
+			System.err.println("DWC\n");
+			/*
+			// Example usage of reading DarwinCore from http://gbif.blogspot.com/2009/07/darwin-core-archive-reader-part1.html
+			Archive archive = ArchiveFactory.openArchive(new File(filename));
+			if (!archive.getCore().hasTerm(DwcTerm.scientificName)){
+			   System.out.println("This application requires dwc-a with scientific names");
+			   System.exit(1);
+			}
+			Iterator<DarwinCoreRecord> a_iter = archive.iteratorDwc();
+			DarwinCoreRecord dwc;
+			long x = 1;
+			while(a_iter.hasNext()){
+				dwc = a_iter.next();
+				if (null != dwc.id()) {
+					System.out.println("ID = " + dwc.id() + " ParentID = " + dwc.getParentNameUsageID() + " canonicalName = " + dwc.getProperty(GbifTerm.canonicalName) + " getTaxonAttributes = " + dwc.getTaxonAttributes());
+					x += 1;
+					if (x > 1000) {
+						break;
+					}
+				}
+			}
+			System.err.println("x= " + x + "\n");
+			*/
+			readGBIF(filename, metadatanode, dbnodes, parents, prop);
+		} else {
+			readTabPipeTabDelimited(filename, synonymfile, metadatanode, dbnodes, parents, prop);
+		}
+		
+		//add the relationships based on dbnodes and parents
+		ArrayList<String> temppar = new ArrayList<String>();
+		int count = 0;
+		for(String key: dbnodes.keySet()){
+			count += 1;
+			temppar.add(key);
+			if (count % transaction_iter == 0){
+				System.out.println(count);
+				commitNewTaxonomyRelationships(temppar, dbnodes, parents, prop);
+				temppar.clear();
+			}
+		}
+		commitNewTaxonomyRelationships(temppar, dbnodes, parents, prop);
+	}
+
+	/**
+	 * Reads a taxonomy file with rows formatted as:
+	 *	taxon_id\t|\tparent_id\t|\tName with spaces allowed\n
+	 *
+	 * Creates nodes and TAXCHILDOF relationships for each line.
+	 * Nodes get a "name" property. Relationships get "source", "childid", "parentid" properties.
+	 * 
+	 * Nodes are indexed in taxNames "name" key and id value.
+	 * 
+	 * A metadata node is created to point to the root
+	 * 
+	 * The line that has no parent will be the root of this tree
+	 * 
+	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
+	 * @param filename file path to the taxonomy file
+	 * @param synonymfile file that holds the synonym
+	 */
+	public void initializeTaxonomyIntoGraphName(String sourcename, String filename, String synonymfile) {
 		String str = "";
 		int count = 0;
 		Transaction tx;
@@ -102,7 +688,7 @@ public class TaxonomyLoader extends Taxonomy {
 				metadatanode.setProperty("author", "no one");
 				//taxSourceIndex.add(metadatanode, "source", sourcename);
 				NodeIndex.TAX_SOURCES.add(metadatanode, "source", sourcename);
-                tx.success();
+				tx.success();
 			} finally {
 				tx.finish();
 			}
@@ -127,7 +713,7 @@ public class TaxonomyLoader extends Taxonomy {
 							tnode.setProperty("name", inputName);
 							//taxNodeIndex.add( tnode, "name", inputName);
 							NodeIndex.TAXON_BY_NAME.add(tnode, "name", inputName);
-                            dbnodes.put(inputId, tnode);
+							dbnodes.put(inputId, tnode);
 							if (numtok == 3) {
 								parents.put(inputId, InputParentId);
 							} else { // this is the root node
@@ -176,7 +762,7 @@ public class TaxonomyLoader extends Taxonomy {
 					tnode.setProperty("name", third);
 					//taxNodeIndex.add( tnode, "name", third);
 					NodeIndex.TAXON_BY_NAME.add( tnode, "name", third);
-                    dbnodes.put(first, tnode);
+					dbnodes.put(first, tnode);
 					if (numtok == 3) {
 						parents.put(first, second);
 					} else {//this is the root node
@@ -198,7 +784,7 @@ public class TaxonomyLoader extends Taxonomy {
 								synode.setProperty("source",sourcename);
 								synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
 								//synNodeIndex.add(synode, "name", synName);
-                                NodeIndex.SYNONYM_BY_NAME.add(synode, "name", synName);
+								NodeIndex.SYNONYM_BY_NAME.add(synode, "name", synName);
 							}
 						}
 					}

@@ -11,7 +11,6 @@ import opentree.tnrs.TNRSResults;
 
 //import org.apache.log4j.Logger;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import org.apache.log4j.PropertyConfigurator;
 
 import org.forester.io.parsers.PhylogenyParser;
@@ -51,13 +50,27 @@ public class MainRunner {
 
 		if (args[0].equals("inittax")) {
 			System.out.println("initializing taxonomy from " + filename + " to " + graphname);
-			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
+			if (new File(sourcename).exists()) {
+				System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
+				tl.initializeTaxonomyIntoGraphProperty(sourcename, filename, synonymfile);
+			}
+			else {
+				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
+				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
+			}
 		} else if(args[0].equals("addtax")) {
 			System.out.println("adding taxonomy from " + filename + " to "+ graphname);
 			tl.addAdditionalTaxonomyToGraph(sourcename, "931568",filename, synonymfile); // '916235' = viri ID '931568' = root id
 		} else if (args[0].equals("inittaxsyn")) {
 			System.out.println("initializing taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
-			tl.initializeTaxonomyIntoGraph(sourcename,filename,synonymfile);
+			if (new File(sourcename).exists()) {
+				System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
+				tl.initializeTaxonomyIntoGraphProperty(sourcename, filename, synonymfile);
+			}
+			else {
+				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
+				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
+			}
 		} else if (args[0].equals("addtaxsyn")) {
 			System.out.println("adding taxonomy from " + filename + "and synonym file " + synonymfile + " to " + graphname);
 			tl.addAdditionalTaxonomyToGraph(sourcename, "931568", filename,synonymfile);
