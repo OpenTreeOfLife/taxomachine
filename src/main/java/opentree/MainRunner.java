@@ -179,7 +179,9 @@ public class MainRunner {
 
 		taxdb.shutdownDb();
 	}
-
+	
+	
+	
     public void parseTNRSRequest(String args[]) {
         
         if (args[0].equals("tnrsbasic")) {
@@ -198,7 +200,7 @@ public class MainRunner {
         taxdb = new GraphDatabaseAgent(graphName);
         TaxonomyCombiner taxonomy = new TaxonomyCombiner(taxdb);
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
-//        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
+//      TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
         TNRSResults results = (TNRSResults)null;
         
         if (args[0].compareTo("tnrsbasic") == 0) {
@@ -297,7 +299,7 @@ public class MainRunner {
 		System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
         System.out.println("\n---taxonomic name resolution services---");
         System.out.println("\ttnrsbasic <querynames> <graphdbfolder> (check if the taxonomy graph contains comma-delimited names)");
-        System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)");
+        System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)\n");
 
 	}
 	/**
@@ -317,7 +319,6 @@ public class MainRunner {
 		} else {
 			System.out.println("\nThings will happen here!\n");
 			MainRunner mr = new MainRunner();
-			
 			if (args[0].equals("inittax")
 					|| args[0].equals("addtax")
 					|| args[0].equals("inittaxsyn")
@@ -330,9 +331,9 @@ public class MainRunner {
 					|| args[0].equals("checktree")
 					|| args[0].equals("makeottol")) {
 				mr.taxonomyQueryParser(args);
-			} else if (args[0].compareTo("tnrsbasic") == 0 || args[0].compareTo("tnrstree") == 0) {
+			} else if (args[0].equals("tnrsbasic") || args[0].equals("tnrstree")) {
 			    mr.parseTNRSRequest(args);
-			}else {
+			} else {
 				System.err.println("Unrecognized command \"" + args[0] + "\"");
 				printHelp();
 				System.exit(1);
