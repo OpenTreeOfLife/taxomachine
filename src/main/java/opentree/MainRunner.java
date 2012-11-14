@@ -29,7 +29,7 @@ public class MainRunner {
 		String synonymfile = "";
 		if (args[0].equals("inittax") || args[0].equals("addtax")) {
 			if (args.length != 4) {
-				System.out.println("arguments should be: sourcename filename graphdbfolder");
+				System.out.println("arguments should be: sourcename filename graphdbfolder\n or (for the inittax command only) you can also use:\n source-properties-file filename graphdbfolder");
 				return;
 			} else {
 				graphname = args[3];
