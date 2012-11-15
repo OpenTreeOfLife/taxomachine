@@ -172,7 +172,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                             // prepare to move on
                             endNode = prefRel.getEndNode();
 
-                        // if there is no preferred rel then they are all the same, we will just pick one
+                        // if there is no preferred rel then they are all equivalent, so we can just pick one
                         } else {
 
                             // follow the first non-looping relationship
@@ -189,6 +189,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                             // if we found a dead-end, die
                             if (endNode == null) {
                                 System.out.println(curNode.getProperty("name"));
+                                System.out.println("Strange, this relationship seems to be pointing at a nonexistent node. Quitting.");
                                 System.exit(0);
                             }
                             
@@ -198,9 +199,9 @@ public class TaxonomySynthesizer extends Taxonomy {
                             nNewRels += 1;
                         }
 
-                        if (startNode == curNode) {
+                        if (startNode == endNode) {
                             System.out.println(startNode);
-                            System.out.println("THERE IS A PROBLEM");
+                            System.out.println("The node seems to be pointing at itself. This is a problem. Quitting.");
                             System.exit(0);
 
                         // prepare for next iteration

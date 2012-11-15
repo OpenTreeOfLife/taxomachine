@@ -278,6 +278,8 @@ public class MainRunner {
                 e.printStackTrace();
             }
             
+            System.out.println("goodbye");
+            
             // TODO: use MRCA of tree as query context
             // TODO: use tree structure to help differentiate homonyms
             String[] tipNames = phys[0].getAllExternalNodeNames();
