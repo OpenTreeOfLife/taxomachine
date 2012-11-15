@@ -39,5 +39,4 @@ Usage
 --------------
 For the standalone version, view the help message by running:
 
-	java -jar taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar
-
+	java -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar
