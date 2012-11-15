@@ -277,10 +277,6 @@ public class MainRunner {
             } catch (final IOException e) {
                 e.printStackTrace();
             }
-
-	    System.out.println("hello");
-            
-            System.out.println("goodbye");
             
             // TODO: use MRCA of tree as query context
             // TODO: use tree structure to help differentiate homonyms

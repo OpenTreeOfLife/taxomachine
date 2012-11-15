@@ -42,6 +42,14 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <filters>
+                <filter>
+                  <artifact>org.forester:forester</artifact>
+                  <includes>
+                    <include>org/forester/**</include>
+                  </includes>
+                </filter>
+              </filters>
               <transformers>
                 <transformer>
                   <mainClass>org.opentree.plugins.TNRS</mainClass>
