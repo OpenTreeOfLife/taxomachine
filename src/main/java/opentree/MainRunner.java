@@ -277,6 +277,8 @@ public class MainRunner {
             } catch (final IOException e) {
                 e.printStackTrace();
             }
+
+	    System.out.println("hello");
             
             System.out.println("goodbye");
             
