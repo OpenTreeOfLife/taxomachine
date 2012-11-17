@@ -2,6 +2,7 @@ package opentree;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSMatch;
@@ -9,7 +10,9 @@ import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSQuery;
 import opentree.tnrs.TNRSResults;
 
-//import org.apache.log4j.Logger;
+import opentree.tnrs.TNRSNameScrubber;
+
+import org.apache.log4j.Logger;
 import java.io.FileNotFoundException;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -25,6 +28,7 @@ public class MainRunner {
     private static GraphDatabaseAgent taxdb;
 
 	public void taxonomyLoadParser(String [] args) throws FileNotFoundException, IOException {
+		
 		String graphname = "";
 		String synonymfile = "";
 		if (args[0].equals("inittax") || args[0].equals("addtax")) {
@@ -202,108 +206,119 @@ public class MainRunner {
 			printHelp();
 			System.exit(1);
 		}
-
 		taxdb.shutdownDb();
 	}
-
-    public void parseTNRSRequest(String args[]) {
-        
-        if (args[0].equals("tnrsbasic")) {
-            if (args.length != 3) {
-                System.out.println("arguments should be: namestring graphdbfolder");
-                return;
-            }
-        } else if (args[0].equals("tnrstree")) {
-            if (args.length != 3) {
-                System.out.println("arguments should be: treefile graphdbfolder");
-                return;
-            }
-        }
-
-        String graphName = args[2];
-        taxdb = new GraphDatabaseAgent(graphName);
-        TaxonomySynthesizer taxonomy = new TaxonomySynthesizer(taxdb);
-        TNRSQuery tnrs = new TNRSQuery(taxonomy);
-//        TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
-        TNRSResults results = (TNRSResults)null;
-        
-        if (args[0].compareTo("tnrsbasic") == 0) {
-            
-            String[] searchStrings = args[1].split("\\s*\\,\\s*");
-            for (int i = 0; i < searchStrings.length; i++)
-                System.out.println(searchStrings[i]);
-            results = tnrs.getAllMatches(searchStrings);
-            
-        } else if (args[0].compareTo("tnrstree") == 0) {
-
-            /*
-            String treeString = "";
-            try {
-            
-                FileInputStream ins = new FileInputStream(args[1]);
-                BufferedReader infile = new BufferedReader(new InputStreamReader(ins));
-                treeString += infile.readLine();
-                infile.close();
-            
-            } catch (FileNotFoundException e) {
-                System.out.println("The specified treefile could not be found.");
-                System.exit(0);
-            } catch (IOException e) {
-                System.out.println("There was a problem reading the treefile.");
-                e.printStackTrace();
-            }
-            
-            TreeReader treeReader = new TreeReader();
-            JadeTree tree = treeReader.readTree(treeString);
-
-            // get external node names from jade tree
-            String[] treeTipNames = new String[tree.getExternalNodeCount()];
-            for (int i = 0; i < tree.getExternalNodeCount(); i++) {
-                treeTipNames[i] = (tree.getExternalNode(i).getName());
-            } */
-            
-
-            // read in the treefile
-            final File treefile = new File(args[1]);
-            PhylogenyParser parser = null;
-            try {
-                parser = ParserUtils.createParserDependingOnFileType(treefile, true);
-            } catch (final IOException e) {
-                e.printStackTrace();
-            }
-            Phylogeny[] phys = null;
-            try {
-                phys = PhylogenyMethods.readPhylogenies(parser, treefile);
-            } catch (final IOException e) {
-                e.printStackTrace();
-            }
-            
-            // TODO: use MRCA of tree as query context
-            // TODO: use tree structure to help differentiate homonyms
-            String[] tipNames = phys[0].getAllExternalNodeNames();
-            for (int i = 0; i < tipNames.length; i++ )
-                System.out.println(tipNames[i]);
-            
-            // search for the names
-            results = tnrs.getAllMatches(phys[0].getAllExternalNodeNames());
-          
-        }
-        
-        for (TNRSNameResult nameResult : results) {
-            System.out.println(nameResult.getQueriedName());
-            for (TNRSMatch m : nameResult) {
-                System.out.println("\t" + m.toString());
-            }
-        }
-
-        System.out.println("\nNames that could not be matched:");
-        for (String name : results.getUnmatchedNames()) {
-            System.out.println(name);
-        }
-
-    }
 	
-	public static void printHelp(){
+	
+	public void parseTNRSRequest(String args[]) {
+		if (args[0].equals("tnrsbasic")) {
+			if (args.length != 3) {
+				System.out.println("arguments should be: namestring graphdbfolder");
+				return;
+			}
+		} else if (args[0].equals("tnrstree")) {
+			if (args.length != 3) {
+				System.out.println("arguments should be: treefile graphdbfolder");
+				return;
+			}
+		}
+		
+		String graphName = args[2];
+		taxdb = new GraphDatabaseAgent(graphName);
+		TaxonomySynthesizer taxonomy = new TaxonomySynthesizer(taxdb);
+		
+		TNRSQuery tnrs = new TNRSQuery(taxonomy);
+//		TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
+		TNRSResults results = (TNRSResults)null;
+		String [] cleanedNames;
+		
+		if (args[0].equals("tnrsbasic")) {
+			String[] searchStrings = args[1].split("\\s*\\,\\s*");
+			
+			TNRSNameScrubber scrubber = new TNRSNameScrubber(searchStrings);
+			cleanedNames = scrubber.cleanedNames();
+			
+			scrubber.review(); // print old and cleaned names
+			
+			for (int i = 0; i < searchStrings.length; i++) {
+				System.out.println(searchStrings[i]);
+			}
+			results = tnrs.getAllMatches(cleanedNames);
+		} else if (args[0].equals("tnrstree")) {
+			
+// for files containing multiple trees, make sure to do TNRS just once
+// read in the treefile
+			final File treefile = new File(args[1]);
+			PhylogenyParser parser = null;
+			try {
+				parser = ParserUtils.createParserDependingOnFileType(treefile, true);
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+			
+			Phylogeny[] phys = null;
+			try {
+				phys = PhylogenyMethods.readPhylogenies(parser, treefile);
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+			
+// TODO: use MRCA of tree as query context
+// TODO: use tree structure to help differentiate homonyms
+			String[] tipNames = phys[0].getAllExternalNodeNames();
+			
+			TNRSNameScrubber scrubber = new TNRSNameScrubber(tipNames);
+			cleanedNames = scrubber.cleanedNames();
+			
+			scrubber.review(); // print old and cleaned names
+			
+			results = tnrs.getAllMatches(cleanedNames);
+		}
+		
+		for (TNRSNameResult nameResult : results) {
+			System.out.println(nameResult.getQueriedName());
+			for (TNRSMatch m : nameResult) {
+				System.out.println("\t" + m.toString());
+			}
+		}
+		
+		System.out.println("\nNames that could not be matched:");
+		for (String name : results.getUnmatchedNames()) {
+			System.out.println(name);
+		}
+	}
+	
+	
+// temporary (obviously)
+	public void testSrcub (String args[]) { // uses forester
+// read in the treefile
+		final File treefile = new File(args[1]);
+		PhylogenyParser parser = null;
+		
+		try {
+			parser = ParserUtils.createParserDependingOnFileType(treefile, true);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		Phylogeny[] phys = null;
+		try {
+			phys = PhylogenyMethods.readPhylogenies(parser, treefile);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		
+		String[] tipNames = phys[0].getAllExternalNodeNames();
+		TNRSNameScrubber nameScrub = new TNRSNameScrubber(tipNames);
+		
+		nameScrub.review(); // print old and cleaned names
+		
+		String [] cleaned = nameScrub.cleanedNames();
+		
+		System.out.println("\ntSucessfully cleaned names.\n");
+	}
+    
+	
+	public static void printHelp() {
 		System.out.println("==========================");
 		System.out.println("usage: taxomachine command options");
 		System.out.println("");
@@ -323,15 +338,16 @@ public class MainRunner {
 		System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
         System.out.println("\n---taxonomic name resolution services---");
         System.out.println("\ttnrsbasic <querynames> <graphdbfolder> (check if the taxonomy graph contains comma-delimited names)");
-        System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)");
-
+        System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)\n");
 	}
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
 		PropertyConfigurator.configure(System.getProperties());
-		System.out.println("taxomachine version alpha.alpha.prealpha");
+		System.out.println("\ntaxomachine version alpha.alpha.prealpha");
+		
 		try {
 			if (args.length == 0 || args[0].equals("help")) {
 				printHelp();
@@ -341,8 +357,14 @@ public class MainRunner {
 				printHelp();
 				System.exit(1);
 			} else {
-				System.out.println("\nThings will happen here!\n");
 				MainRunner mr = new MainRunner();
+				
+				
+// temporary function to play with TNRS name cleaning from trees
+				if (args[0].matches("testScrub")) {
+					mr.testSrcub(args);
+					System.exit(0);
+				}
 				
 				if (args[0].equals("inittax")
 						|| args[0].equals("addtax")
@@ -356,9 +378,9 @@ public class MainRunner {
 						|| args[0].equals("checktree")
 						|| args[0].equals("makeottol")) {
 					mr.taxonomyQueryParser(args);
-				} else if (args[0].compareTo("tnrsbasic") == 0 || args[0].compareTo("tnrstree") == 0) {
+				} else if (args[0].matches("tnrsbasic|tnrstree")) {
 					mr.parseTNRSRequest(args);
-				}else {
+				} else {
 					System.err.println("Unrecognized command \"" + args[0] + "\"");
 					printHelp();
 					System.exit(1);
