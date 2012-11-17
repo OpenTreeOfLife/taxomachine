@@ -78,7 +78,7 @@ public class TaxonomySynthesizer extends Taxonomy {
      */
     public void makePreferredOTTOLRelationshipsConflicts() {
 
-        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+        TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
 
         // get start node
@@ -90,14 +90,14 @@ public class TaxonomySynthesizer extends Taxonomy {
         try {
             
             // walk all nodes looking for conflicts
-            for (Node friendnode : CHILDOF_TRAVERSAL.traverse(life).nodes()) {
+            for (Node friendnode : TAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
                 boolean foundConflict = false;
                 String endNodeName = "";
                 Relationship ncbirel = null;
 
-                for (Relationship rel : friendnode.getRelationships(Direction.OUTGOING)) {
+                for (Relationship rel : friendnode.getRelationships(Direction.OUTGOING, RelTypes.TAXCHILDOF)) {
                     if (rel.getEndNode() == rel.getStartNode()) {
-                        System.out.println("CYCLE!" + rel.getEndNode() + " " + rel.getStartNode() + " " + rel);
+                        System.out.println("\n\n\n!!!!!!!!!!!!!!!!!!!CYCLE! Node " + rel.getEndNode() + " points to itself along relationship: " + rel + "\n\n\n");
                         continue;
 
                     } else {
@@ -111,6 +111,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                             ncbirel = rel;
                     }
                 }
+                
                 if (foundConflict && ncbirel != null) {
                     nRelsAdded += 1;
                     // System.out.println("would make one from "+ncbirel.getStartNode().getProperty("name")+" "+ncbirel.getEndNode().getProperty("name"));
@@ -126,7 +127,9 @@ public class TaxonomySynthesizer extends Taxonomy {
                         System.out.println(nRelsAdded);
                 }
             }
+            
             tx.success();
+
         } finally {
             tx.finish();
         }
@@ -151,11 +154,11 @@ public class TaxonomySynthesizer extends Taxonomy {
         try {
             // walk out to the tips from the base of the tree
             for (Node n : CHILDOF_TRAVERSAL.traverse(life).nodes()) {
-                if (n.hasRelationship(Direction.INCOMING) == false) {
+                if (n.hasRelationship(Direction.INCOMING, RelTypes.TAXCHILDOF) == false) {
 
                     // when we hit a tip, start walking back
                     Node curNode = n;
-                    while (curNode.hasRelationship(Direction.OUTGOING)) {
+                    while (curNode.hasRelationship(Direction.OUTGOING, RelTypes.TAXCHILDOF)) {
                         Node startNode = curNode;
                         Node endNode = null;
 
@@ -172,10 +175,9 @@ public class TaxonomySynthesizer extends Taxonomy {
                             // prepare to move on
                             endNode = prefRel.getEndNode();
 
-                        // if there is no preferred rel then they are all the same, we will just pick one
                         } else {
 
-                            // follow the first non-looping relationship
+                            // if there is no preferred rel then they all point to the same end node; just follow the first non-looping relationship
                             for (Relationship rel : curNode.getRelationships(RelTypes.TAXCHILDOF, Direction.OUTGOING)) {
                                 if (rel.getStartNode().getId() == rel.getEndNode().getId()) {
                                     System.out.println("pointing to itself " + rel + " " + rel.getStartNode().getId() + " " + rel.getEndNode().getId());
@@ -189,6 +191,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                             // if we found a dead-end, die
                             if (endNode == null) {
                                 System.out.println(curNode.getProperty("name"));
+                                System.out.println("Strange, this relationship seems to be pointing at a nonexistent node. Quitting.");
                                 System.exit(0);
                             }
                             
@@ -198,9 +201,9 @@ public class TaxonomySynthesizer extends Taxonomy {
                             nNewRels += 1;
                         }
 
-                        if (startNode == curNode) {
+                        if (startNode == endNode) {
                             System.out.println(startNode);
-                            System.out.println("THERE IS A PROBLEM");
+                            System.out.println("The node seems to be pointing at itself. This is a problem. Quitting.");
                             System.exit(0);
 
                         // prepare for next iteration
