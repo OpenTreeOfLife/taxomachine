@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import opentree.GraphDatabaseAgent;
 import opentree.Taxonomy;
+import opentree.tnrs.TNRSNameScrubber;
 import opentree.tnrs.TNRSQuery;
 import opentree.tnrs.TNRSResults;
 
@@ -77,9 +78,7 @@ public class TNRS extends ServerPlugin {
             e.printStackTrace();
         }
         
-        String[] tipNames = phys[0].getAllExternalNodeNames();
-/*        for (int i = 0; i < tipNames.length; i++ )
-            System.out.println(tipNames[i]); */
+        String[] tipNames = TNRSNameScrubber.scrubNames(phys[0].getAllExternalNodeNames());
 
         // search for the names
         GraphDatabaseAgent taxService = new GraphDatabaseAgent(graphDb);

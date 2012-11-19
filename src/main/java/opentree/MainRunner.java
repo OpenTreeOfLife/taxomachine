@@ -230,24 +230,18 @@ public class MainRunner {
 		TNRSQuery tnrs = new TNRSQuery(taxonomy);
 //		TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
 		TNRSResults results = (TNRSResults)null;
-		String [] cleanedNames;
 		
 		if (args[0].equals("tnrsbasic")) {
 			String[] searchStrings = args[1].split("\\s*\\,\\s*");
-			
-			TNRSNameScrubber scrubber = new TNRSNameScrubber(searchStrings);
-			cleanedNames = scrubber.cleanedNames();
-			
-			scrubber.review(); // print old and cleaned names
-			
+						
 			for (int i = 0; i < searchStrings.length; i++) {
 				System.out.println(searchStrings[i]);
 			}
-			results = tnrs.getAllMatches(cleanedNames);
+			results = tnrs.getAllMatches(searchStrings);
+
 		} else if (args[0].equals("tnrstree")) {
-			
-// for files containing multiple trees, make sure to do TNRS just once
-// read in the treefile
+		    // TODO: for files containing multiple trees, make sure to do TNRS just once
+		    // read in the treefile
 			final File treefile = new File(args[1]);
 			PhylogenyParser parser = null;
 			try {
@@ -266,11 +260,12 @@ public class MainRunner {
 // TODO: use MRCA of tree as query context
 // TODO: use tree structure to help differentiate homonyms
 			String[] tipNames = phys[0].getAllExternalNodeNames();
-			
-			TNRSNameScrubber scrubber = new TNRSNameScrubber(tipNames);
-			cleanedNames = scrubber.cleanedNames();
-			
-			scrubber.review(); // print old and cleaned names
+
+//          TNRSNameScrubber scrubber = new TNRSNameScrubber(searchStrings);
+            String[] cleanedNames = TNRSNameScrubber.scrubNames(tipNames);
+            
+//          scrubber.review(); // print old and cleaned names
+
 			
 			results = tnrs.getAllMatches(cleanedNames);
 		}
@@ -288,7 +283,7 @@ public class MainRunner {
 		}
 	}
 	
-	
+/*
 // temporary (obviously)
 	public void testSrcub (String args[]) { // uses forester
 // read in the treefile
@@ -315,7 +310,7 @@ public class MainRunner {
 		String [] cleaned = nameScrub.cleanedNames();
 		
 		System.out.println("\ntSucessfully cleaned names.\n");
-	}
+	} */
     
 	
 	public static void printHelp() {
@@ -361,10 +356,10 @@ public class MainRunner {
 				
 				
 // temporary function to play with TNRS name cleaning from trees
-				if (args[0].matches("testScrub")) {
+/*				if (args[0].matches("testScrub")) {
 					mr.testSrcub(args);
 					System.exit(0);
-				}
+				} */
 				
 				if (args[0].equals("inittax")
 						|| args[0].equals("addtax")

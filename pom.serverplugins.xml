@@ -100,10 +100,7 @@
                 <filter>
                   <artifact>org.forester:forester</artifact>
                   <includes>
-                    <include>org/forester/phylogeny/**</include>
-                    <include>org/forester/io/parsers/**</include>
-                    <!-- include>junit/framework/**</include>
-                    <include>org/junit/**</include-->
+                    <include>org/forester/**</include>
                   </includes>
                 </filter>
               </filters>

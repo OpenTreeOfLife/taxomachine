@@ -29,7 +29,7 @@ public class TNRSQuery {
     private static final double DEFAULT_NOMEN_CODE_SUPERMAJORITY_PROPORTION = 0.75;
     private static final double DEFAULT_MIN_SCORE = 0.01;
     private static final double DISTANT_HOMONYM_SCORE_SCALAR = 0.25;
-    private static final double DEFAULT_FUZZY_MATCH_IDENTITY = 0.8;
+//    private static final double DEFAULT_FUZZY_MATCH_IDENTITY = 0.8;
 
     private static final int SHORT_NAME_LENGTH = 9;
     private static final int MEDIUM_NAME_LENGTH = 14;
@@ -130,18 +130,19 @@ public class TNRSQuery {
             IndexHits<Node> directHits = NodeIndex.PREFERRED_TAXON_BY_NAME.get("name", thisName);
 
             if (directHits.size() == 1) { // neither a homonym nor synonym
-                for (Node n : directHits) {
-                    unambiguousTaxonNodes.add(n);
-                    _results.addUnambiguousName(thisName);
+                Taxon n = new Taxon(directHits.getSingle());
+                unambiguousTaxonNodes.add(n.getNode());
+                _results.addUnambiguousName(thisName);
 
-                    // update the count for the nomenclatural code govering this name
-                    String thisCode = n.getProperty("taxcode").toString();
-                    if (codeFreqs.containsKey(thisCode)) {
-                        int count = codeFreqs.get(thisCode) + 1;
-                        codeFreqs.put(thisCode, count);
-                    } else {
-                        codeFreqs.put(thisCode, 1);
-                    }
+                // update the count for the nomenclatural code govering this name
+                String thisCode = n.getNomenCode();
+                if (codeFreqs.containsKey(thisCode)) {
+                    System.out.println("Incrementing count for " + thisCode);
+                    int count = codeFreqs.get(thisCode) + 1;
+                    codeFreqs.put(thisCode, count);
+                } else {
+                    System.out.println("Starting count for " + thisCode);
+                    codeFreqs.put(thisCode, 1);
                 }
             }
         }
@@ -151,7 +152,9 @@ public class TNRSQuery {
         // TODO: make it possible for user to assign a governing code rather than guessing it
         String prevalentCode = "";
         for (Entry<String, Integer> i : codeFreqs.entrySet()) {
+            System.out.println(i.getKey() + " " + i.getValue());
             if ((i.getValue() / (double)_queriedNames.size()) >= DEFAULT_NOMEN_CODE_SUPERMAJORITY_PROPORTION) {
+                System.out.println(i.getKey());
                 prevalentCode = i.getKey();
                 break;
             }
@@ -233,7 +236,7 @@ public class TNRSQuery {
                     if (directHits.size() > 1) {
                         isHomonym = true;
 //                        System.out.println("Comparing = '" + _results.getGoverningCode() + "' to '" + n.getProperty("taxcode") + "'");
-                        if (_results.getGoverningCode().equals(n.getProperty("taxcode").toString()) == false) {
+                        if (_results.getGoverningCode().equals(new Taxon(n).getNomenCode()) == false) {
                             
                             ////////////////////////////////////////////////////////////////////////////////////
                             // TODO: provide nomen_code_hard_context option to exclude homonyms outside of nomenclature scope

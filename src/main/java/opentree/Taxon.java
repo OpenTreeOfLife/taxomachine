@@ -44,7 +44,10 @@ public class Taxon {
     }
 
     public String getNomenCode() {
-        return (String) taxNode.getProperty("taxcode");
+        if (taxNode.hasProperty("taxcode"))
+            return (String) taxNode.getProperty("taxcode");
+        else
+            return null;
     }
     
     public String getName() {

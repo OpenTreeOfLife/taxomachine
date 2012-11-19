@@ -16,11 +16,24 @@ public class TaxonSet implements Iterable<Node> {
     private final LinkedList<Node> taxa;
     private Taxon lica;
     
-    public TaxonSet (List<Node> inTaxa) {
-        taxa = (LinkedList<Node>)inTaxa;
+    public TaxonSet (List<?> inTaxa) {
+
+        if (inTaxa.get(0) instanceof Taxon) {
+            taxa = new LinkedList<Node>();
+            for (Taxon t : (LinkedList<Taxon>)inTaxa)
+                taxa.add(t.getNode());
+
+        } else if (inTaxa.get(0) instanceof Node) {
+            taxa = (LinkedList<Node>)inTaxa;
+
+        } else {
+            taxa =null;
+
+        }
+
         lica = null;
     }
-
+    
     public TaxonSet (Node[] inTaxa) {
         taxa = new LinkedList<Node>();
         for (int i = 0; i < inTaxa.length; i++)
