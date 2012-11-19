@@ -34,7 +34,7 @@ these should not survive tree import.
 the following will be the most frequent:
 	_.
  */
-		cleanedNames = (String[]) dirtyNames.clone(); // copying is only for debugging purposes
+//		cleanedNames = (String[]) dirtyNames.clone(); // copying is only for debugging purposes
 		
 // we may want to alter this
 //		String offendingChars = "[_\\s\\._~`:;/\\[\\]\\{\\}\\|<>,!@#\\$%\\^&*\\(\\)\\?\\+=`\\\\-]+";
