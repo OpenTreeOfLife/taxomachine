@@ -37,6 +37,7 @@ public final class BarrierNodes {
             put("Glaucocystophyceae","ICBN");
             put("Haptophyceae","ICBN");
             put("Choanoflagellida","ICZN");
+            //maybe add Protostomia, see Heterochaeta in ncbi
         }
     };
 
