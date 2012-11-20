@@ -1,0 +1,123 @@
+#NEXUS
+
+[This will be, I think, the most popular upload tree format]
+
+BEGIN TAXA;
+	DIMENSIONS NTAX = 52;
+	TAXLABELS
+		Lerwa_lerwa
+		Meleagris_ocellata
+		Meleagris_gallopavo
+		Bonasa_umbellus
+		Bonasa_bonasia
+		Bonasa_sewerzowi
+		Falcipennis_falcipennis
+		Falcipennis_canadensis
+		Falcipennis_franklinii
+		Tetrao_tetrix
+		Tetrao_mlokosiewiczi
+		Tetrao_parvirostris
+		Tetrao_urogallus
+		Lagopus_leucura
+		Lagopus_muta
+		Lagopus_scoticus
+		Lagopus_lagopus
+		Centrocercus_minimus
+		Centrocercus_urophasianus
+		Dendragapus_fuliginosus
+		Dendragapus_obscurus
+		Tympanuchus_pallidicinctus
+		Tympanuchus_phasianellus
+		Tympanuchus_cupido
+		Rhizothera_longirostris
+		Pucrasia_macrolopha
+		Perdix_hodgsoniae
+		Perdix_dauurica
+		Perdix_perdix
+		Syrmaticus_reevesii
+		Syrmaticus_soemmerringii
+		Syrmaticus_mikado
+		Syrmaticus_humiae
+		Syrmaticus_ellioti
+		Phasianus_colchicus
+		Phasianus_versicolor
+		Chrysolophus_pictus
+		Chrysolophus_amherstiae
+		Catreus_wallichii
+		Crossoptilon_crossoptilon
+		Crossoptilon_harmani
+		Crossoptilon_auritum
+		Crossoptilon_mantchuricum
+		Lophura_erythrophthalma
+		Lophura_inornata
+		Lophura_ignita
+		Lophura_diardi
+[a comment: "uheduweweewuio"]
+		Lophura_bulweri
+		Lophura_leucomelanos
+		Lophura_nycthemera
+		Lophura_swinhoii
+		Lophura_edwardsi
+	;
+END;
+[a comment: "uheduweweewuio"]
+
+
+[no comments allowed in translation table (at least by forester)]
+BEGIN TREES;
+	TRANSLATE
+		1	Lerwa___lerwa,
+		2	Meleagris_`ocellata,
+		3	Meleagris_gallopavo,
+		4	Bonasa/umbellus,
+		5	Bonasa_[]bonasia,
+		6	Bonasa_sewerzowi,
+		7	Falcipennis#falcipennis,
+		8	Falcipennis……….canadensis,
+		9	Falcipennis...franklinii,
+		10	Tetrao\tetrix,
+		11	Tetrao{}mlokosiewiczi,
+		12	Tetrao?parvirostris,
+		13	Tetrao_urogallus,
+		14	Lagopus_{leucura},
+		15	Lagopus'''_muta,
+		16	Lagopus_scoticus,
+		17	Lagopus_lagopus,
+		18	Centrocercus/\/\/\/\minimus,
+		19	Centrocercus_ur(o)phasianus,
+		20	Dendragapus_fuliginosus,
+		21	Dendragapus_obscurus,
+		22	Tympanuchus_pallidicinctus,
+		23	#!Tympanuchus_phasianellus,
+		24	Tympanuchus_cupido,
+		25	Rhizothera_longirostris,
+		26	Pucrasia||||macrolopha,
+		27	Perdix_hodgsoniae,
+		28	Perdix_dauurica,
+		29	Perdix_perdix,
+		30	Syrmaticus_reevesii,
+		31	Syrmaticus_soemmerringii,
+		32	Syrmaticus_mikado#42424242,
+		33	Syrmaticus_humiae,
+		34	Syrmaticus@ellioti,
+		35	Phasianus_colchicus,
+		36	Phasianus-versicolor,
+		37	Chrysolophus_pictus,
+		38	Chrysolophus_amherstiae,
+		39	<Catreus><wallichii>,
+		40	Crossoptilon---crossoptilon---,
+		41	.....Crossoptilon_harmani,
+		42	C#r#o#s#s#o#p#t#i#l#o#n_auritum,
+		43	^Crossoptilon^mantchuricum^^^,
+		44	Lophura_erythrophthalma,
+		45	Lophura_inornata,
+		46	Lophura_ignita_#12345,
+		47	Lophura_diardi,
+		48	Lophura_bulweri,
+		49	Lophura_leucomelanos,
+		50	Lophura_nycthemera,
+		51	Lophura[_\\s\\._~`:/\\[\\]\\{\\}\\|<>!@#\\$%\\^&*\\(\\)\\?\\+=]+_swinhoii,
+		52	Lophura_edwardsi
+	;
+	TREE * UNTITLED = [&R] (((1:20.67968265,(2:6.257930914,3:6.257930914):14.42175174):6.446236616,((4:16.8931091,(5:6.108815792,6:6.108815792):10.78429331):2.111661523,((7:10.43258959,((8:0.8459845205,9:0.8459845205):8.150566031,((10:2.812151562,11:2.812151562):3.883688152,(12:3.843288083,13:3.843288083):2.85255163):2.300710837):1.436039037):1.658441243,((14:8.258350083,(15:5.005117554,(16:0.8676262791,17:0.8676262791):4.137491275):3.253232529):3.027905594,((18:1.251818219,19:1.251818219):6.90777342,((20:1.825192701,21:1.825192701):4.328103672,(22:0.587205846,(23:0.2907138728,24:0.2907138728):0.2964919733):5.566090526):2.006295267):3.126664038):0.8047751546):6.913739793):8.121148642):2.780257483,((25:20.31254497,26:20.31254497):8.027312235,((27:6.131990331,(28:3.959764506,29:3.959764506):2.172225825):19.94283654,(((30:10.68822683,31:10.68822683):1.08754481,(32:4.345052098,(33:0.1244652804,34:0.1244652804):4.220586818):7.430719537):4.567431368,(((35:3.022415699,36:3.022415699):9.24015357,(37:1.75503713,38:1.75503713):10.50753214):1.139862118,((39:10.19625118,(40:2.58655113,(41:1.5933808,(42:0.1230757218,43:0.1230757218):1.470305078):0.9931703297):7.609700052):1.04435647,((44:6.013258576,(45:4.908365965,(46:3.03375064,47:3.03375064):1.874615324):1.104892611):1.367408588,(48:6.154918353,((49:2.780220787,50:2.780220787):3.082312845,(51:2.168207816,52:2.168207816):3.694325816):0.2923847202):1.225748811):3.859940488):2.161823735):2.940771616):9.731623872):2.26503033):1.566319546);
+END;
