@@ -14,7 +14,8 @@ public final class TNRSNameScrubber {
 	
 //	private static String[]	dirtyNames;
 //	private static String[]	cleanedNames;
-    public static final String offendingChars = "[\\Q_~`:;/[]{}|<>,!@#$%^&*()?+=`\\\\\\E]+";
+    //public static final String offendingChars = "[\\Q_~`:;/[]{}|<>,!@#$%^&*()?+=`\\\\\\E]+";
+    public static final String offendingChars = "[\\Q_~`:;/[]{}|<>,!@#$%^&*()?+=`\\\\\\E\\s]+";
 
     
 	public TNRSNameScrubber(/*String[] inNames */) {
