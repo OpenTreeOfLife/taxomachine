@@ -281,6 +281,7 @@ public class MainRunner {
 		for (String name : results.getUnmatchedNames()) {
 			System.out.println(name);
 		}
+		taxdb.shutdownDb();
 	}
 	
 /*
