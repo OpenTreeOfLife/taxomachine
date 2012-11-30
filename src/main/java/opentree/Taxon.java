@@ -140,7 +140,7 @@ public class Taxon {
     public void buildTaxonomyTree() {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-                .relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
+                .relationships(RelTypes.PREFTAXCHILDOF, Direction.INCOMING);
         System.out.println(taxNode.getProperty("name"));
         JadeNode root = new JadeNode();
         root.setName(((String) taxNode.getProperty("name")).replace(" ", "_"));
