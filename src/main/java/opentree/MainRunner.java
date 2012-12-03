@@ -237,7 +237,7 @@ public class MainRunner {
 		
 		String graphName = args[2];
 		taxdb = new GraphDatabaseAgent(graphName);
-		TaxonomySynthesizer taxonomy = new TaxonomySynthesizer(taxdb);
+		Taxonomy taxonomy = new Taxonomy(taxdb);
 		
 		TNRSQuery tnrs = new TNRSQuery(taxonomy);
 //		TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
