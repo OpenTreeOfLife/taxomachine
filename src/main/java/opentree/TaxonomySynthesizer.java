@@ -1,7 +1,11 @@
 package opentree;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import opentree.Taxonomy.RelTypes;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSQuery;
 
@@ -227,6 +231,34 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
     }
 
+    /**
+     * 
+     * @param outfile the outfile that will have the dumped ottol information as id\tparentid\tname
+     */
+    public void dumpPreferredOTTOLRelationships(String outfile) {
+    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+                 .relationships(RelTypes.PREFTAXCHILDOF, Direction.INCOMING);
+
+         // get the start point
+         Node life = getLifeNode();
+         System.out.println(life.getProperty("name"));
+         PrintWriter outFile;
+         try {
+             outFile = new PrintWriter(new FileWriter(outfile));
+             for (Node n : CHILDOF_TRAVERSAL.traverse(life).nodes()) {
+            	 if(n.hasRelationship(Direction.OUTGOING, RelTypes.PREFTAXCHILDOF)){
+            		 Node p = n.getSingleRelationship(RelTypes.PREFTAXCHILDOF, Direction.OUTGOING).getEndNode();
+            		 outFile.write(n.getId()+"\t"+p.getId()+"\t"+n.getProperty("name")+"\n");
+            	 }else{
+            		 outFile.write(n.getId()+"\t"+"\t"+n.getProperty("name")+"\n");
+            	 }
+             }
+             outFile.close();
+         } catch (IOException e) {
+             e.printStackTrace();
+         }
+    }
+    
     /**
      * Just add the node `n` to the prefTaxNodes index and its synonyms to prefSynNodes.
      * @param node

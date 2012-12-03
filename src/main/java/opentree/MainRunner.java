@@ -115,7 +115,12 @@ public class MainRunner {
 				System.out.println("arguments should be: graphdbfolder");
 				return;
 			}
-		} else if (args.length != 3) {
+		} else if(args[0].equals("dumpottol")) {
+			if (args.length != 3 ){
+				System.out.println("arguments should be: graphdbfolder outfile");
+				return;
+			}
+		}else if (args.length != 3) {
 			System.out.println("arguments should be: query graphdbfolder");
 			return;
 		}
@@ -201,7 +206,14 @@ public class MainRunner {
 			te.makePreferredOTTOLRelationshipsConflicts();
 			te.makePreferredOTTOLRelationshipsNOConflicts();
 
-		} else {
+		} else if(args[0].equals("dumpottol")){
+			String graphname = args[1];
+			String outfile = args[2];
+			taxdb = new GraphDatabaseAgent(graphname);
+			te = new TaxonomySynthesizer(taxdb);
+			System.out.println("dumping ottol relationships");
+			te.dumpPreferredOTTOLRelationships(outfile);
+		}else {
 			System.err.println("\nERROR: not a known command\n");
 			printHelp();
 			System.exit(1);
@@ -326,6 +338,7 @@ public class MainRunner {
 		System.out.println("\taddtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (adds a tax list and synonym file)");
 		System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
 		System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
+		System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be injested elsewhere)");
 		System.out.println("\n---taxquery---");
 		System.out.println("\tcomptaxtree <name> <graphdbfolder> (construct a comprehensive tax newick)");
 		System.out.println("\tcomptaxgraph <name> <graphdbfolder> <outdotfile> (construct a comprehensive taxonomy in dot)");
@@ -372,7 +385,8 @@ public class MainRunner {
 						|| args[0].equals("findcycles")
 						|| args[0].equals("jsgraph") 
 						|| args[0].equals("checktree")
-						|| args[0].equals("makeottol")) {
+						|| args[0].equals("makeottol")
+						|| args[0].equals("dumpottol")) {
 					mr.taxonomyQueryParser(args);
 				} else if (args[0].matches("tnrsbasic|tnrstree")) {
 					mr.parseTNRSRequest(args);
