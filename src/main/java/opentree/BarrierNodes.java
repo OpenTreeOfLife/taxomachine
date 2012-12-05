@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import opentree.Taxonomy.NodeIndex;
+import opentree.TaxonomyContext.NodeIndex;
 import opentree.Taxonomy.RelTypes;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;
@@ -20,7 +20,7 @@ import org.neo4j.kernel.Traversal;
 public final class BarrierNodes {
 
     private static final int LARGE = 100000000;
-    private static Taxonomy taxonomy;
+    private Taxonomy taxonomy;
     
     /**
      * Key is node name and value is governing nomenclature.
@@ -28,19 +28,33 @@ public final class BarrierNodes {
     private static final HashMap<String,String> barrierNamesMap = new HashMap<String,String>() {
         private static final long serialVersionUID = 1L;
         {
-            put("Fungi","ICBN");
-            put("Viridiplantae","ICBN");
-            put("Bacteria","ICNB");
-            put("Metazoa","ICZN");
-            put("Alveolata","ICZN");
-            put("Rhodophyta","ICBN");
-            put("Glaucocystophyceae","ICBN");
-            put("Haptophyceae","ICBN");
-            put("Choanoflagellida","ICZN");
+            put("Fungi",Nomenclature.ICBN.code);
+            put("Viridiplantae",Nomenclature.ICBN.code);
+            put("Bacteria",Nomenclature.ICNB.code);
+            put("Metazoa",Nomenclature.ICBN.code);
+            put("Alveolata",Nomenclature.ICBN.code);
+            put("Rhodophyta",Nomenclature.ICBN.code);
+            put("Glaucocystophyceae",Nomenclature.ICBN.code);
+            put("Haptophyceae",Nomenclature.ICBN.code);
+            put("Choanoflagellida",Nomenclature.ICZN.code);
             //maybe add Protostomia, see Heterochaeta in ncbi
         }
     };
 
+    public static enum Nomenclature {
+        ICBN ("ICBN", "plants, fungi, and some protists?"),
+        ICNB ("ICNB", "bacteria"),
+        ICZN ("ICZN", "animals"),
+        Undefined ("", "governing code unclear, nonexistent, or multiple codes");
+        
+        public final String code;
+        public final String description;
+        Nomenclature (String code, String description) {
+            this.code = code;
+            this.description = description;
+        }
+    }
+    
     public BarrierNodes(Taxonomy t) {
         taxonomy = t;
     }
@@ -59,7 +73,7 @@ public final class BarrierNodes {
         ArrayList<Node> barnodes = new ArrayList<Node>();
 
         for (String itns : barrierNamesMap.keySet()) {
-            IndexHits<Node> hits = NodeIndex.TAXON_BY_NAME.get("name", itns);
+            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_NAME).get("name", itns);
             int bestcount = LARGE;
             Node bestitem = null;
             try {

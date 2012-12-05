@@ -1,199 +1,98 @@
 package opentree;
 
+import opentree.BarrierNodes.Nomenclature;
+
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.index.Index;
-import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
 public class Taxonomy {
 
-    private static GraphDatabaseAgent graphDb;
+    GraphDatabaseAgent graphDb;
     public final static float DEFAULT_FUZZYMATCH_IDENTITY = (float) 0.70;
     final static String LIFE_NODE_NAME = "life";
+    public final TaxonomyContext ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
 
-    public Taxonomy(GraphDatabaseAgent t) {
-        graphDb = t;
+    public Taxonomy(GraphDatabaseAgent gdb) {
+        graphDb = gdb;
     }
 
-    /**
-     * A wrapper for simplifying access to node indexes.
-     * @author cody
-     *
-     */
-    public static enum NodeIndex implements Index<Node> {
-        TAXON_BY_NAME ("taxNodes"), // all taxon nodes
-        SYNONYM_BY_NAME ("synNodes"), // all synonym nodes
-        PREFERRED_TAXON_BY_NAME ("prefTaxNodes"), // taxon nodes with preferred relationships
-        PREFERRED_SYNONYM_BY_NAME ("prefSynNodes"), // synonym nodes attached to preferred taxon nodes
-        TAX_SOURCES ("taxSources"), // ?
-        TAX_STATUS ("taxStatus"),
-        TAX_RANK ("taxRank");
-        
-        public final Index<Node> index;
-        NodeIndex (String indexName) {
-            this.index = graphDb.getNodeIndex(indexName);
-        }
-
-        @Override
-        public IndexHits<Node> get(String arg0, Object arg1) {
-            return index.get(arg0,  arg1);
-        }
-
-        @Override
-        public Class<Node> getEntityType() {
-            return index.getEntityType();
-        }
-
-        @Override
-        public GraphDatabaseService getGraphDatabase() {
-            return index.getGraphDatabase();
-        }
-
-        @Override
-        public String getName() {
-            return index.getName();
-        }
-
-        @Override
-        public boolean isWriteable() {
-            return index.isWriteable();
-        }
-
-        @Override
-        public IndexHits<Node> query(Object arg0) {
-            return index.query(arg0);
-        }
-
-        @Override
-        public IndexHits<Node> query(String arg0, Object arg1) {
-            return index.query(arg0, arg1);
-        }
-
-        @Override
-        public void add(Node node, String key, Object value) {
-            index.add(node, key, value);
-        }
-
-        @Override
-        public void delete() {
-            index.delete();
-        }
-
-        @Override
-        public Node putIfAbsent(Node node, String key, Object value) {
-            return index.putIfAbsent(node, key, value);
-        }
-
-        @Override
-        public void remove(Node node) {
-            index.remove(node);
-        }
-
-        @Override
-        public void remove(Node arg0, String arg1) {
-            index.remove(arg0, arg1);
-        }
-
-        @Override
-        public void remove(Node arg0, String arg1, Object arg2) {
-            index.remove(arg0, arg1, arg2);
-        }
-    }
-
-    protected static enum RelIndex implements Index<Relationship> {
-        SOURCE_TYPE ("taxSources");
-        
-        public final Index<Relationship> index;
-        RelIndex (String indexName) {
-            this.index = graphDb.getRelIndex(indexName);
-        }
-
-        @Override
-        public IndexHits<Relationship> get(String arg0, Object arg1) {
-            return index.get(arg0, arg1);
-        }
-
-        @Override
-        public Class<Relationship> getEntityType() {
-            return index.getEntityType();
-        }
-
-        @Override
-        public GraphDatabaseService getGraphDatabase() {
-            return index.getGraphDatabase();
-        }
-
-        @Override
-        public String getName() {
-            return index.getName();
-        }
-
-        @Override
-        public boolean isWriteable() {
-            return index.isWriteable();
-        }
-
-        @Override
-        public IndexHits<Relationship> query(Object arg0) {
-            return index.query(arg0);
-        }
-
-        @Override
-        public IndexHits<Relationship> query(String arg0, Object arg1) {
-            return index.query(arg0, arg1);
-        }
-
-        @Override
-        public void add(Relationship rel, String key, Object value) {
-            index.add(rel, key, value);
-        }
-        
-        @Override
-        public void delete() {
-            index.delete();
-        }
-
-        @Override
-        public Relationship putIfAbsent(Relationship arg0, String arg1, Object arg2) {
-            return index.putIfAbsent(arg0, arg1, arg2);
-        }
-
-        @Override
-        public void remove(Relationship arg0) {
-            index.remove(arg0);
-        }
-
-        @Override
-        public void remove(Relationship arg0, String arg1) {
-            index.remove(arg0, arg1);
-        }
-
-        @Override
-        public void remove(Relationship arg0, String arg1, Object arg2) {
-            index.remove(arg0, arg1, arg2);
-        }
+    public static enum ContextGroup {
+        LIFE,
+        BACTERIA,
+        ANIMALS,
+        PLANTS,
+        FUNGI
     }
     
+    public static enum ContextDescription {
+
+        //                  Label               Group                   Index suffix        Node name string    Nomenclature
+        ALLTAXA             ("All life",        ContextGroup.LIFE,      "",                 LIFE_NODE_NAME,     Nomenclature.Undefined),
+
+        // FUNGI
+        BACTERIA            ("Bacteria",        ContextGroup.BACTERIA,  "Bacteria",         "Bactera",          Nomenclature.ICNB),
+
+        // ANIMALS
+        METAZOA             ("Animals",         ContextGroup.ANIMALS,   "Animals",          "Metazoa",          Nomenclature.ICZN),
+
+        // FUNGI
+        FUNGI               ("Fungi",           ContextGroup.FUNGI,     "Fungi",            "Fungi",            Nomenclature.ICBN),
+        
+        // PLANTS
+        LAND_PLANTS         ("Land plants",     ContextGroup.PLANTS,    "Plants",           "Embryophyta",      Nomenclature.ICBN),
+        HORNWORTS           ("Hornworts",       ContextGroup.PLANTS,    "Anthocerotophyta", "Anthocerotophyta", Nomenclature.ICBN),
+        MOSSES              ("Mosses",          ContextGroup.PLANTS,    "Bryophyta",        "Bryophyta",        Nomenclature.ICBN),
+        LIVERWORTS          ("Liverworts",      ContextGroup.PLANTS,    "Marchantiophyta",  "Marchantiophyta",  Nomenclature.ICBN),
+        VASCULAR_PLANTS     ("Vascular plants", ContextGroup.PLANTS,    "Tracheophyta",     "Tracheophyta",     Nomenclature.ICBN),
+        LYCOPHYTES          ("Club mosses",     ContextGroup.PLANTS,    "Lycopodiophyta",   "Lycopodiophyta",   Nomenclature.ICBN),
+        FERNS               ("Ferns",           ContextGroup.PLANTS,    "Moniliformopses",  "Moniliformopses",  Nomenclature.ICBN),
+        SEED_PLANTS         ("Seed plants",     ContextGroup.PLANTS,    "Spermatophyta",    "Spermatophyta",    Nomenclature.ICBN),
+        FLOWERING_PLANTS    ("Flowering plants", ContextGroup.PLANTS,   "Magnoliophyta",    "Magnoliophyta",    Nomenclature.ICBN),
+        MAGNOLIIDS          ("Magnoliids",      ContextGroup.PLANTS,    "Magnoliids",       "magnoliids",       Nomenclature.ICBN),
+        MONOCOTS            ("Monocots",        ContextGroup.PLANTS,    "Monocots",         "Liliopsida",       Nomenclature.ICBN),
+        EUDICOTS            ("Eudicots",        ContextGroup.PLANTS,    "Eudicots",         "eudicotyledons",   Nomenclature.ICBN),
+        ASTERIDS            ("Asterids",        ContextGroup.PLANTS,    "Asterids",         "asterids",         Nomenclature.ICBN),
+        ROSIDS              ("Rosids",          ContextGroup.PLANTS,    "Rosids",           "rosids",           Nomenclature.ICBN);
+        
+        public final String label;
+        public final ContextGroup group;
+        public final String nameSuffix;
+        public final String nodeName;
+        public final Nomenclature nomenclature;
+
+        ContextDescription (String label, ContextGroup group, String nameSuffix, String nodeName, Nomenclature nomenclature) {
+            this.label = label;
+            this.group = group;
+            this.nameSuffix = nameSuffix;
+            this.nodeName = nodeName;
+            this.nomenclature = nomenclature;
+        }
+    }
+        
     public static enum RelTypes implements RelationshipType {
         TAXCHILDOF, // standard rel for tax db, from node to parent
         SYNONYMOF, // relationship for synonyms
         METADATAFOR, // relationship connecting a metadata node to the root of a taxonomy
-        PREFTAXCHILDOF// relationship type for preferred relationships
+        PREFTAXCHILDOF // relationship type for preferred relationships
     }
     
     // general taxonomy access methods
-    
+
     public Node getLifeNode() {
-        IndexHits<Node> r = NodeIndex.TAXON_BY_NAME.get("name", LIFE_NODE_NAME);
         
-        r.close();
-        return r.getSingle();
+        Node lifeNode;
+        try {
+            lifeNode = ALLTAXA.findTaxNodesByName(LIFE_NODE_NAME).get(0);
+        } catch (IndexOutOfBoundsException e) {
+            System.out.println("Could not get life node");
+            lifeNode = null;
+        }
+
+        return lifeNode;
     }
     
     /**

@@ -11,8 +11,7 @@ import javax.net.ssl.SSLException;
 
 import opentree.Taxon;
 import opentree.Taxonomy;
-import opentree.Taxonomy.NodeIndex;
-import opentree.TaxonomySynthesizer;
+import opentree.TaxonomyContext.NodeIndex;
 import opentree.tnrs.TNRSAdapter;
 import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatchSet;
@@ -39,6 +38,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.exc.UnrecognizedPropertyException;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
 /**
@@ -167,15 +167,16 @@ public class TNRSAdapteriPlant extends TNRSAdapter {
                             boolean thisNameMatched = false;
                             TNRSMatchSet matches = new TNRSMatchSet();
                             
+                            Index<Node> prefTaxNodesByName = taxonomy.ALLTAXA.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME);
                             for (iPlantHit thisHit : thisNameResult) {
-                                IndexHits<Node> matchedNodes = NodeIndex.PREFERRED_TAXON_BY_NAME.get("name", thisHit.acceptedName);
+                                IndexHits<Node> matchedNodes = prefTaxNodesByName.get("name", thisHit.acceptedName);
                                 if (matchedNodes.size() > 0) {
                                     for (Node n : matchedNodes) {
                                         
                                         Taxon matchedTaxon = new Taxon(n);
                                         
                                         // check to see if the fuzzily matched node is a homonym
-                                        IndexHits<Node> directMatches = NodeIndex.PREFERRED_TAXON_BY_NAME.get("name", matchedTaxon.getName());
+                                        IndexHits<Node> directMatches = prefTaxNodesByName.get("name", matchedTaxon.getName());
                                         boolean isHomonym = false;
                                         if (directMatches.size() > 1)
                                             isHomonym = true;

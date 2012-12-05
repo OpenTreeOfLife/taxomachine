@@ -22,6 +22,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 //import org.neo4j.kernel.EmbeddedGraphDatabase;
@@ -32,6 +33,8 @@ import org.neo4j.kernel.Traversal;
 //import java.util.HashMap;
 //import java.util.HashSet;
 //import java.util.StringTokenizer;
+
+import opentree.TaxonomyContext.NodeIndex;
 
 /**
  * TaxonomyLoader is intended to control the initial creation 
@@ -70,7 +73,9 @@ public class TaxonomyLoader extends Taxonomy {
 	 */
 	protected Node getNodeForTaxNomStatus(String taxonomicStatus, String nomenclaturalStatus, Transaction pendingTx) {
 		String key = taxonomicStatus + "|" + nomenclaturalStatus;
-		IndexHits<Node> ih = NodeIndex.TAX_STATUS.get("status", key);
+		Index<Node> taxStatus = ALLTAXA.getNodeIndex(NodeIndex.TAX_STATUS);
+		IndexHits<Node> ih = taxStatus.get("status", key);
+//		IndexHits<Node> ih = NodeIndex.TAX_STATUS.get("status", key);
 		if (ih.size() == 0) {
 			boolean closeTx = false;
 			if (pendingTx == null) {
@@ -83,7 +88,7 @@ public class TaxonomyLoader extends Taxonomy {
 				snode = createNode();
 				snode.setProperty("taxStatus", taxonomicStatus);
 				snode.setProperty("nomenStatus", nomenclaturalStatus);
-				NodeIndex.TAX_STATUS.add(snode, "status", key);
+				taxStatus.add(snode, "status", key);
 				if (closeTx) {
 					pendingTx.success();
 				}
@@ -92,11 +97,14 @@ public class TaxonomyLoader extends Taxonomy {
 					pendingTx.finish();
 				}
 			}
+		     ih.close();
 			return snode;
 		}
 		else {
 			assert(ih.size() == 1);
-			return ih.getSingle();
+			Node n = ih.getSingle();
+    	    ih.close();
+    	    return n;
 		}
 	}
 	/**
@@ -106,7 +114,9 @@ public class TaxonomyLoader extends Taxonomy {
 	 * @return
 	 */
 	protected Node getNodeForTaxRank(String taxonomicRank, Transaction pendingTx) {
-		IndexHits<Node> ih = NodeIndex.TAX_RANK.get("rank", taxonomicRank);
+        Index<Node> taxRanks = ALLTAXA.getNodeIndex(NodeIndex.TAX_STATUS);
+        IndexHits<Node> ih = taxRanks.get("rank", taxonomicRank);
+//		IndexHits<Node> ih = NodeIndex.TAX_RANK.get("rank", taxonomicRank);
 		if (ih.size() == 0) {
 			boolean closeTx = false;
 			if (pendingTx == null) {
@@ -118,7 +128,7 @@ public class TaxonomyLoader extends Taxonomy {
 			try {
 				snode = createNode();
 				snode.setProperty("rank", taxonomicRank);
-				NodeIndex.TAX_RANK.add(snode, "rank", taxonomicRank);
+				taxRanks.add(snode, "rank", taxonomicRank);
 				if (closeTx) {
 					pendingTx.success();
 				}
@@ -127,11 +137,14 @@ public class TaxonomyLoader extends Taxonomy {
 					pendingTx.finish();
 				}
 			}
+			ih.close();
 			return snode;
 		}
 		else {
 			assert(ih.size() == 1);
-			return ih.getSingle();
+			Node n = ih.getSingle();
+			ih.close();
+			return n;
 		}
 	}
 	
@@ -174,7 +187,7 @@ public class TaxonomyLoader extends Taxonomy {
 			metadatanode.setProperty("source", sourcename);
 			metadatanode.setProperty("version", sourceversion);
 			metadatanode.setProperty("author", "no one");
-			NodeIndex.TAX_SOURCES.add(metadatanode, "source", sourcename);
+			ALLTAXA.getNodeIndex(NodeIndex.TAX_SOURCES).add(metadatanode, "source", sourcename);
 			tx.success();
 		} finally {
 			tx.finish();
@@ -209,7 +222,7 @@ public class TaxonomyLoader extends Taxonomy {
 	private Node createNewTaxonomyNode(String taxonName) {
 		Node tnode = createNode();
 		tnode.setProperty("name", taxonName);
-		NodeIndex.TAXON_BY_NAME.add( tnode, "name", taxonName);
+		ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_NAME).add(tnode, "name", taxonName);
 		return tnode;
 	}
 
@@ -676,8 +689,14 @@ public class TaxonomyLoader extends Taxonomy {
 			System.out.println("synonyms: " + synonymhash.size());
 		}
 		//finished processing synonym file
+
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
+
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndex.TAX_SOURCES);
+		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_NAME);
+		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_SYNONYM);
+		
 		try {
 			tx = beginTx();
 			//create the metadata node
@@ -687,7 +706,7 @@ public class TaxonomyLoader extends Taxonomy {
 				metadatanode.setProperty("source", sourcename);
 				metadatanode.setProperty("author", "no one");
 				//taxSourceIndex.add(metadatanode, "source", sourcename);
-				NodeIndex.TAX_SOURCES.add(metadatanode, "source", sourcename);
+				taxSources.add(metadatanode, "source", sourcename);
 				tx.success();
 			} finally {
 				tx.finish();
@@ -712,7 +731,7 @@ public class TaxonomyLoader extends Taxonomy {
 							Node tnode = createNode();
 							tnode.setProperty("name", inputName);
 							//taxNodeIndex.add( tnode, "name", inputName);
-							NodeIndex.TAXON_BY_NAME.add(tnode, "name", inputName);
+							taxaByName.add(tnode, "name", inputName);
 							dbnodes.put(inputId, tnode);
 							if (numtok == 3) {
 								parents.put(inputId, InputParentId);
@@ -734,8 +753,7 @@ public class TaxonomyLoader extends Taxonomy {
 										synode.setProperty("nametype",synNameType);
 										synode.setProperty("source",sourcename);
 										synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
-										//synNodeIndex.add(synode, "name", synName);
-										NodeIndex.SYNONYM_BY_NAME.add(synode, "name", synName);
+										taxaBySynonym.add(tnode, "name", synName);
 									}
 								}
 							}
@@ -761,7 +779,7 @@ public class TaxonomyLoader extends Taxonomy {
 					Node tnode = createNode();
 					tnode.setProperty("name", third);
 					//taxNodeIndex.add( tnode, "name", third);
-					NodeIndex.TAXON_BY_NAME.add( tnode, "name", third);
+					taxaByName.add( tnode, "name", third);
 					dbnodes.put(first, tnode);
 					if (numtok == 3) {
 						parents.put(first, second);
@@ -783,8 +801,7 @@ public class TaxonomyLoader extends Taxonomy {
 								synode.setProperty("nametype",synNameType);
 								synode.setProperty("source",sourcename);
 								synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
-								//synNodeIndex.add(synode, "name", synName);
-								NodeIndex.SYNONYM_BY_NAME.add(synode, "name", synName);
+								taxaBySynonym.add(tnode, "name", synName);
 							}
 						}
 					}
@@ -886,6 +903,7 @@ public class TaxonomyLoader extends Taxonomy {
 	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
 	 */
 	public void addAdditionalTaxonomyToGraph(String sourcename, String rootid, String filename, String synonymfile) {
+	    System.out.println("received: " + sourcename + " " + rootid + " " + filename + " " + synonymfile);
 		Node rootnode = null;
 		String str = "";
 		String roottaxid = "";
@@ -939,6 +957,8 @@ public class TaxonomyLoader extends Taxonomy {
 		}
 		HashMap<String,Node> taxcontainedbarriersmap = new HashMap<String,Node>();
 		
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndex.TAX_SOURCES);
+		
 		HashMap<String, String> idparentmap = new HashMap<String, String>(); // node number -> parent's number
 		HashMap<String, String> idnamemap = new HashMap<String, String>();
 		ArrayList<String> idlist = new ArrayList<String>();
@@ -950,7 +970,7 @@ public class TaxonomyLoader extends Taxonomy {
 			metadatanode = createNode();
 			metadatanode.setProperty("source", sourcename);
 			metadatanode.setProperty("author", "no one");
-			NodeIndex.TAX_SOURCES.add(metadatanode, "source", sourcename);
+			taxSources.add(metadatanode, "source", sourcename);
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(filename));
 				while ((str = br.readLine()) != null) {
@@ -1000,6 +1020,8 @@ public class TaxonomyLoader extends Taxonomy {
 		}
 	
 		
+		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_NAME);
+		
 		System.out.println("node run through");
 		HashMap<String,Node> idnodemap = new HashMap<String,Node>();
 		int count = 0;
@@ -1008,6 +1030,7 @@ public class TaxonomyLoader extends Taxonomy {
 		try {
 			for (int i=0; i < idlist.size(); i++) {
 				String curid = idlist.get(i);
+//				System.out.println("attempting id " + String.valueOf(curid));
 				boolean badpath = false;
 				Node curidbarrier = null;
 				ArrayList<String> path1 = new ArrayList<String>();
@@ -1026,13 +1049,14 @@ public class TaxonomyLoader extends Taxonomy {
 				if (curidbarrier == null) {
 					curidbarrier = rootbarrier;
 				}
-				//			System.out.print(curidbarrier);
+//							System.out.print(curidbarrier);
 				if (badpath) {
 					System.out.println("bad path: " + idlist.get(i) + " " + idnamemap.get(curid));
 					continue;
 				}
 				//get any hits
-				IndexHits<Node> hits = NodeIndex.TAXON_BY_NAME.get("name", idnamemap.get(curid));
+				IndexHits<Node> hits = taxaByName.get("name", idnamemap.get(curid));
+//				System.out.println("found " + hits.size() + " hits for " + idnamemap.get(curid));
 				try {
 					if (hits.size()==0) {//no hit
 						Node newnode = createNode();
@@ -1041,20 +1065,20 @@ public class TaxonomyLoader extends Taxonomy {
 							if (curidbarrier.hasProperty("taxcode"))
 								newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
 						}
-						NodeIndex.TAXON_BY_NAME.add( newnode, "name", idnamemap.get(curid));
+						taxaByName.add( newnode, "name", idnamemap.get(curid));
 						idnodemap.put(curid,newnode);
 						acount += 1;
 //						System.out.println("new name: " + idnamemap.get(curid));
 					} else {
 						Node bestnode = null;
-						for (Node node:hits) {
+						for (Node node : hits) {
 							if (node.hasProperty("taxcode")) {
 								if (curidbarrier != null) {
 									if (curidbarrier.hasProperty("taxcode"))
 										if (node.getProperty("taxcode").equals(curidbarrier.getProperty("taxcode")))
 											bestnode = node;
 								} else {
-									//System.out.println("name: " + idnamemap.get(curid) + " " + ((String)node.getProperty("barrier")));
+//									System.out.println("name: " + idnamemap.get(curid) + " " + ((String)node.getProperty("taxcode")));
 									//these are often problems
 								}
 							} else {
@@ -1074,7 +1098,7 @@ public class TaxonomyLoader extends Taxonomy {
 								if (curidbarrier.hasProperty("taxcode"))
 									newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
 							}
-							NodeIndex.TAXON_BY_NAME.add( newnode, "name", idnamemap.get(curid));
+							taxaByName.add( newnode, "name", idnamemap.get(curid));
 							idnodemap.put(curid,newnode);
 							System.out.println("node to make " + idnamemap.get(curid) + " " + curidbarrier + " " + curid);
 							acount += 1;
@@ -1136,7 +1160,7 @@ public class TaxonomyLoader extends Taxonomy {
 							synode.setProperty("nametype",synNameType);
 							synode.setProperty("source",sourcename);
 							synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
-							NodeIndex.SYNONYM_BY_NAME.add(synode, "name", synName);
+							ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_SYNONYM).add(tnode, "name", synName);
 						}
 					}
 				}

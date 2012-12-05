@@ -7,14 +7,14 @@ import java.util.Map.Entry;
 import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.Taxonomy;
-import opentree.TaxonomySynthesizer;
-import opentree.Taxonomy.NodeIndex;
+import opentree.TaxonomyContext.NodeIndex;
 import opentree.Taxonomy.RelTypes;
 import opentree.utils.Levenshtein;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.FuzzyQuery;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
 /**
@@ -115,6 +115,8 @@ public class TNRSQuery {
     private TNRSResults getResults(String[] searchStrings, boolean exactOnly, TNRSAdapter... adapters) {
 
         clearResults();
+        Index<Node> prefTaxNodesByName = _taxonomy.ALLTAXA.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME);
+        Index<Node> prefTaxNodesBySynonym = _taxonomy.ALLTAXA.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_SYNONYM);
 
         // add the names to be queried
         for (String name : searchStrings)
@@ -127,7 +129,7 @@ public class TNRSQuery {
         // find unambiguous names, count occurrences of nomenclatural codes within these names
         for (int i = 0; i < searchStrings.length; i++) {
             String thisName = searchStrings[i];
-            IndexHits<Node> directHits = NodeIndex.PREFERRED_TAXON_BY_NAME.get("name", thisName);
+            IndexHits<Node> directHits = prefTaxNodesByName.get("name", thisName);
 
             if (directHits.size() == 1) { // neither a homonym nor synonym
                 Taxon n = new Taxon(directHits.getSingle());
@@ -145,6 +147,7 @@ public class TNRSQuery {
                     codeFreqs.put(thisCode, 1);
                 }
             }
+            directHits.close();
         }
         TaxonSet ts = new TaxonSet(unambiguousTaxonNodes);
         
@@ -186,9 +189,9 @@ public class TNRSQuery {
             // first: find possible preferred taxon nodes, use fuzzy matching if specified
             IndexHits<Node> matchedTaxNodes;
             if (exactOnly) {
-                matchedTaxNodes = NodeIndex.PREFERRED_TAXON_BY_NAME.get("name", queriedName);
+                matchedTaxNodes = prefTaxNodesByName.get("name", queriedName);
             } else {
-                matchedTaxNodes = NodeIndex.PREFERRED_TAXON_BY_NAME.query(new FuzzyQuery(new Term("name", queriedName), minIdentity));
+                matchedTaxNodes = prefTaxNodesByName.query(new FuzzyQuery(new Term("name", queriedName), minIdentity));
             }
             
             if (matchedTaxNodes.size() > 0) {
@@ -231,7 +234,7 @@ public class TNRSQuery {
                     }
                     
                     // check if the matched node is a homonym
-                    IndexHits<Node> directHits = NodeIndex.PREFERRED_TAXON_BY_NAME.get("name", n.getProperty("name"));
+                    IndexHits<Node> directHits = prefTaxNodesByName.get("name", n.getProperty("name"));
                     boolean isHomonym;
                     if (directHits.size() > 1) {
                         isHomonym = true;
@@ -275,22 +278,22 @@ public class TNRSQuery {
             // second: find possible preferred synonyms, use fuzzy matching if specified
             IndexHits<Node> matchedSynNodes;
             if (exactOnly)
-                matchedSynNodes = NodeIndex.PREFERRED_SYNONYM_BY_NAME.get("name", queriedName);
+                matchedSynNodes = prefTaxNodesBySynonym.get("name", queriedName);
             else
-                matchedSynNodes = NodeIndex.PREFERRED_SYNONYM_BY_NAME.query(new FuzzyQuery(new Term("name", queriedName), minIdentity));
+                matchedSynNodes = prefTaxNodesBySynonym.query(new FuzzyQuery(new Term("name", queriedName), minIdentity));
 
             if (matchedSynNodes.size() > 0) {
                 wasMatched = true;
 
                 // process all matches to synonym nodes
-                for (Node synNode : matchedSynNodes) {
+                for (Node n : matchedSynNodes) {
 
-                    String synonymName = synNode.getProperty("name").toString();
+                    String synonymName = n.getProperty("name").toString();
                     double scoreModifier = 1;
                     double baseScore = 1;
 
                     // get the taxon matched by this synonym
-                    Taxon matchedTaxon = new Taxon(_taxonomy.getTaxNodeForSynNode(synNode));
+                    Taxon matchedTaxon = new Taxon(_taxonomy.getTaxNodeForSynNode(n));
                     
                 	// only add new matches to taxon nodes that are not already in the matched set
                 	if (_matchedNodeIds.contains(matchedTaxon.getNode().getId()) == false) {
@@ -335,7 +338,6 @@ public class TNRSQuery {
                         if (score >= _minScore) {
                             matches.addMatch(new TNRSHit().
                                     setMatchedTaxon(matchedTaxon).
-                                    setSynonymNode(synNode).
                                     setSearchString(queriedName).
                                     setIsApprox(isFuzzy).
                                     setIsSynonym(true).
@@ -345,7 +347,7 @@ public class TNRSQuery {
                                     setScore(score));
                         }
                         
-                        _matchedNodeIds.add(synNode.getId());
+                        _matchedNodeIds.add(n.getId());
                 	}
                 }
             }

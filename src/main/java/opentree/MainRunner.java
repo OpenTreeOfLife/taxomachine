@@ -57,6 +57,7 @@ public class MainRunner {
 		// (i.e. the life node), but this will have to be changed to add taxonomies that are more
 		// specific, such as Hibbett's fungal stuff
 		Node lifeNode = tl.getLifeNode();
+		System.out.println("life node: " + lifeNode);
 		String incomingRootNodeId = null;
 		if (lifeNode != null)
 		    incomingRootNodeId = String.valueOf(lifeNode.getId());

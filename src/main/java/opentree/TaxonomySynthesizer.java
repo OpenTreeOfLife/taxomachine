@@ -9,8 +9,11 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
+
+import opentree.TaxonomyContext.NodeIndex;
 
 public class TaxonomySynthesizer extends Taxonomy {
 
@@ -209,7 +212,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                         // prepare for next iteration
                         } else {
                             curNode = endNode;
-                            addToPreferredIndexes(startNode);
+                            addToPreferredIndexes(startNode, ALLTAXA);
                         }
                     }
                 }
@@ -227,19 +230,35 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
     }
 
+    public void makeContextSpecificIndexes() {
+        
+        // walk through the preferred taxonomy, filling in the scoped indexes for each context
+        // use the ContextDescription and NodeIndex enums
+        
+    }
+    
     /**
      * Just add the node `n` to the prefTaxNodes index and its synonyms to prefSynNodes.
      * @param node
      */
-    private void addToPreferredIndexes(Node node) {
+    private void addToPreferredIndexes(Node node, TaxonomyContext context) {
 
-        // add the node itself
-        NodeIndex.PREFERRED_TAXON_BY_NAME.add(node, "name", node.getProperty("name"));
+        Index<Node> prefTaxNodesByName = context.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME);
+        Index<Node> prefTaxNodesBySynonym = context.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_SYNONYM);
+        Index<Node> prefTaxNodesByNameOrSynonym = context.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
 
-        // add synonyms
-        for (Node sn : Traversal.description().breadthFirst()
-                .relationships(RelTypes.SYNONYMOF,Direction.INCOMING ).traverse(node).nodes())
-            NodeIndex.PREFERRED_SYNONYM_BY_NAME.add(node, "name", sn.getProperty("name"));
+        // add the taxon node under its own name
+        prefTaxNodesByName.add(node, "name", node.getProperty("name"));
+        prefTaxNodesByNameOrSynonym.add(node, "name", node.getProperty("name"));
+
+        // add the taxon node under all its synonym names
+        for (Node sn : Traversal.description()
+                .breadthFirst()
+                .relationships(RelTypes.SYNONYMOF,Direction.INCOMING )
+                .traverse(node).nodes()) {
+            prefTaxNodesBySynonym.add(node, "name", sn.getProperty("name"));
+            prefTaxNodesByNameOrSynonym.add(node, "name", sn.getProperty("name"));
+        }
     }    
 
     /**
