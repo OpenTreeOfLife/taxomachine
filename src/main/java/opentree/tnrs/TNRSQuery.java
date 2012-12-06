@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.Taxonomy;
-import opentree.TaxonomyContext.NodeIndex;
-import opentree.Taxonomy.RelTypes;
+import opentree.NodeIndexDescription;
+import opentree.RelType;
 import opentree.utils.Levenshtein;
 
 import org.apache.lucene.index.Term;
@@ -115,8 +115,8 @@ public class TNRSQuery {
     private TNRSResults getResults(String[] searchStrings, boolean exactOnly, TNRSAdapter... adapters) {
 
         clearResults();
-        Index<Node> prefTaxNodesByName = _taxonomy.ALLTAXA.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME);
-        Index<Node> prefTaxNodesBySynonym = _taxonomy.ALLTAXA.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_SYNONYM);
+        Index<Node> prefTaxNodesByName = _taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
+        Index<Node> prefTaxNodesBySynonym = _taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
 
         // add the names to be queried
         for (String name : searchStrings)
@@ -227,7 +227,7 @@ public class TNRSQuery {
                             // (needs corresponding option for providing taxon name for scoped mrca itself)
                             ////////////////////////////////////////////////////////////////////////////////////
                             
-                            int d = _taxonomy.getInternodalDistThroughMRCA(n, mrca.getNode(), RelTypes.PREFTAXCHILDOF);
+                            int d = _taxonomy.getInternodalDistThroughMRCA(n, mrca.getNode(), RelType.PREFTAXCHILDOF);
                             scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
                             System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
                         }
@@ -325,7 +325,7 @@ public class TNRSQuery {
                                 // (needs corresponding option for providing taxon name for scoped mrca itself)
                                 ////////////////////////////////////////////////////////////////////////////////////
                                 
-                                int d = _taxonomy.getInternodalDistThroughMRCA(matchedTaxon.getNode(), mrca.getNode(), RelTypes.PREFTAXCHILDOF);
+                                int d = _taxonomy.getInternodalDistThroughMRCA(matchedTaxon.getNode(), mrca.getNode(), RelType.PREFTAXCHILDOF);
 //                                System.out.println("d = " + String.valueOf(d));
                                 scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
 //                                System.out.println("scoreModifier = " + String.valueOf(scoreModifier));

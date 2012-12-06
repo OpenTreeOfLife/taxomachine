@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import opentree.Taxonomy.RelTypes;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -17,7 +16,7 @@ public class TaxonSet implements Iterable<Node> {
     private Taxon lica;
     
     public TaxonSet (List<?> inTaxa) {
-
+        
         if (inTaxa.get(0) instanceof Taxon) {
             taxa = new LinkedList<Node>();
             for (Taxon t : (LinkedList<Taxon>)inTaxa)
@@ -48,11 +47,11 @@ public class TaxonSet implements Iterable<Node> {
     
     public Taxon getLICA(boolean usePreferredRels) {
        
-        Taxonomy.RelTypes relType;
+        RelType relType;
         if (usePreferredRels)
-            relType = RelTypes.PREFTAXCHILDOF;
+            relType = RelType.PREFTAXCHILDOF;
         else
-            relType = RelTypes.TAXCHILDOF;
+            relType = RelType.TAXCHILDOF;
         
         if (hasLICA())
             return new Taxon(lica.getNode());

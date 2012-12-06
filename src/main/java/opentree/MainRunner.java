@@ -116,11 +116,16 @@ public class MainRunner {
 				System.out.println("arguments should be: graphdbfolder");
 				return;
 			}
-		} else if(args[0].equals("dumpottol")) {
-			if (args.length != 3 ){
-				System.out.println("arguments should be: graphdbfolder outfile");
-				return;
-			}
+        } else if(args[0].equals("dumpottol")) {
+            if (args.length != 3 ){
+                System.out.println("arguments should be: graphdbfolder outfile");
+                return;
+            }
+        } else if(args[0].equals("makecontexts")) {
+            if (args.length != 2 ){
+                System.out.println("arguments should be: graphdbfolder");
+                return;
+            }
 		}else if (args.length != 3) {
 			System.out.println("arguments should be: query graphdbfolder");
 			return;
@@ -214,7 +219,15 @@ public class MainRunner {
 			te = new TaxonomySynthesizer(taxdb);
 			System.out.println("dumping ottol relationships");
 			te.dumpPreferredOTTOLRelationships(outfile);
-		}else {
+
+	     } else if (args[0].equals("makecontexts")) {
+            String graphname = args[1];
+            taxdb = new GraphDatabaseAgent(graphname);
+            te =  new TaxonomySynthesizer(taxdb);
+            System.out.println("building context-specific indexes");
+            te.makeContextSpecificIndexes();
+	
+		} else {
 			System.err.println("\nERROR: not a known command\n");
 			printHelp();
 			System.exit(1);
@@ -339,7 +352,8 @@ public class MainRunner {
 		System.out.println("\taddtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (adds a tax list and synonym file)");
 		System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
 		System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
-		System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be injested elsewhere)");
+		System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be ingested elsewhere)");
+		System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
 		System.out.println("\n---taxquery---");
 		System.out.println("\tcomptaxtree <name> <graphdbfolder> (construct a comprehensive tax newick)");
 		System.out.println("\tcomptaxgraph <name> <graphdbfolder> <outdotfile> (construct a comprehensive taxonomy in dot)");
@@ -387,10 +401,21 @@ public class MainRunner {
 						|| args[0].equals("jsgraph") 
 						|| args[0].equals("checktree")
 						|| args[0].equals("makeottol")
-						|| args[0].equals("dumpottol")) {
+						|| args[0].equals("dumpottol")
+						|| args[0].equals("makecontexts")) {
 					mr.taxonomyQueryParser(args);
 				} else if (args[0].matches("tnrsbasic|tnrstree")) {
 					mr.parseTNRSRequest(args);
+				
+/*				
+				// TEMP
+				} else if (args[0].equals("addlifenode")) {
+				    TaxonomySynthesizer ts = new TaxonomySynthesizer(new GraphDatabaseAgent(args[1]));
+				    Node lifeNode = ts.getLifeNode();
+				    System.out.println("lifenode: " +  lifeNode.toString() + " " + lifeNode.getProperty("name"));
+				    ts.addToPreferredIndexesAtomicTX(lifeNode, ts.ALLTAXA);
+*/
+				    
 				} else {
 					System.err.println("Unrecognized command \"" + args[0] + "\"");
 					printHelp();

@@ -7,55 +7,46 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
-import opentree.Taxonomy.ContextDescription;
+import opentree.ContextDescription;
 
 public class TaxonomyContext {
-
-    /**
-     * Defines all the indexes that are used by the taxonomy contexts. Each one of these name prefixes is combined with the a name suffix from the Taxonomy.ContextDescription enum to yield an index name.
-     * @author cody hinchliff
-     *
-     */
-    public static enum NodeIndex {
-        TAXON_BY_NAME               ("taxNodesByName"),         // all taxon nodes by name
-        TAXON_BY_SYNONYM            ("taxNodesBySyn"),          // all taxon nodes by synonym
-        PREFERRED_TAXON_BY_NAME     ("prefTaxNodesByName"),     // taxon nodes with preferred relationships by name
-        PREFERRED_TAXON_BY_SYNONYM  ("prefTaxNodesBySyn"),      // taxon nodes with preferred relationships by synonym
-        PREFERRED_TAXON_BY_NAME_OR_SYNONYM  ("prefTaxNodesByNameOrSyn"),
-        
-        TAX_SOURCES                 ("taxSources"),             // ?
-        TAX_STATUS                  ("taxStatus"),
-        TAX_RANK                    ("taxRank");
-
-        public final String namePrefix;
-
-        NodeIndex(String namePrefix) {
-            this.namePrefix = namePrefix;
-        }
-    }
-
-    public static enum RelationshipIndex {
-        SOURCE_TYPE ("taxSources");
-
-        public final String namePrefix;
-
-        RelationshipIndex(String namePrefix) {
-            this.namePrefix = namePrefix;
-        }
-    }
     
-    private ContextDescription _context;
+    private ContextDescription _contextDescription;
     private Taxonomy _taxonomy;
     
     TaxonomyContext(ContextDescription context, Taxonomy taxonomy) {
-        _context = context;
-        _taxonomy = taxonomy;
+        _contextDescription = context;
+        _taxonomy = taxonomy;      
+        
     }
     
-    public Index<Node> getNodeIndex(NodeIndex index) {
-        String indexName = index.namePrefix + _context.nameSuffix;
+    /**
+     * Return a Neo4J index of the type defined by the passed NodeIndexDescription `index`, which is intended to be limited to the scope of the initiating taxonomic context
+     * @param indexDesc
+     * @return nodeIndex
+     */
+    public Index<Node> getNodeIndex(NodeIndexDescription indexDesc) {
+        String indexName = indexDesc.namePrefix + _contextDescription.nameSuffix;
         return _taxonomy.graphDb.getNodeIndex(indexName);
+        
     }
+    
+    /**
+     * Return the root node for this taxonomic context
+     * @return rootNode
+     */
+    public Node getRootNode() {
+//        System.out.println(_contextDescription.licaNodeName);
+        IndexHits<Node> rootMatch = _taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).get("name", _contextDescription.licaNodeName);
+//        System.out.println(rootMatch.toString() + " length " + rootMatch.size());
+
+        Node rn = rootMatch.getSingle();
+        rootMatch.close();
+
+//        System.out.println(rn.toString() + " " + rn.getProperty("name"));
+        return rn;
+    }
+    
 
     /**
      * a convenience wrapper for the taxNodes index .get("name", `name`) method
@@ -63,9 +54,8 @@ public class TaxonomyContext {
      * @return
      */
     public List<Node> findTaxNodesByName(String name) {
-        Index<Node> index = (Index<Node>) getNodeIndex(NodeIndex.TAXON_BY_NAME);
+        Index<Node> index = (Index<Node>) getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
         return findNodes(index, "name", name);
-
     }
     
     /**
@@ -74,29 +64,7 @@ public class TaxonomyContext {
      * @return
      */
     public List<Node> findPrefTaxNodesByName(String name) {
-        Index<Node> index = (Index<Node>) getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME);
-        return findNodes(index, "name", name);
-
-    }
-
-    /**
-     * a convenience wrapper for the prefSynNodes index .get("name", `name`) method
-     * @param name
-     * @return
-     */
-    public List<Node> findPrefTaxNodesBySyn(String name) {
-        Index<Node> index = (Index<Node>) getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_SYNONYM);
-        return findNodes(index, "name", name);
-
-    }
-
-    /**
-     * a convenience wrapper for the prefTaxSynNodes index .get("name", `name`) method
-     * @param name
-     * @return
-     */
-    public List<Node> findPrefTaxNodesByNameOrSyn(String name) {
-        Index<Node> index = (Index<Node>) getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+        Index<Node> index = (Index<Node>) getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
         return findNodes(index, "name", name);
 
     }
@@ -120,4 +88,29 @@ public class TaxonomyContext {
 
         return foundNodes;
     }
+
+
+    /* IF THESE show common enough usage, it could be useful to provide them as well
+    /**
+     * a convenience wrapper for the prefSynNodes index .get("name", `name`) method
+     * @param name
+     * @return
+     *
+    public List<Node> findPrefTaxNodesBySyn(String name) {
+        Index<Node> index = (Index<Node>) getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
+        return findNodes(index, "name", name);
+
+    }
+
+    /**
+     * a convenience wrapper for the prefTaxSynNodes index .get("name", `name`) method
+     * @param name
+     * @return
+     *
+    public List<Node> findPrefTaxNodesByNameOrSyn(String name) {
+        Index<Node> index = (Index<Node>) getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+        return findNodes(index, "name", name);
+
+    } */
+
 }

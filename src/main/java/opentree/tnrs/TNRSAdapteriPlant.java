@@ -11,12 +11,12 @@ import javax.net.ssl.SSLException;
 
 import opentree.Taxon;
 import opentree.Taxonomy;
-import opentree.TaxonomyContext.NodeIndex;
 import opentree.tnrs.TNRSAdapter;
 import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
+import opentree.NodeIndexDescription;
 import opentree.tnrs.adaptersupport.iplant.StatusMessage;
 import opentree.tnrs.adaptersupport.iplant.iPlantHit;
 import opentree.tnrs.adaptersupport.iplant.iPlantNameResult;
@@ -167,7 +167,7 @@ public class TNRSAdapteriPlant extends TNRSAdapter {
                             boolean thisNameMatched = false;
                             TNRSMatchSet matches = new TNRSMatchSet();
                             
-                            Index<Node> prefTaxNodesByName = taxonomy.ALLTAXA.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME);
+                            Index<Node> prefTaxNodesByName = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
                             for (iPlantHit thisHit : thisNameResult) {
                                 IndexHits<Node> matchedNodes = prefTaxNodesByName.get("name", thisHit.acceptedName);
                                 if (matchedNodes.size() > 0) {

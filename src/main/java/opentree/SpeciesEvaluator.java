@@ -1,7 +1,5 @@
 package opentree;
 
-import opentree.Taxonomy.RelTypes;
-
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
@@ -23,7 +21,7 @@ public class SpeciesEvaluator implements Evaluator{
 		//TODO: take in whether this is a taxonomy tree or not
 		boolean parent_startnode = false;
 		
-		for(Relationship rel: arg0.endNode().getRelationships(Direction.OUTGOING, RelTypes.TAXCHILDOF)){
+		for(Relationship rel: arg0.endNode().getRelationships(Direction.OUTGOING, RelType.TAXCHILDOF)){
 			//System.out.println(startNode.getProperty("name") +"  "+rel.getEndNode().getProperty("name")+ "  "+ rel.getStartNode().getProperty("name"));
 			if (rel.getEndNode().getId()==startNode.getId()){
 				parent_startnode = true;
@@ -32,7 +30,7 @@ public class SpeciesEvaluator implements Evaluator{
 		}
 		if(parent_startnode == true){
 			return Evaluation.INCLUDE_AND_CONTINUE;
-		}else if(arg0.endNode().hasRelationship(Direction.INCOMING,RelTypes.TAXCHILDOF)){
+		}else if(arg0.endNode().hasRelationship(Direction.INCOMING,RelType.TAXCHILDOF)){
 			return Evaluation.INCLUDE_AND_CONTINUE;
 		}
 		return Evaluation.EXCLUDE_AND_PRUNE;

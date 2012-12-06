@@ -6,9 +6,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import opentree.TaxonomyContext.NodeIndex;
-import opentree.Taxonomy.RelTypes;
-
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphdb.Direction;
@@ -17,6 +14,12 @@ import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.kernel.Traversal;
 
+/**
+ * Defines the barrier nodes for the various nomenclatural codes and provides methods for accessing them and their metadata.
+ * Would it be useful to have this class implemented as an enum?
+ * @author cody
+ *
+ */
 public final class BarrierNodes {
 
     private static final int LARGE = 100000000;
@@ -41,20 +44,6 @@ public final class BarrierNodes {
         }
     };
 
-    public static enum Nomenclature {
-        ICBN ("ICBN", "plants, fungi, and some protists?"),
-        ICNB ("ICNB", "bacteria"),
-        ICZN ("ICZN", "animals"),
-        Undefined ("", "governing code unclear, nonexistent, or multiple codes");
-        
-        public final String code;
-        public final String description;
-        Nomenclature (String code, String description) {
-            this.code = code;
-            this.description = description;
-        }
-    }
-    
     public BarrierNodes(Taxonomy t) {
         taxonomy = t;
     }
@@ -69,11 +58,11 @@ public final class BarrierNodes {
         Node lifen = taxonomy.getLifeNode();
 
         // traverse from each barrier node to life and pick the closest one
-        PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING), 10000);
+        PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelType.TAXCHILDOF, Direction.OUTGOING), 10000);
         ArrayList<Node> barnodes = new ArrayList<Node>();
 
         for (String itns : barrierNamesMap.keySet()) {
-            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_NAME).get("name", itns);
+            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).get("name", itns);
             int bestcount = LARGE;
             Node bestitem = null;
             try {

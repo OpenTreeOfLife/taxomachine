@@ -9,7 +9,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import opentree.Taxonomy.RelTypes;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSQuery;
 
@@ -20,9 +19,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.ReturnableEvaluator;
-import org.neo4j.graphdb.StopEvaluator;
-import org.neo4j.graphdb.Traverser;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
@@ -58,7 +54,7 @@ public class Taxon {
     
         TraversalDescription hierarchy = Traversal.description()
                 .depthFirst()
-                .relationships( RelTypes.PREFTAXCHILDOF, Direction.OUTGOING );
+                .relationships( RelType.PREFTAXCHILDOF, Direction.OUTGOING );
         
         Long pid = parent.getNode().getId();
         
@@ -89,15 +85,9 @@ public class Taxon {
             HashMap<Node, String> nodeToNameMap = new HashMap<Node, String>();
 //            int count = 0;
 
-            // TODO: switch this to use TraversalDescription object
-/*            for (Node nd : taxNode.traverse(Traverser.Order.BREADTH_FIRST,
-                    StopEvaluator.END_OF_GRAPH,
-                    ReturnableEvaluator.ALL,
-                    RelTypes.TAXCHILDOF,
-                    Direction.INCOMING)) */ 
             for (Node nd : Traversal.description()
-                .relationships(RelTypes.PREFTAXCHILDOF, Direction.INCOMING).breadthFirst().traverse(taxNode).nodes()) {
-                for (Relationship rel : nd.getRelationships(RelTypes.TAXCHILDOF, Direction.INCOMING)) {
+                .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING).breadthFirst().traverse(taxNode).nodes()) {
+                for (Relationship rel : nd.getRelationships(RelType.TAXCHILDOF, Direction.INCOMING)) {
 //                    count += 1;
                     Node startNode = rel.getStartNode();
                     String sName = ((String) startNode.getProperty("name"));
@@ -140,7 +130,7 @@ public class Taxon {
     public void buildTaxonomyTree() {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-                .relationships(RelTypes.PREFTAXCHILDOF, Direction.INCOMING);
+                .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
         System.out.println(taxNode.getProperty("name"));
         JadeNode root = new JadeNode();
         root.setName(((String) taxNode.getProperty("name")).replace(" ", "_"));
@@ -181,7 +171,7 @@ public class Taxon {
 
         System.out.println(taxNode.getProperty("name"));
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-                .relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
+                .relationships(RelType.TAXCHILDOF, Direction.INCOMING);
         HashMap<Node, Integer> nodenumbers = new HashMap<Node, Integer>();
         HashMap<Integer, Node> numbernodes = new HashMap<Integer, Node>();
         int count = 0;
@@ -225,8 +215,8 @@ public class Taxon {
         se.setStartNode(taxNode);
         int maxdepth = 3;
         boolean taxonomy = true;
-        RelationshipType defaultchildtype = RelTypes.TAXCHILDOF;
-        RelationshipType defaultsourcetype = RelTypes.TAXCHILDOF;
+        RelationshipType defaultchildtype = RelType.TAXCHILDOF;
+        RelationshipType defaultsourcetype = RelType.TAXCHILDOF;
         String sourcename = "ottol";
         if (domsource != null)
             sourcename = domsource;

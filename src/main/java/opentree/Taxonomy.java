@@ -1,7 +1,5 @@
 package opentree;
 
-import opentree.BarrierNodes.Nomenclature;
-
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
@@ -19,69 +17,7 @@ public class Taxonomy {
     public Taxonomy(GraphDatabaseAgent gdb) {
         graphDb = gdb;
     }
-
-    public static enum ContextGroup {
-        LIFE,
-        BACTERIA,
-        ANIMALS,
-        PLANTS,
-        FUNGI
-    }
-    
-    public static enum ContextDescription {
-
-        //                  Label               Group                   Index suffix        Node name string    Nomenclature
-        ALLTAXA             ("All life",        ContextGroup.LIFE,      "",                 LIFE_NODE_NAME,     Nomenclature.Undefined),
-
-        // FUNGI
-        BACTERIA            ("Bacteria",        ContextGroup.BACTERIA,  "Bacteria",         "Bactera",          Nomenclature.ICNB),
-
-        // ANIMALS
-        METAZOA             ("Animals",         ContextGroup.ANIMALS,   "Animals",          "Metazoa",          Nomenclature.ICZN),
-
-        // FUNGI
-        FUNGI               ("Fungi",           ContextGroup.FUNGI,     "Fungi",            "Fungi",            Nomenclature.ICBN),
-        
-        // PLANTS
-        LAND_PLANTS         ("Land plants",     ContextGroup.PLANTS,    "Plants",           "Embryophyta",      Nomenclature.ICBN),
-        HORNWORTS           ("Hornworts",       ContextGroup.PLANTS,    "Anthocerotophyta", "Anthocerotophyta", Nomenclature.ICBN),
-        MOSSES              ("Mosses",          ContextGroup.PLANTS,    "Bryophyta",        "Bryophyta",        Nomenclature.ICBN),
-        LIVERWORTS          ("Liverworts",      ContextGroup.PLANTS,    "Marchantiophyta",  "Marchantiophyta",  Nomenclature.ICBN),
-        VASCULAR_PLANTS     ("Vascular plants", ContextGroup.PLANTS,    "Tracheophyta",     "Tracheophyta",     Nomenclature.ICBN),
-        LYCOPHYTES          ("Club mosses",     ContextGroup.PLANTS,    "Lycopodiophyta",   "Lycopodiophyta",   Nomenclature.ICBN),
-        FERNS               ("Ferns",           ContextGroup.PLANTS,    "Moniliformopses",  "Moniliformopses",  Nomenclature.ICBN),
-        SEED_PLANTS         ("Seed plants",     ContextGroup.PLANTS,    "Spermatophyta",    "Spermatophyta",    Nomenclature.ICBN),
-        FLOWERING_PLANTS    ("Flowering plants", ContextGroup.PLANTS,   "Magnoliophyta",    "Magnoliophyta",    Nomenclature.ICBN),
-        MAGNOLIIDS          ("Magnoliids",      ContextGroup.PLANTS,    "Magnoliids",       "magnoliids",       Nomenclature.ICBN),
-        MONOCOTS            ("Monocots",        ContextGroup.PLANTS,    "Monocots",         "Liliopsida",       Nomenclature.ICBN),
-        EUDICOTS            ("Eudicots",        ContextGroup.PLANTS,    "Eudicots",         "eudicotyledons",   Nomenclature.ICBN),
-        ASTERIDS            ("Asterids",        ContextGroup.PLANTS,    "Asterids",         "asterids",         Nomenclature.ICBN),
-        ROSIDS              ("Rosids",          ContextGroup.PLANTS,    "Rosids",           "rosids",           Nomenclature.ICBN);
-        
-        public final String label;
-        public final ContextGroup group;
-        public final String nameSuffix;
-        public final String nodeName;
-        public final Nomenclature nomenclature;
-
-        ContextDescription (String label, ContextGroup group, String nameSuffix, String nodeName, Nomenclature nomenclature) {
-            this.label = label;
-            this.group = group;
-            this.nameSuffix = nameSuffix;
-            this.nodeName = nodeName;
-            this.nomenclature = nomenclature;
-        }
-    }
-        
-    public static enum RelTypes implements RelationshipType {
-        TAXCHILDOF, // standard rel for tax db, from node to parent
-        SYNONYMOF, // relationship for synonyms
-        METADATAFOR, // relationship connecting a metadata node to the root of a taxonomy
-        PREFTAXCHILDOF // relationship type for preferred relationships
-    }
-    
-    // general taxonomy access methods
-
+   
     public Node getLifeNode() {
         
         Node lifeNode;
@@ -96,15 +32,25 @@ public class Taxonomy {
     }
     
     /**
-     * Just get the recognized taxon node that is associated with a given synonym node.
+     * Return a TaxonomyContext object for this taxonomy, as defined by the passed ContextDescription `cd`
+     * @param contextDesc
+     * @return
+     */
+    public TaxonomyContext getContext(ContextDescription contextDesc) {
+        return new TaxonomyContext(contextDesc, this);
+    }
+    
+    /**
+     * Just get the recognized taxon node that is associated with a given synonym node. Deprecated since t
      * 
      * @param synonymNode
      * @return taxNode
      */
+    @Deprecated
     public Node getTaxNodeForSynNode(Node synonymNode) {
 
         TraversalDescription synonymTraversal = Traversal.description()
-                .relationships(RelTypes.SYNONYMOF, Direction.OUTGOING);
+                .relationships(RelType.SYNONYMOF, Direction.OUTGOING);
 
         Node taxNode = null;
         for (Node tn : synonymTraversal.traverse(synonymNode).nodes())

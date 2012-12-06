@@ -1,7 +1,6 @@
 package opentree;
 
 import java.io.BufferedReader;
-//import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -25,16 +24,7 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
-//import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
-//import org.apache.log4j.Logger;
-//import java.io.*;
-//import java.util.ArrayList;
-//import java.util.HashMap;
-//import java.util.HashSet;
-//import java.util.StringTokenizer;
-
-import opentree.TaxonomyContext.NodeIndex;
 
 /**
  * TaxonomyLoader is intended to control the initial creation 
@@ -44,7 +34,6 @@ import opentree.TaxonomyContext.NodeIndex;
 public class TaxonomyLoader extends Taxonomy {
 
 	static Logger _LOG = Logger.getLogger(TaxonomyLoader.class);
-//	static TaxonomyBase taxonomy;
 	int transaction_iter = 100000;
 	int LARGE = 100000000;
 	int globaltransactionnum = 0;
@@ -54,7 +43,7 @@ public class TaxonomyLoader extends Taxonomy {
 	
 	// basic traversal method
 	final TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-			.relationships( RelTypes.TAXCHILDOF,Direction.OUTGOING );
+			.relationships( RelType.TAXCHILDOF,Direction.OUTGOING );
 	
 	TaxonomyLoader(GraphDatabaseAgent t) {
 		super(t);
@@ -73,9 +62,8 @@ public class TaxonomyLoader extends Taxonomy {
 	 */
 	protected Node getNodeForTaxNomStatus(String taxonomicStatus, String nomenclaturalStatus, Transaction pendingTx) {
 		String key = taxonomicStatus + "|" + nomenclaturalStatus;
-		Index<Node> taxStatus = ALLTAXA.getNodeIndex(NodeIndex.TAX_STATUS);
+		Index<Node> taxStatus = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_STATUS);
 		IndexHits<Node> ih = taxStatus.get("status", key);
-//		IndexHits<Node> ih = NodeIndex.TAX_STATUS.get("status", key);
 		if (ih.size() == 0) {
 			boolean closeTx = false;
 			if (pendingTx == null) {
@@ -114,9 +102,8 @@ public class TaxonomyLoader extends Taxonomy {
 	 * @return
 	 */
 	protected Node getNodeForTaxRank(String taxonomicRank, Transaction pendingTx) {
-        Index<Node> taxRanks = ALLTAXA.getNodeIndex(NodeIndex.TAX_STATUS);
+        Index<Node> taxRanks = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_STATUS);
         IndexHits<Node> ih = taxRanks.get("rank", taxonomicRank);
-//		IndexHits<Node> ih = NodeIndex.TAX_RANK.get("rank", taxonomicRank);
 		if (ih.size() == 0) {
 			boolean closeTx = false;
 			if (pendingTx == null) {
@@ -187,7 +174,7 @@ public class TaxonomyLoader extends Taxonomy {
 			metadatanode.setProperty("source", sourcename);
 			metadatanode.setProperty("version", sourceversion);
 			metadatanode.setProperty("author", "no one");
-			ALLTAXA.getNodeIndex(NodeIndex.TAX_SOURCES).add(metadatanode, "source", sourcename);
+			ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES).add(metadatanode, "source", sourcename);
 			tx.success();
 		} finally {
 			tx.finish();
@@ -204,7 +191,7 @@ public class TaxonomyLoader extends Taxonomy {
 		try {
 			for (int i=0;i<temppar.size();i++) {
 				try {
-					Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelTypes.TAXCHILDOF);
+					Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
 					rel.setProperty("source", sourcename);
 					rel.setProperty("childid",temppar.get(i));
 					rel.setProperty("parentid",parents.get(temppar.get(i)));
@@ -222,7 +209,7 @@ public class TaxonomyLoader extends Taxonomy {
 	private Node createNewTaxonomyNode(String taxonName) {
 		Node tnode = createNode();
 		tnode.setProperty("name", taxonName);
-		ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_NAME).add(tnode, "name", taxonName);
+		ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).add(tnode, "name", taxonName);
 		return tnode;
 	}
 
@@ -277,7 +264,7 @@ public class TaxonomyLoader extends Taxonomy {
 													prop);
 				for (Node rootNd : parentless) {
 					System.out.println("created root node and metadata link");
-					metadatanode.createRelationshipTo(rootNd, RelTypes.METADATAFOR);
+					metadatanode.createRelationshipTo(rootNd, RelType.METADATAFOR);
 				}
 				templines.clear();
 			}
@@ -290,7 +277,7 @@ public class TaxonomyLoader extends Taxonomy {
 											prop);
 		for (Node rootNd : parentless) {
 			System.out.println("created root node and metadata link");
-			metadatanode.createRelationshipTo(rootNd, RelTypes.METADATAFOR);
+			metadatanode.createRelationshipTo(rootNd, RelType.METADATAFOR);
 		}
 		templines.clear();
 	}
@@ -441,7 +428,7 @@ public class TaxonomyLoader extends Taxonomy {
 					if (n != null) {
 						toDel.add(key);
 						Node validNode = null;
-						for (Relationship rel : n.getRelationships(Direction.OUTGOING, RelTypes.SYNONYMOF)) {
+						for (Relationship rel : n.getRelationships(Direction.OUTGOING, RelType.SYNONYMOF)) {
 							assert(validNode == null); // there should only be one outgoing SYNONYMOF relationship...
 							validNode = rel.getEndNode();
 						}
@@ -486,7 +473,7 @@ public class TaxonomyLoader extends Taxonomy {
 		try {
 			for (Node rootNd : parentless) {
 				System.out.println("created root node and metadata link");
-				metadatanode.createRelationshipTo(rootNd, RelTypes.METADATAFOR);
+				metadatanode.createRelationshipTo(rootNd, RelType.METADATAFOR);
 			}
 			tx.success();
 		} finally {
@@ -510,7 +497,7 @@ public class TaxonomyLoader extends Taxonomy {
 		synode.setProperty("nametype", taxonomicStatusStr);
 		synode.setProperty("gbif_ID", gbifIDStr);
 		synode.setProperty("source", sourcename);
-		Relationship rel = synode.createRelationshipTo(validNode, RelTypes.SYNONYMOF);
+		Relationship rel = synode.createRelationshipTo(validNode, RelType.SYNONYMOF);
 		rel.setProperty("source", sourcename);
 		synNameToSynNode.put(gbifIDStr, synode);
 		return synode;
@@ -550,7 +537,7 @@ public class TaxonomyLoader extends Taxonomy {
 							synode.setProperty("name", syns.get(j).get(0));
 							synode.setProperty("nametype", syns.get(j).get(1));
 							synode.setProperty("source", sourcename);
-							synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+							synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 						}
 					}
 				}
@@ -693,9 +680,9 @@ public class TaxonomyLoader extends Taxonomy {
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
 
-		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndex.TAX_SOURCES);
-		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_NAME);
-		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_SYNONYM);
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
 		
 		try {
 			tx = beginTx();
@@ -737,7 +724,7 @@ public class TaxonomyLoader extends Taxonomy {
 								parents.put(inputId, InputParentId);
 							} else { // this is the root node
 								System.out.println("created root node and metadata link");
-								metadatanode.createRelationshipTo(tnode, RelTypes.METADATAFOR);
+								metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
 							}
 							// synonym processing
 							if (synFileExists) {
@@ -752,7 +739,7 @@ public class TaxonomyLoader extends Taxonomy {
 										synode.setProperty("name",synName);
 										synode.setProperty("nametype",synNameType);
 										synode.setProperty("source",sourcename);
-										synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 										taxaBySynonym.add(tnode, "name", synName);
 									}
 								}
@@ -785,7 +772,7 @@ public class TaxonomyLoader extends Taxonomy {
 						parents.put(first, second);
 					} else {//this is the root node
 						System.out.println("created root node and metadata link");
-						metadatanode.createRelationshipTo(tnode, RelTypes.METADATAFOR);
+						metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
 					}
 					//synonym processing
 					if (synFileExists) {
@@ -800,7 +787,7 @@ public class TaxonomyLoader extends Taxonomy {
 								synode.setProperty("name",synName);
 								synode.setProperty("nametype",synNameType);
 								synode.setProperty("source",sourcename);
-								synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
+								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 								taxaBySynonym.add(tnode, "name", synName);
 							}
 						}
@@ -823,7 +810,7 @@ public class TaxonomyLoader extends Taxonomy {
 					try {
 						for (int i=0; i < temppar.size(); i++) {
 							try {
-								Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelTypes.TAXCHILDOF);
+								Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
 								rel.setProperty("source", sourcename);
 								rel.setProperty("childid",temppar.get(i));
 								rel.setProperty("parentid",parents.get(temppar.get(i)));
@@ -843,7 +830,7 @@ public class TaxonomyLoader extends Taxonomy {
 			try {
 				for (int i=0; i < temppar.size(); i++) {
 					try {
-						Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelTypes.TAXCHILDOF);
+						Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
 						rel.setProperty("source", sourcename);
 						rel.setProperty("childid",temppar.get(i));
 						rel.setProperty("parentid",parents.get(temppar.get(i)));
@@ -863,7 +850,7 @@ public class TaxonomyLoader extends Taxonomy {
 		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
 		HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
 		TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
-				.relationships( RelTypes.TAXCHILDOF,Direction.INCOMING );
+				.relationships( RelType.TAXCHILDOF,Direction.INCOMING );
 		tx = beginTx();
 		try {
 			for (int i=0; i < barrierNodes.size(); i++) {
@@ -879,7 +866,7 @@ public class TaxonomyLoader extends Taxonomy {
 	
 	HashMap<String, ArrayList<String>> globalchildren = null;
 	HashMap<String,String> globalidnamemap = null;
-	PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ),10000);
+	PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelType.TAXCHILDOF, Direction.OUTGOING ),10000);
 	HashMap<Node,Node> lastexistingmatchparents = new HashMap<Node,Node>();
 	
 	/**
@@ -911,7 +898,7 @@ public class TaxonomyLoader extends Taxonomy {
 			rootnode = getNodeById(Long.valueOf(rootid));
 			System.out.println(rootnode);
 		}
-		PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING ), 10000);
+		PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelType.TAXCHILDOF, Direction.OUTGOING ), 10000);
 
 		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
 		boolean synFileExists = false;
@@ -957,7 +944,7 @@ public class TaxonomyLoader extends Taxonomy {
 		}
 		HashMap<String,Node> taxcontainedbarriersmap = new HashMap<String,Node>();
 		
-		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndex.TAX_SOURCES);
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
 		
 		HashMap<String, String> idparentmap = new HashMap<String, String>(); // node number -> parent's number
 		HashMap<String, String> idnamemap = new HashMap<String, String>();
@@ -995,7 +982,7 @@ public class TaxonomyLoader extends Taxonomy {
 						}
 						roottaxid = id;
 						System.out.println("matched root node and metadata link");
-						metadatanode.createRelationshipTo(rootnode, RelTypes.METADATAFOR);
+						metadatanode.createRelationshipTo(rootnode, RelType.METADATAFOR);
 					}
 					//check to see if the name is a barrier
 					HashSet<String> barrierNames = (HashSet<String>) bn.getBarrierNodeNames();
@@ -1020,7 +1007,7 @@ public class TaxonomyLoader extends Taxonomy {
 		}
 	
 		
-		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_NAME);
+		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 		
 		System.out.println("node run through");
 		HashMap<String,Node> idnodemap = new HashMap<String,Node>();
@@ -1129,7 +1116,7 @@ public class TaxonomyLoader extends Taxonomy {
 					//make the relationship
 					Node tnode = idnodemap.get(curid);
 					Node tnodep = idnodemap.get(idparentmap.get(curid));
-					Relationship rel = tnode.createRelationshipTo(tnodep, RelTypes.TAXCHILDOF);
+					Relationship rel = tnode.createRelationshipTo(tnodep, RelType.TAXCHILDOF);
 					rel.setProperty("source", sourcename);
 					rel.setProperty("childid", curid);
 					rel.setProperty("parentid", idparentmap.get(curid));
@@ -1159,8 +1146,8 @@ public class TaxonomyLoader extends Taxonomy {
 							synode.setProperty("name",synName);
 							synode.setProperty("nametype",synNameType);
 							synode.setProperty("source",sourcename);
-							synode.createRelationshipTo(tnode, RelTypes.SYNONYMOF);
-							ALLTAXA.getNodeIndex(NodeIndex.TAXON_BY_SYNONYM).add(tnode, "name", synName);
+							synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+							ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM).add(tnode, "name", synName);
 						}
 					}
 				}

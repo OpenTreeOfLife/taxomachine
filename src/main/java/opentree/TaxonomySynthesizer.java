@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-import opentree.Taxonomy.RelTypes;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSQuery;
 
@@ -17,12 +16,16 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
-import opentree.TaxonomyContext.NodeIndex;
-
 public class TaxonomySynthesizer extends Taxonomy {
 
     int transaction_iter = 10000;
 
+    private static final TraversalDescription PREFTAXCHILDOF_TRAVERSAL = Traversal.description().breadthFirst().
+            relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
+
+    private static final TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description().breadthFirst().
+            relationships(RelType.TAXCHILDOF, Direction.INCOMING);
+    
     public TaxonomySynthesizer(GraphDatabaseAgent t) {
         super(t);
     }
@@ -39,11 +42,11 @@ public class TaxonomySynthesizer extends Taxonomy {
             e.printStackTrace();
         }
 
-        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-                .relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
+//        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+//                .relationships(RelType.TAXCHILDOF, Direction.INCOMING);
         System.out.println(firstNode.getProperty("name"));
         ArrayList<Node> conflictingnodes = new ArrayList<Node>();
-        for (Node friendnode : CHILDOF_TRAVERSAL.traverse(firstNode).nodes()) {
+        for (Node friendnode : TAXCHILDOF_TRAVERSAL.traverse(firstNode).nodes()) {
             int count = 0;
             boolean conflict = false;
             String endNode = "";
@@ -85,8 +88,8 @@ public class TaxonomySynthesizer extends Taxonomy {
      */
     public void makePreferredOTTOLRelationshipsConflicts() {
 
-        TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description()
-                .relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
+//        TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description()
+//                .relationships(RelType.TAXCHILDOF, Direction.INCOMING);
 
         // get start node
         Node life = getLifeNode();
@@ -102,7 +105,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                 String endNodeName = "";
                 Relationship ncbirel = null;
 
-                for (Relationship rel : friendnode.getRelationships(Direction.OUTGOING, RelTypes.TAXCHILDOF)) {
+                for (Relationship rel : friendnode.getRelationships(Direction.OUTGOING, RelType.TAXCHILDOF)) {
                     if (rel.getEndNode() == rel.getStartNode()) {
                         System.out.println("\n\n\n!!!!!!!!!!!!!!!!!!!CYCLE! Node " + rel.getEndNode() + " points to itself along relationship: " + rel + "\n\n\n");
                         continue;
@@ -123,8 +126,8 @@ public class TaxonomySynthesizer extends Taxonomy {
                     nRelsAdded += 1;
                     // System.out.println("would make one from "+ncbirel.getStartNode().getProperty("name")+" "+ncbirel.getEndNode().getProperty("name"));
                     if (ncbirel.getStartNode().getId() != ncbirel.getEndNode().getId()) {
-                        ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelTypes.PREFTAXCHILDOF);
-                        Relationship newrel2 = ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelTypes.TAXCHILDOF);
+                        ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelType.PREFTAXCHILDOF);
+                        Relationship newrel2 = ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelType.TAXCHILDOF);
                         newrel2.setProperty("source", "ottol");
                     } else {
                         System.out.println("would make cycle from " + ncbirel.getEndNode().getProperty("name"));
@@ -143,35 +146,37 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
 
     /**
-     * ASSUMES THAT `makePreferredOTTOLRelationshipsConflicts()` HAS ALREADY BEEN RUN. This will walks through the tree, following the
+     * ASSUMES THAT `makePreferredOTTOLRelationshipsConflicts()` HAS ALREADY BEEN RUN. This will walk through the tree, following the
      * preferred rels already identified by `makePreferredOTTOLRelationshipsConflicts()` and will create new preferred relationships
      * where there are no conflicts.
      */
     public void makePreferredOTTOLRelationshipsNOConflicts() {
 
-        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-                .relationships(RelTypes.TAXCHILDOF, Direction.INCOMING);
+//        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+//                .relationships(RelType.TAXCHILDOF, Direction.INCOMING);
 
         // get the start point
         Node life = getLifeNode();
         System.out.println(life.getProperty("name"));
 
-        int nNewRels = 0;
         Transaction tx = beginTx();
+        addToPreferredIndexes(life, ALLTAXA);
+
+        int nNewRels = 0;
         try {
             // walk out to the tips from the base of the tree
-            for (Node n : CHILDOF_TRAVERSAL.traverse(life).nodes()) {
-                if (n.hasRelationship(Direction.INCOMING, RelTypes.TAXCHILDOF) == false) {
+            for (Node n : TAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
+                if (n.hasRelationship(Direction.INCOMING, RelType.TAXCHILDOF) == false) {
 
                     // when we hit a tip, start walking back
                     Node curNode = n;
-                    while (curNode.hasRelationship(Direction.OUTGOING, RelTypes.TAXCHILDOF)) {
+                    while (curNode.hasRelationship(Direction.OUTGOING, RelType.TAXCHILDOF)) {
                         Node startNode = curNode;
                         Node endNode = null;
 
                         // if the current node already has a preferred relationship, we will just follow it
-                        if (startNode.hasRelationship(Direction.OUTGOING, RelTypes.PREFTAXCHILDOF)) {
-                            Relationship prefRel = startNode.getSingleRelationship(RelTypes.PREFTAXCHILDOF, Direction.OUTGOING);
+                        if (startNode.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)) {
+                            Relationship prefRel = startNode.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
 
                             // make sure we don't get stuck in an infinite loop (should not happen, could do weird things to the graph)
                             if (prefRel.getStartNode().getId() == prefRel.getEndNode().getId()) {
@@ -185,7 +190,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                         } else {
 
                             // if there is no preferred rel then they all point to the same end node; just follow the first non-looping relationship
-                            for (Relationship rel : curNode.getRelationships(RelTypes.TAXCHILDOF, Direction.OUTGOING)) {
+                            for (Relationship rel : curNode.getRelationships(RelType.TAXCHILDOF, Direction.OUTGOING)) {
                                 if (rel.getStartNode().getId() == rel.getEndNode().getId()) {
                                     System.out.println("pointing to itself " + rel + " " + rel.getStartNode().getId() + " " + rel.getEndNode().getId());
                                     break;
@@ -203,8 +208,8 @@ public class TaxonomySynthesizer extends Taxonomy {
                             }
                             
                             // create preferred relationships
-                            curNode.createRelationshipTo(endNode, RelTypes.PREFTAXCHILDOF);
-                            curNode.createRelationshipTo(endNode, RelTypes.TAXCHILDOF).setProperty("source", "ottol");
+                            curNode.createRelationshipTo(endNode, RelType.PREFTAXCHILDOF);
+                            curNode.createRelationshipTo(endNode, RelType.TAXCHILDOF).setProperty("source", "ottol");
                             nNewRels += 1;
                         }
 
@@ -234,11 +239,33 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
     }
 
+    /**
+     * Builds the context-specific indices that are used for more efficient access to sub-regions of the taxonomy, as defined in the ContextDescription enum.
+     * Context-specific indices are all just subsets of the preferred taxon indices (by name, synonym, and both) for the entire graph.
+     */
     public void makeContextSpecificIndexes() {
         
-        // walk through the preferred taxonomy, filling in the scoped indexes for each context
-        // use the ContextDescription and NodeIndex enums
-        
+        for (ContextDescription cd : ContextDescription.values()) {
+            TaxonomyContext context = this.getContext(cd);
+            Node contextRootNode = context.getRootNode();
+            int i = 0;
+            
+            if (contextRootNode.getProperty("name").equals(LIFE_NODE_NAME) == false) {
+
+                System.out.println("making indices for " + contextRootNode.getProperty("name"));
+    
+                Transaction tx = beginTx();
+                for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(contextRootNode).nodes()) {
+                    addToPreferredIndexes(n, context);
+
+                    i++;
+                    if (i % 100000 == 0)
+                        System.out.println(i);
+                }
+                tx.success();
+                tx.finish();
+            }
+        }
     }
     
     /**
@@ -246,8 +273,8 @@ public class TaxonomySynthesizer extends Taxonomy {
      * @param outfile the outfile that will have the dumped ottol information as id\tparentid\tname
      */
     public void dumpPreferredOTTOLRelationships(String outfile) {
-    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-                 .relationships(RelTypes.PREFTAXCHILDOF, Direction.INCOMING);
+//    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+//                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
 
          // get the start point
          Node life = getLifeNode();
@@ -255,9 +282,9 @@ public class TaxonomySynthesizer extends Taxonomy {
          PrintWriter outFile;
          try {
              outFile = new PrintWriter(new FileWriter(outfile));
-             for (Node n : CHILDOF_TRAVERSAL.traverse(life).nodes()) {
-            	 if(n.hasRelationship(Direction.OUTGOING, RelTypes.PREFTAXCHILDOF)){
-            		 Node p = n.getSingleRelationship(RelTypes.PREFTAXCHILDOF, Direction.OUTGOING).getEndNode();
+             for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
+            	 if(n.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)){
+            		 Node p = n.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING).getEndNode();
             		 outFile.write(n.getId()+"\t"+p.getId()+"\t"+n.getProperty("name")+"\n");
             	 }else{
             		 outFile.write(n.getId()+"\t"+"\t"+n.getProperty("name")+"\n");
@@ -270,14 +297,15 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
     
     /**
-     * Just add the node `n` to the prefTaxNodes index and its synonyms to prefSynNodes.
+     * THIS ASSUMES (REQUIRES) THAT IT IS BEING CALLED FROM WITHIN A TRANSACTION. Just adds `node` under its name and its synonyms
+     * to the corresponding indices for `context`.
      * @param node
      */
-    private void addToPreferredIndexes(Node node, TaxonomyContext context) {
+    public void addToPreferredIndexes(Node node, TaxonomyContext context) {
 
-        Index<Node> prefTaxNodesByName = context.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME);
-        Index<Node> prefTaxNodesBySynonym = context.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_SYNONYM);
-        Index<Node> prefTaxNodesByNameOrSynonym = context.getNodeIndex(NodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+        Index<Node> prefTaxNodesByName = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
+        Index<Node> prefTaxNodesBySynonym = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
+        Index<Node> prefTaxNodesByNameOrSynonym = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
 
         // add the taxon node under its own name
         prefTaxNodesByName.add(node, "name", node.getProperty("name"));
@@ -286,13 +314,26 @@ public class TaxonomySynthesizer extends Taxonomy {
         // add the taxon node under all its synonym names
         for (Node sn : Traversal.description()
                 .breadthFirst()
-                .relationships(RelTypes.SYNONYMOF,Direction.INCOMING )
+                .relationships(RelType.SYNONYMOF,Direction.INCOMING )
                 .traverse(node).nodes()) {
             prefTaxNodesBySynonym.add(node, "name", sn.getProperty("name"));
             prefTaxNodesByNameOrSynonym.add(node, "name", sn.getProperty("name"));
         }
     }    
 
+    /**
+     * Originally a one-time solution to a specific problem that has now been fixed. Leaving it in case it is useful.
+     * @param node
+     * @param context
+     */
+    @Deprecated
+    public void addToPreferredIndexesAtomicTX(Node node, TaxonomyContext context) {
+        Transaction tx = beginTx();
+        addToPreferredIndexes(node, context);
+        tx.success();
+        tx.finish();
+    }
+    
     /**
      * @param args
      */
