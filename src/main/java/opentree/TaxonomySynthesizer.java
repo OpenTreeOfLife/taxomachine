@@ -4,6 +4,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
 
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSQuery;
@@ -240,32 +244,138 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
 
     /**
-     * Builds the context-specific indices that are used for more efficient access to sub-regions of the taxonomy, as defined in the ContextDescription enum.
-     * Context-specific indices are all just subsets of the preferred taxon indices (by name, synonym, and both) for the entire graph.
+     * Used to make a hierarchy for the taxonomic contexts (each ContextTreeNode contains links to immediate child ContextTreeNodes),
+     * which is in turn used to do a pre-order traversal when building the contexts, which in turn ensures that the last written value
+     * of each node's leastContext property contains the least inclusive context.
+     * @author cody
+     *
      */
-    public void makeContextSpecificIndexes() {
+    private class ContextTreeNode {
         
-        for (ContextDescription cd : ContextDescription.values()) {
-            TaxonomyContext context = this.getContext(cd);
-            Node contextRootNode = context.getRootNode();
-            int i = 0;
-            
-            if (contextRootNode.getProperty("name").equals(LIFE_NODE_NAME) == false) {
+        TaxonomyContext context;
+        ArrayList<ContextTreeNode> children;
 
-                System.out.println("making indices for " + contextRootNode.getProperty("name"));
+        ContextTreeNode(TaxonomyContext context) {
+            this.context = context;
+            children = new ArrayList<ContextTreeNode>();
+        }
+        
+        void addChild(ContextTreeNode child) {
+            children.add(child);
+        }
+        
+        TaxonomyContext getContext() {
+            return context;
+        }
+        
+        List<ContextTreeNode> getChildren() {
+            return children;
+        }
+    }
     
-                Transaction tx = beginTx();
-                for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(contextRootNode).nodes()) {
-                    addToPreferredIndexes(n, context);
+    /**
+     * Builds the context-specific indices that are used for more efficient access to sub-regions of the taxonomy, as defined in the
+     * ContextDescription enum. Context-specific indices are all just subsets of the preferred taxon indices (by name, synonym, and
+     * both) for the entire graph.
+     *
+     * This method first uses the taxonomy to determine the hierarchical nesting structure of the contexts, recording this hierarchy
+     * in the form of pointer-links among a group of ContextTreeNode objects. This hierarchy is then passed to a recursive function
+     * that builds the indexes, which ensures that they are built outside-in, and thus that each taxon node's leastIndex property
+     * (written to each traversed node during the creation of each context's indices) always reflects the least inclusive index name.
+     * @return root of the ContextTreeNode hierarchy
+     */
+    public void makeContexts() {
+        
+        // make map of ContextTreeNode objects for all taxonomic contexts, indexed by root node name
+        HashMap<String, ContextTreeNode> contextNodesByRootName = new HashMap<String, ContextTreeNode>();
+        for (ContextDescription cd : ContextDescription.values()) {
+            contextNodesByRootName.put(cd.licaNodeName, new ContextTreeNode(new TaxonomyContext(cd, this)));
+        }
 
-                    i++;
-                    if (i % 100000 == 0)
-                        System.out.println(i);
+        TraversalDescription prefTaxParentOfTraversal = Traversal.description().depthFirst().
+                relationships(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
+        
+        // for each ContextTreeNode (i.e. each context)
+        for (Entry<String, ContextTreeNode> entry: contextNodesByRootName.entrySet()) {
+            
+            String childName = entry.getKey();
+            ContextTreeNode contextNode = entry.getValue();
+                        
+            // traverse back up the taxonomy tree from the root of this context toward life
+            for (Node parentNode : prefTaxParentOfTraversal.traverse(contextNode.context.getRootNode()).nodes()) {
+
+                // if/when we find a more inclusive (i.e. parent) context
+                String parentName = String.valueOf(parentNode.getProperty("name"));
+                if (contextNodesByRootName.containsKey(parentName) && (parentName.equals(childName) == false)) {
+
+                    System.out.println("Adding " + childName + " as child of " + parentName);
+                    
+                    // add this link in the contextNode hierarchy and move to the next contextNode
+                    ContextTreeNode parentContextNode = contextNodesByRootName.get(parentName);
+                    parentContextNode.addChild(contextNode);
+                    break;
+
                 }
-                tx.success();
-                tx.finish();
             }
         }
+        
+        // get the root of the ContextTreeNode tree (i.e. most inclusive context)
+        ContextTreeNode contextHierarchyRoot = contextNodesByRootName.get(LIFE_NODE_NAME);
+    
+        System.out.println("\nHierarchy for contexts (note: paraphyletic groups do not have their own contexts):");
+        printContextTree(contextHierarchyRoot, "");
+        System.out.println("");
+
+        // make the contexts!
+        makeContextsRecursive(contextHierarchyRoot);
+        
+    }
+    
+    /**
+     * Just prints the hierarchy below `contextNode`
+     * @param contextNode
+     * @param prefix
+     */
+    private void printContextTree(ContextTreeNode contextNode, String prefix) {
+
+        prefix = prefix + "    ";
+        for (ContextTreeNode childNode : contextNode.getChildren()) {
+            System.out.println(prefix + childNode.getContext().getDescription().name);
+            printContextTree(childNode, prefix);
+        }
+
+    }
+
+    /**
+     * Uses recursive method for building indexes, starting with most inclusive and working in, so that least inclusive indexes are built last.
+     * @param contextNode
+     */
+    private void makeContextsRecursive(ContextTreeNode contextNode) {
+
+        TaxonomyContext context = contextNode.getContext();
+        Node contextRootNode = context.getRootNode();
+        int i = 0;
+        
+        if (contextRootNode.getProperty("name").equals(LIFE_NODE_NAME) == false) {
+
+            System.out.println("making indices for " + contextRootNode.getProperty("name"));
+
+            Transaction tx = beginTx();
+            for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(contextRootNode).nodes()) {
+                addToPreferredIndexes(n, context);
+                
+                i++;
+                if (i % 100000 == 0)
+                    System.out.println(i);
+            }
+            tx.success();
+            tx.finish();
+        }
+        
+        // now move on to all children
+        for (ContextTreeNode childNode : contextNode.getChildren())
+            makeContextsRecursive(childNode);
+
     }
     
     /**
@@ -297,7 +407,7 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
     
     /**
-     * THIS ASSUMES (REQUIRES) THAT IT IS BEING CALLED FROM WITHIN A TRANSACTION. Just adds `node` under its name and its synonyms
+     * Just adds `node` under its name and its synonyms. THIS METHOD ASSUMES (I.E. REQUIRES) THAT IT IS BEING CALLED FROM WITHIN A TRANSACTION.
      * to the corresponding indices for `context`.
      * @param node
      */
@@ -306,6 +416,9 @@ public class TaxonomySynthesizer extends Taxonomy {
         Index<Node> prefTaxNodesByName = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
         Index<Node> prefTaxNodesBySynonym = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
         Index<Node> prefTaxNodesByNameOrSynonym = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+        
+        // update the leastcontext property (notion of "least" assumes this is being called by recursive context-building)
+        node.setProperty("leastcontext", context.getDescription().toString());
 
         // add the taxon node under its own name
         prefTaxNodesByName.add(node, "name", node.getProperty("name"));

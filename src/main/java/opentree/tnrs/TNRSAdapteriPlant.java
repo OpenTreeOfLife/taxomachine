@@ -173,7 +173,7 @@ public class TNRSAdapteriPlant extends TNRSAdapter {
                                 if (matchedNodes.size() > 0) {
                                     for (Node n : matchedNodes) {
                                         
-                                        Taxon matchedTaxon = new Taxon(n);
+                                        Taxon matchedTaxon = taxonomy.getTaxon(n);
                                         
                                         // check to see if the fuzzily matched node is a homonym
                                         IndexHits<Node> directMatches = prefTaxNodesByName.get("name", matchedTaxon.getName());

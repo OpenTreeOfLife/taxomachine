@@ -11,12 +11,12 @@ import opentree.ContextDescription;
 
 public class TaxonomyContext {
     
-    private ContextDescription _contextDescription;
-    private Taxonomy _taxonomy;
+    private ContextDescription contextDescription;
+    private Taxonomy taxonomy;
     
     TaxonomyContext(ContextDescription context, Taxonomy taxonomy) {
-        _contextDescription = context;
-        _taxonomy = taxonomy;      
+        this.contextDescription = context;
+        this.taxonomy = taxonomy;      
         
     }
     
@@ -26,27 +26,30 @@ public class TaxonomyContext {
      * @return nodeIndex
      */
     public Index<Node> getNodeIndex(NodeIndexDescription indexDesc) {
-        String indexName = indexDesc.namePrefix + _contextDescription.nameSuffix;
-        return _taxonomy.graphDb.getNodeIndex(indexName);
+        String indexName = indexDesc.namePrefix + contextDescription.nameSuffix;
+        return taxonomy.graphDb.getNodeIndex(indexName);
         
     }
-    
+
+    /**
+     * Return the ContextDescription that underlies this TaxonomyContext object.
+     * @return
+     */
+    public ContextDescription getDescription() {
+        return contextDescription;
+    }
+
     /**
      * Return the root node for this taxonomic context
      * @return rootNode
      */
     public Node getRootNode() {
-//        System.out.println(_contextDescription.licaNodeName);
-        IndexHits<Node> rootMatch = _taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).get("name", _contextDescription.licaNodeName);
-//        System.out.println(rootMatch.toString() + " length " + rootMatch.size());
-
+        IndexHits<Node> rootMatch = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).get("name", contextDescription.licaNodeName);
         Node rn = rootMatch.getSingle();
         rootMatch.close();
 
-//        System.out.println(rn.toString() + " " + rn.getProperty("name"));
         return rn;
     }
-    
 
     /**
      * a convenience wrapper for the taxNodes index .get("name", `name`) method

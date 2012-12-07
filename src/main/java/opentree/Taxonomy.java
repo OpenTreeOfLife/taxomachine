@@ -41,7 +41,27 @@ public class Taxonomy {
     }
     
     /**
-     * Just get the recognized taxon node that is associated with a given synonym node. Deprecated since t
+     * Returns a TaxonomyContext object for the ContextDescription indicated by `id`
+     * @param id
+     * @return
+     */
+    public TaxonomyContext getContextByName(String name) {
+
+        for (ContextDescription cd : ContextDescription.values())
+            if (cd.name == name)
+                return this.getContext(cd);
+
+        // if we didn't find one
+        return null;
+    }
+
+    public Taxon getTaxon(Node node) {
+        return new Taxon(node, this);
+    }
+    
+    /**
+     * Just get the recognized taxon node that is associated with a given synonym node. Deprecated since the synonym nodes are now only accessible via
+     * traversals that must pass through the associated taxon nodes anyway, but left in case it is becomes useful.
      * 
      * @param synonymNode
      * @return taxNode

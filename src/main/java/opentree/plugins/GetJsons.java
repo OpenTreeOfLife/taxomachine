@@ -36,6 +36,7 @@ public class GetJsons extends ServerPlugin {
 
         String retst = "";
         Taxon taxon;
+        Taxonomy t = new Taxonomy(new GraphDatabaseAgent(target.getGraphDatabase()));
         
         if (nubRelId != null) {
             
@@ -45,12 +46,12 @@ public class GetJsons extends ServerPlugin {
                 for (int i = 0; i < altrels.length; i++) {
                     rels.add(altrels[i]);
                 }
-            taxon = new Taxon(rel.getEndNode());
+            taxon = t.getTaxon(rel.getEndNode());
             retst = taxon.constructJSONAltRels((String) rel.getProperty("source"), rels);
 
         } else {
 
-            taxon = new Taxon(target);
+            taxon = t.getTaxon(target);
             ArrayList<Long> rels = new ArrayList<Long>();
             if (altrels != null)
                 for (int i = 0; i < altrels.length; i++) {

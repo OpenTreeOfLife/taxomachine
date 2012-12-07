@@ -143,7 +143,7 @@ public class MainRunner {
             te =  new TaxonomySynthesizer(taxdb);
             tnrs = new TNRSQuery(te);
             try {
-                taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
+                taxon = te.getTaxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
                 System.out.println("There was more than one match for that name");
             }
@@ -160,7 +160,7 @@ public class MainRunner {
             te =  new TaxonomySynthesizer(taxdb);
             tnrs = new TNRSQuery(te);
             try {
-                taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
+                taxon = te.getTaxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
                 System.out.println("There was more than one match for that name");
             }
@@ -186,7 +186,7 @@ public class MainRunner {
             te =  new TaxonomySynthesizer(taxdb);
             tnrs = new TNRSQuery(te);
             try {
-                taxon = new Taxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
+                taxon = te.getTaxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
                 System.out.println("There was more than one match for that name");
             }
@@ -225,7 +225,7 @@ public class MainRunner {
             taxdb = new GraphDatabaseAgent(graphname);
             te =  new TaxonomySynthesizer(taxdb);
             System.out.println("building context-specific indexes");
-            te.makeContextSpecificIndexes();
+            te.makeContexts();
 	
 		} else {
 			System.err.println("\nERROR: not a known command\n");

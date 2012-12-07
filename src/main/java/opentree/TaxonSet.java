@@ -10,34 +10,33 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
-public class TaxonSet implements Iterable<Node> {
+public class TaxonSet implements Iterable<Taxon> {
 
-    private final LinkedList<Node> taxa;
+    private final LinkedList<Taxon> taxa;
+    private final Taxonomy taxonomy;
     private Taxon lica;
     
-    public TaxonSet (List<?> inTaxa) {
-        
-        if (inTaxa.get(0) instanceof Taxon) {
-            taxa = new LinkedList<Node>();
-            for (Taxon t : (LinkedList<Taxon>)inTaxa)
-                taxa.add(t.getNode());
-
-        } else if (inTaxa.get(0) instanceof Node) {
-            taxa = (LinkedList<Node>)inTaxa;
-
-        } else {
-            taxa =null;
-
-        }
-
+    /**
+     * Assumes all taxa are coming from the same taxonomy (since we only expect to ever be working with one taxonomy)
+     * @param inTaxa
+     */
+    public TaxonSet (List<Taxon> inTaxa) {
         lica = null;
+        taxa = (LinkedList<Taxon>) inTaxa;
+
+        if (taxa.size() > 0)
+            taxonomy = taxa.get(0).getTaxonomy();
+        else
+            taxonomy = null;
     }
     
-    public TaxonSet (Node[] inTaxa) {
-        taxa = new LinkedList<Node>();
-        for (int i = 0; i < inTaxa.length; i++)
-            taxa.add(inTaxa[i]);
+    public TaxonSet (LinkedList<Node> inNodes, Taxonomy taxonomy) {
         lica = null;
+        this.taxonomy = taxonomy;
+
+        taxa = new LinkedList<Taxon>();
+        for (Node n : inNodes)
+            taxa.add(taxonomy.getTaxon(n));
     }
     
     public Taxon getLICA() {
@@ -54,7 +53,7 @@ public class TaxonSet implements Iterable<Node> {
             relType = RelType.TAXCHILDOF;
         
         if (hasLICA())
-            return new Taxon(lica.getNode());
+            return lica;
         
         Node licaNode;
         if (taxa.size() == 0) {
@@ -62,7 +61,7 @@ public class TaxonSet implements Iterable<Node> {
 
         } else if (taxa.size() == 1) {
             // if there is only one taxon, then it is the mrca
-            licaNode = taxa.peek();
+            licaNode = taxa.peek().getNode();
         
         } else {
             // find the mrca of all taxa
@@ -93,8 +92,8 @@ public class TaxonSet implements Iterable<Node> {
         }
 
         // keep an internal copy of the mrca, we may need it later
-        lica = new Taxon(licaNode);
-        return new Taxon(licaNode);
+        lica = taxonomy.getTaxon(licaNode);
+        return lica;
     }
     
     public boolean hasLICA() {
@@ -106,7 +105,7 @@ public class TaxonSet implements Iterable<Node> {
     }
     
     @Override
-    public Iterator<Node> iterator() {
+    public Iterator<Taxon> iterator() {
         return taxa.iterator();
     }
 }

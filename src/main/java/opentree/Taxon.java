@@ -26,17 +26,23 @@ import org.neo4j.kernel.Traversal;
 public class Taxon {
 
     private final Node taxNode;
+    private final Taxonomy taxonomy;
     private ChildNumberEvaluator cne;
     private SpeciesEvaluator se;
 
-    public Taxon(Node n) {
-        taxNode = n;
+    public Taxon(Node node, Taxonomy taxonomy) {
+        this.taxNode = node;
+        this.taxonomy = taxonomy;
         cne = new ChildNumberEvaluator();
         se = new SpeciesEvaluator();
     }
 
     public Node getNode() {
         return taxNode;
+    }
+    
+    public Taxonomy getTaxonomy() {
+        return taxonomy;
     }
 
     public String getNomenCode() {
@@ -48,6 +54,22 @@ public class Taxon {
     
     public String getName() {
         return taxNode.getProperty("name").toString();
+    }
+    
+    /**
+     * Returns the least inclusive TaxonomyContext object that contains `taxon`
+     * @param taxon
+     * @return
+     */
+    public TaxonomyContext getLeastInclusiveContext() {
+        
+        // look for a matching ContextDescription, if we don't find one
+        for (ContextDescription cd : ContextDescription.values())
+            if (cd.toString().equals(taxNode.getProperty("leastcontext")))
+                return new TaxonomyContext(cd, taxonomy);
+
+        // if we didn't find a match
+        return null;
     }
     
     public boolean isPreferredTaxChildOf(Taxon parent) {
@@ -370,11 +392,12 @@ public class Taxon {
 
         String pathToGraphDb = "";
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(pathToGraphDb);
+        Taxonomy t = new Taxonomy(gdb);
         TNRSQuery tnrs = new TNRSQuery(new Taxonomy(gdb));
 
         Taxon lonicera = null;
         try {
-            lonicera = new Taxon(tnrs.getExactMatches("Lonicera").getSingleMatch().getMatchedNode());
+            lonicera = new Taxon(tnrs.getExactMatches("Lonicera").getSingleMatch().getMatchedNode(), t);
         } catch (MultipleHitsException e) {
             e.printStackTrace();
         }
