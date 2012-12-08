@@ -118,7 +118,7 @@ public class GetJsons extends ServerPlugin {
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         TNRSQuery tnrs = new TNRSQuery(new Taxonomy(gdb));
         
-        TNRSNameResult matches = tnrs.getExactMatches(nodename).iterator().next();
+        TNRSNameResult matches = tnrs.matchExact(nodename).iterator().next();
 
         for (TNRSMatch m : matches)
             ((ArrayList<Long>)results.get("nodeid")).add(m.getMatchedNode().getId());

@@ -6,13 +6,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import opentree.ContextGroup;
 import opentree.GraphDatabaseAgent;
 import opentree.Taxonomy;
 import opentree.ContextDescription;
+import opentree.TaxonomyContext;
 import opentree.tnrs.TNRSNameScrubber;
-import opentree.tnrs.TNRSQueryNew;
+import opentree.tnrs.TNRSQuery;
 import opentree.tnrs.TNRSResults;
 
 import org.forester.io.parsers.PhylogenyParser;
@@ -34,15 +36,17 @@ public class TNRS extends ServerPlugin {
     @PluginTarget(GraphDatabaseService.class)
     public Representation doTNRSForNames(
             @Source GraphDatabaseService graphDb,
-            @Description("A comma-delimited string of names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString) {
+            @Description("A comma-delimited string of names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
+            @Description("A comma-delimited string of names to be queried against the taxonomy db") @Parameter(name = "contextName", optional = true) String contextName) {
 
         String[] searchStrings = queryString.split("\\s*\\,\\s*");
-
         GraphDatabaseAgent taxService = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(taxService);
+        TaxonomyContext context = taxonomy.getContextByName(contextName);
 
-        TNRSQueryNew tnrs = new TNRSQueryNew(taxonomy);
-        TNRSResults results = tnrs.match(searchStrings);
+        TNRSQuery tnrs = new TNRSQuery(taxonomy);
+        HashSet<String> names = tnrs.stringArrayToHashset(searchStrings);
+        TNRSResults results = tnrs.initialize(names, context).doFullTNRS();
 
         taxService.shutdownDb();
         return OpentreeRepresentationConverter.convert(results);
@@ -84,13 +88,20 @@ public class TNRS extends ServerPlugin {
         }
 
         // clean the names extracted from the treefile
-        String[] tipNames = TNRSNameScrubber.scrubNames(phys[0].getAllExternalNodeNames());
-
-        // search for the names
+        String[] cleanNames = TNRSNameScrubber.scrubNames(phys[0].getAllExternalNodeNames());
+        
+        // connect to taxonomy db
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
-        TNRSQueryNew tnrs = new TNRSQueryNew( new Taxonomy(gdb));
+        Taxonomy taxonomy = new Taxonomy(gdb);
+        TaxonomyContext context = taxonomy.getContextByName(contextName);
 
-        TNRSResults results = tnrs.match(tipNames);
+        // TEST
+        System.out.println(cleanNames[0] + " " + context);
+
+        // do TNRS
+        TNRSQuery tnrs = new TNRSQuery(taxonomy);
+        HashSet<String> names = tnrs.stringArrayToHashset(cleanNames);
+        TNRSResults results = tnrs.initialize(names, context).doFullTNRS();
 
         gdb.shutdownDb();
         return OpentreeRepresentationConverter.convert(results);

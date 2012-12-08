@@ -35,7 +35,7 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
         return unmatchedNames;
     }
 
-    public Set<String> getUnambiguousNames() {
+    public Set<String> getNamesWithDirectMatches() {
         return unambiguousNames;
     }
 
@@ -70,7 +70,7 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
         unmatchedNames.add(name);
     }
 
-    protected void addUnambiguousName(String name) {
+    protected void addNameWithDirectMatch(String name) {
         unambiguousNames.add(name);
     }
 

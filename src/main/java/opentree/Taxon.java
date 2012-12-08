@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSQuery;
@@ -397,7 +398,9 @@ public class Taxon {
 
         Taxon lonicera = null;
         try {
-            lonicera = new Taxon(tnrs.getExactMatches("Lonicera").getSingleMatch().getMatchedNode(), t);
+            HashSet<String> names = new HashSet<String>();
+            names.add("Lonicera");
+            lonicera = new Taxon(tnrs.matchExact(names).getSingleMatch().getMatchedNode(), t);
         } catch (MultipleHitsException e) {
             e.printStackTrace();
         }

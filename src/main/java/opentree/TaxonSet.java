@@ -1,9 +1,11 @@
 package opentree;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -12,7 +14,7 @@ import org.neo4j.kernel.Traversal;
 
 public class TaxonSet implements Iterable<Taxon> {
 
-    private final LinkedList<Taxon> taxa;
+    private final HashSet<Taxon> taxa;
     private final Taxonomy taxonomy;
     private Taxon lica;
     
@@ -20,12 +22,12 @@ public class TaxonSet implements Iterable<Taxon> {
      * Assumes all taxa are coming from the same taxonomy (since we only expect to ever be working with one taxonomy)
      * @param inTaxa
      */
-    public TaxonSet (List<Taxon> inTaxa) {
+    public TaxonSet (Set<Taxon> inTaxa) {
         lica = null;
-        taxa = (LinkedList<Taxon>) inTaxa;
+        taxa = (HashSet<Taxon>) inTaxa;
 
         if (taxa.size() > 0)
-            taxonomy = taxa.get(0).getTaxonomy();
+            taxonomy = taxa.iterator().next().getTaxonomy();
         else
             taxonomy = null;
     }
@@ -34,7 +36,7 @@ public class TaxonSet implements Iterable<Taxon> {
         lica = null;
         this.taxonomy = taxonomy;
 
-        taxa = new LinkedList<Taxon>();
+        taxa = new HashSet<Taxon>();
         for (Node n : inNodes)
             taxa.add(taxonomy.getTaxon(n));
     }
@@ -57,11 +59,11 @@ public class TaxonSet implements Iterable<Taxon> {
         
         Node licaNode;
         if (taxa.size() == 0) {
-            throw new java.lang.InternalError("Attempt to find the mrca of zero taxa");
+            throw new java.lang.InternalError("Attempt to find the LICA of zero taxa");
 
         } else if (taxa.size() == 1) {
             // if there is only one taxon, then it is the mrca
-            licaNode = taxa.peek().getNode();
+            licaNode = taxa.iterator().next().getNode();
         
         } else {
             // find the mrca of all taxa

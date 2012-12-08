@@ -58,7 +58,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                 HashMap<String, Object> tnrsResultsMap = new HashMap<String, Object>();
                 
                 tnrsResultsMap.put("governing_code", results.getGoverningCode());
-                tnrsResultsMap.put("unambiguous_names", results.getUnambiguousNames());
+                tnrsResultsMap.put("unambiguous_names", results.getNamesWithDirectMatches());
                 tnrsResultsMap.put("unmatched_names", results.getUnmatchedNames());
                 tnrsResultsMap.put("matched_names", results.getMatchedNames());
                 
@@ -131,10 +131,16 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                 serializer.putString("nomenCode", match.getNomenCode());
                 serializer.putBoolean("isPerfectMatch", match.getIsPerfectMatch());
                 serializer.putBoolean("isApprox", match.getIsApproximate());
-                serializer.putBoolean("isSynonym", match.getIsSynonym());
-                serializer.putBoolean("isHomonym", match.getIsHomonym());
                 serializer.putString("searchString", match.getSearchString());
                 serializer.putNumber("score", match.getScore());
+
+                if (match.getNameStatusIsKnown()) {
+                    serializer.putString("matchedNameStatus", "known");
+                    serializer.putBoolean("isSynonym", match.getIsSynonym());
+                    serializer.putBoolean("isHomonym", match.getIsHomonym());
+                } else {
+                    serializer.putString("matchedNameStatus", "uncertain");
+                }
 
                 if (match.getIsSynonym()) {
                     serializer.putNumber("synonymNodeId", match.getSynonymNode().getId());

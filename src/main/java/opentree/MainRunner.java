@@ -3,6 +3,7 @@ package opentree;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSMatch;
@@ -143,7 +144,7 @@ public class MainRunner {
             te =  new TaxonomySynthesizer(taxdb);
             tnrs = new TNRSQuery(te);
             try {
-                taxon = te.getTaxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
+                taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
                 System.out.println("There was more than one match for that name");
             }
@@ -160,7 +161,7 @@ public class MainRunner {
             te =  new TaxonomySynthesizer(taxdb);
             tnrs = new TNRSQuery(te);
             try {
-                taxon = te.getTaxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
+                taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
                 System.out.println("There was more than one match for that name");
             }
@@ -186,7 +187,7 @@ public class MainRunner {
             te =  new TaxonomySynthesizer(taxdb);
             tnrs = new TNRSQuery(te);
             try {
-                taxon = te.getTaxon(tnrs.getExactMatches(query).getSingleMatch().getMatchedNode());
+                taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
                 System.out.println("There was more than one match for that name");
             }
@@ -259,11 +260,13 @@ public class MainRunner {
 		
 		if (args[0].equals("tnrsbasic")) {
 			String[] searchStrings = args[1].split("\\s*\\,\\s*");
+			
+			HashSet<String> names = tnrs.stringArrayToHashset(searchStrings);
 						
 			for (int i = 0; i < searchStrings.length; i++) {
 				System.out.println(searchStrings[i]);
 			}
-			results = tnrs.getAllMatches(searchStrings);
+			results = tnrs.matchExact(names);
 
 		} else if (args[0].equals("tnrstree")) {
 		    // TODO: for files containing multiple trees, make sure to do TNRS just once
@@ -283,17 +286,16 @@ public class MainRunner {
 				e.printStackTrace();
 			}
 			
-// TODO: use MRCA of tree as query context
-// TODO: use tree structure to help differentiate homonyms
+			// TODO: use MRCA of tree as query context
+			// TODO: use tree structure to help differentiate homonyms
 			String[] tipNames = phys[0].getAllExternalNodeNames();
 
 //          TNRSNameScrubber scrubber = new TNRSNameScrubber(searchStrings);
             String[] cleanedNames = TNRSNameScrubber.scrubNames(tipNames);
             
+            HashSet<String> names = tnrs.stringArrayToHashset(cleanedNames);
 //          scrubber.review(); // print old and cleaned names
-
-			
-			results = tnrs.getAllMatches(cleanedNames);
+            results = tnrs.initialize(names, null).doFullTNRS();
 		}
 		
 		for (TNRSNameResult nameResult : results) {
@@ -407,14 +409,14 @@ public class MainRunner {
 				} else if (args[0].matches("tnrsbasic|tnrstree")) {
 					mr.parseTNRSRequest(args);
 				
-/*				
+				
 				// TEMP
 				} else if (args[0].equals("addlifenode")) {
 				    TaxonomySynthesizer ts = new TaxonomySynthesizer(new GraphDatabaseAgent(args[1]));
 				    Node lifeNode = ts.getLifeNode();
 				    System.out.println("lifenode: " +  lifeNode.toString() + " " + lifeNode.getProperty("name"));
 				    ts.addToPreferredIndexesAtomicTX(lifeNode, ts.ALLTAXA);
-*/
+
 				    
 				} else {
 					System.err.println("Unrecognized command \"" + args[0] + "\"");

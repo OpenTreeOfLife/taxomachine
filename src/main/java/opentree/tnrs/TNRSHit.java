@@ -17,137 +17,157 @@ import org.neo4j.graphdb.Node;
  */
 public class TNRSHit {
 
-    Node _matchedNode;
-    Node _synonymNode;
-    String _searchString;
-    String _sourceName;
-    String _nomenCode;
-    boolean _isHomonym;
-    boolean _isPerfectMatch;
-    boolean _isApprox;
-    boolean _isSynonym;
-    HashMap<String,String> _otherData;
-    double _score;
+    Node matchedNode;
+    Node synonymNode;
+    String searchString;
+    String sourceName;
+    String nomenCode;
+    boolean isHomonym;
+    boolean isPerfectMatch;
+    boolean isApprox;
+    boolean isSynonym;
+    boolean nameStatusIsKnown;
+    HashMap<String,String> otherData;
+    double score;
 
     public TNRSHit() {
-        _matchedNode = null;
-        _synonymNode = null;
-        _searchString = "";
-        _sourceName = "";
-        _nomenCode = "undetermined";
-        _isHomonym = false;
-        _isPerfectMatch = false;
-        _isApprox = false;
-        _isSynonym = false;
-        _otherData = null;
-        _score = -1;
+        matchedNode = null;
+        synonymNode = null;
+        searchString = "";
+        sourceName = "";
+        nomenCode = "undetermined";
+        isHomonym = false;
+        isPerfectMatch = false;
+        isApprox = false;
+        isSynonym = false;
+        nameStatusIsKnown = true;
+        otherData = null;
+        score = -1;
     }
     
     public TNRSHit setMatchedTaxon(Taxon matchedTaxon) {
-        _matchedNode = matchedTaxon.getNode();
+        this.matchedNode = matchedTaxon.getNode();
         return this;
     }
 
     public TNRSHit setSynonymNode(Node synonymNode) {
-        _synonymNode = synonymNode;
+        this.synonymNode = synonymNode;
         return this;
     }
 
     public TNRSHit setSearchString(String searchString) {
-        _searchString = searchString;
+        this.searchString = searchString;
         return this;
     }
 
     public TNRSHit setSourceName(String sourceName) {
-        _sourceName = sourceName;
+        this.sourceName = sourceName;
         return this;
     }
 
     public TNRSHit setNomenCode(String nomenCode) {
-        _nomenCode = nomenCode;
+        this.nomenCode = nomenCode;
         return this;
     }
     
     public TNRSHit setIsHomonym(boolean isHomonym) {
-        _isHomonym = isHomonym;
+        this.isHomonym = isHomonym;
+        return this;
+    }
+    
+    /**
+     * Indicates a match for which it is known whether the matched name represents either a homonym or synonym. For fuzzy matches, this may not be known.
+     * @param nameStatusIsKnown
+     * @return
+     */
+    public TNRSHit setNameStatusIsKnown(boolean nameStatusIsKnown) {
+        this.nameStatusIsKnown = nameStatusIsKnown;
         return this;
     }
 
-    /** Indicates a hit to a node this is neither a synonym nor a homonym, and whose name is an exact match to the query */
+    /**
+     * Indicates a hit to a node this is neither a synonym nor a homonym, and whose name is an exact match to the query.
+     * @param isPerfectMatch
+     * @return
+     */
     public TNRSHit setIsPerfectMatch(boolean isPerfectMatch) {
-        _isPerfectMatch = isPerfectMatch;
+        this.isPerfectMatch = isPerfectMatch;
         return this;
     }
 
     public TNRSHit setIsApprox(boolean isApprox) {
-        _isApprox = isApprox;
+        this.isApprox = isApprox;
         return this;
     }
 
     public TNRSHit setIsSynonym(boolean isSynonym) {
-        _isSynonym = isSynonym;
+        this.isSynonym = isSynonym;
         return this;
     }
 
     public TNRSHit setOtherData(Map<String,String> otherData) {
-        _otherData = (HashMap<String, String>)otherData;
+        this.otherData = (HashMap<String, String>)otherData;
         return this;
     }
 
     public TNRSHit setScore(double score) {
-        _score = score;
+        this.score = score;
         return this;
     }
     
     public Node getMatchedNode() {
-        return _matchedNode;
+        return matchedNode;
     }    
     
     public String getSearchString() {
-        return _searchString;
+        return searchString;
     }
     
     public String getNomenCode() {
-        return _nomenCode;
+        return nomenCode;
     }
     
     public boolean getIsHomonym() {
-        return _isHomonym;
+        return isHomonym;
     }
         
     public Node getSynonymNode() {
         // the matched synonym node (if any)
-        return _synonymNode;
+        return synonymNode;
     }
 
     public String getSourceName() {
         // the name of the source where the match was found
-        return _sourceName;
+        return sourceName;
     }
 
     public boolean getIsPerfectMatch() {
         // is this an exact direct match to a graph node?
-        return _isPerfectMatch;
+        return isPerfectMatch;
     }
 
     public boolean getIsApprox() {
         // whether the match is a fuzzy match (presumably misspelling)
-        return _isApprox;
+        return isApprox;
     }
 
     public boolean getIsSynonym() {
         // indicates that this match points to a known synonym
-        return _isSynonym;
+        return isSynonym;
+    }
+    
+    public boolean getNameStatusIsKnown() {
+        return nameStatusIsKnown;
     }
 
     public double getScore() {
         // the score of this match
-        return _score;
+        return score;
     }
 
     public Map<String, String> getOtherData() {
         // any other data
-        return _otherData;
+        return otherData;
     }
 
 }

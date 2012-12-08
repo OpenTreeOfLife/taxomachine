@@ -41,7 +41,7 @@ public class TaxonomySynthesizer extends Taxonomy {
 
         Node firstNode = null;
         try {
-            firstNode = (new TNRSQuery(this)).getExactMatches(name).getSingleMatch().getMatchedNode();
+            firstNode = (new TNRSQuery(this)).matchExact(name).getSingleMatch().getMatchedNode();
         } catch (MultipleHitsException e) {
             e.printStackTrace();
         }
