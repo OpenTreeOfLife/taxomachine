@@ -138,9 +138,9 @@ public class TNRSQuery {
     }
     
     /**
-     * Attempt to infer a context by first looking for direct matches to instance variable `queriedNames` against the
-     * entire graph, determining the LICA for these names (calls `updateLICA()`) and then determining the least inclusive
-     * context for the inferred LICA. The resulting TaxonomyContext object is both remembered internally and returned
+     * Attempt to infer a context for the current set of names by looking for direct matches to the names in `queriedNames` on
+     * the entire graph, determining the LICA for these names (calls `updateLICA()`) and then determining the least inclusive
+     * context for the inferred LICA. The resulting TaxonomyContext object is remembered internally and returned.
      * @param searchStrings
      * @return inferred TaxonomyContext for names
      */

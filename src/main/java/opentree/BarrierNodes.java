@@ -34,7 +34,7 @@ public final class BarrierNodes {
             put("Fungi",Nomenclature.ICBN.code);
             put("Viridiplantae",Nomenclature.ICBN.code);
             put("Bacteria",Nomenclature.ICNB.code);
-            put("Metazoa",Nomenclature.ICBN.code);
+            put("Metazoa",Nomenclature.ICZN.code);
             put("Alveolata",Nomenclature.ICBN.code);
             put("Rhodophyta",Nomenclature.ICBN.code);
             put("Glaucocystophyceae",Nomenclature.ICBN.code);
