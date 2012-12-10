@@ -1,72 +1,64 @@
 package opentree.tnrs;
 
-/*
- Remove offending characters from query names for better TNRS matching.
-
-There is currently a bunch of extra debugging stuff in here that will be purged when complete.
-
-Use 'review' to print out original and cleaned names.
-
-TODO:  Do we want to apply different cleaning to input name strings vs. tip labels?
+/**
+ * Remove offending characters from query names for better TNRS matching.
+TODO:  Make different methods for cleaning input name strings vs. tip labels?
+ * @author joseph
+ *
  */
-
 public final class TNRSNameScrubber {
 	
-//	private static String[]	dirtyNames;
-//	private static String[]	cleanedNames;
-    //public static final String offendingChars = "[\\Q_~`:;/[]{}|<>,!@#$%^&*()?+=`\\\\\\E]+";
     public static final String offendingChars = "[\\Q_~`:;/[]{}|<>,!@#$%^&*()?+=`\\\\\\E\\s]+";
 
+    /**
+     * Returns a string containing all the characters that are considered invalid (i.e. the characters that will be removed by scrubBasic).
+     * @return invalid chars
+     */
+    public static String getInvalidChars() {
+        return offendingChars;
+    }
     
-	public TNRSNameScrubber(/*String[] inNames */) {
-//		dirtyNames = inNames;
-//		cleanedNames = scrubNames(dirtyNames);
-	}
-	
-	public static String[] scrubNames(String[] dirtyNames) {
+    /**
+     * Returns the list of input names with the last word (as delimited by spaces) removed.
+     * @param inNames
+     * @return cleaned names
+     */
+    public static String[] truncateRightmostWord(String[] inNames) {
+        return truncateRightmostWord(inNames, " ");
+    }
 
-	    String[] cleanedNames = new String[dirtyNames.length];
-/*
-special characters needing escaping: .|*?+(){}[]^$\
-	\\.\\|\\*\\?\\+\\(\\)\\{\\}\\[\\]\\^\\$\\\
-tip labels will not involve the following (unless in quotes) as these have special meaning in trees:
-	:,()[];
-these should not survive tree import.
-the following will be the most frequent:
-	_.
- */
-//		cleanedNames = (String[]) dirtyNames.clone(); // copying is only for debugging purposes
-		
-// we may want to alter this
-//		String offendingChars = "[_\\s\\._~`:;/\\[\\]\\{\\}\\|<>,!@#\\$%\\^&*\\(\\)\\?\\+=`\\\\-]+";
-		
-		for (int i = 0; i < cleanedNames.length; i++) {
-			cleanedNames[i] = dirtyNames[i].replaceAll(offendingChars, " ").trim(); // trim is used in case offending characters occur at beginning or end of name
-		}
-		return cleanedNames;
+    /**
+     * Returns the list of input names with the last word (as delimited by the regex `separatorExpr`) removed.
+     * @param inNames
+     * @return cleaned names
+     */
+	public static String[] truncateRightmostWord(String[] inNames, String separatorExpr) {
+        String[] scrubbedNames = new String[inNames.length];
+
+        for (int i = 0; i < inNames.length; i++) {
+            String[] parts = inNames[i].split(separatorExpr);
+            String newName = "";
+            for (int j = 0; j < parts.length - 1; j++) {
+                newName = newName.concat(parts[j]);
+            }
+            scrubbedNames[i] = newName;
+        }
+        return scrubbedNames;
 	}
 	
-// for debugging:
-/*	public void review () {
-		int maxLength = 0;
-		for (int i = 0; i < dirtyNames.length; i++) {
-			if (dirtyNames[i].length() > maxLength)
-				maxLength = dirtyNames[i].length();
-		}
+	/**
+	 * Returns the array of input strings with invalid characters removed. A list of the characters considered to be invalid can be obtained by calling getInvalidChars().
+	 * @param inNames
+	 * @return cleaned names
+	 */
+	public static String[] scrubBasic(String[] inNames) {
+
+	    String[] scrubbedNames = new String[inNames.length];
 		
-		// print original and cleaned labels
-		for (int i = 0; i < cleanedNames.length; i++) {
-			System.out.print(dirtyNames[i] + "   ");
-			int diff = maxLength - dirtyNames[i].length();
-			while (diff > 0) {
-				System.out.print(" ");
-				diff--;
-			}
-			System.out.print(cleanedNames[i] + "\n");
+		for (int i = 0; i < inNames.length; i++) {
+		    // trim whitesapce in case offending characters occur at beginning or end of name
+		    scrubbedNames[i] = inNames[i].replaceAll(offendingChars, " ").trim();
 		}
-	} */
-	
-/*	public String[] cleanedNames() {
-		return cleanedNames;
-	} */
+		return scrubbedNames;
+	}
 }

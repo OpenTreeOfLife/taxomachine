@@ -291,7 +291,7 @@ public class MainRunner {
 			String[] tipNames = phys[0].getAllExternalNodeNames();
 
 //          TNRSNameScrubber scrubber = new TNRSNameScrubber(searchStrings);
-            String[] cleanedNames = TNRSNameScrubber.scrubNames(tipNames);
+            String[] cleanedNames = TNRSNameScrubber.scrubBasic(tipNames);
             
             HashSet<String> names = tnrs.stringArrayToHashset(cleanedNames);
 //          scrubber.review(); // print old and cleaned names

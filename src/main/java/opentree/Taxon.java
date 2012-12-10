@@ -260,7 +260,11 @@ public class Taxon {
         root.assocObject("nodeid", taxNode.getId());
         // These are the altrels that actually made it in the tree
         ArrayList<Long> returnrels = new ArrayList<Long>();
-        for (Node friendnode : CHILDOF_TRAVERSAL.depthFirst().evaluator(Evaluators.toDepth(maxdepth)).evaluator(cne).evaluator(se).traverse(taxNode).nodes()) {
+        
+        TraversalDescription td = CHILDOF_TRAVERSAL.depthFirst().evaluator(cne).evaluator(se);
+        td = td.evaluator(Evaluators.toDepth(maxdepth));
+        
+        for (Node friendnode : td.traverse(taxNode).nodes()) {
             // System.out.println("visiting: "+friendnode.getProperty("name"));
             if (friendnode == taxNode)
                 continue;

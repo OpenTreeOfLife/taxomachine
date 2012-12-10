@@ -88,7 +88,7 @@ public class TNRS extends ServerPlugin {
         }
 
         // clean the names extracted from the treefile
-        String[] cleanNames = TNRSNameScrubber.scrubNames(phys[0].getAllExternalNodeNames());
+        String[] cleanNames = TNRSNameScrubber.scrubBasic(phys[0].getAllExternalNodeNames());
         
         // connect to taxonomy db
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);

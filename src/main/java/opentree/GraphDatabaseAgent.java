@@ -1,10 +1,13 @@
 package opentree;
 
+import java.util.Map;
+
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 public class GraphDatabaseAgent {
@@ -29,17 +32,27 @@ public class GraphDatabaseAgent {
     }
 
     public Index<Node> getNodeIndex(String indexName) {
+        Index<Node> index; 
+        Map<String,String> indexPars = MapUtil.stringMap( "type", "exact", "to_lower_case", "true" );
+
         if (embedded)
-            return embeddedGraphDb.index().forNodes(indexName);
+            index = embeddedGraphDb.index().forNodes(indexName, indexPars);
         else
-            return graphDbService.index().forNodes(indexName);
+            index = graphDbService.index().forNodes(indexName, indexPars);
+        
+        return index;
     }
 
     public Index<Relationship> getRelIndex(String indexName) {
+        Index<Relationship> index; 
+        Map<String,String> indexPars = MapUtil.stringMap( "type", "exact", "to_lower_case", "true" );
+
         if (embedded)
-            return embeddedGraphDb.index().forRelationships(indexName);
+            index = embeddedGraphDb.index().forRelationships(indexName, indexPars);
         else
-            return graphDbService.index().forRelationships(indexName);
+            index = graphDbService.index().forRelationships(indexName, indexPars);
+        
+        return index;
     }
     
     public Node createNode() {

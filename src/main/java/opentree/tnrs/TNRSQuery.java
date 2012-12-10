@@ -26,10 +26,10 @@ public class TNRSQuery {
 
     
 //    private static final double TEMP_SCORE = 0.75;
-    private static final double DEFAULT_NOMEN_CODE_SUPERMAJORITY_PROPORTION = 0.75;
+//    private static final double DEFAULT_NOMEN_CODE_SUPERMAJORITY_PROPORTION = 0.75;
     private static final double DEFAULT_MIN_SCORE = 0.01;
     private static final double PERFECT_SCORE = 1;
-    private static final double DISTANT_HOMONYM_SCORE_SCALAR = 0.25;
+//    private static final double DISTANT_HOMONYM_SCORE_SCALAR = 0.25;
 //    private static final double DEFAULT_FUZZY_MATCH_IDENTITY = 0.8;
 
     private static final int SHORT_NAME_LENGTH = 9;
@@ -37,22 +37,22 @@ public class TNRSQuery {
     private static final int LONG_NAME_LENGTH = 19;
 
     private static final String DEFAULT_TAXONOMY_NAME = "ottol";
-    private static final String UNDETERMINED = "undetermined";
+//    private static final String UNDETERMINED = "undetermined";
 
     private Taxonomy taxonomy;
     private TNRSResults results;
     private HashSet<String> queriedNames;
-    private HashSet<Long> matchedNodeIds;
+//    private HashSet<Long> matchedNodeIds;
     private double minScore;
     
-    TaxonomyContext context;
-    Taxon bestGuessLICAForNames;
+    private TaxonomyContext context;
+    private Taxon bestGuessLICAForNames;
 
     // To store taxa/names for which we can/cannot find direct (exact, n=1) matches
     private HashSet<Taxon> taxaWithDirectMatches;
-    private HashSet<String> namesWithoutDirectTaxnameMatches;
+/*    private HashSet<String> namesWithoutDirectTaxnameMatches;
     private HashSet<String> namesWithoutDirectSynonymMatches;
-    private HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches;
+    private HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches; */
 
     private Index<Node> prefTaxNodesByName;
     
@@ -67,15 +67,12 @@ public class TNRSQuery {
     private void clearResults() {
         queriedNames = new HashSet<String>();
         results = new TNRSResults();
-        matchedNodeIds = new HashSet<Long>();
+//        matchedNodeIds = new HashSet<Long>();
         
         context = null;
         bestGuessLICAForNames = null;
         
         taxaWithDirectMatches = new HashSet<Taxon>();
-        namesWithoutDirectTaxnameMatches = new HashSet<String>();
-        namesWithoutDirectSynonymMatches = new HashSet<String>();
-        namesWithoutApproxTaxnameOrSynonymMatches = new HashSet<String>();
     }
 
     /**
@@ -98,35 +95,45 @@ public class TNRSQuery {
      * @return
      */
     public TNRSResults doFullTNRS() {
-
-        HashSet<String> namesToMatchAgainstContext;
+        
+        HashSet<String> namesWithoutDirectTaxnameMatches = new HashSet<String>();
+        HashSet<String> namesWithoutDirectSynonymMatches = new HashSet<String>();
+        HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches = new HashSet<String>();
+        HashSet<String> unmatchableNames = new HashSet<String>();
 
         // infer context if we need to, and determine names to be matched against it
+        HashSet<String> namesToMatchAgainstContext = new HashSet<String>();
         if (context == null) {
-            inferContext();
-            namesToMatchAgainstContext = namesWithoutDirectTaxnameMatches;
+            inferContext(namesToMatchAgainstContext);
         } else {
             results.setGoverningCode(context.getDescription().nomenclature.code);
             namesToMatchAgainstContext = queriedNames;
         }
         
-        // direct match unmatched names against taxon names, and update the list
-        getExactTaxonMatches(namesToMatchAgainstContext);
-        for (Taxon t : taxaWithDirectMatches) {
-            namesWithoutDirectTaxnameMatches.remove(t.getName());
-        }
+        // direct match unmatched names within context
+        getExactTaxonMatches(namesToMatchAgainstContext, namesWithoutDirectTaxnameMatches);
+
+        // update the list of unmatched names (necessary only if we had to infer the context)
+//        for (Taxon t : taxaWithDirectMatches) {
+//            namesWithoutDirectTaxnameMatches.remove(t.getName());
+//        }
         
         // direct match unmatched names against synonyms
-        getExactSynonymMatches(namesWithoutDirectTaxnameMatches);
+        getExactSynonymMatches(namesWithoutDirectTaxnameMatches, namesWithoutDirectSynonymMatches);
         
         // TODO: external concept resolution for still-unmatched names? (direct match returned concepts against context)
         // this will need an external concept-resolution service, which as yet does not seem to exist...
 
-        // do fuzzy matching for any names we couldn't match, update results to reflect completely unmatched names
-        getApproxTaxnameOrSynonymMatches(namesWithoutDirectSynonymMatches);
-        for (String name : namesWithoutApproxTaxnameOrSynonymMatches)
-            results.addUnmatchedName(name);
+        // do fuzzy matching for any names we couldn't match
+        getApproxTaxnameOrSynonymMatches(namesWithoutDirectSynonymMatches, namesWithoutApproxTaxnameOrSynonymMatches);
         
+        // last-ditch effort to match yet-unmatched names: try truncating names in case there are accession-id modifiers
+        getApproxTaxnameOrSynonymMatches(namesWithoutApproxTaxnameOrSynonymMatches, unmatchableNames);
+
+        // record unmatchable names to results
+        for (String name : unmatchableNames)
+            results.addUnmatchedName(name);
+                    
         return results;
     }
     
@@ -137,7 +144,7 @@ public class TNRSQuery {
      * @param searchStrings
      * @return inferred TaxonomyContext for names
      */
-    public TaxonomyContext inferContext() {
+    public TaxonomyContext inferContext(HashSet<String> unmatchableNames) {
         // No user-defined context, so we need to infer one. First we will look for unambiguous
         // matches on entire graph (remembering direct matches to valid homonyms separately)
 
@@ -170,7 +177,7 @@ public class TNRSQuery {
                 results.addNameWithDirectMatch(thisName);
 
             } else { // is either a homonym match or a non-matched name
-                namesWithoutDirectTaxnameMatches.add(thisName);
+                unmatchableNames.add(thisName);
             }
 
             hits.close();
@@ -191,7 +198,7 @@ public class TNRSQuery {
      * Taxon objects for names that can be matched to `taxaWithDirectMatches`. Finally will call `updateLICA()` to reflect any newly matched taxa.
      * @param searchStrings
      */
-    private void getExactTaxonMatches(HashSet<String> searchStrings) {
+    private void getExactTaxonMatches(HashSet<String> searchStrings, HashSet<String> unmatchableNames) {
 
         // exact match the names against the context; save all hits
         for (String thisName : searchStrings) {
@@ -200,7 +207,7 @@ public class TNRSQuery {
 
             if (hits.size() < 1) {
                 // no direct matches, move on to next name
-                namesWithoutDirectTaxnameMatches.add(thisName);
+                unmatchableNames.add(thisName);
                 continue;
 
             } else {
@@ -245,7 +252,7 @@ public class TNRSQuery {
      * Search for exact synonym matches to names in `searchStrings`, adding names that cannot be matched to `namesWithoutDirectSynonymMatches`
      * @param searchStrings
      */
-    private void getExactSynonymMatches(HashSet<String> searchStrings) {
+    private void getExactSynonymMatches(HashSet<String> searchStrings, HashSet<String> unmatchableNames) {
         
         // exact match unmatched names against context synonym index
         for (String thisName : searchStrings) {
@@ -254,7 +261,7 @@ public class TNRSQuery {
 
             if (hits.size() < 1) {
                 // no direct matches, move on to next name
-                namesWithoutDirectSynonymMatches.add(thisName);
+                unmatchableNames.add(thisName);
                 continue;
 
             } else {
@@ -289,7 +296,7 @@ public class TNRSQuery {
      * cannot be matched to `namesWithoutApproxTaxnameOrSynonymMatches`.
      * @param searchStrings
      */
-    private void getApproxTaxnameOrSynonymMatches(HashSet<String> searchStrings) {
+    private void getApproxTaxnameOrSynonymMatches(HashSet<String> searchStrings, HashSet<String> unmatchableNames) {
 
         for (String thisName : searchStrings) {
             
@@ -300,7 +307,7 @@ public class TNRSQuery {
 
             if (hits.size() < 1) {
                 // no direct matches, move on to next name
-                namesWithoutApproxTaxnameOrSynonymMatches.add(thisName);
+                unmatchableNames.add(thisName);
                 continue;
 
             } else {
@@ -347,7 +354,7 @@ public class TNRSQuery {
                 if (matches.size() > 0)
                     results.addNameResult(new TNRSNameResult(thisName, matches));
                 else
-                    namesWithoutApproxTaxnameOrSynonymMatches.add(thisName);
+                    unmatchableNames.add(thisName);
             }
             hits.close();
         }
@@ -425,11 +432,18 @@ public class TNRSQuery {
      * 
      */
     public TNRSResults matchExact(Set<String> searchStrings, TaxonomyContext context) {
+        
         initialize(searchStrings, context);
-        getExactTaxonMatches(queriedNames);
+
+        // match names against context
+        HashSet<String> namesWithoutDirectTaxnameMatches = new HashSet<String>();
+        getExactTaxonMatches(queriedNames, namesWithoutDirectTaxnameMatches);
+
+        // record the names that couldn't be matched
         for (String name : namesWithoutDirectTaxnameMatches) {
             results.addUnmatchedName(name);
         }
+        
         return results;
     }
 
@@ -442,11 +456,19 @@ public class TNRSQuery {
      */
     public TNRSResults matchExact(Set<String> searchStrings) {
         initialize(searchStrings, null);
-        inferContext();
-        getExactTaxonMatches(namesWithoutDirectTaxnameMatches);
+
+        HashSet<String> namesToMatchAgainstContext = new HashSet<String>();
+        HashSet<String> namesWithoutDirectTaxnameMatches = new HashSet<String>();
+
+        // infer the context, re-match unmatched names against inferred context
+        inferContext(namesToMatchAgainstContext);
+        getExactTaxonMatches(namesToMatchAgainstContext, namesWithoutDirectTaxnameMatches);
+
+        // record names that still couldn't be matched against inferred context
         for (String name : namesWithoutDirectTaxnameMatches) {
             results.addUnmatchedName(name);
         }
+        
         return results;
     }
 }

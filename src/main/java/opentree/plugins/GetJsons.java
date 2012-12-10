@@ -72,7 +72,7 @@ public class GetJsons extends ServerPlugin {
             @Description("A new relationship nub.") @Parameter(name = "nubrel", optional = true) Long nubrel,
             @Description("A new relationship nub.") @Parameter(name = "nodeid", optional = true) Long nodeId) {
         String retst = "";
-//        TaxonomyExplorer te = new TaxonomyExplorer();
+        Taxonomy taxonomy = new Taxonomy(new GraphDatabaseAgent(source.getGraphDatabase()));
         Taxon taxon;
 
         if (nubrel != null) {
@@ -82,7 +82,7 @@ public class GetJsons extends ServerPlugin {
                 for (int i = 0; i < altrels.length; i++) {
                     rels.add(altrels[i]);
                 }
-            taxon = new Taxon(rel.getEndNode());
+            taxon = taxonomy.getTaxon(rel.getEndNode());
             retst = taxon.constructJSONAltRels((String) rel.getProperty("source"), rels);
 
         } else {
@@ -94,7 +94,7 @@ public class GetJsons extends ServerPlugin {
             taxon = new Taxon(source);
             retst = taxon.constructJSONAltRels(domsource, rels); *
             
-            taxon = new Taxon(source.getGraphDatabase().getNodeById(nodeId));
+            taxon = taxonomy.getTaxon(taxonomy.getNodeById(nodeId));
             ArrayList<Long> rels = new ArrayList<Long>();
             if (altrels != null)
                 for (int i = 0; i < altrels.length; i++) {
