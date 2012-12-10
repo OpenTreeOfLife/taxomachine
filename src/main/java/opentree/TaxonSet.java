@@ -67,8 +67,9 @@ public class TaxonSet implements Iterable<Taxon> {
         
         } else {
             // find the mrca of all taxa
-            LinkedList<Node> temptaxa = (LinkedList<Node>) taxa.clone();
-            Node firstNode = temptaxa.poll();
+//            HashSet<Taxon> temptaxa = (LinkedList<Node>) taxa.clone();
+	    Iterator<Taxon> taxIter = taxa.iterator();
+            Node firstNode = taxIter.next().getNode();
             TraversalDescription hierarchy = Traversal.description()
                     .depthFirst()
                     .relationships( relType, Direction.OUTGOING );
@@ -80,8 +81,8 @@ public class TaxonSet implements Iterable<Taxon> {
 
             // compare paths from all other taxa to find the mrca
             int i = 0;
-            for (Node curTax : temptaxa) {
-                for (Node n : hierarchy.traverse(curTax).nodes()) {
+            for (Taxon curTax : taxa) {
+                for (Node n : hierarchy.traverse(curTax.getNode()).nodes()) {
                     if (path.contains(n)) {
                         int j = path.indexOf(n);
                         if (i < j)

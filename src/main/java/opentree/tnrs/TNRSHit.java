@@ -18,7 +18,6 @@ import org.neo4j.graphdb.Node;
 public class TNRSHit {
 
     Node matchedNode;
-    Node synonymNode;
     String searchString;
     String sourceName;
     String nomenCode;
@@ -32,7 +31,6 @@ public class TNRSHit {
 
     public TNRSHit() {
         matchedNode = null;
-        synonymNode = null;
         searchString = "";
         sourceName = "";
         nomenCode = "undetermined";
@@ -47,11 +45,6 @@ public class TNRSHit {
     
     public TNRSHit setMatchedTaxon(Taxon matchedTaxon) {
         this.matchedNode = matchedTaxon.getNode();
-        return this;
-    }
-
-    public TNRSHit setSynonymNode(Node synonymNode) {
-        this.synonymNode = synonymNode;
         return this;
     }
 
@@ -131,11 +124,6 @@ public class TNRSHit {
         return isHomonym;
     }
         
-    public Node getSynonymNode() {
-        // the matched synonym node (if any)
-        return synonymNode;
-    }
-
     public String getSourceName() {
         // the name of the source where the match was found
         return sourceName;

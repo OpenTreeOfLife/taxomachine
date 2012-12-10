@@ -13,7 +13,6 @@ public abstract class TNRSMatch {
     
     public abstract String getSearchString();
     public abstract Node getMatchedNode();    
-    public abstract Node getSynonymNode();
     public abstract String getSource();
     public abstract String getNomenCode();
     public abstract boolean getIsPerfectMatch();

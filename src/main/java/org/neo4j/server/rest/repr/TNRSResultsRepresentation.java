@@ -126,7 +126,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
     
                 // should also have matchedNodeUniqueId, but this is not yet available
                 serializer.putNumber("matchedNodeId", match.getMatchedNode().getId());
-                serializer.putString("matchedNodeName", match.getMatchedNode().getProperty("name").toString());
+                serializer.putString("matchedName", match.getMatchedNode().getProperty("name").toString());
                 serializer.putString("sourceName", match.getSource());
                 serializer.putString("nomenCode", match.getNomenCode());
                 serializer.putBoolean("isPerfectMatch", match.getIsPerfectMatch());
@@ -140,11 +140,6 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                     serializer.putBoolean("isHomonym", match.getIsHomonym());
                 } else {
                     serializer.putString("matchedNameStatus", "uncertain");
-                }
-
-                if (match.getIsSynonym()) {
-                    serializer.putNumber("synonymNodeId", match.getSynonymNode().getId());
-                    serializer.putString("synonymNodeName", match.getSynonymNode().getProperty("name").toString());
                 }
             }
         };

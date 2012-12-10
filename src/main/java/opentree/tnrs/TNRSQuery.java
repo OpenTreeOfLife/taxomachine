@@ -54,11 +54,11 @@ public class TNRSQuery {
     private HashSet<String> namesWithoutDirectSynonymMatches;
     private HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches;
 
-    
-    private Index<Node> prefTaxNodesByName = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
+    private Index<Node> prefTaxNodesByName;
     
     public TNRSQuery(Taxonomy taxonomy) {
         this.taxonomy = taxonomy;
+	prefTaxNodesByName = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
         context = null;
         minScore = DEFAULT_MIN_SCORE; // TODO: make it possible for client to set this
         clearResults();

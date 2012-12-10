@@ -57,7 +57,6 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         // for all matches, information associating this match with a known node in the graph
         private String searchString;                   // the original search text queried
         private Node matchedNode;                     // the recognized taxon node we matched
-        private Node synonymNode;                      // the synonym node we matched
         private String sourceName;                     // the name of the source where the match was found
         private String nomenCode;                      // the nomenclatural code under which this match is defined
         private boolean isPerfectMatch;                  // whether this is an exact match to known, recognized taxon
@@ -70,7 +69,6 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
         public Match(TNRSHit m) {
             matchedNode = m.getMatchedNode();
-            synonymNode = m.getSynonymNode();
             isPerfectMatch = m.getIsPerfectMatch();
             sourceName = m.getSourceName();
             nomenCode = m.getNomenCode();
@@ -97,13 +95,6 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             return matchedNode;
         }
 
-        /**
-         * @return the Neo4j Node object for the synonym that was matched
-         */
-        public Node getSynonymNode() {
-            return synonymNode;
-        }
-        
         public boolean getIsPerfectMatch() {
             return isPerfectMatch;
         }
@@ -159,12 +150,13 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             	if (nameStatusIsKnown) {
                     if (isSynonym) {
                     	desc += "to known synonym";
-                        desc += isApprox ? "; \"" + synonymNode.getProperty("name") + "\"" : "";
     
                     } else {
                     	desc += "to known taxon";
     
-                    } if (isHomonym) {
+                    }
+
+		    if (isHomonym) {
     	                desc += "; also a homonym";
                     }
             	} else {
