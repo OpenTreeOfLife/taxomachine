@@ -47,9 +47,13 @@ public class Taxonomy {
      */
     public TaxonomyContext getContextByName(String name) {
 
-        for (ContextDescription cd : ContextDescription.values())
-            if (cd.name == name)
+        for (ContextDescription cd : ContextDescription.values()) {
+//            System.out.println("comparing " + name + " to " + cd.name);
+            if (cd.name.equals(name)) {
+//                System.out.println("success");
                 return this.getContext(cd);
+            }
+        }
 
         // if we didn't find one
         return null;

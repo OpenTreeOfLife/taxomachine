@@ -356,11 +356,11 @@ public class TaxonomySynthesizer extends Taxonomy {
         Node contextRootNode = context.getRootNode();
         int i = 0;
         
+        Transaction tx = beginTx();
         if (contextRootNode.getProperty("name").equals(LIFE_NODE_NAME) == false) {
 
             System.out.println("making indices for " + contextRootNode.getProperty("name"));
 
-            Transaction tx = beginTx();
             for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(contextRootNode).nodes()) {
                 addToPreferredIndexes(n, context);
                 
@@ -368,9 +368,9 @@ public class TaxonomySynthesizer extends Taxonomy {
                 if (i % 100000 == 0)
                     System.out.println(i);
             }
-            tx.success();
-            tx.finish();
         }
+        tx.success();
+        tx.finish();
         
         // now move on to all children
         for (ContextTreeNode childNode : contextNode.getChildren())

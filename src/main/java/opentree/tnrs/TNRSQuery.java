@@ -85,6 +85,10 @@ public class TNRSQuery {
     public TNRSQuery initialize(Set<String> searchStrings, TaxonomyContext context) {
         clearResults();
         this.context = context;
+        if (context != null) {
+            System.out.println(context.getDescription().name);
+            results.setContextName(this.context.getDescription().name);
+        }
         queriedNames = (HashSet<String>) searchStrings;
         return this;
     }
@@ -189,6 +193,7 @@ public class TNRSQuery {
         // now we can determine a context to use from here on
         context = bestGuessLICAForNames.getLeastInclusiveContext();
         results.setGoverningCode(context.getDescription().nomenclature.code);
+        results.setContextName(context.getDescription().name);
 
         return context;
     }

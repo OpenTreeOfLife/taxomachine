@@ -9,6 +9,7 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 	private HashMap<String, TNRSNameResult> results;
 	private HashSet<String> unambiguousNames;
 	private HashSet<String> unmatchedNames;
+	private String contextName;
 	private String governingCode;
 	private double minimumScore;
 
@@ -16,6 +17,7 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 	    results = new HashMap<String, TNRSNameResult>();
 	    unambiguousNames = new HashSet<String>();
 	    unmatchedNames = new HashSet<String>();
+	    contextName = "";
 	    governingCode = "";
 	    minimumScore = 0;
 	}
@@ -41,6 +43,10 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 
     public String getGoverningCode() {
         return governingCode;
+    }
+    
+    public String getContextName() {
+        return contextName;
     }
 
     public double getMinimumScore() {
@@ -76,6 +82,10 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 
     protected void setGoverningCode(String code) {
         governingCode = code;
+    }
+    
+    protected void setContextName(String contextName) {
+        this.contextName = contextName;
     }
     
     protected void setMinimumScore(double s) {

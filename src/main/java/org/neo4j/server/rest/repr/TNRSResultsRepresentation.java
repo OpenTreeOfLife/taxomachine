@@ -61,6 +61,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                 tnrsResultsMap.put("unambiguous_names", results.getNamesWithDirectMatches());
                 tnrsResultsMap.put("unmatched_names", results.getUnmatchedNames());
                 tnrsResultsMap.put("matched_names", results.getMatchedNames());
+                tnrsResultsMap.put("context", results.getContextName());
                 
                 for(Map.Entry<String,Object> pair : tnrsResultsMap.entrySet()) {
                     String key = pair.getKey();

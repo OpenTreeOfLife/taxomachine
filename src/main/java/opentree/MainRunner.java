@@ -239,24 +239,34 @@ public class MainRunner {
 	
 	public void parseTNRSRequest(String args[]) {
 		if (args[0].equals("tnrsbasic")) {
-			if (args.length != 3) {
-				System.out.println("arguments should be: namestring graphdbfolder");
+			if (args.length != 3 && args.length != 4) {
+				System.out.println("arguments should be: namestring graphdbfolder [context]");
 				return;
 			}
 		} else if (args[0].equals("tnrstree")) {
-			if (args.length != 3) {
-				System.out.println("arguments should be: treefile graphdbfolder");
+			if (args.length != 3 && args.length != 4) {
+				System.out.println("arguments should be: treefile graphdbfolder [context]");
 				return;
 			}
 		}
 		
 		String graphName = args[2];
+		
+		String contextName = null;
+		if (args.length == 4) {
+		    contextName = args[3];
+		}
+		
 		taxdb = new GraphDatabaseAgent(graphName);
 		Taxonomy taxonomy = new Taxonomy(taxdb);
-		
+
+		System.out.println("Looking for " + contextName);
+		TaxonomyContext context = taxonomy.getContextByName(contextName);
+		System.out.println("Found " + context.getDescription().name);
+
 		TNRSQuery tnrs = new TNRSQuery(taxonomy);
 //		TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
-		TNRSResults results = (TNRSResults)null;
+		TNRSResults results = null;
 		
 		if (args[0].equals("tnrsbasic")) {
 			String[] searchStrings = args[1].split("\\s*\\,\\s*");
@@ -266,7 +276,8 @@ public class MainRunner {
 			for (int i = 0; i < searchStrings.length; i++) {
 				System.out.println(searchStrings[i]);
 			}
-			results = tnrs.matchExact(names);
+			tnrs.initialize(names, context);
+			results = tnrs.doFullTNRS();
 
 		} else if (args[0].equals("tnrstree")) {
 		    // TODO: for files containing multiple trees, make sure to do TNRS just once
@@ -295,7 +306,7 @@ public class MainRunner {
             
             HashSet<String> names = tnrs.stringArrayToHashset(cleanedNames);
 //          scrubber.review(); // print old and cleaned names
-            results = tnrs.initialize(names, null).doFullTNRS();
+            results = tnrs.initialize(names, context).doFullTNRS();
 		}
 		
 		for (TNRSNameResult nameResult : results) {
@@ -363,8 +374,8 @@ public class MainRunner {
 		System.out.println("\tjsgraph <name> <graphdbfolder> (constructs a json file from tax graph)");
 		System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
         System.out.println("\n---taxonomic name resolution services---");
-        System.out.println("\ttnrsbasic <querynames> <graphdbfolder> (check if the taxonomy graph contains comma-delimited names)");
-        System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)\n");
+        System.out.println("\ttnrsbasic <querynames> <graphdbfolder> [contextname] (check if the taxonomy graph contains comma-delimited names)");
+        System.out.println("\ttnrstree <treefile> <graphdbfolder> [contextname] (check if the taxonomy graph contains names in treefile)\n");
 	}
 	/**
 	 * @param args
