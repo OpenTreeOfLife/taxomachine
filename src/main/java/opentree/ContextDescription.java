@@ -27,7 +27,8 @@ public enum ContextDescription {
     VERTEBRATES         ("Vertebrates",     ContextGroup.ANIMALS,   "Vertebrates",      "Vertebrata",       Nomenclature.ICZN),
     ARTHROPODS          ("Arthropods",      ContextGroup.ANIMALS,   "Arthopods",        "Arthropoda",       Nomenclature.ICZN),
     MOLLUSCS            ("Molluscs",        ContextGroup.ANIMALS,   "Molluscs",         "Mollusca",         Nomenclature.ICZN),
-    NEMATODES           ("Nematodes",       ContextGroup.ANIMALS,   "Nematodes",        "Nematoda",         Nomenclature.ICZN),
+// name Nematodes may not be unique?
+//  NEMATODES           ("Nematodes",       ContextGroup.ANIMALS,   "Nematodes",        "Nematoda",         Nomenclature.ICZN),
     PLATYHELMINTHES     ("Platyhelminthes", ContextGroup.ANIMALS,   "Platyhelminthes",  "Platyhelminthes",  Nomenclature.ICZN),
     ANNELIDS            ("Annelids",        ContextGroup.ANIMALS,   "Annelids",         "Annelida",         Nomenclature.ICZN),
     CNIDARIA            ("Cnidarians",      ContextGroup.ANIMALS,   "Cnidarians",       "Cnidaria",         Nomenclature.ICZN),
