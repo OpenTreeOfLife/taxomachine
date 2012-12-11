@@ -717,6 +717,7 @@ public class TaxonomyLoader extends Taxonomy {
 							String inputName = st.nextToken();
 							Node tnode = createNode();
 							tnode.setProperty("name", inputName);
+							tnode.setProperty("uid", "");
 							//taxNodeIndex.add( tnode, "name", inputName);
 							taxaByName.add(tnode, "name", inputName);
 							dbnodes.put(inputId, tnode);
@@ -737,6 +738,7 @@ public class TaxonomyLoader extends Taxonomy {
 										
 										Node synode = createNode();
 										synode.setProperty("name",synName);
+										synode.setProperty("uid", "");
 										synode.setProperty("nametype",synNameType);
 										synode.setProperty("source",sourcename);
 										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
@@ -765,6 +767,7 @@ public class TaxonomyLoader extends Taxonomy {
 					String third = st.nextToken();
 					Node tnode = createNode();
 					tnode.setProperty("name", third);
+					tnode.setProperty("uid", "");
 					//taxNodeIndex.add( tnode, "name", third);
 					taxaByName.add( tnode, "name", third);
 					dbnodes.put(first, tnode);
@@ -787,6 +790,7 @@ public class TaxonomyLoader extends Taxonomy {
 								synode.setProperty("name",synName);
 								synode.setProperty("nametype",synNameType);
 								synode.setProperty("source",sourcename);
+								synode.setProperty("uid", "");
 								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 								taxaBySynonym.add(tnode, "name", synName);
 							}
@@ -1048,6 +1052,7 @@ public class TaxonomyLoader extends Taxonomy {
 					if (hits.size()==0) {//no hit
 						Node newnode = createNode();
 						newnode.setProperty("name", idnamemap.get(curid));
+						newnode.setProperty("uid", "");
 						if (curidbarrier != null) {
 							if (curidbarrier.hasProperty("taxcode"))
 								newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
@@ -1081,6 +1086,7 @@ public class TaxonomyLoader extends Taxonomy {
 						if (bestnode == null) {
 							Node newnode = createNode();
 							newnode.setProperty("name", idnamemap.get(curid));
+							newnode.setProperty("uid", "");
 							if (curidbarrier != null) {
 								if (curidbarrier.hasProperty("taxcode"))
 									newnode.setProperty("taxcode", (String)curidbarrier.getProperty("taxcode"));
@@ -1146,6 +1152,7 @@ public class TaxonomyLoader extends Taxonomy {
 							synode.setProperty("name",synName);
 							synode.setProperty("nametype",synNameType);
 							synode.setProperty("source",sourcename);
+							synode.setProperty("uid", "");
 							synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 							ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM).add(tnode, "name", synName);
 						}

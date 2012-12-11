@@ -107,7 +107,9 @@ public class TaxonomySynthesizer extends Taxonomy {
             for (Node friendnode : TAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
                 boolean foundConflict = false;
                 String endNodeName = "";
+                //for more generality this should be changed to a hash
                 Relationship ncbirel = null;
+                Relationship fungirel = null;
 
                 for (Relationship rel : friendnode.getRelationships(Direction.OUTGOING, RelType.TAXCHILDOF)) {
                     if (rel.getEndNode() == rel.getStartNode()) {
@@ -123,10 +125,13 @@ public class TaxonomySynthesizer extends Taxonomy {
 
                         if (((String) rel.getProperty("source")).compareTo("ncbi") == 0)
                             ncbirel = rel;
+                        
+                        if (((String) rel.getProperty("source")).compareTo("paul_kirk_fungi") == 0)
+                        	fungirel = rel;
                     }
                 }
                 
-                if (foundConflict && ncbirel != null) {
+                if (foundConflict && (ncbirel != null || fungirel != null)) {
                     nRelsAdded += 1;
                     // System.out.println("would make one from "+ncbirel.getStartNode().getProperty("name")+" "+ncbirel.getEndNode().getProperty("name"));
                     if (ncbirel.getStartNode().getId() != ncbirel.getEndNode().getId()) {
