@@ -41,6 +41,9 @@ public final class BarrierNodes {
             put("Haptophyceae",Nomenclature.ICBN.code);
             put("Choanoflagellida",Nomenclature.ICZN.code);
             //maybe add Protostomia, see Heterochaeta in ncbi
+            //for paul kirk fungi
+            put("Protozoa",Nomenclature.ICZN.code);
+            put("Chromista",Nomenclature.ICBN.code);
         }
     };
 
@@ -77,8 +80,12 @@ public final class BarrierNodes {
             } finally {
                 hits.close();
             }
-            System.out.println("Found barrier: " + itns + " " + bestitem.getId());
-            barnodes.add(bestitem);
+            try{
+            	System.out.println("Found barrier: " + itns + " " + bestitem.getId());
+            	barnodes.add(bestitem);
+            }catch(Exception e){
+            	System.out.println("Didn't find barrier: "+ itns);
+            }
         }
         
         return barnodes;
