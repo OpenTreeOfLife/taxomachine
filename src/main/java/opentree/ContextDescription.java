@@ -20,6 +20,19 @@ public enum ContextDescription {
 
     // ANIMALS group
     METAZOA             ("Animals",         ContextGroup.ANIMALS,   "Animals",          "Metazoa",          Nomenclature.ICZN),
+    BIRDS               ("Birds",           ContextGroup.ANIMALS,   "Birds",            "Aves",             Nomenclature.ICZN),
+    TETRAPODS           ("Tetrapods",       ContextGroup.ANIMALS,   "Tetrapods",        "Tetrapoda",        Nomenclature.ICZN),
+    MAMMALS             ("Mammals",         ContextGroup.ANIMALS,   "Mammals",          "Mammalia",         Nomenclature.ICZN),
+    AMPHIBIANS          ("Amphibians",      ContextGroup.ANIMALS,   "Amphibians",       "Amphibia",         Nomenclature.ICZN),
+    VERTEBRATES         ("Vertebrates",     ContextGroup.ANIMALS,   "Vertebrates",      "Vertebrata",       Nomenclature.ICZN),
+    ARTHROPODS          ("Arthropods",      ContextGroup.ANIMALS,   "Arthopods",        "Arthropoda",       Nomenclature.ICZN),
+    MOLLUSCS            ("Molluscs",        ContextGroup.ANIMALS,   "Molluscs",         "Mollusca",         Nomenclature.ICZN),
+    NEMATODES           ("Nematodes",       ContextGroup.ANIMALS,   "Nematodes",        "Nematoda",         Nomenclature.ICZN),
+    PLATYHELMINTHES     ("Platyhelminthes", ContextGroup.ANIMALS,   "Platyhelminthes",  "Platyhelminthes",  Nomenclature.ICZN),
+    ANNELIDS            ("Annelids",        ContextGroup.ANIMALS,   "Annelids",         "Annelida",         Nomenclature.ICZN),
+    CNIDARIA            ("Cnidarians",      ContextGroup.ANIMALS,   "Cnidarians",       "Cnidaria",         Nomenclature.ICZN),
+    ARACHNIDES          ("Arachnides",      ContextGroup.ANIMALS,   "Arachnides",       "Arachnida",        Nomenclature.ICZN),
+    INSECTS             ("Insects",         ContextGroup.ANIMALS,   "Insects",          "Insecta",          Nomenclature.ICZN),
 
     // FUNGI group
     FUNGI               ("Fungi",           ContextGroup.FUNGI,     "Fungi",            "Fungi",            Nomenclature.ICBN),
@@ -33,7 +46,7 @@ public enum ContextDescription {
     LYCOPHYTES          ("Club mosses",     ContextGroup.PLANTS,    "Lycopodiophyta",   "Lycopodiophyta",   Nomenclature.ICBN),
     FERNS               ("Ferns",           ContextGroup.PLANTS,    "Moniliformopses",  "Moniliformopses",  Nomenclature.ICBN),
     SEED_PLANTS         ("Seed plants",     ContextGroup.PLANTS,    "Spermatophyta",    "Spermatophyta",    Nomenclature.ICBN),
-    FLOWERING_PLANTS    ("Flowering plants", ContextGroup.PLANTS,   "Magnoliophyta",    "Magnoliophyta",    Nomenclature.ICBN),
+    FLOWERING_PLANTS    ("Flowering plants",ContextGroup.PLANTS,    "Magnoliophyta",    "Magnoliophyta",    Nomenclature.ICBN),
     MAGNOLIIDS          ("Magnoliids",      ContextGroup.PLANTS,    "Magnoliids",       "magnoliids",       Nomenclature.ICBN),
     MONOCOTS            ("Monocots",        ContextGroup.PLANTS,    "Monocots",         "Liliopsida",       Nomenclature.ICBN),
     EUDICOTS            ("Eudicots",        ContextGroup.PLANTS,    "Eudicots",         "eudicotyledons",   Nomenclature.ICBN),
