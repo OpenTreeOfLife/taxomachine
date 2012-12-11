@@ -41,9 +41,6 @@ public final class BarrierNodes {
             put("Haptophyceae",Nomenclature.ICBN.code);
             put("Choanoflagellida",Nomenclature.ICZN.code);
             //maybe add Protostomia, see Heterochaeta in ncbi
-            //for paul kirk fungi
-            put("Protozoa",Nomenclature.ICZN.code);
-            put("Chromista",Nomenclature.ICBN.code);
         }
     };
 
