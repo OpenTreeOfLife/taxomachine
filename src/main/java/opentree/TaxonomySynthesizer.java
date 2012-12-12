@@ -134,13 +134,24 @@ public class TaxonomySynthesizer extends Taxonomy {
                 if (foundConflict && (ncbirel != null || fungirel != null)) {
                     nRelsAdded += 1;
                     // System.out.println("would make one from "+ncbirel.getStartNode().getProperty("name")+" "+ncbirel.getEndNode().getProperty("name"));
-                    if (ncbirel.getStartNode().getId() != ncbirel.getEndNode().getId()) {
-                        ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelType.PREFTAXCHILDOF);
-                        Relationship newrel2 = ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelType.TAXCHILDOF);
-                        newrel2.setProperty("source", "ottol");
-                    } else {
-                        System.out.println("would make cycle from " + ncbirel.getEndNode().getProperty("name"));
-                        System.exit(0);// NEED TO EXIT BECAUSE THIS IS A PROBLEM
+                    if (ncbirel != null){
+                    	if (ncbirel.getStartNode().getId() != ncbirel.getEndNode().getId()) {
+                    		ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelType.PREFTAXCHILDOF);
+                    		Relationship newrel2 = ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelType.TAXCHILDOF);
+                    		newrel2.setProperty("source", "ottol");
+                    	} else {
+                    		System.out.println("would make cycle from " + ncbirel.getEndNode().getProperty("name"));
+                    		System.exit(0);// NEED TO EXIT BECAUSE THIS IS A PROBLEM
+                    	}
+                    }else if(fungirel != null){
+                    	if (fungirel.getStartNode().getId() != fungirel.getEndNode().getId()) {
+                    		fungirel.getStartNode().createRelationshipTo(fungirel.getEndNode(), RelType.PREFTAXCHILDOF);
+                            Relationship newrel2 = fungirel.getStartNode().createRelationshipTo(fungirel.getEndNode(), RelType.TAXCHILDOF);
+                            newrel2.setProperty("source", "ottol");
+                        } else {
+                            System.out.println("would make cycle from " + fungirel.getEndNode().getProperty("name"));
+                            System.exit(0);// NEED TO EXIT BECAUSE THIS IS A PROBLEM
+                        }
                     }
                     if (nRelsAdded % transaction_iter == 0)
                         System.out.println(nRelsAdded);
@@ -170,7 +181,7 @@ public class TaxonomySynthesizer extends Taxonomy {
 
         Transaction tx = beginTx();
         addToPreferredIndexes(life, ALLTAXA);
-
+        HashSet<Long> traveled = new HashSet<Long>();
         int nNewRels = 0;
         try {
             // walk out to the tips from the base of the tree
@@ -181,6 +192,11 @@ public class TaxonomySynthesizer extends Taxonomy {
                     Node curNode = n;
                     while (curNode.hasRelationship(Direction.OUTGOING, RelType.TAXCHILDOF)) {
                         Node startNode = curNode;
+                        if (traveled.contains((Long)startNode.getId())){
+                        	break;
+                        }else{
+                        	traveled.add((Long)startNode.getId());
+                        }
                         Node endNode = null;
 
                         // if the current node already has a preferred relationship, we will just follow it
@@ -237,9 +253,9 @@ public class TaxonomySynthesizer extends Taxonomy {
 
                 if (nNewRels % transaction_iter == 0) {
                     System.out.println(nNewRels);
-                    tx.success();
-                    tx.finish();
-                    tx = beginTx();
+   //                 tx.success();
+   //                 tx.finish();
+    //                tx = beginTx();
                 }
             }
             tx.success();
