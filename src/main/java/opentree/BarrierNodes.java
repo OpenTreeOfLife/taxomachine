@@ -43,6 +43,17 @@ public final class BarrierNodes {
             //maybe add Protostomia, see Heterochaeta in ncbi
         }
     };
+    
+    /**
+     * This is in order to match some of the barrier nodes that are in the other taxonomies    
+     */
+    private static final HashMap<String,HashSet<String>> barrierNamesSearch = new HashMap<String,HashSet<String>>() {
+    	private static final long serialVersionUID = 1L;
+    	{
+    	 put("Metazoa",new HashSet<String>(){{add("Metazoa");add("Animalia");}});
+    	 put("Viridiplantae",new HashSet<String>(){{add("Viridiplantae");add("Plantae");}});
+    	}
+    };
 
     public BarrierNodes(Taxonomy t) {
         taxonomy = t;
@@ -62,12 +73,15 @@ public final class BarrierNodes {
         ArrayList<Node> barnodes = new ArrayList<Node>();
 
         for (String itns : barrierNamesMap.keySet()) {
-            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).get("name", itns);
             int bestcount = LARGE;
             Node bestitem = null;
+            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).get("name", itns);
             try {
                 for (Node node : hits) {
+                	System.out.println(node);
                     Path tpath = tfinder.findSinglePath(node, lifen);
+                    if (tpath == null)
+                    	continue;
                     int pl = tpath.length();
                     if (pl < bestcount) {
                         bestcount = pl;
@@ -76,6 +90,51 @@ public final class BarrierNodes {
                 }
             } finally {
                 hits.close();
+            }
+            //if there is no match, try to match synonyms if they exist
+            if(bestitem == null){
+            	if(barrierNamesSearch.containsKey(itns)==true){
+            		System.out.println("checking some of the other names for: "+itns);
+            		for(String tname: barrierNamesSearch.get(itns)){
+            			System.out.println("checking: "+tname);
+            			hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).get("name", tname);
+                        try {
+                            for (Node node : hits) {
+                            	System.out.println(node);
+                                Path tpath = tfinder.findSinglePath(node, lifen);
+                                if (tpath == null)
+                                	continue;
+                                int pl = tpath.length();
+                                if (pl < bestcount) {
+                                    bestcount = pl;
+                                    bestitem = node;
+                                }
+                            }
+                        } finally {
+                            hits.close();
+                        }
+            		}
+            	}
+            	if (bestitem == null){
+            		System.out.println("trying to match barriers with the synonyms");
+            		hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM).get("name", itns);
+            		bestcount = LARGE;
+            		try {
+            			for (Node node : hits) {
+            				System.out.println(node);
+            				Path tpath = tfinder.findSinglePath(node, lifen);
+            				if (tpath == null)
+            					continue;
+            				int pl = tpath.length();
+            				if (pl < bestcount) {
+            					bestcount = pl;
+            					bestitem = node;
+            				}
+            			}
+            		} finally {
+            			hits.close();
+            		}
+            	}
             }
             try{
             	System.out.println("Found barrier: " + itns + " " + bestitem.getId());
@@ -99,6 +158,13 @@ public final class BarrierNodes {
             barrierNames.add(name);
         }
         return barrierNames;
+    }
+    
+    /**
+     * Returns the set of names that might stand for the barrier node (synonyms)
+     */
+    public HashMap<String,HashSet<String>> getBarrierNodesSearchMap(){
+    	return barrierNamesSearch;
     }
 
     /**

@@ -989,12 +989,28 @@ public class TaxonomyLoader extends Taxonomy {
 						metadatanode.createRelationshipTo(rootnode, RelType.METADATAFOR);
 					}
 					//check to see if the name is a barrier
+					//need to check the synonyms of the barrier names as well for things like gbif that don't have the "right names"
 					HashSet<String> barrierNames = (HashSet<String>) bn.getBarrierNodeNames();
 					if (barrierNames.contains(name)) {
 						for (int j=0; j < barrierNodes.size(); j++) {
 							if (((String)barrierNodes.get(j).getProperty("name")).equals(name)) {	
 								taxcontainedbarriersmap.put(id,barrierNodes.get(j));
 								System.out.println("added barrier node "+name);
+							}
+						}
+					}else{
+						//searching for synonyms if there are any in the barrier nodes
+						HashMap<String,HashSet<String>> tns = (HashMap<String,HashSet<String>>) bn.getBarrierNodesSearchMap();
+						for(String tname: tns.keySet()){
+							if (tns.get(tname).contains(name)){
+								System.out.println("matched "+name+" to "+tname);
+								for (int j=0; j < barrierNodes.size(); j++) {
+									if (((String)barrierNodes.get(j).getProperty("name")).equals(tname)) {	
+										taxcontainedbarriersmap.put(id,barrierNodes.get(j));
+										System.out.println("added barrier node "+name);
+									}
+								}
+								break;
 							}
 						}
 					}
@@ -1162,6 +1178,34 @@ public class TaxonomyLoader extends Taxonomy {
 			tx.success();
 		} finally {
 			tx.finish();
+		}
+	}
+	
+	/**
+	 * We are checking the validity of the taxonomy that is loaded.
+	 * Validity is based on where there are nodes that have multiple parents
+	 * within a source
+	 * 
+	 * @param sourcename this is the source that we are checking the validity of
+	 */
+	public void verifyLoadedTaxonomy(String sourcename){
+		//get life node
+		//traverse starting at life, checking to see if any of the nodes have multiple parents if looking at the source from sourcename
+		Node startnode = getLifeNode();
+		TraversalDescription MRCACHILDOF_TRAVERSAL = Traversal.description()
+		        .relationships( RelType.TAXCHILDOF,Direction.INCOMING );
+		for(Node friendnode : MRCACHILDOF_TRAVERSAL.traverse(startnode).nodes()){
+			int count = 0;
+			for (Relationship rel: friendnode.getRelationships(Direction.OUTGOING, RelType.TAXCHILDOF)){
+				if (((String)rel.getProperty("source")).compareTo(sourcename) == 0){
+					count += 1;
+				}
+				if(rel.getEndNode().getId() == rel.getStartNode().getId())
+					System.out.println("invalid (self cycle): "+friendnode);
+			}
+			if (count > 1){
+				System.out.println("invalid (multiple parents): "+friendnode);
+			}
 		}
 	}
 	

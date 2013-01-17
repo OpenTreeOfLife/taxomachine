@@ -105,7 +105,6 @@ public class JadeTree {
 	 */
 	public Iterable<JadeNode> iterateExternalNodes() {
 	    return new Iterable<JadeNode>() {
-            @Override
             public Iterator<JadeNode> iterator() {
                 return externalNodes.iterator();
             }
@@ -117,8 +116,7 @@ public class JadeTree {
      */
     public Iterable<JadeNode> iterateInternalNodes() {
         return new Iterable<JadeNode>() {
-            @Override
-            public Iterator<JadeNode> iterator() {
+        	public Iterator<JadeNode> iterator() {
                 return internalNodes.iterator();
             }
         };

@@ -73,10 +73,13 @@ public class MainRunner {
 				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
 				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
 			}
+			System.out.println("verifying taxonomy");
+			tl.verifyLoadedTaxonomy(sourcename);
 		} else if(args[0].equals("addtax")) {
 			System.out.println("adding taxonomy from " + filename + " to "+ graphname);
 			tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId ,filename, synonymfile);
-
+			System.out.println("verifying taxonomy");
+			tl.verifyLoadedTaxonomy(sourcename);
 		} else if (args[0].equals("inittaxsyn")) {
 			System.out.println("initializing taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
 			if (new File(sourcename).exists()) {
@@ -87,10 +90,13 @@ public class MainRunner {
 				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
 				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
 			}
+			System.out.println("verifying taxonomy");
+			tl.verifyLoadedTaxonomy(sourcename);
 		} else if (args[0].equals("addtaxsyn")) {
 			System.out.println("adding taxonomy from " + filename + "and synonym file " + synonymfile + " to " + graphname);
 			tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId, filename,synonymfile);
-
+			System.out.println("verifying taxonomy");
+			tl.verifyLoadedTaxonomy(sourcename);
 		} else {
 			System.err.println("\nERROR: not a known command");
 			taxdb.shutdownDb();
@@ -228,7 +234,14 @@ public class MainRunner {
             System.out.println("building context-specific indexes");
             te.makeContexts();
 	
-		} else {
+		} else if (args[0].equals("checknames")){
+			String sourcename = args[1];
+			String graphname = args[2];
+			taxdb = new GraphDatabaseAgent(graphname);
+			te = new TaxonomySynthesizer(taxdb);
+			System.out.println("checking names from source: "+sourcename);
+			te.findEquivalentNamedNodes(sourcename);
+		}else {
 			System.err.println("\nERROR: not a known command\n");
 			printHelp();
 			System.exit(1);
@@ -367,6 +380,7 @@ public class MainRunner {
 		System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
 		System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be ingested elsewhere)");
 		System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
+		System.out.println("\tchecknames <sourcename> <graphdbfolder>");
 		System.out.println("\n---taxquery---");
 		System.out.println("\tcomptaxtree <name> <graphdbfolder> (construct a comprehensive tax newick)");
 		System.out.println("\tcomptaxgraph <name> <graphdbfolder> <outdotfile> (construct a comprehensive taxonomy in dot)");
@@ -415,7 +429,8 @@ public class MainRunner {
 						|| args[0].equals("checktree")
 						|| args[0].equals("makeottol")
 						|| args[0].equals("dumpottol")
-						|| args[0].equals("makecontexts")) {
+						|| args[0].equals("makecontexts")
+						|| args[0].equals("checknames")) {
 					mr.taxonomyQueryParser(args);
 				} else if (args[0].matches("tnrsbasic|tnrstree")) {
 					mr.parseTNRSRequest(args);

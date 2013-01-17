@@ -107,7 +107,6 @@ public class TaxonSet implements Iterable<Taxon> {
         return taxa.size();
     }
     
-    @Override
     public Iterator<Taxon> iterator() {
         return taxa.iterator();
     }

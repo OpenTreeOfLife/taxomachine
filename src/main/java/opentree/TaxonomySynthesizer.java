@@ -17,6 +17,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
@@ -263,7 +264,42 @@ public class TaxonomySynthesizer extends Taxonomy {
             tx.finish();
         }
     }
-
+    
+    /*
+     * New: This is meant to examine whether we can create equivalent statements about named nodes in the full graph
+     * The procedure is meant to look at the node and the descentdents of that node and ask whether they are an equivalent
+     * name. If so eventually you would want to add the taxa from the one taxonomy that are not in the new one to the new
+     * one in the ottol relationships 
+     */
+    
+    public void findEquivalentNamedNodes(String domsource){
+		IndexHits<Node> hits = null;
+		Node startnode = null;
+    	try{
+    		hits = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES).get("source", domsource);
+    		startnode = hits.getSingle().getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode();//there should only be one source with that name
+    	}finally{
+    		hits.close();
+    	}
+    	Index<Node> taxNames = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+    	
+    	for(Node curnode: TAXCHILDOF_TRAVERSAL.traverse(startnode).nodes()){
+    		IndexHits<Node> nhits = null;
+    		System.out.println((String)curnode.getProperty("name")+":"+curnode);
+    		try{
+    			nhits = taxNames.get("name", (String)curnode.getProperty("name"));
+    			for (Node tnode: nhits){
+    				System.out.println(tnode);
+    			}
+    		}finally{
+    			nhits.close();
+    		}
+    	}
+    }
+    
+    
+    
+    
     /**
      * Used to make a hierarchy for the taxonomic contexts (each ContextTreeNode contains links to immediate child ContextTreeNodes),
      * which is in turn used to do a pre-order traversal when building the contexts, which in turn ensures that the last written value

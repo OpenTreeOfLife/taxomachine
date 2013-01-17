@@ -20,7 +20,6 @@ public class TNRSNameResult implements Iterable<TNRSMatch> {
 	    return _queriedName;
 	}
 
-    @Override
     public Iterator<TNRSMatch> iterator() {
         return _matches.iterator();
     }
