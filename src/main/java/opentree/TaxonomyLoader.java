@@ -1190,6 +1190,232 @@ public class TaxonomyLoader extends Taxonomy {
 		}
 	}
 	
+	/*
+	 * for adding a taxonomy that won't connect to the life node
+	 * goes to different index
+	 * index gets stored as sourcename,name instead of name,name
+	 */
+	public void addDisconnectedTaxonomyToGraph(String sourcename, String filename, String synonymfile) {
+		String str = "";
+		int count = 0;
+		Transaction tx = null;
+		ArrayList<String> templines = new ArrayList<String>();
+		HashMap<String,ArrayList<ArrayList<String>>> synonymhash = null;
+		boolean synFileExists = false;
+		if (synonymfile.length() > 0)
+			synFileExists = true;
+		//preprocess the synonym file
+		//key is the id from the taxonomy, the array has the synonym and the type of synonym
+		if (synFileExists) {
+			synonymhash = new HashMap<String,ArrayList<ArrayList<String>>>();
+			try {
+				BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
+				while ((str = sbr.readLine()) != null) {
+					StringTokenizer st = new StringTokenizer(str,"\t|\t");
+					String id = st.nextToken();
+					String name = st.nextToken();
+					String type = st.nextToken();
+					ArrayList<String> tar = new ArrayList<String>();
+					tar.add(name);tar.add(type);
+					if (synonymhash.get(id) == null) {
+						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
+						synonymhash.put(id, ttar);
+					}
+					synonymhash.get(id).add(tar);
+				}
+				sbr.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+			System.out.println("synonyms: " + synonymhash.size());
+		}
+		//finished processing synonym file
+
+		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
+		HashMap<String, String> parents = new HashMap<String, String>();
+
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+		//can plug into these by not saying name but the source itself
+		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
+		Node metadatanode = null;
+		try {
+			tx = beginTx();
+			//create the metadata node
+			try {
+				metadatanode = createNode();
+				metadatanode.setProperty("source", sourcename);
+				metadatanode.setProperty("author", "no one");
+				//taxSourceIndex.add(metadatanode, "source", sourcename);
+				System.out.println("source: "+sourcename);
+				taxSources.add(metadatanode, "source", sourcename);
+				tx.success();
+			} finally {
+				tx.finish();
+			}
+			BufferedReader br = new BufferedReader(new FileReader(filename));
+			while ((str = br.readLine()) != null) {
+				count += 1;
+				templines.add(str);
+				if (count % transaction_iter == 0) {
+					System.out.print(count);
+					System.out.print("\n");
+					tx = beginTx();
+					try {
+						for (int i=0; i<templines.size(); i++) {
+							StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
+							int numtok = st.countTokens();
+							String inputId = st.nextToken();
+							String InputParentId = "";
+							if (numtok == 3)
+								InputParentId = st.nextToken();
+							String inputName = st.nextToken();
+							Node tnode = createNode();
+							tnode.setProperty("name", inputName);
+							tnode.setProperty("uid", "");
+							//taxNodeIndex.add( tnode, "name", inputName);
+							taxaByName.add(tnode, sourcename, inputName);
+							dbnodes.put(inputId, tnode);
+							if (numtok == 3) {
+								parents.put(inputId, InputParentId);
+							} else { // this is the root node
+								System.out.println("created root node and metadata link");
+								metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
+							}
+							// synonym processing
+							if (synFileExists) {
+								if (synonymhash.get(inputId) != null) {
+									ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
+									for (int j=0; j < syns.size(); j++) {
+										
+										String synName = syns.get(j).get(0);
+										String synNameType = syns.get(j).get(1);
+										
+										Node synode = createNode();
+										synode.setProperty("name",synName);
+										synode.setProperty("uid", "");
+										synode.setProperty("nametype",synNameType);
+										synode.setProperty("source",sourcename);
+										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+										taxaBySynonym.add(tnode, sourcename, synName);
+									}
+								}
+							}
+						}
+						tx.success();
+					} finally {
+						tx.finish();
+					}
+					templines.clear();
+				}
+			}
+			br.close();
+			tx = beginTx();
+			try {
+				for (int i=0; i < templines.size(); i++) {
+					StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
+					int numtok = st.countTokens();
+					String first = st.nextToken();
+					String second = "";
+					if (numtok == 3)
+						second = st.nextToken();
+					String third = st.nextToken();
+					Node tnode = createNode();
+					tnode.setProperty("name", third);
+					tnode.setProperty("uid", "");
+					//taxNodeIndex.add( tnode, "name", third);
+					taxaByName.add( tnode, sourcename, third);
+					dbnodes.put(first, tnode);
+					if (numtok == 3) {
+						parents.put(first, second);
+					} else {//this is the root node
+						System.out.println("created root node and metadata link");
+						metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
+					}
+					//synonym processing
+					if (synFileExists) {
+						if (synonymhash.get(first) != null) {
+							ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+							for (int j=0; j < syns.size(); j++) {
+								
+								String synName = syns.get(j).get(0);
+								String synNameType = syns.get(j).get(1);
+								
+								Node synode = createNode();
+								synode.setProperty("name",synName);
+								synode.setProperty("nametype",synNameType);
+								synode.setProperty("source",sourcename);
+								synode.setProperty("uid", "");
+								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+								taxaBySynonym.add(tnode, sourcename, synName);
+							}
+						}
+					}
+				}
+				tx.success();
+			} finally {
+				tx.finish();
+			}
+			templines.clear();
+			//add the relationships
+			ArrayList<String> temppar = new ArrayList<String>();
+			count = 0;
+			for (String key: dbnodes.keySet()) {
+				count += 1;
+				temppar.add(key);
+				if (count % transaction_iter == 0) {
+					System.out.println(count);
+					tx = beginTx();
+					try {
+						for (int i=0; i < temppar.size(); i++) {
+							try {
+								Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
+								rel.setProperty("source", sourcename);
+								rel.setProperty("childid",temppar.get(i));
+								rel.setProperty("parentid",parents.get(temppar.get(i)));
+							} catch(java.lang.IllegalArgumentException io) {
+//								System.out.println(temppar.get(i));
+								continue;
+							}
+						}
+						tx.success();
+					} finally {
+						tx.finish();
+					}
+					temppar.clear();
+				}
+			}
+			tx = beginTx();
+			try {
+				for (int i=0; i < temppar.size(); i++) {
+					try {
+						Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
+						rel.setProperty("source", sourcename);
+						rel.setProperty("childid",temppar.get(i));
+						rel.setProperty("parentid",parents.get(temppar.get(i)));
+					} catch(java.lang.IllegalArgumentException io) {
+//						System.out.println(temppar.get(i));
+						continue;
+					}
+				}
+				tx.success();
+			} finally {
+				tx.finish();
+			}
+		} catch(IOException ioe) {}
+		//no need for barrier things because these won't be searched
+		//start the mrcas
+		System.out.println("calculating mrcas");
+		try{
+			tx = graphDb.beginTx();
+			postorderAddMRCAsTax(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
+			tx.success();
+		}finally{
+			tx.finish();
+		}
+	}
+	
 	/**
 	 * We are checking the validity of the taxonomy that is loaded.
 	 * Validity is based on where there are nodes that have multiple parents

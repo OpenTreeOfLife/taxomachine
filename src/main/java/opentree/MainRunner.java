@@ -79,7 +79,8 @@ public class MainRunner {
 			tl.verifyLoadedTaxonomy(sourcename);
 		} else if(args[0].equals("addtax")) {
 			System.out.println("adding taxonomy from " + filename + " to "+ graphname);
-			tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId ,filename, synonymfile);
+			//tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId ,filename, synonymfile);
+			tl.addDisconnectedTaxonomyToGraph(sourcename,filename,synonymfile);
 			System.out.println("verifying taxonomy");
 			tl.verifyLoadedTaxonomy(sourcename);
 		} else if (args[0].equals("inittaxsyn")) {
@@ -96,7 +97,8 @@ public class MainRunner {
 			tl.verifyLoadedTaxonomy(sourcename);
 		} else if (args[0].equals("addtaxsyn")) {
 			System.out.println("adding taxonomy from " + filename + "and synonym file " + synonymfile + " to " + graphname);
-			tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId, filename,synonymfile);
+			//tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId, filename,synonymfile);
+			tl.addDisconnectedTaxonomyToGraph(sourcename,filename,synonymfile);
 			System.out.println("verifying taxonomy");
 			tl.verifyLoadedTaxonomy(sourcename);
 		} else {
@@ -257,13 +259,13 @@ public class MainRunner {
     	}
 		System.out.println(args);
 		String graphdomname = args[1];
-		String graphname = args[2];
+		String sourcename = args[2];
 		TaxonomyComparator tc = new TaxonomyComparator();
 		GraphDatabaseAgent inga = new GraphDatabaseAgent(graphdomname);
-		System.out.println("setting dominant database: "+graphdomname);
-		GraphDatabaseAgent inga2 = new GraphDatabaseAgent(graphname);
-		System.out.println("comparing databases: "+graphname);
-		tc.compareTaxonomyToDominant(inga,inga2);
+		System.out.println("setting database: "+graphdomname);
+		System.out.println("comparing source: "+sourcename);
+		//tc.compareTaxonomyToDominant(inga,inga2);
+		tc.compareTaxonomyToDominant(inga, sourcename);
 	}
 	
 	public void parseTNRSRequest(String args[]) {
