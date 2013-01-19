@@ -12,9 +12,15 @@ import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 public class GraphDatabaseAgent {
 
+    /*
     private static EmbeddedGraphDatabase embeddedGraphDb;
     private static GraphDatabaseService graphDbService;
     private static boolean embedded;
+    */
+    
+    private EmbeddedGraphDatabase embeddedGraphDb;
+    private GraphDatabaseService graphDbService;
+    private boolean embedded;
 
     public GraphDatabaseAgent(GraphDatabaseService gdbs) {
         graphDbService = gdbs;
@@ -80,7 +86,7 @@ public class GraphDatabaseAgent {
         registerShutdownHook();
     }
 
-    protected static void registerShutdownHook() {
+    protected /*static */ void registerShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
 
             @Override
