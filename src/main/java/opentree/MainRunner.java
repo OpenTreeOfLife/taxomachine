@@ -21,7 +21,9 @@ import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.util.ParserUtils;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 
 public class MainRunner {
@@ -128,7 +130,7 @@ public class MainRunner {
                 System.out.println("arguments should be: graphdbfolder outfile");
                 return;
             }
-        } else if(args[0].equals("makecontexts")) {
+        }else if(args[0].equals("makecontexts")) {
             if (args.length != 2 ){
                 System.out.println("arguments should be: graphdbfolder");
                 return;
@@ -249,6 +251,20 @@ public class MainRunner {
 		taxdb.shutdownDb();
 	}
 	
+	public void parseMakeOttolByComp(String args[]){
+		if (args.length != 3){
+    		System.out.println("arguments should be: graphdbfolderdom graphdbfolder");
+    	}
+		System.out.println(args);
+		String graphdomname = args[1];
+		String graphname = args[2];
+		TaxonomyComparator tc = new TaxonomyComparator();
+		GraphDatabaseAgent inga = new GraphDatabaseAgent(graphdomname);
+		System.out.println("setting dominant database: "+graphdomname);
+		GraphDatabaseAgent inga2 = new GraphDatabaseAgent(graphname);
+		System.out.println("comparing databases: "+graphname);
+		tc.compareTaxonomyToDominant(inga,inga2);
+	}
 	
 	public void parseTNRSRequest(String args[]) {
 		if (args[0].equals("tnrsbasic")) {
@@ -379,6 +395,7 @@ public class MainRunner {
 		System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
 		System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
 		System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be ingested elsewhere)");
+		System.out.println("\tmakeottolbycomp <graphdbfolder_dom> <graphdbfolder> (creates ottol using the comparator)");
 		System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
 		System.out.println("\tchecknames <sourcename> <graphdbfolder>");
 		System.out.println("\n---taxquery---");
@@ -432,7 +449,9 @@ public class MainRunner {
 						|| args[0].equals("makecontexts")
 						|| args[0].equals("checknames")) {
 					mr.taxonomyQueryParser(args);
-				} else if (args[0].matches("tnrsbasic|tnrstree")) {
+				}else if (args[0].equals("makeottolbycomp")){
+					mr.parseMakeOttolByComp(args);
+				}else if (args[0].matches("tnrsbasic|tnrstree")) {
 					mr.parseTNRSRequest(args);
 				
 				

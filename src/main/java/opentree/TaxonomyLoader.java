@@ -683,11 +683,10 @@ public class TaxonomyLoader extends Taxonomy {
 		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
 		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
-		
+		Node metadatanode = null;
 		try {
 			tx = beginTx();
 			//create the metadata node
-			Node metadatanode = null;
 			try {
 				metadatanode = createNode();
 				metadatanode.setProperty("source", sourcename);
@@ -864,6 +863,16 @@ public class TaxonomyLoader extends Taxonomy {
 			}
 			tx.success();
 		} finally {
+			tx.finish();
+		}
+		
+		//start the mrcas
+		System.out.println("calculating mrcas");
+		try{
+			tx = graphDb.beginTx();
+			postorderAddMRCAsTax(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
+			tx.success();
+		}finally{
 			tx.finish();
 		}
 	}
@@ -1206,6 +1215,53 @@ public class TaxonomyLoader extends Taxonomy {
 			if (count > 1){
 				System.out.println("invalid (multiple parents): "+friendnode);
 			}
+		}
+	}
+	
+	/**
+	 * This is to add the mrca long ids at each internal node referring to the taxa below
+	 * @param dbnode this is the root node
+	 */
+	public void postorderAddMRCAsTax(Node dbnode){
+		//traversal incoming and record all the names
+		for(Relationship rel: dbnode.getRelationships(Direction.INCOMING,RelType.TAXCHILDOF)){
+			Node tnode = rel.getStartNode();
+			postorderAddMRCAsTax(tnode);
+		}
+		//could make this a hashset if dups become a problem
+		ArrayList<Long> mrcas = new ArrayList<Long> ();
+		ArrayList<Long> nested_mrcas = new ArrayList<Long>();
+		if(dbnode.hasProperty("mrca")==false){
+			for(Relationship rel: dbnode.getRelationships(Direction.INCOMING,RelType.TAXCHILDOF)){
+				Node tnode = rel.getStartNode();
+				long[] tmrcas = (long[])tnode.getProperty("mrca");
+				for(int j=0;j<tmrcas.length;j++){
+					mrcas.add(tmrcas[j]);
+				}
+				long[] nestedtmrcas = (long[])tnode.getProperty("nested_mrca");
+				for(int j=0;j<nestedtmrcas.length;j++){
+					nested_mrcas.add(nestedtmrcas[j]);
+				}
+			}
+			//for the tips
+			if(dbnode.hasRelationship(Direction.INCOMING, RelType.TAXCHILDOF)==false){
+				mrcas.add(dbnode.getId());
+			}
+			//should these be added to the nested ones?
+			//higher taxa?
+			//mrcas.add(dbnode.getId());
+			long[] ret = new long[mrcas.size()];
+			for (int i=0; i < ret.length; i++){
+				ret[i] = mrcas.get(i).longValue();
+			}
+			dbnode.setProperty("mrca", ret);
+			
+			nested_mrcas.add(dbnode.getId());
+			long[] ret2 = new long[nested_mrcas.size()];
+			for (int i=0; i < ret2.length; i++){
+				ret2[i] = nested_mrcas.get(i).longValue();
+			}
+			dbnode.setProperty("nested_mrca", ret2);
 		}
 	}
 	
