@@ -23,6 +23,7 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 
@@ -230,7 +231,6 @@ public class MainRunner {
 			te = new TaxonomySynthesizer(taxdb);
 			System.out.println("dumping ottol relationships");
 			te.dumpPreferredOTTOLRelationships(outfile);
-
 	     } else if (args[0].equals("makecontexts")) {
             String graphname = args[1];
             taxdb = new GraphDatabaseAgent(graphname);
@@ -255,7 +255,7 @@ public class MainRunner {
 	
 	public void parseMakeOttolByComp(String args[]){
 		if (args.length != 3){
-    		System.out.println("arguments should be: graphdbfolderdom graphdbfolder");
+    		System.out.println("arguments should be: graphdbfolderdom sourcenametocomp");
     	}
 		System.out.println(args);
 		String graphdomname = args[1];
@@ -266,6 +266,31 @@ public class MainRunner {
 		System.out.println("comparing source: "+sourcename);
 		//tc.compareTaxonomyToDominant(inga,inga2);
 		tc.compareTaxonomyToDominant(inga, sourcename);
+	}
+	
+	public void recalculateMRCAS(String args[]){
+		if (args.length != 2){
+    		System.out.println("arguments should be: graphdbfolder");
+    	}
+		System.out.println(args);
+		String graphdbname = args[1];
+		GraphDatabaseAgent inga = new GraphDatabaseAgent(graphdbname);
+		System.out.println("setting database: "+graphdbname);
+		TaxonomyLoader tl = new TaxonomyLoader(inga);
+		Node dbnode = tl.getLifeNode();
+		System.out.println("removing mrcas");
+		tl.removeMRCAs(dbnode);
+		System.out.println("adding mrcas");
+
+		Transaction tx = inga.beginTx();
+		try{
+			tl.postorderAddMRCAsTax(dbnode);
+			tx.success();
+		}finally{
+			tx.finish();
+		}
+		System.out.println("verifying taxonomy");
+		tl.verifyMainTaxonomy();
 	}
 	
 	public void parseTNRSRequest(String args[]) {
@@ -398,6 +423,7 @@ public class MainRunner {
 		System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
 		System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be ingested elsewhere)");
 		System.out.println("\tmakeottolbycomp <graphdbfolder_dom> <graphdbfolder> (creates ottol using the comparator)");
+		System.out.println("\trecalculatemrcas <graphdbfolder> (deletes the mrca and nested mrcas and recalculates them)");
 		System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
 		System.out.println("\tchecknames <sourcename> <graphdbfolder>");
 		System.out.println("\n---taxquery---");
@@ -451,6 +477,8 @@ public class MainRunner {
 						|| args[0].equals("makecontexts")
 						|| args[0].equals("checknames")) {
 					mr.taxonomyQueryParser(args);
+				}else if(args[0].equals("recalculatemrcas")){
+					mr.recalculateMRCAS(args);
 				}else if (args[0].equals("makeottolbycomp")){
 					mr.parseMakeOttolByComp(args);
 				}else if (args[0].matches("tnrsbasic|tnrstree")) {
