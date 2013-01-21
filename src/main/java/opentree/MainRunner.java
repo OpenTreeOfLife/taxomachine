@@ -253,7 +253,7 @@ public class MainRunner {
 		taxdb.shutdownDb();
 	}
 	
-	public void parseMakeOttolByComp(String args[]){
+	public void parseGraftByComp(String args[]){
 		if (args.length != 3){
     		System.out.println("arguments should be: graphdbfolderdom sourcenametocomp");
     	}
@@ -264,8 +264,7 @@ public class MainRunner {
 		GraphDatabaseAgent inga = new GraphDatabaseAgent(graphdomname);
 		System.out.println("setting database: "+graphdomname);
 		System.out.println("comparing source: "+sourcename);
-		//tc.compareTaxonomyToDominant(inga,inga2);
-		tc.compareTaxonomyToDominant(inga, sourcename);
+		tc.compareGraftTaxonomyToDominant(inga, sourcename);
 	}
 	
 	public void recalculateMRCAS(String args[]){
@@ -415,7 +414,7 @@ public class MainRunner {
 		System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
 		System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
 		System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be ingested elsewhere)");
-		System.out.println("\tmakeottolbycomp <graphdbfolder_dom> <graphdbfolder> (creates ottol using the comparator)");
+		System.out.println("\tgraftbycomp <graphdbfolder_dom> <sourcename> (graphs an addedtaxonomy into main using the comparator)");
 		System.out.println("\trecalculatemrcas <graphdbfolder> (deletes the mrca and nested mrcas and recalculates them)");
 		System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
 		System.out.println("\tchecknames <sourcename> <graphdbfolder>");
@@ -472,8 +471,8 @@ public class MainRunner {
 					mr.taxonomyQueryParser(args);
 				}else if(args[0].equals("recalculatemrcas")){
 					mr.recalculateMRCAS(args);
-				}else if (args[0].equals("makeottolbycomp")){
-					mr.parseMakeOttolByComp(args);
+				}else if (args[0].equals("graftbycomp")){
+					mr.parseGraftByComp(args);
 				}else if (args[0].matches("tnrsbasic|tnrstree")) {
 					mr.parseTNRSRequest(args);
 				
