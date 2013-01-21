@@ -179,13 +179,8 @@ public class TaxonomyComparator {
 		//remake the mrca
 		TaxonomyLoader tl = new TaxonomyLoader(dinga);
 		System.out.println("calculating mrcas");
-		try{
-			tx = dinga.beginTx();
-			tl.postorderAddMRCAsTax(domtax.getLifeNode());
-			tx.success();
-		}finally{
-			tx.finish();
-		}
+		tl.removeMRCAs(domtax.getLifeNode());
+		tl.initMrcaForTipsAndPO(domtax.getLifeNode());
 	}
 	
 	private void postorderAddTaxa(Node innode, Node lifenode,HashMap<Long,Long> matchedDomCompNodes

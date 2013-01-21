@@ -15,6 +15,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
@@ -380,7 +381,7 @@ public class TaxonomyLoader extends Taxonomy {
 		System.out.println("calculating mrcas");
 		try{
 			tx = graphDb.beginTx();
-			postorderAddMRCAsTax(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
+			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
 			tx.success();
 		}finally{
 			tx.finish();
@@ -613,7 +614,7 @@ public class TaxonomyLoader extends Taxonomy {
 		System.out.println("calculating mrcas");
 		try{
 			tx = graphDb.beginTx();
-			postorderAddMRCAsTax(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
+			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
 			tx.success();
 		}finally{
 			tx.finish();
@@ -690,6 +691,7 @@ public class TaxonomyLoader extends Taxonomy {
 				if(count % transaction_iter == 0){
 					System.out.println(count);
 					tx.success();
+					tx.finish();
 					tx = graphDb.beginTx();
 				}
 				count += 1;
@@ -700,65 +702,128 @@ public class TaxonomyLoader extends Taxonomy {
 		}
 	}
 	
+	private Transaction	general_tx;
+	private int cur_tran_iter = 0;
+	public void initMrcaForTipsAndPO(Node startnode){
+		general_tx = graphDb.beginTx();
+		//start from the node called root
+//		Node startnode = getLifeNode();
+		try{
+			//root should be the taxonomy startnode
+			TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+			        .relationships( RelType.TAXCHILDOF,Direction.INCOMING );
+			for(Node friendnode: CHILDOF_TRAVERSAL.traverse(startnode).nodes()){
+				Node taxparent = getAdjNodeFromFirstRelationship(friendnode, RelType.TAXCHILDOF, Direction.OUTGOING);
+				if (taxparent != null){
+					Node firstchild = getAdjNodeFromFirstRelationship(friendnode, RelType.TAXCHILDOF, Direction.INCOMING);
+					if(firstchild == null){//leaf
+						long [] tmrcas = {friendnode.getId()};
+						friendnode.setProperty("mrca", tmrcas);
+						long [] ntmrcas = {};
+						friendnode.setProperty("nested_mrca", ntmrcas);
+					}
+					cur_tran_iter += 1;
+					if(cur_tran_iter % transaction_iter == 0){
+						general_tx.success();
+						general_tx.finish();
+						general_tx = graphDb.beginTx();
+						System.out.println("cur transaction: "+cur_tran_iter);
+					}
+				}else{
+					System.out.println(friendnode+"\t"+friendnode.getProperty("name"));
+				}
+			}
+			general_tx.success();
+		}finally{
+			general_tx.finish();
+		}
+		//start the mrcas
+		System.out.println("calculating mrcas");
+		try{
+			general_tx = graphDb.beginTx();
+			postorderAddMRCAsTax(startnode);
+			general_tx.success();
+		}finally{
+			general_tx.finish();
+		}
+	}
+	
+	static public Node getAdjNodeFromFirstRelationship(Node nd, RelationshipType relType, Direction dir) {
+		for (Relationship rel: nd.getRelationships(relType, dir)) {
+			if (dir == Direction.OUTGOING) {
+				return rel.getEndNode();
+			}
+			else {
+				return rel.getStartNode();
+			}
+		}
+		return null;
+	}
+	
+	static public Node getAdjNodeFromFirstRelationshipBySource(Node nd, RelationshipType relType, Direction dir,  String src) {
+		for (Relationship rel: nd.getRelationships(relType, dir)) {
+			if (((String)rel.getProperty("source")).equals(src)) {
+				if (dir == Direction.OUTGOING) {
+					return rel.getEndNode();
+				}
+				else {
+					return rel.getStartNode();
+				}
+			}
+		}
+		return null;
+	}
+	
 	/**
-	 * This is to add the mrca long ids at each internal node referring to the taxa below
-	 * @param dbnode this is the root node
+	 * for initial taxonomy to tree processing.  adds a mrca->long[]  property
+	 *	to the node and its children (where the elements of the array are the ids
+	 *	of graph of life nodes). The property is is the union of the mrca properties
+	 *	for the subtree. So the leaves of the tree must already have their mrca property
+	 *	filled in!
+	 *
+	 * @param dbnode should be a node in the graph-of-life (has incoming MRCACHILDOF relationship)
 	 */
-	public void postorderAddMRCAsTax(Node dbnode){
+	private void postorderAddMRCAsTax(Node dbnode){
 		//traversal incoming and record all the names
 		for(Relationship rel: dbnode.getRelationships(Direction.INCOMING,RelType.TAXCHILDOF)){
 			Node tnode = rel.getStartNode();
 			postorderAddMRCAsTax(tnode);
 		}
 		//could make this a hashset if dups become a problem
-		HashSet<Long> mrcas = new HashSet<Long> ();
-		HashSet<Long> nested_mrcas = new HashSet<Long>();
+		ArrayList<Long> mrcas = new ArrayList<Long> ();
+		ArrayList<Long> nested_mrcas = new ArrayList<Long>();
 		if(dbnode.hasProperty("mrca")==false){
-			//for the tips
-			if(dbnode.hasRelationship(Direction.INCOMING, RelType.TAXCHILDOF)==false){
-				mrcas.add(dbnode.getId());
-			}else{
-				for(Relationship rel: dbnode.getRelationships(Direction.INCOMING,RelType.TAXCHILDOF)){
-					Node tnode = rel.getStartNode();
-					long[] tmrcas = (long[])tnode.getProperty("mrca");
-					for(int j=0;j<tmrcas.length;j++){
-						mrcas.add(tmrcas[j]);
-					}
-					long[] nestedtmrcas = (long[])tnode.getProperty("nested_mrca");
-					for(int j=0;j<nestedtmrcas.length;j++){
-						nested_mrcas.add(nestedtmrcas[j]);
-					}
+			for(Relationship rel: dbnode.getRelationships(Direction.INCOMING,RelType.TAXCHILDOF)){
+				Node tnode = rel.getStartNode();
+				long[] tmrcas = (long[])tnode.getProperty("mrca");
+				for(int j=0;j<tmrcas.length;j++){
+					mrcas.add(tmrcas[j]);
 				}
-				nested_mrcas.add(dbnode.getId());
+				long[] nestedtmrcas = (long[])tnode.getProperty("nested_mrca");
+				for(int j=0;j<nestedtmrcas.length;j++){
+					nested_mrcas.add(nestedtmrcas[j]);
+				}
 			}
-			
+			//should these be added to the nested ones?
+			//higher taxa?
+			//mrcas.add(dbnode.getId());
 			long[] ret = new long[mrcas.size()];
-			int i =0;
-			for(Long l: mrcas){
-				ret[i] = l.longValue();
-				i++;
+			for (int i=0; i < ret.length; i++){
+				ret[i] = mrcas.get(i).longValue();
 			}
-			try{
-				dbnode.setProperty("mrca", ret);
-			}catch(java.lang.NegativeArraySizeException nae){
-				System.out.println("negativearrayexception");
-				System.out.println(nae.getMessage());
-				System.out.println("ret: " +ret.length);
-				//System.out.println("mrca: "+mrcas);
-				System.out.println(dbnode+" "+dbnode.getProperty("name"));
-				dbnode.removeProperty("mrca");
-				dbnode.setProperty("mrca", ret);
-				System.exit(0);
-			}
+			dbnode.setProperty("mrca", ret);
+			
+			nested_mrcas.add(dbnode.getId());
 			long[] ret2 = new long[nested_mrcas.size()];
-			i =0;
-			for(Long l: nested_mrcas){
-				ret2[i] = l.longValue();
-				i++;
+			for (int i=0; i < ret2.length; i++){
+				ret2[i] = nested_mrcas.get(i).longValue();
 			}
 			dbnode.setProperty("nested_mrca", ret2);
 		}
 	}
+	
+	
+	
 	
 	public void runittest(String filename,String filename2) {
 

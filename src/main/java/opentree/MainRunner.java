@@ -70,7 +70,7 @@ public class MainRunner {
 			System.out.println("initializing taxonomy from " + filename + " to " + graphname);
 			if (new File(sourcename).exists()) {
 				System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
-				tl.initializeTaxonomyIntoGraphProperty(sourcename, filename, synonymfile);
+				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
 			}
 			else {
 				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
@@ -88,7 +88,7 @@ public class MainRunner {
 			System.out.println("initializing taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
 			if (new File(sourcename).exists()) {
 				System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
-				tl.initializeTaxonomyIntoGraphProperty(sourcename, filename, synonymfile);
+				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
 			}
 			else {
 				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
@@ -281,14 +281,7 @@ public class MainRunner {
 		System.out.println("removing mrcas");
 		tl.removeMRCAs(dbnode);
 		System.out.println("adding mrcas");
-
-		Transaction tx = inga.beginTx();
-		try{
-			tl.postorderAddMRCAsTax(dbnode);
-			tx.success();
-		}finally{
-			tx.finish();
-		}
+		tl.initMrcaForTipsAndPO(dbnode);
 		System.out.println("verifying taxonomy");
 		tl.verifyMainTaxonomy();
 	}
