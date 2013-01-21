@@ -44,11 +44,19 @@ public class TaxonomyContext {
      * @return rootNode
      */
     public Node getRootNode() {
-        IndexHits<Node> rootMatch = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).get("name", contextDescription.licaNodeName);
-        Node rn = rootMatch.getSingle();
-        rootMatch.close();
-
-        return rn;
+        IndexHits<Node> rootMatches = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).get("name", contextDescription.licaNodeName);
+        Node rn = null;
+        for (Node n : rootMatches) {
+            if (n.getProperty("taxcode").equals(contextDescription.nomenclature.code)) {
+                rn = n;
+            }
+        }
+        rootMatches.close();
+        if (rn != null) {
+            return rn;
+        } else {
+            throw new java.lang.IllegalStateException("Could not find the root node: " + contextDescription.licaNodeName + " in nomenclature + " + contextDescription.nomenclature.code);
+        }
     }
 
     /**
