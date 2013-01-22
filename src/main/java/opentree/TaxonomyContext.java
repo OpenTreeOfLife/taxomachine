@@ -47,8 +47,14 @@ public class TaxonomyContext {
         IndexHits<Node> rootMatches = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).get("name", contextDescription.licaNodeName);
         Node rn = null;
         for (Node n : rootMatches) {
-            if (n.getProperty("taxcode").equals(contextDescription.nomenclature.code)) {
+            if (n.getProperty("name").equals(taxonomy.getLifeNode().getProperty("name"))) {
+                // if we find the life node, just return it
                 rn = n;
+                break;
+            } else if (n.getProperty("taxcode").equals(contextDescription.nomenclature.code)) {
+                // otherwise check the taxcode to validate that this is the correct root, in case there are valid homonyms in other nomenclatures
+                rn = n;
+                break;
             }
         }
         rootMatches.close();
