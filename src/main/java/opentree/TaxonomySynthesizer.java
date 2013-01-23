@@ -451,10 +451,15 @@ public class TaxonomySynthesizer extends Taxonomy {
              outFile = new PrintWriter(new FileWriter(outfile));
              for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
             	 if(n.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)){
-            		 Node p = n.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING).getEndNode();
-            		 outFile.write(n.getId()+"\t"+p.getId()+"\t"+n.getProperty("name")+"\n");
+            		 Relationship tr = n.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
+            		 Node p = tr.getEndNode();
+            		 String source = "";
+            		 for (Relationship r: n.getRelationships(RelType.TAXCHILDOF, Direction.OUTGOING)){
+            			 source = (String)r.getProperty("source");
+            		 }
+            		 outFile.write(n.getId()+"\t"+p.getId()+"\t"+n.getProperty("name")+"\t"+source+"\n");
             	 }else{
-            		 outFile.write(n.getId()+"\t"+"\t"+n.getProperty("name")+"\n");
+            		 outFile.write(n.getId()+"\t"+"\t"+n.getProperty("name")+"\tncbi\n");
             	 }
              }
              outFile.close();
