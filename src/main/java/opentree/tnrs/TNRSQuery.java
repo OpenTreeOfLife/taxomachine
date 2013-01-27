@@ -25,24 +25,16 @@ import org.neo4j.graphdb.index.IndexHits;
 public class TNRSQuery {
 
     
-//    private static final double TEMP_SCORE = 0.75;
-//    private static final double DEFAULT_NOMEN_CODE_SUPERMAJORITY_PROPORTION = 0.75;
     private static final double DEFAULT_MIN_SCORE = 0.01;
     private static final double PERFECT_SCORE = 1;
-//    private static final double DISTANT_HOMONYM_SCORE_SCALAR = 0.25;
-//    private static final double DEFAULT_FUZZY_MATCH_IDENTITY = 0.8;
-
     private static final int SHORT_NAME_LENGTH = 9;
     private static final int MEDIUM_NAME_LENGTH = 14;
     private static final int LONG_NAME_LENGTH = 19;
-
     private static final String DEFAULT_TAXONOMY_NAME = "ottol";
-//    private static final String UNDETERMINED = "undetermined";
 
     private Taxonomy taxonomy;
     private TNRSResults results;
     private HashSet<String> queriedNames;
-//    private HashSet<Long> matchedNodeIds;
     private double minScore;
     
     private TaxonomyContext context;
@@ -50,15 +42,12 @@ public class TNRSQuery {
 
     // To store taxa/names for which we can/cannot find direct (exact, n=1) matches
     private HashSet<Taxon> taxaWithDirectMatches;
-/*    private HashSet<String> namesWithoutDirectTaxnameMatches;
-    private HashSet<String> namesWithoutDirectSynonymMatches;
-    private HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches; */
 
     private Index<Node> prefTaxNodesByName;
     
     public TNRSQuery(Taxonomy taxonomy) {
         this.taxonomy = taxonomy;
-	prefTaxNodesByName = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
+        prefTaxNodesByName = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
         context = null;
         minScore = DEFAULT_MIN_SCORE; // TODO: make it possible for client to set this
         clearResults();
@@ -67,7 +56,6 @@ public class TNRSQuery {
     private void clearResults() {
         queriedNames = new HashSet<String>();
         results = new TNRSResults();
-//        matchedNodeIds = new HashSet<Long>();
         
         context = null;
         bestGuessLICAForNames = null;
@@ -116,11 +104,6 @@ public class TNRSQuery {
         
         // direct match unmatched names within context
         getExactTaxonMatches(namesToMatchAgainstContext, namesWithoutDirectTaxnameMatches);
-
-        // update the list of unmatched names (necessary only if we had to infer the context)
-//        for (Taxon t : taxaWithDirectMatches) {
-//            namesWithoutDirectTaxnameMatches.remove(t.getName());
-//        }
         
         // direct match unmatched names against synonyms
         getExactSynonymMatches(namesWithoutDirectTaxnameMatches, namesWithoutDirectSynonymMatches);

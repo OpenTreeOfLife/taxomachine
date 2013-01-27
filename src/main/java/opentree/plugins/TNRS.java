@@ -37,7 +37,7 @@ public class TNRS extends ServerPlugin {
     public Representation doTNRSForNames(
             @Source GraphDatabaseService graphDb,
             @Description("A comma-delimited string of names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
-            @Description("A comma-delimited string of names to be queried against the taxonomy db") @Parameter(name = "contextName", optional = true) String contextName) {
+            @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) {
 
         String[] searchStrings = queryString.split("\\s*\\,\\s*");
         GraphDatabaseAgent taxService = new GraphDatabaseAgent(graphDb);

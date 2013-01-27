@@ -1,6 +1,12 @@
 package opentree.tnrs;
 
+import opentree.RelType;
+
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.traversal.Evaluators;
+import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.kernel.Traversal;
 import org.neo4j.server.rest.repr.MappingRepresentation;
 import org.neo4j.server.rest.repr.MappingSerializer;
 
@@ -93,6 +99,15 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
          */
         public Node getMatchedNode() {
             return matchedNode;
+        }
+        
+        public Node getParentNode() {
+            TraversalDescription prefTaxTD = Traversal.description().breadthFirst().
+                    relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING).evaluator(Evaluators.toDepth(1));
+            for (Node n : prefTaxTD.traverse(matchedNode).nodes()) {
+                return n;
+            }
+            throw new java.lang.IllegalStateException("Node " + matchedNode + " doesn't seem to have a preferred parent!");
         }
 
         public boolean getIsPerfectMatch() {

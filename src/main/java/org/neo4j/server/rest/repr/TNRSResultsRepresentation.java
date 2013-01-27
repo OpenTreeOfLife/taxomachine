@@ -128,6 +128,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                 // should also have matchedNodeUniqueId, but this is not yet available
                 serializer.putNumber("matchedNodeId", match.getMatchedNode().getId());
                 serializer.putString("matchedName", match.getMatchedNode().getProperty("name").toString());
+                serializer.putString("parentName", match.getParentNode().getProperty("name").toString());
                 serializer.putString("sourceName", match.getSource());
                 serializer.putString("nomenCode", match.getNomenCode());
                 serializer.putBoolean("isPerfectMatch", match.getIsPerfectMatch());

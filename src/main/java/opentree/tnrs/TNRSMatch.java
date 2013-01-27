@@ -12,7 +12,8 @@ import org.neo4j.graphdb.Node;
 public abstract class TNRSMatch {
     
     public abstract String getSearchString();
-    public abstract Node getMatchedNode();    
+    public abstract Node getMatchedNode();
+    public abstract Node getParentNode();
     public abstract String getSource();
     public abstract String getNomenCode();
     public abstract boolean getIsPerfectMatch();
