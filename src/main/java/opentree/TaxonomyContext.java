@@ -97,7 +97,8 @@ public class TaxonomyContext {
         
         ArrayList<Node> foundNodes = new ArrayList<Node>();
         
-        IndexHits<Node> results = index.get(column, key);
+        IndexHits<Node> results = index.query(column, key);
+//        IndexHits<Node> results = index.get(column, key);
         for (Node n : results) {
             foundNodes.add(n);
         }
