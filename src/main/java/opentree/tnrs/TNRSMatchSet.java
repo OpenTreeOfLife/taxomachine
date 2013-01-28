@@ -103,7 +103,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
         public Node getParentNode() {
             TraversalDescription prefTaxTD = Traversal.description().breadthFirst().
-                    relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING).evaluator(Evaluators.toDepth(1));
+                    relationships(RelType.PREFTAXCHILDOF, Direction.OUTGOING).evaluator(Evaluators.toDepth(1));
             
             Node p = null;
             for (Node n : prefTaxTD.traverse(matchedNode).nodes()) {
