@@ -104,10 +104,16 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         public Node getParentNode() {
             TraversalDescription prefTaxTD = Traversal.description().breadthFirst().
                     relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING).evaluator(Evaluators.toDepth(1));
+            
+            Node p = null;
             for (Node n : prefTaxTD.traverse(matchedNode).nodes()) {
-                return n;
+                p = n;
             }
-            throw new java.lang.IllegalStateException("Node " + matchedNode + " doesn't seem to have a preferred parent!");
+
+            if (p.equals(matchedNode) == false)
+                return p;
+            else
+                throw new java.lang.IllegalStateException("Node " + matchedNode + " doesn't seem to have a preferred parent!");
         }
 
         public boolean getIsPerfectMatch() {
