@@ -78,7 +78,7 @@ public class GetJsons extends ServerPlugin {
                 String queryString) {
         
         Taxonomy taxonomy = new Taxonomy(new GraphDatabaseAgent(graphDb));
-        TaxonomyContext ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, t);
+        TaxonomyContext ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, taxonomy);
         
         /* Eventually this should presumable parse CQL queries that define the search parameters.
          * 
