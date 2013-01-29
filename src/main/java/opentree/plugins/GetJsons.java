@@ -73,7 +73,7 @@ public class GetJsons extends ServerPlugin {
     
     @Description("Return a subtree for a set of taxon names")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation subtreeForNames(@Source GraphDatabaseService graphDb,
+    public String subtreeForNames(@Source GraphDatabaseService graphDb,
             @Parameter(name = "queryString", optional = true) @Description("A comma-delimited set of taxon names") 
                 String queryString) {
         
@@ -116,12 +116,13 @@ public class GetJsons extends ServerPlugin {
             Taxon t = new Taxon(ALLTAXA.findPrefTaxNodesByName(name).iterator().next(), taxonomy);
         }
         
-        ArrayList<String> testnames = new ArrayList<String>();
+//        ArrayList<String> testnames = new ArrayList<String>();
+        String namesConfirm = "";
         for (Taxon t : taxa) {
-            testnames.add(t.getName());
+            namesConfirm += (t.getName());
         }
         
-        return OpentreeRepresentationConverter.convert(testnames);
+        return namesConfirm;
         
     }
 
