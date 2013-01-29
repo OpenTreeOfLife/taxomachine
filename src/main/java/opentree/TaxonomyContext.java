@@ -14,7 +14,7 @@ public class TaxonomyContext {
     private ContextDescription contextDescription;
     private Taxonomy taxonomy;
     
-    TaxonomyContext(ContextDescription context, Taxonomy taxonomy) {
+    public TaxonomyContext(ContextDescription context, Taxonomy taxonomy) {
         this.contextDescription = context;
         this.taxonomy = taxonomy;      
         

@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import opentree.ContextDescription;
 import opentree.GraphDatabaseAgent;
 import opentree.Taxon;
 import opentree.Taxonomy;
+import opentree.TaxonomyContext;
 import opentree.TaxonomySynthesizer;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
@@ -69,30 +71,57 @@ public class GetJsons extends ServerPlugin {
 
     }
     
-    @Description("Process a CQL query using the OBO (CDAO) OWL specification and return the results from the graph")
+    @Description("Return a subtree for a set of taxon names")
     @PluginTarget(GraphDatabaseService.class)
-    public String queryCQL(@Source GraphDatabaseService graphDb,
-            @Parameter(name = "queryString", optional = true) @Description("The CQL query.") 
+    public Representation subtreeForNames(@Source GraphDatabaseService graphDb,
+            @Parameter(name = "queryString", optional = true) @Description("A comma-delimited set of taxon names") 
                 String queryString) {
+        
+        Taxonomy taxonomy = new Taxonomy(new GraphDatabaseAgent(graphDb));
+        TaxonomyContext ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, t);
+        
+        /* Eventually this should presumable parse CQL queries that define the search parameters.
+         * 
+         * Currently we are just using a set of names. We should however be using a set of unique taxon identifiers
+         * because of valid homonyms.
+         * 
+         * We will have to make available a dump of taxon names, identities (lineages?), with unique ids in order
+         * to make it possible for clients to find the names they want and reference their UIDs.
+         * 
+         */
 
 //        String result = queryString;
         
         // parse CQL query
-        CQLNode queryTree = null;
-        CQLParser cp = new CQLParser();
-        try {
-            queryTree = cp.parse(queryString);
+//        CQLNode queryTree = null;
+//        CQLParser cp = new CQLParser();
+//        try {
+//            queryTree = cp.parse(queryString);
 
-        } catch (CQLParseException e) {
+//        } catch (CQLParseException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
+//            e.printStackTrace();
+//        }
         
-        return queryTree.toString();
+//        return queryTree.toString();
+
+        ArrayList<Taxon> taxa = new ArrayList<Taxon>();
+        String[] names = queryString.split(",");
+
+        // currently, for simplicity, we are using taxon names, but we should be using taxon UIDS.
+        for (String name : names) {
+            Taxon t = new Taxon(ALLTAXA.findPrefTaxNodesByName(name).iterator().next(), taxonomy);
+        }
+        
+        ArrayList<String> testnames = new ArrayList<String>();
+        for (Taxon t : taxa) {
+            testnames.add(t.getName());
+        }
+        
+        return OpentreeRepresentationConverter.convert(testnames);
         
     }
 
