@@ -14,6 +14,7 @@ import opentree.tnrs.TNRSQuery;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.server.plugins.Description;
 import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
@@ -63,8 +64,20 @@ public class GetJsons extends ServerPlugin {
         return retst;
 
     }
+    
+    @Description("Process a CQL query using the OBO (CDAO) OWL specification and return the results from the graph")
+    @PluginTarget(GraphDatabaseService.class)
+    public String queryCQL(@Source GraphDatabaseService graphDb,
+            @Parameter(name = "queryString", optional = true) @Description("The CQL query.") 
+                String queryString) {
 
-/*    @Description("Return a JSON with alternative TAXONOMIC relationships noted and returned")
+        String result = queryString;
+        
+        return result;
+        
+    }
+
+    /*    @Description("Return a JSON with alternative TAXONOMIC relationships noted and returned")
     @PluginTarget(Node.class)
     public String getConflictTaxJsonAltRel(@Source Node source,
             @Description("The dominant source.") @Parameter(name = "domsource", optional = true) String domsource,

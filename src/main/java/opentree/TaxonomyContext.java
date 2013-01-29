@@ -66,7 +66,7 @@ public class TaxonomyContext {
     }
 
     /**
-     * a convenience wrapper for the taxNodes index .get("name", `name`) method
+     * a convenience wrapper for the taxNodes index .query("name", `name`) method
      * @param name
      * @return
      */
@@ -76,7 +76,7 @@ public class TaxonomyContext {
     }
     
     /**
-     * a convenience wrapper for the prefTaxNodes index .get("name", `name`) method
+     * a convenience wrapper for the prefTaxNodes index .query("name", `name`) method
      * @param name
      * @return
      */
