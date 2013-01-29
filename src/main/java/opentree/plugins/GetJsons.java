@@ -1,5 +1,6 @@
 package opentree.plugins;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -22,6 +23,9 @@ import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.OpentreeRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
+import org.z3950.zing.cql.CQLNode;
+import org.z3950.zing.cql.CQLParseException;
+import org.z3950.zing.cql.CQLParser;
 
 public class GetJsons extends ServerPlugin {
 
@@ -60,7 +64,7 @@ public class GetJsons extends ServerPlugin {
                 }
             retst = taxon.constructJSONAltRels(domsource, rels);
         }
-
+        
         return retst;
 
     }
@@ -71,9 +75,24 @@ public class GetJsons extends ServerPlugin {
             @Parameter(name = "queryString", optional = true) @Description("The CQL query.") 
                 String queryString) {
 
-        String result = queryString;
+//        String result = queryString;
         
-        return result;
+        // parse CQL query
+        CQLNode queryTree = null;
+        CQLParser cp = new CQLParser();
+        try {
+            queryTree = cp.parse(queryString);
+
+        } catch (CQLParseException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        
+        return queryTree.toString();
         
     }
 
