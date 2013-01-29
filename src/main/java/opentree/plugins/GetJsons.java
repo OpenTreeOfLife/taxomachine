@@ -73,7 +73,7 @@ public class GetJsons extends ServerPlugin {
     
     @Description("Return a subtree for a set of taxon names")
     @PluginTarget(GraphDatabaseService.class)
-    public String subtreeForNames(@Source GraphDatabaseService graphDb,
+    public Representation subtreeForNames(@Source GraphDatabaseService graphDb,
             @Parameter(name = "queryString", optional = true) @Description("A comma-delimited set of taxon names") 
                 String queryString) {
         
@@ -113,16 +113,16 @@ public class GetJsons extends ServerPlugin {
 
         // currently, for simplicity, we are using taxon names, but we should be using taxon UIDS.
         for (String name : names) {
-            Taxon t = new Taxon(ALLTAXA.findPrefTaxNodesByName(name).iterator().next(), taxonomy);
+            taxa.add(new Taxon(ALLTAXA.findPrefTaxNodesByName(name).iterator().next(), taxonomy));
         }
         
-//        ArrayList<String> testnames = new ArrayList<String>();
+/*        ArrayList<String> testnames = new ArrayList<String>();
         String namesConfirm = "";
         for (Taxon t : taxa) {
             namesConfirm += (t.getName());
-        }
+        } */
         
-        return namesConfirm;
+        return OpentreeRepresentationConverter.convert(taxa);
         
     }
 
