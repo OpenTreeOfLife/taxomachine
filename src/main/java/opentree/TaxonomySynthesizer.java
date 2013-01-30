@@ -35,9 +35,6 @@ public class TaxonomySynthesizer extends Taxonomy {
     private static final TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description().breadthFirst().
             relationships(RelType.TAXCHILDOF, Direction.INCOMING);
     
-    private static final TraversalDescription TAXCHILDOF_OUTGOING_TRAVERSAL = Traversal.description().breadthFirst().
-            relationships(RelType.TAXCHILDOF, Direction.OUTGOING);
-    
     public TaxonomySynthesizer(GraphDatabaseAgent t) {
         super(t);
     }
@@ -122,16 +119,10 @@ public class TaxonomySynthesizer extends Taxonomy {
                         treestoreId = sourceName + ":" + id;
                     }
                 }
-                
-                sourceIdString += "\"" + sourceName + "\":\"" + id + "\"";
-                
-                if (first) {
-                    first = false;
-                } else {
-                    sourceIdString += ",";  
-                }                
+                                
+                if (first) { first = false; } else { sourceIdString += ","; }                
 
-//                System.out.println("\t" + sourceName + " : " + id);
+                sourceIdString += "\"" + sourceName + "\":\"" + id + "\"";
             }
             
             // for those things that we don't have UIDs for (i.e. gbif names), we are currently spoofing them
