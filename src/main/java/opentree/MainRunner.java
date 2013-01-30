@@ -170,9 +170,11 @@ public class MainRunner {
             LinkedList<Node> tNodes = new LinkedList<Node>();
             
             for (String taxName : names) {
-                Node firstNode = taxonomy.ALLTAXA.findPrefTaxNodesByName(taxName).iterator().next();
-                System.out.println("adding " + firstNode.getProperty("name") + " to taxon set");
-                tNodes.add(firstNode);
+                System.out.println("Searching for " + taxName);
+                for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName)) {
+                    System.out.println("adding " + n.getProperty("name") + " to taxon set");
+                    tNodes.add(n);                    
+                }
             }
             
             TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
