@@ -138,7 +138,7 @@ public class TNRSQuery {
         for (String thisName : queriedNames) {
 
             // Attempt to find exact matches against *ALL* preferred taxa
-            IndexHits<Node> hits = prefTaxNodesByName.query("name", thisName);
+            IndexHits<Node> hits = prefTaxNodesByName.query("name", thisName.replace(" ", "\\ "));
             if (hits.size() == 1) { // not a homonym
 
                 // WE (MUST) ASSUME that users have spelled names correctly, but havoc will ensure if this assumption
@@ -191,7 +191,7 @@ public class TNRSQuery {
         // exact match the names against the context; save all hits
         for (String thisName : searchStrings) {
 
-            IndexHits<Node> hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query("name", thisName);
+            IndexHits<Node> hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query("name", thisName.replace(" ", "\\ "));
 
             if (hits.size() < 1) {
                 // no direct matches, move on to next name
@@ -245,7 +245,7 @@ public class TNRSQuery {
         // exact match unmatched names against context synonym index
         for (String thisName : searchStrings) {
 
-            IndexHits<Node> hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM).query("name", thisName);
+            IndexHits<Node> hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM).query("name", thisName.replace(" ", "\\ "));
 
             if (hits.size() < 1) {
                 // no direct matches, move on to next name
