@@ -170,14 +170,8 @@ public class MainRunner {
             LinkedList<Node> tNodes = new LinkedList<Node>();
             
             for (String taxName : names) {
-                try {
-                    tNodes.add(tnrs.matchExact(taxName).getSingleMatch().getMatchedNode());
-                } catch (MultipleHitsException e) {
-                    e.printStackTrace();
-                } catch (NoSuchElementException e) {
-                    System.out.println("Could not find " + taxName);
-                    e.printStackTrace();
-                }
+                Node firstNode = taxonomy.ALLTAXA.findPrefTaxNodesByName(taxName).iterator().next();
+                tNodes.add(firstNode);
             }
             
             TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
