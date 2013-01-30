@@ -48,7 +48,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName);
         
         for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(rootNode).nodes()) {
-            System.out.println("name: " + n.getProperty("name"));
+            System.out.println("name: " + n.getProperty("name") + "; id: " + String.valueOf(n.getId()));
             
             // source name : source UID
             HashMap<String, String> sourceIdMap = new HashMap<String, String>();
@@ -67,7 +67,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                 if (l.hasProperty("parentid"))
                     taxUId = String.valueOf(l.getProperty("parentid")); */
             
-            for (Relationship l : TAXCHILDOF_OUTGOING_TRAVERSAL.evaluator(Evaluators.toDepth(2)).traverse(n).relationships()) {
+            for (Relationship l : TAXCHILDOF_OUTGOING_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships()) {
                 
                 System.out.println("start node: " + String.valueOf(l.getStartNode().getId()) + "; end node: " + String.valueOf(l.getEndNode().getId()));
 
