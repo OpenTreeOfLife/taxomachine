@@ -18,6 +18,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
@@ -42,6 +43,12 @@ public class TaxonomySynthesizer extends Taxonomy {
         
         System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName);
         
+        for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(rootNode).nodes()) {
+            System.out.println("name: " + n.getProperty("name"));
+            
+            for (Relationship l : PREFTAXCHILDOF_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships())
+                System.out.println("\tsource: " + l.getProperty("source") + ", childid: " + l.getProperty("childid") + ", " + l.getProperty("parentid"));
+        }
     }
     
     /**
