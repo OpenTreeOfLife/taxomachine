@@ -266,7 +266,7 @@ public class MainRunner {
             String outfile = args[2];
             taxdb = new GraphDatabaseAgent(graphname);
             te =  new TaxonomySynthesizer(taxdb);
-            System.out.println("making ottol relationships");
+            System.out.println("dumping names to: " + outfile);
 
             // testing
             te.makeOTTOLNameDump(te.ALLTAXA.findPrefTaxNodesByName("Viburnum").get(0), outfile);

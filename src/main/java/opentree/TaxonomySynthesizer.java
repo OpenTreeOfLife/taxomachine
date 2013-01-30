@@ -40,7 +40,7 @@ public class TaxonomySynthesizer extends Taxonomy {
      */
     public void makeOTTOLNameDump(Node rootNode, String outFileName) {
         
-        
+        System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName);
         
     }
     
