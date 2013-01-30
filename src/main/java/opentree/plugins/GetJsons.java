@@ -118,7 +118,7 @@ public class GetJsons extends ServerPlugin {
         // currently, for simplicity, we are using taxon names, but we should be using taxon UIDS.
         for (String taxName : inputNames) {
             System.out.println("Searching for " + taxName);
-            for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName)) {
+            for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName.trim())) {
                 tNodes.add(n);                    
             }
         }
