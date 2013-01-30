@@ -138,7 +138,7 @@ public class MainRunner {
 				System.out.println("arguments should be: graphdbfolder");
 				return;
 			}
-        } else if(args[0].equals("dumpottol")) {
+        } else if(args[0].equals("dumpottol") || args[0].equals("makeottolnamedump")) {
             if (args.length != 3 ){
                 System.out.println("arguments should be: graphdbfolder outfile");
                 return;
@@ -261,6 +261,18 @@ public class MainRunner {
 			te.makePreferredOTTOLRelationshipsConflicts();
 			te.makePreferredOTTOLRelationshipsNOConflicts();
 
+        } else if (args[0].equals("makeottolnamedump")) {
+            String graphname = args[1];
+            String outfile = args[2];
+            taxdb = new GraphDatabaseAgent(graphname);
+            te =  new TaxonomySynthesizer(taxdb);
+            System.out.println("making ottol relationships");
+
+            // testing
+            te.makeOTTOLNameDump(te.ALLTAXA.findPrefTaxNodesByName("Viburnum").get(0), outfile);
+
+            //te.makeOTTOLNameDump(te.ALLTAXA.getRootNode(), outfile);
+		
 		} else if(args[0].equals("dumpottol")){
 			String graphname = args[1];
 			String outfile = args[2];
@@ -451,6 +463,7 @@ public class MainRunner {
 		System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
 		System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
 		System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be ingested elsewhere)");
+		System.out.println("\tmakeottolnamedump <graphdbfolder> <filename> (dumps the recognized ottol names in a format consistent with phylotastic treestores)");
 		System.out.println("\tgraftbycomp <graphdbfolder_dom> <sourcename> (graphs an addedtaxonomy into main using the comparator)");
 		System.out.println("\trecalculatemrcas <graphdbfolder> (deletes the mrca and nested mrcas and recalculates them)");
 		System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
@@ -503,6 +516,7 @@ public class MainRunner {
 						|| args[0].equals("jsgraph") 
 						|| args[0].equals("checktree")
 						|| args[0].equals("makeottol")
+						|| args[0].equals("makeottolnamedump")
 						|| args[0].equals("dumpottol")
 						|| args[0].equals("makecontexts")
 						|| args[0].equals("checknames")

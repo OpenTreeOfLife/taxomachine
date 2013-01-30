@@ -36,6 +36,15 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
 
     /**
+     * Dump all the name data in a format consistent with Phylotastic treestore requirements
+     */
+    public void makeOTTOLNameDump(Node rootNode, String outFileName) {
+        
+        
+        
+    }
+    
+    /**
      * Attempt to find cycles (should be conflicting taxonomies) below the node matched by `name`.
      */
     public void findTaxonomyCycles(String name) {
