@@ -44,9 +44,36 @@ public class TaxonomySynthesizer extends Taxonomy {
      */
     public void makeOTTOLNameDump(Node rootNode, String outFileName) {
         
-        System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName);
-
+        File outFile = null;
+        BufferedWriter bw = null;
+        FileWriter fw = null;
+        try {
+            
+            outFile = new File(outFileName);
+ 
+            // if file doesnt exists, then create it
+            if (!outFile.exists()) {
+                outFile.createNewFile();
+            }
+ 
+            fw = new FileWriter(outFile.getAbsoluteFile());
+            bw = new BufferedWriter(fw);
+ 
+            System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName);
+ 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }        
+        
         // first need to get list of sources, currently including 'nodeid' source
+        Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+        IndexHits<Node> sourceNodes = taxSources.query("*");
+        for (Node metadataNode : sourceNodes) {
+            System.out.println("source " + metadataNode.getProperty("source"));
+        }
+        sourceNodes.close();
+        
+        System.exit(0);
         
         // will contain data for all taxon nodes with their sources
         HashMap<Node, HashMap<String, String>> nodeSourceMap = new HashMap<Node, HashMap<String, String>>();
@@ -80,27 +107,6 @@ public class TaxonomySynthesizer extends Taxonomy {
             
         }
 
-        File outFile = null;
-        BufferedWriter bw = null;
-        FileWriter fw = null;
-        try {
-            
-            outFile = new File(outFileName);
- 
-            // if file doesnt exists, then create it
-            if (!outFile.exists()) {
-                outFile.createNewFile();
-            }
- 
-            fw = new FileWriter(outFile.getAbsoluteFile());
-            bw = new BufferedWriter(fw);
- 
-            System.out.println("Writing to " + outFileName);
- 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        
         boolean first = true;
         for (Entry<Node, HashMap<String, String>> nameData : nodeSourceMap.entrySet()) {
             Node taxNode = nameData.getKey();

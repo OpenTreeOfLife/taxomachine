@@ -194,6 +194,24 @@ public class TaxonomyLoader extends Taxonomy {
 		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
 		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
+
+		// just setting source metadata manually for now
+		String author = "";
+		String weburl = "";
+		String uri = "";
+		String urlPrefix = "";
+		if (sourcename == "ncbi") {
+            author = "no one";
+            weburl = "http://ncbi.nlm.nih.gov";
+            uri = "";
+            urlPrefix = "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=";
+		} else if (sourcename == "gbif") {
+            author = "gbif";
+            weburl = "http://www.gbif.org/";
+            uri = "";
+            urlPrefix = "http://ecat-dev.gbif.org/usage/";		    
+		}
+		
 		Node metadatanode = null;
 		try {
 			tx = beginTx();
@@ -201,7 +219,10 @@ public class TaxonomyLoader extends Taxonomy {
 			try {
 				metadatanode = createNode();
 				metadatanode.setProperty("source", sourcename);
-				metadatanode.setProperty("author", "no one");
+				metadatanode.setProperty("author", author);
+				metadatanode.setProperty("weburl", weburl);
+				metadatanode.setProperty("uri", uri);
+				metadatanode.setProperty("urlprefix", urlPrefix);
 				//taxSourceIndex.add(metadatanode, "source", sourcename);
 				taxSources.add(metadatanode, "source", sourcename);
 				tx.success();
