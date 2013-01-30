@@ -67,7 +67,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         
         // first need to get list of sources, currently including 'nodeid' source
         Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
-        IndexHits<Node> sourceNodes = taxSources.query("*");
+        IndexHits<Node> sourceNodes = taxSources.query("source", "?");
         for (Node metadataNode : sourceNodes) {
             System.out.println("source " + metadataNode.getProperty("source"));
         }
