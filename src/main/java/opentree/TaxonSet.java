@@ -126,17 +126,23 @@ public class TaxonSet implements Iterable<Taxon> {
                 continue;
 
             // get ids of all eventual descendants of this child node
-            long[] descendantIdsArray = (long[]) childNode.getProperty("mrca");
-            System.out.println("Found " + String.valueOf(descendantIdsArray.length) + " ids in " + childNode.getProperty("name"));
-            outer:
-            for (int i = 0; i < descendantIdsArray.length; i++) {
-                long aid = descendantIdsArray[i];
+            HashSet<Long> descendantIds = new HashSet<Long>();
+
+            long[] dTipIds = (long[]) childNode.getProperty("mrca");
+            for (int i = 0; i < dTipIds.length; i++) descendantIds.add(dTipIds[i]);
+
+            long[] dInternalIds = (long[]) childNode.getProperty("nested_mrca");
+            for (int i = 0; i < dInternalIds.length; i++) descendantIds.add(dInternalIds[i]);
+
+            System.out.println("Found " + String.valueOf(descendantIds.size()) + " ids in " + childNode.getProperty("name"));          
+
+            findDescendants:
+            for (long aid : descendantIds) {
                 for (long tid : taxonIds) {
-//                    System.out.println("\tComparing " + String.valueOf(aid) + " == " + String.valueOf(tid) + " " + String.valueOf(tid == aid));
                     if (tid == aid) {
                         System.out.println("found child " + String.valueOf(tid) + " in " + childNode.getProperty("name"));
                         heavyChildren.add(childNode);
-                        break outer;
+                        break findDescendants;
                     }
                 }
             }            
