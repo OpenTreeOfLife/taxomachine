@@ -108,7 +108,7 @@ public class TaxonSet implements Iterable<Taxon> {
         return lica;
     }
     
-    private JadeNode makeSubtree(Taxon taxNode) {
+    private JadeNode makeSubtree(Taxon taxNode, JadeNode parentNode) {
         
         final double DEF_BRLEN = 1.0;  
 
@@ -122,8 +122,8 @@ public class TaxonSet implements Iterable<Taxon> {
         // record all the children of this node which themselves contain taxa from this taxon set
         for (Node childNode : prefChildTraversal.traverse(taxNode.getNode()).nodes()) {
             
-//            if (childNode.getId() == taxNode.getNode().getId())
-//                continue;
+            if (childNode.getId() == taxNode.getNode().getId())
+                continue;
 
             // get ids of all eventual descendants of this child node
             long[] descendantIdsArray = (long[]) childNode.getProperty("mrca");
@@ -147,10 +147,10 @@ public class TaxonSet implements Iterable<Taxon> {
         if (heavyChildren.size() > 1) {
 
             // this node represents a branching event, i.e. an internal node; make the node and add its children
-            JadeNode treeNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
+            JadeNode treeNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), parentNode);
 
             for (Node heavyChild : heavyChildren) {
-                treeNode.addChild(makeSubtree(new Taxon(heavyChild, taxonomy)));
+                treeNode.addChild(makeSubtree(new Taxon(heavyChild, taxonomy), treeNode));
             }
 
             System.out.println("Adding internal node: " + treeNode.getName());
@@ -162,12 +162,12 @@ public class TaxonSet implements Iterable<Taxon> {
             System.out.println("Skipping knuckle: " + knuckle.getName());
 
             // this is a "knuckle" on a lineage containing downstream nodes; continue tracing this lineage
-            return makeSubtree(knuckle);
+            return makeSubtree(knuckle, parentNode);
 
         } else {
             
             // this should be a tip node
-            JadeNode tipNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
+            JadeNode tipNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), parentNode);
 
             System.out.println("Adding tip node: " + tipNode.getName());
             return tipNode;
@@ -188,7 +188,8 @@ public class TaxonSet implements Iterable<Taxon> {
         }
         
         nodeIndex = 0;
-        return new JadeTree(makeSubtree(lica));
+        JadeNode rootNode = new JadeNode();
+        return new JadeTree(makeSubtree(lica, rootNode));
 
     }
     
