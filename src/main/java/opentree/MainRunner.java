@@ -171,6 +171,7 @@ public class MainRunner {
             
             for (String taxName : names) {
                 Node firstNode = taxonomy.ALLTAXA.findPrefTaxNodesByName(taxName).iterator().next();
+                System.out.println("adding " + firstNode.getProperty("name") + " to taxon set");
                 tNodes.add(firstNode);
             }
             
