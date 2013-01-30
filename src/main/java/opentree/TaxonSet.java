@@ -25,6 +25,7 @@ public class TaxonSet implements Iterable<Taxon> {
     
     // for building subtrees
     private int nodeIndex;
+    private HashSet<Long> taxonIds;
 
     /**
      * Assumes all taxa are coming from the same taxonomy (since we only expect to ever be working with one taxonomy)
@@ -114,7 +115,7 @@ public class TaxonSet implements Iterable<Taxon> {
         TraversalDescription prefChildTraversal = Traversal.description()
                 .breadthFirst()
                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING).evaluator(Evaluators.toDepth(1));
-
+        
         // this will hold immediate children of taxNode that contain taxa from this taxon set
         HashSet<Node> heavyChildren = new HashSet<Node>();
 
@@ -130,9 +131,10 @@ public class TaxonSet implements Iterable<Taxon> {
                 descendantIds.add(descendantIdsArray[i]);
             }
             
-            for (Taxon t : taxa) {
-                if (descendantIds.contains(t.getNode().getId()))
-                    heavyChildren.add(childNode);
+            // do intersection compare
+            descendantIds.retainAll(taxonIds);
+            if (descendantIds.size() > 0) {
+                heavyChildren.add(childNode);
             }
         }
 
@@ -174,6 +176,12 @@ public class TaxonSet implements Iterable<Taxon> {
         if (!hasLICA())
             getLICA();
 
+        // make a set of taxon ids in this taxon set
+        taxonIds = new HashSet<Long>();
+        for (Taxon t : taxa) {
+            taxonIds.add(t.getNode().getId());
+        }
+        
         nodeIndex = 0;
         return new JadeTree(makeSubtree(lica));
 
