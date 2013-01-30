@@ -123,7 +123,7 @@ public class TaxonSet implements Iterable<Taxon> {
 
             // get ids of all eventual descendants of this child node
             HashSet<Long> descendantIds = new HashSet<Long>();
-            Long[] descendantIdsArray = (Long[]) childNode.getProperty("mrca");
+            long[] descendantIdsArray = (long[]) childNode.getProperty("mrca");
             for (int i = 0; i < descendantIdsArray.length; i++) {
                 descendantIds.add(descendantIdsArray[i]);
             }
