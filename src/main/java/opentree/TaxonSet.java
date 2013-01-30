@@ -130,7 +130,7 @@ public class TaxonSet implements Iterable<Taxon> {
             for (int i = 0; i < descendantIdsArray.length; i++) {
                 long aid = descendantIdsArray[i];
                 for (long tid : taxonIds) {
-                    System.out.println("\tComparing " + String.valueOf(aid) + " == " + String.valueOf(tid) + " " + String.valueOf(tid == aid));
+//                    System.out.println("\tComparing " + String.valueOf(aid) + " == " + String.valueOf(tid) + " " + String.valueOf(tid == aid));
                     if (tid == aid) {
                         System.out.println("found child " + String.valueOf(tid) + " in " + childNode.getProperty("name"));
                         heavyChildren.add(childNode);
