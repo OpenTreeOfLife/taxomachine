@@ -65,16 +65,28 @@ public class TaxonomySynthesizer extends Taxonomy {
             e.printStackTrace();
         }        
         
+        String sourceJSON = "externalSources\":{";
         // first need to get list of sources, currently including 'nodeid' source
         Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
         IndexHits<Node> sourceNodes = taxSources.query("source", "*");
         for (Node metadataNode : sourceNodes) {
-            System.out.println("source " + metadataNode.getProperty("source"));
+            String sourceName = String.valueOf(metadataNode.getProperty("source"));
+            String author = String.valueOf(metadataNode.getProperty("author"));
+            String uri = String.valueOf(metadataNode.getProperty("uri"));
+            String urlPrefix = String.valueOf(metadataNode.getProperty("urlprefix"));
+            String weburl = String.valueOf(metadataNode.getProperty("weburl"));
+            sourceJSON += "\"" + sourceName + "\":{\"author\":" + author + ",\"uri\":" + uri + ",\"urlprefix\":" + urlPrefix + ",\"weburl\":" + weburl + "}";
         }
         sourceNodes.close();
         
-        System.exit(0);
-        
+        // write the namedump metadata and source metadata
+        try {
+            bw.write("{\"metadata\"{\"version\":\"0\",\"treestoreMetadata\":{\"treestoreShortName\":\"ottol\",\"treestoreLongName\":\"Open Tree of Life\",\"weburl\":\"\",\"urlPrefix\":\"\"},{");
+            bw.write(sourceJSON + "},");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }        
+
         // will contain data for all taxon nodes with their sources
         HashMap<Node, HashMap<String, String>> nodeSourceMap = new HashMap<Node, HashMap<String, String>>();
         
@@ -107,6 +119,13 @@ public class TaxonomySynthesizer extends Taxonomy {
             
         }
 
+        try {
+            bw.write("\"names\":{");
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        
         boolean first = true;
         for (Entry<Node, HashMap<String, String>> nameData : nodeSourceMap.entrySet()) {
             Node taxNode = nameData.getKey();
@@ -150,6 +169,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
         
         try {
+            bw.write("}}");
             bw.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
