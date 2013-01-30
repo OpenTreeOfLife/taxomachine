@@ -60,6 +60,7 @@ public class TaxonomySynthesizer extends Taxonomy {
 
                 String sourceName = "";
                 if (l.hasProperty("source"))
+                    System.out.println(sourceName);
                     sourceName = String.valueOf(l.getProperty("source"));
 
                 String taxUId = "";
