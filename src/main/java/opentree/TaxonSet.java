@@ -121,19 +121,18 @@ public class TaxonSet implements Iterable<Taxon> {
 
         // record all the children of this node which themselves contain taxa from this taxon set
         for (Node childNode : prefChildTraversal.traverse(taxNode.getNode()).nodes()) {
-            
-            System.out.println(childNode.getProperty("name"));
 
             // get ids of all eventual descendants of this child node
 //            HashSet<Long> descendantIds = new HashSet<Long>();
             long[] descendantIdsArray = (long[]) childNode.getProperty("mrca");
+            System.out.println("Found " + String.valueOf(descendantIdsArray.length) + " in " + childNode.getProperty("name"));
             outer:
             for (int i = 0; i < descendantIdsArray.length; i++) {
                 long aid = descendantIdsArray[i];
-//                System.out.println(descendantIdsArray[i]);
+                System.out.println(descendantIdsArray[i]);
                 for (long tid : taxonIds) {
-//                    System.out.println("checking for taxon id " + String.valueOf(tid) + " in " + childNode.getProperty("name"));
                     if (tid == aid) {
+                        System.out.println("found child " + String.valueOf(tid) + " in " + childNode.getProperty("name"));
                         heavyChildren.add(childNode);
                         break outer;
                     }
