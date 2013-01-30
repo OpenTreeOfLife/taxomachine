@@ -121,6 +121,9 @@ public class TaxonSet implements Iterable<Taxon> {
 
         // record all the children of this node which themselves contain taxa from this taxon set
         for (Node childNode : prefChildTraversal.traverse(taxNode.getNode()).nodes()) {
+            
+            if (childNode.getId() == taxNode.getNode().getId())
+                continue;
 
             // get ids of all eventual descendants of this child node
 //            HashSet<Long> descendantIds = new HashSet<Long>();
