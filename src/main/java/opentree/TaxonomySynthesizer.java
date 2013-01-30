@@ -1,5 +1,7 @@
 package opentree;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -47,7 +49,10 @@ public class TaxonomySynthesizer extends Taxonomy {
         
         System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName);
 
-        HashMap<String, HashMap<String, String>> nameSourceMap = new HashMap<String, HashMap<String, String>>();
+        // first need to get list of sources, currently including 'nodeid' source
+        
+        // will contain data for all taxon nodes with their sources
+        HashMap<Node, HashMap<String, String>> nodeSourceMap = new HashMap<Node, HashMap<String, String>>();
         
         for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(rootNode).nodes()) {
 //            System.out.println("name: " + n.getProperty("name") + "; id: " + String.valueOf(n.getId()));
@@ -74,19 +79,80 @@ public class TaxonomySynthesizer extends Taxonomy {
             }
             
             // add source info for this taxon to the map
-            nameSourceMap.put(String.valueOf(n.getProperty("name")), sourceIdMap);
+            nodeSourceMap.put(n, sourceIdMap);
             
         }
+
+        File outFile = null;
+        BufferedWriter bw = null;
+        FileWriter fw = null;
+        try {
+            
+            outFile = new File(outFileName);
+ 
+            // if file doesnt exists, then create it
+            if (!outFile.exists()) {
+                outFile.createNewFile();
+            }
+ 
+            fw = new FileWriter(outFile.getAbsoluteFile());
+            bw = new BufferedWriter(fw);
+ 
+            System.out.println("Writing to " + outFileName);
+ 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         
-        for (Entry<String, HashMap<String, String>> nameData : nameSourceMap.entrySet()) {
-            String name = nameData.getKey();
+        for (Entry<Node, HashMap<String, String>> nameData : nodeSourceMap.entrySet()) {
+            Node taxNode = nameData.getKey();
+            String taxName = String.valueOf(taxNode.getProperty("name"));
             HashMap<String, String> nameIds = nameData.getValue();
-            System.out.println(name);
+            
+            String treestoreId = "";
+            String sourceIdString = "";
+            boolean first = true;
             for (Entry<String, String> source : nameIds.entrySet()) {
                 String sourceName = source.getKey();
                 String id = source.getValue();
-                System.out.println("\t" + sourceName + " : " + id);
+
+                // set the treestore id using an id we recognize
+                if (treestoreId == "") {
+                    if (id != "") {
+                        treestoreId = sourceName + ":" + id;
+                    }
+                }
+                
+                sourceIdString += "\"" + sourceName + "\":\"" + id + "\"";
+                
+                if (first) {
+                    first = false;
+                } else {
+                    sourceIdString += ",";  
+                }                
+
+//                System.out.println("\t" + sourceName + " : " + id);
             }
+            
+            // for those things that we don't have UIDs for (i.e. gbif names), we are currently spoofing them
+            // using the neo4j node ids. this should be unnecessary once we have external UIDs for all our names
+            if (treestoreId == "") {
+                treestoreId = "nodeid:" + String.valueOf(taxNode.getId());
+            }
+            
+            try {
+                bw.write("{\"name\":\"" + taxName + "\",\"treestoreId\":\"" + treestoreId + "\",\"sourceIds\":{" + sourceIdString + "}}");
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        
+        try {
+            bw.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
     
