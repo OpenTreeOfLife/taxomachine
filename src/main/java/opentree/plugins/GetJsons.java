@@ -1,12 +1,17 @@
 package opentree.plugins;
 
+import jade.tree.JadeTree;
+import jade.tree.TreePrinter;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import opentree.ContextDescription;
 import opentree.GraphDatabaseAgent;
 import opentree.Taxon;
+import opentree.TaxonSet;
 import opentree.Taxonomy;
 import opentree.TaxonomyContext;
 import opentree.TaxonomySynthesizer;
@@ -71,6 +76,34 @@ public class GetJsons extends ServerPlugin {
 
     }
     
+    /* Eventually there should be things to parse queries, presumably CQL ones.
+     * 
+     * Currently we are just using a set of names. We should however be using a set of unique taxon identifiers
+     * because of valid homonyms.
+     * 
+     * We will have to make available a dump of taxon names, identities (lineages?), with unique ids in order
+     * to make it possible for clients to find the names they want and reference their UIDs.
+     * 
+     */
+
+//    String result = queryString;
+    
+    // parse CQL query
+//    CQLNode queryTree = null;
+//    CQLParser cp = new CQLParser();
+//    try {
+//        queryTree = cp.parse(queryString);
+
+//    } catch (CQLParseException e) {
+        // TODO Auto-generated catch block
+//        e.printStackTrace();
+//    } catch (IOException e) {
+        // TODO Auto-generated catch block
+//        e.printStackTrace();
+//    }
+    
+//    return queryTree.toString();
+    
     @Description("Return a subtree for a set of taxon names")
     @PluginTarget(GraphDatabaseService.class)
     public Representation subtreeForNames(@Source GraphDatabaseService graphDb,
@@ -78,50 +111,25 @@ public class GetJsons extends ServerPlugin {
                 String queryString) {
         
         Taxonomy taxonomy = new Taxonomy(new GraphDatabaseAgent(graphDb));
-        TaxonomyContext ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, taxonomy);
         
-        /* Eventually this should presumable parse CQL queries that define the search parameters.
-         * 
-         * Currently we are just using a set of names. We should however be using a set of unique taxon identifiers
-         * because of valid homonyms.
-         * 
-         * We will have to make available a dump of taxon names, identities (lineages?), with unique ids in order
-         * to make it possible for clients to find the names they want and reference their UIDs.
-         * 
-         */
-
-//        String result = queryString;
-        
-        // parse CQL query
-//        CQLNode queryTree = null;
-//        CQLParser cp = new CQLParser();
-//        try {
-//            queryTree = cp.parse(queryString);
-
-//        } catch (CQLParseException e) {
-            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        } catch (IOException e) {
-            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-        
-//        return queryTree.toString();
-
-        ArrayList<Taxon> taxa = new ArrayList<Taxon>();
         String[] inputNames = queryString.split(",");
-
+        LinkedList<Node> tNodes = new LinkedList<Node>();
+        
         // currently, for simplicity, we are using taxon names, but we should be using taxon UIDS.
-        for (String name : inputNames) {
-            taxa.add(new Taxon(ALLTAXA.findPrefTaxNodesByName(name).iterator().next(), taxonomy));
+        for (String taxName : inputNames) {
+            System.out.println("Searching for " + taxName);
+            for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName)) {
+                tNodes.add(n);                    
+            }
         }
         
-        String treeString = "";
-        for (Taxon tax : taxa) {
-            
-        }
+        // create a taxon set for the found nodes and get the subtree
+        TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
+        JadeTree subTree = taxa.getPrefTaxSubtree();
+
+        TreePrinter tp = new TreePrinter();
         
-        return OpentreeRepresentationConverter.convert("");
+        return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
         
     }
 

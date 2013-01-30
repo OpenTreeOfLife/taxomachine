@@ -108,7 +108,7 @@ public class TaxonSet implements Iterable<Taxon> {
         return lica;
     }
     
-    private JadeNode makeSubtree(Taxon taxNode /*, JadeNode parentNode*/) {
+    private JadeNode makeSubtree(Taxon taxNode) {
         
         final double DEF_BRLEN = 1.0;  
 
@@ -153,10 +153,10 @@ public class TaxonSet implements Iterable<Taxon> {
         if (heavyChildren.size() > 1) {
 
             // this node represents a branching event, i.e. an internal node; make the node and add its children
-            JadeNode treeNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null/*, parentNode*/);
+            JadeNode treeNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
 
             for (Node heavyChild : heavyChildren) {
-                treeNode.addChild(makeSubtree(new Taxon(heavyChild, taxonomy)/*, treeNode*/));
+                treeNode.addChild(makeSubtree(new Taxon(heavyChild, taxonomy)));
             }
 
 //            System.out.println("Adding internal node: " + treeNode.getName());
@@ -164,16 +164,15 @@ public class TaxonSet implements Iterable<Taxon> {
 
         } else if (heavyChildren.size() == 1) {
 
-            Taxon knuckle  = new Taxon(heavyChildren.iterator().next(), taxonomy);
 //            System.out.println("Skipping knuckle: " + knuckle.getName());
 
             // this is a "knuckle" on a lineage containing downstream nodes; continue tracing this lineage
-            return makeSubtree(knuckle/*, parentNode*/);
+            return makeSubtree(new Taxon(heavyChildren.iterator().next(), taxonomy));
 
         } else {
             
             // this should be a tip node
-            JadeNode tipNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null/*, parentNode*/);
+            JadeNode tipNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
 
 //            System.out.println("Adding tip node: " + tipNode.getName());
             return tipNode;
@@ -194,8 +193,7 @@ public class TaxonSet implements Iterable<Taxon> {
         }
         
         nodeIndex = 0;
-        JadeNode rootNode = new JadeNode();
-        return new JadeTree(makeSubtree(lica /*, rootNode*/));
+        return new JadeTree(makeSubtree(lica));
 
     }
     
