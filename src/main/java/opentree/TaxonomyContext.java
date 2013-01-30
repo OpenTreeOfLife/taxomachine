@@ -96,7 +96,7 @@ public class TaxonomyContext {
     public List<Node> findNodes(Index<Node> index, String column, String key) {
         
         ArrayList<Node> foundNodes = new ArrayList<Node>();
-        
+        key = key.replace(" ", "\\ ");
         IndexHits<Node> results = index.query(column, key);
 //        IndexHits<Node> results = index.get(column, key);
         for (Node n : results) {
