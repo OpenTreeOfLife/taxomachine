@@ -125,17 +125,25 @@ public class TaxonSet implements Iterable<Taxon> {
             System.out.println(childNode.getProperty("name"));
 
             // get ids of all eventual descendants of this child node
-            HashSet<Long> descendantIds = new HashSet<Long>();
+//            HashSet<Long> descendantIds = new HashSet<Long>();
             long[] descendantIdsArray = (long[]) childNode.getProperty("mrca");
+            outer:
             for (int i = 0; i < descendantIdsArray.length; i++) {
-                descendantIds.add(descendantIdsArray[i]);
+                long aid = descendantIdsArray[i];
+//                System.out.println(descendantIdsArray[i]);
+                for (long tid : taxonIds) {
+                    System.out.println("checking for taxon id " + String.valueOf(tid) + " in " + childNode.getProperty("name"));
+                    if (tid == aid) {
+                        heavyChildren.add(childNode);
+                        break outer;
+                    }
+                }
+//                descendantIds.add(descendantIdsArray[i]);
             }
             
             // do intersection compare
-            descendantIds.retainAll(taxonIds);
-            if (descendantIds.size() > 0) {
-                heavyChildren.add(childNode);
-            }
+//            descendantIds.retainAll(taxonIds);
+            
         }
 
         System.out.println(heavyChildren.size());
@@ -179,6 +187,7 @@ public class TaxonSet implements Iterable<Taxon> {
         // make a set of taxon ids in this taxon set
         taxonIds = new HashSet<Long>();
         for (Taxon t : taxa) {
+            System.out.println("adding " + String.valueOf(t.getNode().getId()) + " to taxid hashset");
             taxonIds.add(t.getNode().getId());
         }
         
