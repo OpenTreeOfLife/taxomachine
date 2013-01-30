@@ -68,6 +68,9 @@ public class TaxonomySynthesizer extends Taxonomy {
                     taxUId = String.valueOf(l.getProperty("parentid")); */
             
             for (Relationship l : TAXCHILDOF_OUTGOING_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships()) {
+                
+                System.out.println("start node: " + String.valueOf(l.getStartNode().getId()) + "; end node: " + String.valueOf(l.getEndNode().getId()));
+
                 String sourceName = "";
                 if (l.hasProperty("source")) {
                     sourceName = String.valueOf(l.getProperty("source"));
