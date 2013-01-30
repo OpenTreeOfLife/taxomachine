@@ -46,30 +46,17 @@ public class TaxonomySynthesizer extends Taxonomy {
     public void makeOTTOLNameDump(Node rootNode, String outFileName) {
         
         System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName);
+
+        HashMap<String, HashMap<String, String>> nameSourceMap = new HashMap<String, HashMap<String, String>>();
         
         for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(rootNode).nodes()) {
-            System.out.println("name: " + n.getProperty("name") + "; id: " + String.valueOf(n.getId()));
+//            System.out.println("name: " + n.getProperty("name") + "; id: " + String.valueOf(n.getId()));
             
             // source name : source UID
             HashMap<String, String> sourceIdMap = new HashMap<String, String>();
             
-/*            boolean hasChildren = false;
-            for (Relationship l : TAXCHILDOF_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships()) {
-                hasChildren = true;
-                // this taxon has children, so we can get info from of its incoming relationships
-
-                String sourceName = "";
-                if (l.hasProperty("source"))
-                    System.out.println(sourceName);
-                    sourceName = String.valueOf(l.getProperty("source"));
-
-                String taxUId = "";
-                if (l.hasProperty("parentid"))
-                    taxUId = String.valueOf(l.getProperty("parentid")); */
-            
             for (Relationship l : n.getRelationships(Direction.OUTGOING, RelType.TAXCHILDOF)) {
-                
-                System.out.println("start node: " + String.valueOf(l.getStartNode().getId()) + "; end node: " + String.valueOf(l.getEndNode().getId()));
+//                System.out.println("start node: " + String.valueOf(l.getStartNode().getId()) + "; end node: " + String.valueOf(l.getEndNode().getId()));
 
                 String sourceName = "";
                 if (l.hasProperty("source")) {
@@ -87,27 +74,21 @@ public class TaxonomySynthesizer extends Taxonomy {
                 }
             }
             
-/*            if (!hasChildren) {
-                // this taxon has no children, so we need to check its outgoing relationships
-                
-                for (Relationship l : TAXCHILDOF_OUTGOING_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships()) {
-                    String sourceName = "";
-                    if (l.hasProperty("source"))
-                        sourceName = String.valueOf(l.getProperty("source"));
-
-                    String taxUId = "";
-                    if (l.hasProperty("childid"))
-                        taxUId = String.valueOf(l.getProperty("childid"));
-                    
-                    if (sourceName != "")
-                        sourceIdMap.put(sourceName, taxUId);
-                }
-            } */
-            
-            for (Entry<String, String> info : sourceIdMap.entrySet()) {
+/*            for (Entry<String, String> info : sourceIdMap.entrySet()) {
                 String sourceName = info.getKey();
                 String taxUId = info.getValue();
                 System.out.println("\tsource: " + sourceName + ", uid: " + taxUId);
+            } */
+        }
+        
+        for (Entry<String, HashMap<String, String>> nameData : nameSourceMap.entrySet()) {
+            String name = nameData.getKey();
+            HashMap<String, String> nameIds = nameData.getValue();
+            System.out.println(name);
+            for (Entry<String, String> source : nameIds.entrySet()) {
+                String sourceName = source.getKey();
+                String id = source.getValue();
+                System.out.println("\t" + sourceName + " : " + id);
             }
         }
     }
