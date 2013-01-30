@@ -131,10 +131,12 @@ public class TaxonomySynthesizer extends Taxonomy {
                 treestoreId = "nodeid:" + String.valueOf(taxNode.getId());
             }
             
-            if (first) { first = false; } else { sourceIdString += ","; }
-            
+            String nameString = "";
+            if (first) { first = false; } else { nameString += ","; }
+            nameString += "{\"name\":\"" + taxName + "\",\"treestoreId\":\"" + treestoreId + "\",\"sourceIds\":{" + sourceIdString + "}}";
+
             try {
-                bw.write("{\"name\":\"" + taxName + "\",\"treestoreId\":\"" + treestoreId + "\",\"sourceIds\":{" + sourceIdString + "}}");
+                bw.write(nameString);
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
