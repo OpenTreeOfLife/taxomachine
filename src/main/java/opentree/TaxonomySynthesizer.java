@@ -101,6 +101,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             e.printStackTrace();
         }
         
+        boolean first = true;
         for (Entry<Node, HashMap<String, String>> nameData : nodeSourceMap.entrySet()) {
             Node taxNode = nameData.getKey();
             String taxName = String.valueOf(taxNode.getProperty("name"));
@@ -108,7 +109,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             
             String treestoreId = "";
             String sourceIdString = "";
-            boolean first = true;
+            boolean first2 = true;
             for (Entry<String, String> source : nameIds.entrySet()) {
                 String sourceName = source.getKey();
                 String id = source.getValue();
@@ -120,8 +121,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                     }
                 }
                                 
-                if (first) { first = false; } else { sourceIdString += ","; }                
-
+                if (first2) { first2 = false; } else { sourceIdString += ","; }                
                 sourceIdString += "\"" + sourceName + "\":\"" + id + "\"";
             }
             
@@ -130,6 +130,8 @@ public class TaxonomySynthesizer extends Taxonomy {
             if (treestoreId == "") {
                 treestoreId = "nodeid:" + String.valueOf(taxNode.getId());
             }
+            
+            if (first) { first = false; } else { sourceIdString += ","; }
             
             try {
                 bw.write("{\"name\":\"" + taxName + "\",\"treestoreId\":\"" + treestoreId + "\",\"sourceIds\":{" + sourceIdString + "}}");
