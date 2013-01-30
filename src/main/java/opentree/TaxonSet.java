@@ -120,6 +120,8 @@ public class TaxonSet implements Iterable<Taxon> {
 
         // record all the children of this node which themselves contain taxa from this taxon set
         for (Node childNode : prefChildTraversal.traverse(taxNode.getNode()).nodes()) {
+            
+            System.out.println(childNode.getProperty("name"));
 
             // get ids of all eventual descendants of this child node
             HashSet<Long> descendantIds = new HashSet<Long>();
@@ -134,6 +136,8 @@ public class TaxonSet implements Iterable<Taxon> {
             }
         }
 
+        System.out.println(heavyChildren.size());
+        
         if (heavyChildren.size() > 1) {
 
             // this node represents a branching event, i.e. an internal node; make the node and add its children
@@ -143,18 +147,23 @@ public class TaxonSet implements Iterable<Taxon> {
                 treeNode.addChild(makeSubtree(new Taxon(heavyChild, taxonomy)));
             }
 
+            System.out.println("Adding internal node: " + treeNode.getName());
             return treeNode;
 
         } else if (heavyChildren.size() == 1) {
 
+            Taxon knuckle  = new Taxon(heavyChildren.iterator().next(), taxonomy);
+            System.out.println("Skipping knuckle: " + knuckle.getName());
+
             // this is a "knuckle" on a lineage containing downstream nodes; continue tracing this lineage
-            return makeSubtree(new Taxon(heavyChildren.iterator().next(), taxonomy));
+            return makeSubtree(knuckle);
 
         } else {
             
-            // this should be a final node
-            
+            // this should be a tip node
             JadeNode tipNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
+
+            System.out.println("Adding tip node: " + tipNode.getName());
             return tipNode;
         }
     }
