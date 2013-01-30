@@ -125,12 +125,12 @@ public class TaxonSet implements Iterable<Taxon> {
             // get ids of all eventual descendants of this child node
 //            HashSet<Long> descendantIds = new HashSet<Long>();
             long[] descendantIdsArray = (long[]) childNode.getProperty("mrca");
-            System.out.println("Found " + String.valueOf(descendantIdsArray.length) + " in " + childNode.getProperty("name"));
+            System.out.println("Found " + String.valueOf(descendantIdsArray.length) + " ids in " + childNode.getProperty("name"));
             outer:
             for (int i = 0; i < descendantIdsArray.length; i++) {
                 long aid = descendantIdsArray[i];
-//                System.out.println(descendantIdsArray[i]);
                 for (long tid : taxonIds) {
+                    System.out.println("\tComparing " + String.valueOf(aid) + " == " + String.valueOf(tid) + " " + String.valueOf(tid == aid));
                     if (tid == aid) {
                         System.out.println("found child " + String.valueOf(tid) + " in " + childNode.getProperty("name"));
                         heavyChildren.add(childNode);
