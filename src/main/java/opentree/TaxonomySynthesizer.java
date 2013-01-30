@@ -14,6 +14,7 @@ import opentree.tnrs.TNRSQuery;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
@@ -32,6 +33,9 @@ public class TaxonomySynthesizer extends Taxonomy {
     private static final TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description().breadthFirst().
             relationships(RelType.TAXCHILDOF, Direction.INCOMING);
     
+    private static final TraversalDescription TAXCHILDOF_OUTGOING_TRAVERSAL = Traversal.description().breadthFirst().
+            relationships(RelType.TAXCHILDOF, Direction.OUTGOING);
+    
     public TaxonomySynthesizer(GraphDatabaseAgent t) {
         super(t);
     }
@@ -46,8 +50,49 @@ public class TaxonomySynthesizer extends Taxonomy {
         for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(rootNode).nodes()) {
             System.out.println("name: " + n.getProperty("name"));
             
-            for (Relationship l : TAXCHILDOF_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships())
-                System.out.println("\tsource: " + l.getProperty("source") + ", childid: " + l.getProperty("childid") + ", " + l.getProperty("parentid"));
+            // source name : source UID
+            HashMap<String, String> sourceIdMap = new HashMap<String, String>();
+            
+            boolean hasChildren = false;
+            for (Relationship l : TAXCHILDOF_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships()) {
+                hasChildren = true;
+                // this taxon has children, so we can get info from of its incoming relationships
+
+                String sourceName = "";
+                if (l.hasProperty("source"))
+                    sourceName = String.valueOf(l.getProperty("source"));
+
+                String taxUId = "";
+                if (l.hasProperty("parentid"))
+                    taxUId = String.valueOf(l.getProperty("parentid"));
+                
+                if (sourceName != "")
+                    sourceIdMap.put(sourceName, taxUId);
+
+            }
+            
+            if (!hasChildren) {
+                // this taxon has no children, so we need to check its outgoing relationships
+                
+                for (Relationship l : TAXCHILDOF_OUTGOING_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships()) {
+                    String sourceName = "";
+                    if (l.hasProperty("source"))
+                        sourceName = String.valueOf(l.getProperty("source"));
+
+                    String taxUId = "";
+                    if (l.hasProperty("childid"))
+                        taxUId = String.valueOf(l.getProperty("childid"));
+                    
+                    if (sourceName != "")
+                        sourceIdMap.put(sourceName, taxUId);
+                }
+            }
+            
+            for (Entry<String, String> info : sourceIdMap.entrySet()) {
+                String sourceName = info.getKey();
+                String taxUId = info.getValue();
+                System.out.println("\tsource: " + sourceName + ", uid: " + taxUId);
+            }
         }
     }
     
