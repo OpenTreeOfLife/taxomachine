@@ -61,7 +61,6 @@ public class TaxonomySynthesizer extends Taxonomy {
                 String sourceName = "";
                 if (l.hasProperty("source")) {
                     sourceName = String.valueOf(l.getProperty("source"));
-                    System.out.println(sourceName);
                 }
 
                 String taxUId = "";
@@ -74,11 +73,9 @@ public class TaxonomySynthesizer extends Taxonomy {
                 }
             }
             
-/*            for (Entry<String, String> info : sourceIdMap.entrySet()) {
-                String sourceName = info.getKey();
-                String taxUId = info.getValue();
-                System.out.println("\tsource: " + sourceName + ", uid: " + taxUId);
-            } */
+            // add source info for this taxon to the map
+            nameSourceMap.put(String.valueOf(n.getProperty("name")), sourceIdMap);
+            
         }
         
         for (Entry<String, HashMap<String, String>> nameData : nameSourceMap.entrySet()) {
