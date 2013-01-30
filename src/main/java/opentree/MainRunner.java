@@ -1,9 +1,13 @@
 package opentree;
 
+import jade.tree.JadeTree;
+import jade.tree.TreePrinter;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSMatch;
@@ -113,7 +117,12 @@ public class MainRunner {
 	
 	public void taxonomyQueryParser(String [] args) {
 		
-	    if (args[0].equals("checktree")) {
+	    if (args[0].equals("getsubtree")) {
+	        if (args.length != 3) {
+                System.out.println("arguments should be: graphdbfolder \"nameslist\"");
+                return;
+            }
+        } else if (args[0].equals("checktree")) {
 			if (args.length != 4) {
 				System.out.println("arguments should be: treefile focalgroup graphdbfolder");
 				return;
@@ -147,8 +156,35 @@ public class MainRunner {
         TNRSQuery tnrs = null;
         Taxon taxon = null;
 
-		if (args[0].equals("comptaxtree")) {
-			String query = args[1];
+        
+        if (args[0].equals("getsubtree")) {
+            String graphname = args[1];
+            String nameString = args[2];
+            
+            taxdb = new GraphDatabaseAgent(graphname);
+            Taxonomy taxonomy = new Taxonomy(taxdb);
+            tnrs = new TNRSQuery(taxonomy); 
+            
+            String[] names = nameString.split(",");
+            LinkedList<Node> tNodes = new LinkedList<Node>();
+            
+            for (String taxName : names) {
+                try {
+                    tNodes.add(tnrs.matchExact(taxName).getSingleMatch().getMatchedNode());
+                } catch (MultipleHitsException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
+            JadeTree subTree = taxa.getPrefTaxSubtree();
+
+            TreePrinter tp = new TreePrinter();
+            System.out.println(tp.printNH(subTree));
+        
+        } else if (args[0].equals("comptaxtree")) {
+
+            String query = args[1];
             String graphname = args[2];
 
             taxdb = new GraphDatabaseAgent(graphname);
@@ -424,6 +460,7 @@ public class MainRunner {
 		System.out.println("\tfindcycles <name> <graphdbfolder> (find cycles in tax graph)");
 		System.out.println("\tjsgraph <name> <graphdbfolder> (constructs a json file from tax graph)");
 		System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
+        System.out.println("\tgetsubtree <graphdbfolder> \"<nameslist>\" (find the subgraph for the specified taxa)");
         System.out.println("\n---taxonomic name resolution services---");
         System.out.println("\ttnrsbasic <querynames> <graphdbfolder> [contextname] (check if the taxonomy graph contains comma-delimited names)");
         System.out.println("\ttnrstree <treefile> <graphdbfolder> [contextname] (check if the taxonomy graph contains names in treefile)\n");
@@ -467,7 +504,8 @@ public class MainRunner {
 						|| args[0].equals("makeottol")
 						|| args[0].equals("dumpottol")
 						|| args[0].equals("makecontexts")
-						|| args[0].equals("checknames")) {
+						|| args[0].equals("checknames")
+						|| args[0].equals("getsubtree")) {
 					mr.taxonomyQueryParser(args);
 				}else if(args[0].equals("recalculatemrcas")){
 					mr.recalculateMRCAS(args);

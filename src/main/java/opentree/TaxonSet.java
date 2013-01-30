@@ -1,6 +1,10 @@
 package opentree;
 
+import jade.tree.JadeNode;
+import jade.tree.JadeTree;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -9,6 +13,7 @@ import java.util.Set;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
@@ -18,6 +23,9 @@ public class TaxonSet implements Iterable<Taxon> {
     private final Taxonomy taxonomy;
     private Taxon lica;
     
+    // for building subtrees
+    private int nodeIndex;
+
     /**
      * Assumes all taxa are coming from the same taxonomy (since we only expect to ever be working with one taxonomy)
      * @param inTaxa
@@ -97,6 +105,69 @@ public class TaxonSet implements Iterable<Taxon> {
         // keep an internal copy of the mrca, we may need it later
         lica = taxonomy.getTaxon(licaNode);
         return lica;
+    }
+    
+    private JadeNode makeSubtree(Taxon taxNode) {
+        
+        final double DEF_BRLEN = 1.0;  
+
+        TraversalDescription prefChildTraversal = Traversal.description()
+                .breadthFirst()
+                .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING).evaluator(Evaluators.toDepth(1));
+
+        // this will hold immediate children of taxNode that contain taxa from this taxon set
+        HashSet<Node> heavyChildren = new HashSet<Node>();
+
+        // record all the children of this node which themselves contain taxa from this taxon set
+        for (Node childNode : prefChildTraversal.traverse(taxNode.getNode()).nodes()) {
+
+            // get ids of all eventual descendants of this child node
+            HashSet<Long> descendantIds = new HashSet<Long>();
+            Long[] descendantIdsArray = (Long[]) childNode.getProperty("mrca");
+            for (int i = 0; i < descendantIdsArray.length; i++) {
+                descendantIds.add(descendantIdsArray[i]);
+            }
+            
+            for (Taxon t : taxa) {
+                if (descendantIds.contains(t.getNode().getId()))
+                    heavyChildren.add(childNode);
+            }
+        }
+
+        if (heavyChildren.size() > 1) {
+
+            // this node represents a branching event, i.e. an internal node; make the node and add its children
+            JadeNode treeNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
+
+            for (Node heavyChild : heavyChildren) {
+                treeNode.addChild(makeSubtree(new Taxon(heavyChild, taxonomy)));
+            }
+
+            return treeNode;
+
+        } else if (heavyChildren.size() == 1) {
+
+            // this is a "knuckle" on a lineage containing downstream nodes; continue tracing this lineage
+            return makeSubtree(new Taxon(heavyChildren.iterator().next(), taxonomy));
+
+        } else {
+            
+            // this should be a final node
+            
+            JadeNode tipNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
+            return tipNode;
+        }
+    }
+    
+    public JadeTree getPrefTaxSubtree() {
+                
+        // get the lica if there is not one
+        if (!hasLICA())
+            getLICA();
+
+        nodeIndex = 0;
+        return new JadeTree(makeSubtree(lica));
+
     }
     
     public boolean hasLICA() {

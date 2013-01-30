@@ -109,20 +109,19 @@ public class GetJsons extends ServerPlugin {
 //        return queryTree.toString();
 
         ArrayList<Taxon> taxa = new ArrayList<Taxon>();
-        String[] names = queryString.split(",");
+        String[] inputNames = queryString.split(",");
 
         // currently, for simplicity, we are using taxon names, but we should be using taxon UIDS.
-        for (String name : names) {
+        for (String name : inputNames) {
             taxa.add(new Taxon(ALLTAXA.findPrefTaxNodesByName(name).iterator().next(), taxonomy));
         }
         
-/*        ArrayList<String> testnames = new ArrayList<String>();
-        String namesConfirm = "";
-        for (Taxon t : taxa) {
-            namesConfirm += (t.getName());
-        } */
+        String treeString = "";
+        for (Taxon tax : taxa) {
+            
+        }
         
-        return OpentreeRepresentationConverter.convert(taxa);
+        return OpentreeRepresentationConverter.convert("");
         
     }
 
