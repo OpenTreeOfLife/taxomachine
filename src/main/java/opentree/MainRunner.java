@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSMatch;
@@ -172,6 +173,9 @@ public class MainRunner {
                 try {
                     tNodes.add(tnrs.matchExact(taxName).getSingleMatch().getMatchedNode());
                 } catch (MultipleHitsException e) {
+                    e.printStackTrace();
+                } catch (NoSuchElementException e) {
+                    System.out.println("Could not find " + taxName);
                     e.printStackTrace();
                 }
             }
