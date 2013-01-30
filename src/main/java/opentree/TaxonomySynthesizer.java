@@ -46,7 +46,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(rootNode).nodes()) {
             System.out.println("name: " + n.getProperty("name"));
             
-            for (Relationship l : PREFTAXCHILDOF_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships())
+            for (Relationship l : TAXCHILDOF_TRAVERSAL.evaluator(Evaluators.toDepth(1)).traverse(n).relationships())
                 System.out.println("\tsource: " + l.getProperty("source") + ", childid: " + l.getProperty("childid") + ", " + l.getProperty("parentid"));
         }
     }
