@@ -8,13 +8,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import opentree.ContextDescription;
 import opentree.GraphDatabaseAgent;
 import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.Taxonomy;
-import opentree.TaxonomyContext;
-import opentree.TaxonomySynthesizer;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSQuery;
@@ -22,7 +19,6 @@ import opentree.tnrs.TNRSQuery;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.server.plugins.Description;
 import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
@@ -34,7 +30,6 @@ import org.z3950.zing.cql.CQLBooleanNode;
 import org.z3950.zing.cql.CQLNode;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.CQLParser;
-import org.z3950.zing.cql.CQLRelation;
 import org.z3950.zing.cql.CQLTermNode;
 
 public class GetJsons extends ServerPlugin {
@@ -76,41 +71,14 @@ public class GetJsons extends ServerPlugin {
 
     }
 
-    /*
-     * Eventually there should be things to parse queries, presumably CQL ones.
-     * 
-     * Currently we are just using a set of names. We should however be using a set of unique taxon identifiers because of valid homonyms.
-     * 
-     * We will have to make available a dump of taxon names, identities (lineages?), with unique ids in order to make it possible for clients to find the names
-     * they want and reference their UIDs.
-     */
-
-    // String result = queryString;
-
-    // parse CQL query
-    // CQLNode queryTree = null;
-    // CQLParser cp = new CQLParser();
-    // try {
-    // queryTree = cp.parse(queryString);
-
-    // } catch (CQLParseException e) {
-    // TODO Auto-generated catch block
-    // e.printStackTrace();
-    // } catch (IOException e) {
-    // TODO Auto-generated catch block
-    // e.printStackTrace();
-    // }
-
-    // return queryTree.toString();
-
-    /*
-     * It would be good to turn this into an unmanaged extension so we can use phylows urls /phylows/tree/subtree
-     */
-
     @Description("Return a taxonomy subtree for a set of taxon names")
     @PluginTarget(GraphDatabaseService.class)
     public Representation subtree(@Source GraphDatabaseService graphDb,
             @Parameter(name = "query", optional = true) @Description("A CQL query string") String query) {
+
+        /*
+         * It would be good to turn this into an unmanaged extension so we can use phylows urls /phylows/tree/subtree
+         */
 
         Taxonomy taxonomy = new Taxonomy(new GraphDatabaseAgent(graphDb));
 
@@ -157,8 +125,8 @@ public class GetJsons extends ServerPlugin {
     }
 
     /**
-     * Recursively traverses a CQL parse tree (presumably starting from its root node).
-     * Currently not used, but here for reference; we will presumably want to support these queries at some point.
+     * Recursively traverses a CQL parse tree (presumably starting from its root node). Currently not used, but here
+     * for reference; we will presumably want to support more complex queries at some point that will require parsing.
      * 
      * @param node
      * @return
@@ -187,7 +155,7 @@ public class GetJsons extends ServerPlugin {
         return node;
     }
 
-    @Deprecated
+/*    @Deprecated
     @Description("Return a taxonomy subtree for a set of taxon names")
     @PluginTarget(GraphDatabaseService.class)
     public Representation subtreeForNames(@Source GraphDatabaseService graphDb,
@@ -214,7 +182,7 @@ public class GetJsons extends ServerPlugin {
 
         return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
 
-    }
+    } */
 
     /*
      * @Description("Return a JSON with alternative TAXONOMIC relationships noted and returned")

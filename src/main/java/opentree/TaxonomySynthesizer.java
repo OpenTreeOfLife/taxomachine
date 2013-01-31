@@ -44,22 +44,30 @@ public class TaxonomySynthesizer extends Taxonomy {
      */
     public void makeOTTOLNameDump(Node rootNode, String outFileName) {
         
-        File outFile = null;
-        BufferedWriter bw = null;
-        FileWriter fw = null;
+        // create file access variables
+        File outFileMain = null;
+        File outFileMetadata = null;
+        FileWriter fwMain = null;
+        FileWriter fwMetadata = null;
+        BufferedWriter bwMain = null;
+        BufferedWriter bwMetadata = null;
+
+        // initialize files
         try {
-            
-            outFile = new File(outFileName);
+
+            outFileMain = new File(outFileName);
+            outFileMetadata = new File(outFileName+".metadata");
  
-            // if file doesnt exists, then create it
-            if (!outFile.exists()) {
-                outFile.createNewFile();
-            }
- 
-            fw = new FileWriter(outFile.getAbsoluteFile());
-            bw = new BufferedWriter(fw);
- 
-            System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName);
+            if (!outFileMain.exists()) { outFileMain.createNewFile(); }
+            if (!outFileMetadata.exists()) { outFileMetadata.createNewFile(); }
+
+            fwMain = new FileWriter(outFileMain.getAbsoluteFile());
+            fwMetadata = new FileWriter(outFileMetadata.getAbsoluteFile());
+
+            bwMain = new BufferedWriter(fwMain);
+            bwMetadata = new BufferedWriter(fwMetadata);
+
+            System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName + ", " + outFileName + ".metadata");
  
         } catch (IOException e) {
             e.printStackTrace();
@@ -85,13 +93,18 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
         sourceNodes.close();
         
+        String metadata = "{\"metadata\":{\"version\":\"0\",\"treestoreMetadata\":{\"treestoreShortName\":\"ottol\",\"treestoreLongName\":\"Open Tree of Life\",\"weburl\":\"\",\"urlPrefix\":\"\"},";
+        metadata += sourceJSON + "}";
+
         // write the namedump metadata and source metadata
         try {
-            bw.write("{\"metadata\":{\"version\":\"0\",\"treestoreMetadata\":{\"treestoreShortName\":\"ottol\",\"treestoreLongName\":\"Open Tree of Life\",\"weburl\":\"\",\"urlPrefix\":\"\"},");
-            bw.write(sourceJSON + "},");
+            bwMain.write(metadata);
+            bwMetadata.write(metadata + "}}");
+            bwMetadata.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }        
+        }
+        
 
         // will contain data for all taxon nodes with their sources
         HashMap<Node, HashMap<String, String>> nodeSourceMap = new HashMap<Node, HashMap<String, String>>();
@@ -126,7 +139,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
 
         try {
-            bw.write("\"names\":[");
+            bwMain.write(",\"names\":[");
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -167,7 +180,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             nameString += "{\"name\":\"" + taxName + "\",\"treestoreId\":\"" + treestoreId + "\",\"sourceIds\":{" + sourceIdString + "}}";
 
             try {
-                bw.write(nameString);
+                bwMain.write(nameString);
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -175,8 +188,8 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
         
         try {
-            bw.write("]}}");
-            bw.close();
+            bwMain.write("]}}");
+            bwMain.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
