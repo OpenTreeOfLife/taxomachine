@@ -71,11 +71,11 @@ public class TaxonomySynthesizer extends Taxonomy {
         IndexHits<Node> sourceNodes = taxSources.query("source", "*");
         boolean first0 = true;
         for (Node metadataNode : sourceNodes) {
-            String sourceName = String.valueOf(metadataNode.getProperty("source"));
-            String author = String.valueOf(metadataNode.getProperty("author"));
-            String uri = String.valueOf(metadataNode.getProperty("uri"));
-            String urlPrefix = String.valueOf(metadataNode.getProperty("urlprefix"));
-            String weburl = String.valueOf(metadataNode.getProperty("weburl"));
+            String sourceName = "\"" + String.valueOf(metadataNode.getProperty("source")) + "\"";
+            String author = "\"" + String.valueOf(metadataNode.getProperty("author")) + "\"";
+            String uri = "\"" + String.valueOf(metadataNode.getProperty("uri")) + "\"";
+            String urlPrefix = "\"" + String.valueOf(metadataNode.getProperty("urlprefix")) + "\"";
+            String weburl = "\"" + String.valueOf(metadataNode.getProperty("weburl")) + "\"";
             if (first0) {
                 first0 = false;
             } else {
