@@ -126,9 +126,10 @@ public class GetJsons extends ServerPlugin {
             e.printStackTrace();
         }
 
-        parseCQL(testQuery);
+        String taxaForSubtree = "";
+        parseCQL(testQuery, taxaForSubtree);
         
-        return OpentreeRepresentationConverter.convert(test);
+        return OpentreeRepresentationConverter.convert(taxaForSubtree);
     }
 
     private String test = "";
@@ -142,17 +143,25 @@ public class GetJsons extends ServerPlugin {
      * @return
      * @author Rutger Vos
      */
-    protected CQLNode parseCQL(CQLNode node) {
+    protected CQLNode parseCQL(CQLNode node, String taxaForSubtree) {
         if (node instanceof CQLBooleanNode) {
-            ((CQLBooleanNode) node).left = parseCQL(((CQLBooleanNode) node).left);
-            ((CQLBooleanNode) node).right = parseCQL(((CQLBooleanNode) node).right);
+            ((CQLBooleanNode) node).left = parseCQL(((CQLBooleanNode) node).left, taxaForSubtree);
+            ((CQLBooleanNode) node).right = parseCQL(((CQLBooleanNode) node).right, taxaForSubtree);
             return node;
 
         } else if (node instanceof CQLTermNode) {
             String index = ((CQLTermNode) node).getQualifier();
             String term = ((CQLTermNode) node).getTerm();
             
-            test += " | " + index + " = " + term;
+//            test += " | " + index + " = " + term;
+            
+            if (index == "pt.taxaForSubtree") {
+                if (!taxaForSubtree.equals("")) {
+                    taxaForSubtree += "," + term;
+                } else {
+                    taxaForSubtree = term;
+                }
+            }
 
 /*            CQLRelation relation = ((CQLTermNode) node).getRelation();
             Map<String, String> mapping = getPredicateMapping();
