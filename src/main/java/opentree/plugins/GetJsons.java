@@ -128,7 +128,7 @@ public class GetJsons extends ServerPlugin {
 
         String taxaForSubtree = "";
         if (queryNode instanceof CQLTermNode) {
-            if (((CQLTermNode) queryNode).getQualifier() == "pt.taxaForSubtree") {
+            if ((((CQLTermNode) queryNode).getQualifier()).equals("pt.taxaForSubtree")) {
                 taxaForSubtree = ((CQLTermNode) queryNode).getTerm();
             }
         }
