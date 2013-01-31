@@ -65,7 +65,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             e.printStackTrace();
         }        
         
-        String sourceJSON = "externalSources\":{";
+        String sourceJSON = "\"externalSources\":{";
         // first need to get list of sources, currently including 'nodeid' source
         Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
         IndexHits<Node> sourceNodes = taxSources.query("source", "*");
@@ -120,7 +120,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
 
         try {
-            bw.write("\"names\":{");
+            bw.write("\"names\":[");
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -169,7 +169,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
         
         try {
-            bw.write("}}");
+            bw.write("]}");
             bw.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
