@@ -114,6 +114,7 @@ public class GetJsons extends ServerPlugin {
 
         Taxonomy taxonomy = new Taxonomy(new GraphDatabaseAgent(graphDb));
 
+        // parse the cql
         CQLParser cp = new CQLParser();
         CQLNode queryNode = null;
         try {
@@ -126,6 +127,8 @@ public class GetJsons extends ServerPlugin {
             e.printStackTrace();
         }
 
+        // extract the names of the taxa from the CQL
+        // currently, for simplicity, we are using taxon names, but we should be using taxon UIDS.
         String taxaForSubtree = "";
         if (queryNode instanceof CQLTermNode) {
             if ((((CQLTermNode) queryNode).getQualifier()).equals("pt.taxaForSubtree")) {
@@ -133,11 +136,29 @@ public class GetJsons extends ServerPlugin {
             }
         }
         
-        return OpentreeRepresentationConverter.convert(taxaForSubtree);
+        String[] inputNames = taxaForSubtree.split(",");
+        LinkedList<Node> tNodes = new LinkedList<Node>();
+
+        // get the nodes for the names
+        for (String taxName : inputNames) {
+            for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName.trim())) {
+                tNodes.add(n);
+            }
+        }
+
+        // create a taxon set for the found nodes and get the subtree
+        TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
+        JadeTree subTree = taxa.getPrefTaxSubtree();
+
+        // return a newick tree
+        TreePrinter tp = new TreePrinter();
+        return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
+
     }
 
     /**
-     * Recursively traverses a CQL parse tree (presumably starting from its root node). We will presumably want to support these queries at some point...
+     * Recursively traverses a CQL parse tree (presumably starting from its root node).
+     * Currently not used, but here for reference; we will presumably want to support these queries at some point.
      * 
      * @param node
      * @return
