@@ -175,7 +175,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
         
         try {
-            bw.write("]}");
+            bw.write("]}}");
             bw.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block

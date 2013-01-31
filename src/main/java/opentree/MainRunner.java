@@ -269,9 +269,9 @@ public class MainRunner {
             System.out.println("dumping names to: " + outfile);
 
             // testing
-            te.makeOTTOLNameDump(te.ALLTAXA.findPrefTaxNodesByName("Viburnum").get(0), outfile);
+//            te.makeOTTOLNameDump(te.ALLTAXA.findPrefTaxNodesByName("Viburnum").get(0), outfile);
 
-            //te.makeOTTOLNameDump(te.ALLTAXA.getRootNode(), outfile);
+            te.makeOTTOLNameDump(te.ALLTAXA.getRootNode(), outfile);
 		
 		} else if(args[0].equals("dumpottol")){
 			String graphname = args[1];
