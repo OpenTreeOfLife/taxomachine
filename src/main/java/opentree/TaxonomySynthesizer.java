@@ -87,7 +87,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         
         // write the namedump metadata and source metadata
         try {
-            bw.write("{\"metadata\":{\"version\":\"0\",\"treestoreMetadata\":{\"treestoreShortName\":\"ottol\",\"treestoreLongName\":\"Open Tree of Life\",\"weburl\":\"\",\"urlPrefix\":\"\"},{");
+            bw.write("{\"metadata\":{\"version\":\"0\",\"treestoreMetadata\":{\"treestoreShortName\":\"ottol\",\"treestoreLongName\":\"Open Tree of Life\",\"weburl\":\"\",\"urlPrefix\":\"\"},");
             bw.write(sourceJSON + "},");
         } catch (IOException e) {
             e.printStackTrace();
