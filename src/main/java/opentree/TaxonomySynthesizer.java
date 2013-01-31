@@ -69,19 +69,25 @@ public class TaxonomySynthesizer extends Taxonomy {
         // first need to get list of sources, currently including 'nodeid' source
         Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
         IndexHits<Node> sourceNodes = taxSources.query("source", "*");
+        boolean first0 = true;
         for (Node metadataNode : sourceNodes) {
             String sourceName = String.valueOf(metadataNode.getProperty("source"));
             String author = String.valueOf(metadataNode.getProperty("author"));
             String uri = String.valueOf(metadataNode.getProperty("uri"));
             String urlPrefix = String.valueOf(metadataNode.getProperty("urlprefix"));
             String weburl = String.valueOf(metadataNode.getProperty("weburl"));
+            if (first0) {
+                first0 = false;
+            } else {
+                sourceJSON += ",";
+            }
             sourceJSON += "\"" + sourceName + "\":{\"author\":" + author + ",\"uri\":" + uri + ",\"urlprefix\":" + urlPrefix + ",\"weburl\":" + weburl + "}";
         }
         sourceNodes.close();
         
         // write the namedump metadata and source metadata
         try {
-            bw.write("{\"metadata\"{\"version\":\"0\",\"treestoreMetadata\":{\"treestoreShortName\":\"ottol\",\"treestoreLongName\":\"Open Tree of Life\",\"weburl\":\"\",\"urlPrefix\":\"\"},{");
+            bw.write("{\"metadata\":{\"version\":\"0\",\"treestoreMetadata\":{\"treestoreShortName\":\"ottol\",\"treestoreLongName\":\"Open Tree of Life\",\"weburl\":\"\",\"urlPrefix\":\"\"},{");
             bw.write(sourceJSON + "},");
         } catch (IOException e) {
             e.printStackTrace();
