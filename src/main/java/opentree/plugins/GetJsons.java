@@ -115,9 +115,9 @@ public class GetJsons extends ServerPlugin {
         Taxonomy taxonomy = new Taxonomy(new GraphDatabaseAgent(graphDb));
 
         CQLParser cp = new CQLParser();
-        CQLNode testQuery = null;
+        CQLNode queryNode = null;
         try {
-            testQuery = cp.parse(query);
+            queryNode = cp.parse(query);
         } catch (CQLParseException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -127,21 +127,20 @@ public class GetJsons extends ServerPlugin {
         }
 
         String taxaForSubtree = "";
-        parseCQL(testQuery, taxaForSubtree);
+        if (queryNode instanceof CQLTermNode) {
+            if (((CQLTermNode) queryNode).getQualifier() == "") {
+                taxaForSubtree = ((CQLTermNode) queryNode).getTerm();
+            }
+        }
         
         return OpentreeRepresentationConverter.convert(taxaForSubtree);
     }
 
-    private String test = "";
     /**
-     * Recursively traverses a CQL parse tree (presumably starting from its root node), replacing the observed indices with ones suggested by the map returned
-     * by getPredicateMapping(). The function of this is to allow concrete subclasses to create specific mappings from more general ones, e.g. when a study
-     * search query refers to the index "dcterms.identifier", the StudySearchController can specify that within its context this index is understood to mean
-     * "tb.identifier.study", i.e. the study ID. From the TreeBase code base.
+     * Recursively traverses a CQL parse tree (presumably starting from its root node). We will presumably want to support these queries at some point...
      * 
      * @param node
      * @return
-     * @author Rutger Vos
      */
     protected CQLNode parseCQL(CQLNode node, String taxaForSubtree) {
         if (node instanceof CQLBooleanNode) {
@@ -152,16 +151,6 @@ public class GetJsons extends ServerPlugin {
         } else if (node instanceof CQLTermNode) {
             String index = ((CQLTermNode) node).getQualifier();
             String term = ((CQLTermNode) node).getTerm();
-            
-//            test += " | " + index + " = " + term;
-            
-            if (index == "pt.taxaForSubtree") {
-                if (!taxaForSubtree.equals("")) {
-                    taxaForSubtree += "," + term;
-                } else {
-                    taxaForSubtree = term;
-                }
-            }
 
 /*            CQLRelation relation = ((CQLTermNode) node).getRelation();
             Map<String, String> mapping = getPredicateMapping();
