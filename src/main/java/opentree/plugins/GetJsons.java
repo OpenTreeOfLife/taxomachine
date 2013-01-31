@@ -123,7 +123,7 @@ public class GetJsons extends ServerPlugin {
         // return a newick tree
 //        TreePrinter tp = new TreePrinter();
 //        return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
-        return OpentreeRepresentationConverter.convert(testnames);
+        return OpentreeRepresentationConverter.convert(taxaForSubtree);
 
     }
 
