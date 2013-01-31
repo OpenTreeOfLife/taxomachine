@@ -110,20 +110,19 @@ public class GetJsons extends ServerPlugin {
         String testnames = "";
         // get the nodes for the names
         for (String taxName : inputNames) {
-            testnames += " | " + taxName;
-//            for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName.trim())) {
-//                tNodes.add(n);
-//            }
+            for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName.trim())) {
+                tNodes.add(n);
+            }
         }
 
         // create a taxon set for the found nodes and get the subtree
-//        TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
-//        JadeTree subTree = taxa.getPrefTaxSubtree();
+        TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
+        JadeTree subTree = taxa.getPrefTaxSubtree();
 
         // return a newick tree
-//        TreePrinter tp = new TreePrinter();
-//        return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
-        return OpentreeRepresentationConverter.convert(taxaForSubtree);
+        TreePrinter tp = new TreePrinter();
+        return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
+//        return OpentreeRepresentationConverter.convert(taxaForSubtree);
 
     }
 
