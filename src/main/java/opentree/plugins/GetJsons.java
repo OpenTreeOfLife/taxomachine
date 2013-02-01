@@ -107,10 +107,8 @@ public class GetJsons extends ServerPlugin {
         String[] inputNames = taxaForSubtree.split(",");
         LinkedList<Node> tNodes = new LinkedList<Node>();
 
-        return OpentreeRepresentationConverter.convert(taxaForSubtree);
+//        return OpentreeRepresentationConverter.convert(taxaForSubtree);
 
-        /*
-        
         // get the nodes for the names
         for (String taxName : inputNames) {
             for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName.trim())) {
@@ -125,8 +123,7 @@ public class GetJsons extends ServerPlugin {
         // return a newick tree
         TreePrinter tp = new TreePrinter();
         return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
-    
-*/
+
     }
 
     /**
