@@ -107,28 +107,31 @@ public class GetJsons extends ServerPlugin {
         String[] inputNames = taxaForSubtree.split(",");
         LinkedList<Node> tNodes = new LinkedList<Node>();
 
-        String testnames = "";
         // get the nodes for the names
-        for (String taxName : inputNames) {
-            for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName.trim())) {
-                tNodes.add(n);
+        if (inputNames.length > 0) {
+            for (String taxName : inputNames) {
+                for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName.trim())) {
+                    tNodes.add(n);
+                }
             }
+
+            // create a taxon set for the found nodes and get the subtree
+            TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
+            JadeTree subTree = taxa.getPrefTaxSubtree();
+    
+            // return a newick tree
+            TreePrinter tp = new TreePrinter();
+            return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
+        
+        } else {
+            return OpentreeRepresentationConverter.convert("");
         }
-
-        // create a taxon set for the found nodes and get the subtree
-        TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
-        JadeTree subTree = taxa.getPrefTaxSubtree();
-
-        // return a newick tree
-        TreePrinter tp = new TreePrinter();
-        return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
-//        return OpentreeRepresentationConverter.convert(taxaForSubtree);
 
     }
 
     /**
      * Recursively traverses a CQL parse tree (presumably starting from its root node). Currently not used, but here
-     * for reference; we will presumably want to support more complex queries at some point that will require parsing.
+     * for reference; we will presumably want to support more complex queries at some point that will require recursions.
      * 
      * @param node
      * @return
