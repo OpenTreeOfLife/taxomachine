@@ -107,7 +107,7 @@ public class GetJsons extends ServerPlugin {
         String[] inputNames = taxaForSubtree.split(",");
         LinkedList<Node> tNodes = new LinkedList<Node>();
 
-        return OpentreeRepresentationConverter.convert(inputNames);
+        return OpentreeRepresentationConverter.convert(taxaForSubtree);
 
         /*
         
