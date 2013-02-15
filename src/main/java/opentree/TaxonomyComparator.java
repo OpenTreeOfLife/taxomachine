@@ -1,9 +1,14 @@
 package opentree;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -27,6 +32,13 @@ public class TaxonomyComparator {
 	
 	public TaxonomyComparator(){}
 
+	/**
+	 * This should compare an additional taxonomic source to the one that is 
+	 * managed by the main indices. This will typically be the NCBI taxonomy.
+	 * 
+	 * @param dinga 
+	 * @param comparisonsource
+	 */
 	public void compareGraftTaxonomyToDominant(GraphDatabaseAgent dinga,String comparisonsource){
 		Taxonomy domtax = new Taxonomy(dinga);		
 
@@ -268,5 +280,69 @@ public class TaxonomyComparator {
 			innode.removeProperty("nested_mrca");
 		}
 	}
-
+	
+	/**
+	 * This is intended to be used, for example, to compare the names in a file (preottol) to the ottol
+	 * and create a mapping of those. The infile is expected to be in the format of 
+	 * id,parentid,name
+	 * 
+	 * The output will be 
+	 * id,ottolid
+	 * @param infilename
+	 * @param outfilename
+	 * @param dinga
+	 */
+	public void compareDontAddNamesToOTTOL(String infilename, String outfilename,GraphDatabaseAgent dinga){
+		Taxonomy domtax = new Taxonomy(dinga);		
+		Index<Node> taxSources = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+		Index<Node> taxaByName = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+		
+		String str = "";
+		BufferedReader sbr;
+		HashMap<String,String> id_name_map = new HashMap<String,String>();
+		HashMap<String,String> id_parent_map = new HashMap<String,String>();
+		HashMap<String,HashSet<String>> id_nameset_map = new HashMap<String,HashSet<String>>();
+		try {
+			sbr = new BufferedReader(new FileReader(infilename));
+			while ((str = sbr.readLine()) != null) {
+				StringTokenizer st = new StringTokenizer(str,"\t|\t");
+				String id = st.nextToken();
+				String pid = st.nextToken();
+				String name = st.nextToken();
+				id_name_map.put(id, name);
+				id_parent_map.put(id,pid);
+				id_nameset_map.put(id,new HashSet<String>());
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//get all the names that subtend a particular name and place them in the id_nameset_map
+		System.out.println("adding leaves");
+		for(String id: id_name_map.keySet()){
+			String curid = id_parent_map.get(id);
+			while(id_name_map.containsKey(curid)){
+				id_nameset_map.get(curid).add(id);
+				if(id_parent_map.containsKey(curid)){
+					curid = id_parent_map.get(curid);
+				}else{
+					break;
+				}
+			}
+		}
+		for(String id: id_name_map.keySet()){
+			if(id_nameset_map.get(id).size() > 0){
+				ArrayList<Node> tn = (ArrayList<Node>) domtax.ALLTAXA.findPrefTaxNodesByNameOrSyn(id_name_map.get(id));
+				if(tn.size()<1){
+					System.out.println(id+" "+id_name_map.get(id)+" "+tn.size());
+				}
+			}else{
+				ArrayList<Node> tn = (ArrayList<Node>) domtax.ALLTAXA.findPrefTaxNodesByNameOrSyn(id_name_map.get(id));
+				if(tn.size()<1){
+					System.out.println(id+" "+id_name_map.get(id)+" "+tn.size());
+				}
+			}
+		}
+	}
 }

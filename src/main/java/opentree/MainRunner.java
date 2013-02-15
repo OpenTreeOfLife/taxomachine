@@ -302,9 +302,31 @@ public class MainRunner {
 		taxdb.shutdownDb();
 	}
 	
+	/**
+	 * Intends to be used to compare names that are in a file with the format
+	 * id parentid name
+	 * to the ottol names and will output the mappings
+	 * @param args
+	 */
+	public void compareNames(String args[]){
+		if (args.length != 4){
+			System.out.println("arguments should be: infile outfile graphdbfolder");
+			System.exit(0);
+		}
+		String filename = args[1];
+		String outfilename = args[2];
+		String graphname = args[3];
+		taxdb = new GraphDatabaseAgent(graphname);
+		System.out.println("checking the names from "+filename);
+		TaxonomyComparator tc =  new TaxonomyComparator();
+		tc.compareDontAddNamesToOTTOL(filename, outfilename, taxdb);
+		taxdb.shutdownDb();
+	}
+	
 	public void parseGraftByComp(String args[]){
 		if (args.length != 3){
     		System.out.println("arguments should be: graphdbfolderdom sourcenametocomp");
+    		System.exit(0);
     	}
 		System.out.println(args);
 		String graphdomname = args[1];
@@ -319,6 +341,7 @@ public class MainRunner {
 	public void recalculateMRCAS(String args[]){
 		if (args.length != 2){
     		System.out.println("arguments should be: graphdbfolder");
+    		System.exit(0);
     	}
 		System.out.println(args);
 		String graphdbname = args[1];
@@ -468,6 +491,7 @@ public class MainRunner {
 		System.out.println("\trecalculatemrcas <graphdbfolder> (deletes the mrca and nested mrcas and recalculates them)");
 		System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
 		System.out.println("\tchecknames <sourcename> <graphdbfolder>");
+		System.out.println("\tcomparenames <filename> <outfile> <graphdbfolder> (compare the names from a file to the ottol names and output the mappings of names)");
 		System.out.println("\n---taxquery---");
 		System.out.println("\tcomptaxtree <name> <graphdbfolder> (construct a comprehensive tax newick)");
 		System.out.println("\tcomptaxgraph <name> <graphdbfolder> <outdotfile> (construct a comprehensive taxonomy in dot)");
@@ -528,17 +552,16 @@ public class MainRunner {
 					mr.parseGraftByComp(args);
 				}else if (args[0].matches("tnrsbasic|tnrstree")) {
 					mr.parseTNRSRequest(args);
-				
-				
 				// TEMP
 				} else if (args[0].equals("addlifenode")) {
 				    TaxonomySynthesizer ts = new TaxonomySynthesizer(new GraphDatabaseAgent(args[1]));
 				    Node lifeNode = ts.getLifeNode();
 				    System.out.println("lifenode: " +  lifeNode.toString() + " " + lifeNode.getProperty("name"));
 				    ts.addToPreferredIndexesAtomicTX(lifeNode, ts.ALLTAXA);
-
 				    
-				} else {
+				} else if(args[0].equals("comparenames")){
+					mr.compareNames(args);
+				}else {
 					System.err.println("Unrecognized command \"" + args[0] + "\"");
 					printHelp();
 					System.exit(1);

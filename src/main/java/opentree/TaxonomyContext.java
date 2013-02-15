@@ -124,11 +124,11 @@ public class TaxonomyContext {
      * a convenience wrapper for the prefTaxSynNodes index .get("name", `name`) method
      * @param name
      * @return
-     *
+     */
     public List<Node> findPrefTaxNodesByNameOrSyn(String name) {
         Index<Node> index = (Index<Node>) getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
         return findNodes(index, "name", name);
 
-    } */
+    } 
 
 }
