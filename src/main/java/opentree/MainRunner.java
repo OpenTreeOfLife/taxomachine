@@ -269,7 +269,7 @@ public class MainRunner {
             System.out.println("dumping names to: " + outfile);
 
             // testing
-            te.makeOTTOLNameDump(te.ALLTAXA.findPrefTaxNodesByName("Viburnum").get(0), outfile);
+            te.OTTOLNameDump(te.ALLTAXA.findPrefTaxNodesByName("Viburnum").get(0), outfile);
 
 //            te.makeOTTOLNameDump(te.ALLTAXA.getRootNode(), outfile);
 		

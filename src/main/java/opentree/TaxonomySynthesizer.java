@@ -25,6 +25,15 @@ import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
+/**
+ * TaxonomySynthesize functions
+ * ============================
+ * make ottol preferred relationships
+ * make contexts
+ * add preferred index values
+ *
+ */
+
 public class TaxonomySynthesizer extends Taxonomy {
 
     int transaction_iter = 10000;
@@ -42,7 +51,7 @@ public class TaxonomySynthesizer extends Taxonomy {
     /**
      * Dump all the name data in a format consistent with Phylotastic treestore requirements
      */
-    public void makeOTTOLNameDump(Node rootNode, String outFileName) {
+    public void OTTOLNameDump(Node rootNode, String outFileName) {
         
         // create file access variables
         File outFileMain = null;

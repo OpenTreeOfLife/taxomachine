@@ -14,7 +14,9 @@ public enum NodeIndexDescription {
     
     TAX_SOURCES                 ("taxSources"),             // ?
     TAX_STATUS                  ("taxStatus"),
-    TAX_RANK                    ("taxRank");
+    TAX_RANK                    ("taxRank"),
+    
+    TAXON_UNIQID				("taxUniqId");
 
     public final String namePrefix;
 

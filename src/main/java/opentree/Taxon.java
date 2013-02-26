@@ -24,6 +24,7 @@ import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
+
 public class Taxon {
 
     private final Node taxNode;
