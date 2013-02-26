@@ -10,6 +10,13 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
+/**
+ * An abstraction of the Neo4J database that provides identical modes of access to both embedded and served databases,
+ * and which defines some convenience methods for accessing certain database features (e.g. common types of index queries).
+ *
+ * @author cody hinchliff and stephen smith
+ *
+ */
 public class GraphDatabaseAgent {
 
     /*

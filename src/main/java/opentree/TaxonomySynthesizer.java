@@ -468,7 +468,38 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
     
     
-    
+    /**
+     * 
+     * @param outfile the outfile that will have the dumped ottol information as id\tparentid\tname
+     */
+    public void dumpPreferredOTTOLRelationships(String outfile) {
+//    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+//                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
+
+         // get the start point
+         Node life = getLifeNode();
+         System.out.println(life.getProperty("name"));
+         PrintWriter outFile;
+         try {
+             outFile = new PrintWriter(new FileWriter(outfile));
+             for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
+            	 if(n.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)){
+            		 Relationship tr = n.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
+            		 Node p = tr.getEndNode();
+            		 String source = "";
+            		 for (Relationship r: n.getRelationships(RelType.TAXCHILDOF, Direction.OUTGOING)){
+            			 source = (String)r.getProperty("source");
+            		 }
+            		 outFile.write(n.getId()+"\t"+p.getId()+"\t"+n.getProperty("name")+"\t"+source+"\n");
+            	 }else{
+            		 outFile.write(n.getId()+"\t"+"\t"+n.getProperty("name")+"\tncbi\n");
+            	 }
+             }
+             outFile.close();
+         } catch (IOException e) {
+             e.printStackTrace();
+         }
+    }
     
     /**
      * Used to make a hierarchy for the taxonomic contexts (each ContextTreeNode contains links to immediate child ContextTreeNodes),
@@ -501,14 +532,32 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
     
     /**
+     * Just prints the context hierarchy below `contextNode`. Used when building indexes to provide the user with confirmation that
+     * everything is going according to plan.
+     * @param contextNode
+     * @param prefix
+     */
+    private void printContextTree(ContextTreeNode contextNode, String prefix) {
+
+        prefix = prefix + "    ";
+        for (ContextTreeNode childNode : contextNode.getChildren()) {
+            System.out.println(prefix + childNode.getContext().getDescription().name);
+            printContextTree(childNode, prefix);
+        }
+
+    }
+    
+    /**
      * Builds the context-specific indices that are used for more efficient access to sub-regions of the taxonomy, as defined in the
      * ContextDescription enum. Context-specific indices are all just subsets of the preferred taxon indices (by name, synonym, and
      * both) for the entire graph.
      *
-     * This method first uses the taxonomy to determine the hierarchical nesting structure of the contexts, recording this hierarchy
-     * in the form of pointer-links among a group of ContextTreeNode objects. This hierarchy is then passed to a recursive function
-     * that builds the indexes, which ensures that they are built outside-in, and thus that each taxon node's leastIndex property
-     * (written to each traversed node during the creation of each context's indices) always reflects the least inclusive index name.
+     * This method first uses the taxonomy defined by the database to determine the hierarchical nesting structure of the contexts,
+     * recording this hierarchy in the form of pointer-links among a group of ContextTreeNode objects. This hierarchy is then passed
+     * to a recursive function that builds the indexes, which ensures that they are built pre-order, and thus that each taxon node's
+     * leastIndex property (written to each traversed node during the creation of each context's indices) always reflects the last
+     * index built (thus, the least inclusive index).
+     * 
      * @return root of the ContextTreeNode hierarchy
      */
     public void makeContexts() {
@@ -559,22 +608,7 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
     
     /**
-     * Just prints the hierarchy below `contextNode`
-     * @param contextNode
-     * @param prefix
-     */
-    private void printContextTree(ContextTreeNode contextNode, String prefix) {
-
-        prefix = prefix + "    ";
-        for (ContextTreeNode childNode : contextNode.getChildren()) {
-            System.out.println(prefix + childNode.getContext().getDescription().name);
-            printContextTree(childNode, prefix);
-        }
-
-    }
-
-    /**
-     * Uses recursive method for building indexes, starting with most inclusive and working in, so that least inclusive indexes are built last.
+     * Uses preorder recursion for building indexes, so that least inclusive indexes are built last.
      * @param contextNode
      */
     private void makeContextsRecursive(ContextTreeNode contextNode) {
@@ -606,41 +640,11 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
     
     /**
+     * Just adds `node` under its name and its synonyms to the corresponding node indexes for `context`. Called by the
+     * makeContextsRecursive method to build the index for a given context as it traverses the nodes within it.
      * 
-     * @param outfile the outfile that will have the dumped ottol information as id\tparentid\tname
-     */
-    public void dumpPreferredOTTOLRelationships(String outfile) {
-//    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-//                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
-
-         // get the start point
-         Node life = getLifeNode();
-         System.out.println(life.getProperty("name"));
-         PrintWriter outFile;
-         try {
-             outFile = new PrintWriter(new FileWriter(outfile));
-             for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
-            	 if(n.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)){
-            		 Relationship tr = n.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
-            		 Node p = tr.getEndNode();
-            		 String source = "";
-            		 for (Relationship r: n.getRelationships(RelType.TAXCHILDOF, Direction.OUTGOING)){
-            			 source = (String)r.getProperty("source");
-            		 }
-            		 outFile.write(n.getId()+"\t"+p.getId()+"\t"+n.getProperty("name")+"\t"+source+"\n");
-            	 }else{
-            		 outFile.write(n.getId()+"\t"+"\t"+n.getProperty("name")+"\tncbi\n");
-            	 }
-             }
-             outFile.close();
-         } catch (IOException e) {
-             e.printStackTrace();
-         }
-    }
-    
-    /**
-     * Just adds `node` under its name and its synonyms. THIS METHOD ASSUMES (I.E. REQUIRES) THAT IT IS BEING CALLED FROM WITHIN A TRANSACTION.
-     * to the corresponding indices for `context`.
+     * THIS METHOD ASSUMES (I.E. REQUIRES) THAT IT IS BEING CALLED FROM WITHIN A TRANSACTION.
+     * 
      * @param node
      */
     public void addToPreferredIndexes(Node node, TaxonomyContext context) {
@@ -666,19 +670,6 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
     }    
 
-    /**
-     * Originally a one-time solution to a specific problem that has now been fixed. Leaving it in case it is useful.
-     * @param node
-     * @param context
-     */
-    @Deprecated
-    public void addToPreferredIndexesAtomicTX(Node node, TaxonomyContext context) {
-        Transaction tx = beginTx();
-        addToPreferredIndexes(node, context);
-        tx.success();
-        tx.finish();
-    }
-    
     /**
      * @param args
      */

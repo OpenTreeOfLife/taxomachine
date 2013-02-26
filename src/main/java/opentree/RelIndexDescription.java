@@ -2,7 +2,7 @@ package opentree;
 
 /**
  * Defines relationship indexes for the db. Not clear that these are even being used...
- * @author cody
+ * @author cody hinchliff and stephen smith
  *
  */
 public enum RelIndexDescription {

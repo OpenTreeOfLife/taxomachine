@@ -9,7 +9,46 @@ import org.neo4j.graphdb.index.IndexHits;
 
 import opentree.ContextDescription;
 
+/**
+ * TaxonomyContext objects are used to access ALL node indexes. The various taxonomic contexts are defined in the 
+ * ContextDescription enum. To initialize a TaxonomyContext object, one must pass a ContextDescription object `cd` and a
+ * Taxonomy object `t` to the TaxonomyContext constructor. The returned TaxonomyContext object will provide access to
+ * node indexes of `t` which will be limited to the taxonomic scope defined by `cd`. The most straightforward way to
+ * create a new TaxonomyContext object is simply to pass a ContextDescription object to the Taxonomy.getContext() method,
+ * which will return a TaxonomyContext object for the originating Taxonomy and indicated ContextDescription.
+ * 
+ * Before TaxonomyContext objects can be used to query the indexes, the indexes themselves must first be built using
+ * the TaxonomySynthesizer.makeContexts() method. For more information on this, refer to the documentation for that
+ * method in the TaxonomySynthesizer class file.
+ * 
+ * Once the indexes have been built, it becomes possible to query the node indexes by name, synonym, or various other
+ * properties. The types of indexes that will be built (and thus the types of available queries) are named and discussed
+ * in the NodeIndexDescription class file, with more specific details in the various methods of the TaxonomySynthesizer
+ * class file that are called by the TaxonomySynthesizer.makeContexts() method itself.
+ * 
+ * Once a TaxonomyContext object `tc` has been created, one may access the node indexes themselves through the
+ * `tc`.getNodeIndex(NodeIndexDescription nid) method. This will call the underlying Neo4J graph database itself (via
+ * the GraphDatabaseAgent that underlies the associated Taxonomy object) and will return a Neo4J Index<Node> object that
+ * can be queried using any available methods.
+ * 
+ * Various convenience wrappers are defined to simplify certain common queries, such as findTaxNodesByName(String name),
+ * which returns results from a query to the TaxNodesByName index. These methods also provide examples illustrating
+ * how a node index may be queried from a ContextDescription object.
+ * 
+ * To access the non-context specific node indexes (i.e. the entire taxonomy at once), initialize a TaxonomyContext object
+ * using the ContextDescription.ALLTAXA enum. Assuming that a GraphDatabaseAgent object `gdb` exists that points taxomachine database...
+ * 
+ * Taxonomy t = new Taxonomy(gdb);
+ * TaxonomyContext everything = t.getContext(ContextDescription.ALLTAXA);
+ * Index<Node> allTaxaIndexByName = (Index<Node>) everything.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+ * 
+ * @author cody hinchliff
+ *
+ */
+
 public class TaxonomyContext {
+    
+    
     
     private ContextDescription contextDescription;
     private Taxonomy taxonomy;

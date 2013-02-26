@@ -3,8 +3,15 @@ package opentree;
 import opentree.ContextGroup;
 
 /**
- * Definitions for the various taxonomic contexts. These descriptions can be passed to the Taxonomy.getContext() function to return
- * a corresponding TaxonomyContext object that can be used for limited  (i.e. more efficient) access to individual parts of the taxonomy itself.
+ * Definitions for the various taxonomic contexts. These are used to access the node indexes in order to locate nodes by name, synonym name, etc.
+ * This enum defines the taxonomic scope of the various contexts. It is referred to by the TaxonomySynthesizer.makeContexts() method, which will
+ * make context-specific node indexes for all the contexts defined here, and is also used when initializing an instance of the TaxonomyContext class,
+ * through which access to all the context-specific node indexes themselves is provided.
+ * 
+ * Definitions for new contexts should be created in this enum.
+ * 
+ * For more information on how to use the context-specific indexes, refer to the documentation in the TaxonomyContext class file.
+ * 
  * @author cody hinchliff
  *
  */

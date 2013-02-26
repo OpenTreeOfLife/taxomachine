@@ -7,6 +7,19 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
+/**
+ * This class provides access to methods specific to the taxonomic database itself. Initialization requires a GraphDatabaseAgent object,
+ * through which the Taxonomy object will interact with the underlying Neo4J database object.
+ * 
+ * Most of the interaction with the taxonomy is defined in other class files that make use of or inherit the Taxonomy class
+ * (e.g. TaxonomyComparator, TaxonomySynthesizer, TaxonomyLoader, Taxon, etc.). Only the most general methods are defined here.
+ * The most frequent use of the Taxonomy class itself should probably be to access objects of of the TaxonomyContext class which
+ * are iun turn used to access ALL the node indexes. For more information on node indexes and TaxonomyContext objects, refer
+ * to the documentation in the TaxonomyContext class file.
+ * 
+ * @author cody hinchliff and stephen smith
+ *
+ */
 public class Taxonomy {
 
     GraphDatabaseAgent graphDb;
@@ -32,30 +45,33 @@ public class Taxonomy {
     }
     
     /**
-     * Return a TaxonomyContext object for this taxonomy, as defined by the passed ContextDescription `cd`
+     * Return a TaxonomyContext object for this taxonomy, as defined by the passed ContextDescription `contextDesc`.
+     * TaxonomyContext objects are used for accessing ALL node indexes. For more information on how to use these objects,
+     * refer to the documentation in the TaxonomyContext class file.
      * @param contextDesc
-     * @return
+     * @return TaxonomyContext
      */
     public TaxonomyContext getContext(ContextDescription contextDesc) {
         return new TaxonomyContext(contextDesc, this);
     }
     
     /**
-     * Returns a TaxonomyContext object for the ContextDescription indicated by `id`
-     * @param id
-     * @return
+     * Returns a TaxonomyContext object for the ContextDescription with name matching `name`
+     * TaxonomyContext objects are used for accessing ALL node indexes. For more information on how to use these objects,
+     * refer to the documentation in the TaxonomyContext class file.
+     * @param name
+     * @return TaxonomyContext
      */
     public TaxonomyContext getContextByName(String name) {
 
         for (ContextDescription cd : ContextDescription.values()) {
-//            System.out.println("comparing " + name + " to " + cd.name);
             if (cd.name.equals(name)) {
-//                System.out.println("success");
                 return this.getContext(cd);
             }
         }
 
         // if we didn't find one
+        // this might ought to throw an exception instead...
         return null;
     }
 
@@ -125,16 +141,26 @@ public class Taxonomy {
         return i;
     }
     
-    // wrappers for relevant underlying database methods
-    
+    /** Just a wrapper for the underlying database method defined in the GraphDatabaseAgent class
+     * 
+     * @return Transaction
+     */
     public Node createNode() {
         return graphDb.createNode();
     }
     
+    /** Just a wrapper for the underlying database method defined in the GraphDatabaseAgent class
+     * 
+     * @return Transaction
+     */
     public Transaction beginTx() {
         return graphDb.beginTx();
     }
     
+    /** Just a wrapper for the underlying database method defined in the GraphDatabaseAgent class
+     *  
+     * @return Node
+     */
     public Node getNodeById(Long arg0) {
         return graphDb.getNodeById(arg0);
     }
