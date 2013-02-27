@@ -1,5 +1,13 @@
 package opentree;
 
+/**
+ * TaxonomyComparator functions
+ * ====================
+ * compare an added taxonomy to the dominant taxonomy and add nodes where possible
+ * compare a taxonomy without adding it so that we can assign ids
+ * 
+ */
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;

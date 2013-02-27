@@ -205,43 +205,6 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
     }
     
-    /**
-     * Attempt to find cycles (should be conflicting taxonomies) below the node matched by `name`.
-     */
-    public void findTaxonomyCycles(String name) {
-
-        Node firstNode = null;
-        try {
-            firstNode = (new TNRSQuery(this)).matchExact(name).getSingleMatch().getMatchedNode();
-        } catch (MultipleHitsException e) {
-            e.printStackTrace();
-        }
-
-//        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-//                .relationships(RelType.TAXCHILDOF, Direction.INCOMING);
-        System.out.println(firstNode.getProperty("name"));
-        ArrayList<Node> conflictingnodes = new ArrayList<Node>();
-        for (Node friendnode : TAXCHILDOF_TRAVERSAL.traverse(firstNode).nodes()) {
-            int count = 0;
-            boolean conflict = false;
-            String endNode = "";
-            for (Relationship rel : friendnode.getRelationships(Direction.OUTGOING)) {
-                if (endNode == "")
-                    endNode = (String) rel.getEndNode().getProperty("name");
-                if ((String) rel.getEndNode().getProperty("name") != endNode) {
-                    conflict = true;
-                }
-                count += 1;
-            }
-            if (count > 1 && conflict) {
-                conflictingnodes.add(friendnode);
-            }
-        }
-        System.out.println(conflictingnodes.size());
-        for (int i = 0; i < conflictingnodes.size(); i++) {
-            System.out.println(conflictingnodes.get(i).getProperty("name"));
-        }
-    }
 
     /*
      * TODO: THIS SHOULD BE REPLACED BY TNRS CHECK TREE FUNCTION public void checkNamesInTree(String treefilename,String focalgroup){ PathFinder <Path> pf =
@@ -669,6 +632,19 @@ public class TaxonomySynthesizer extends Taxonomy {
             prefTaxNodesByNameOrSynonym.add(node, "name", sn.getProperty("name"));
         }
     }    
+
+    /**
+    -     * Originally a one-time solution to a specific problem that has now been fixed. Leaving it in case it is useful.
+    -     * @param node
+    -     * @param context
+    -     */
+    @Deprecated
+    public void addToPreferredIndexesAtomicTX(Node node, TaxonomyContext context) {
+    	Transaction tx = beginTx();
+    	addToPreferredIndexes(node, context);
+    	tx.success();
+    	tx.finish();
+    }
 
     /**
      * @param args

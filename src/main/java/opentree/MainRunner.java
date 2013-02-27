@@ -217,16 +217,6 @@ public class MainRunner {
             System.out.println("exporting the subgraph for clade " + query);
             taxon.exportGraphForClade(outname);
             
-		} else if (args[0].equals("findcycles")) {
-			String query = args[1];
-			String graphname = args[2];
-			
-            taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomySynthesizer(taxdb);
-
-            System.out.println("finding taxonomic cycles for " + query);
-			te.findTaxonomyCycles(query);
-
 		} else if (args[0].equals("jsgraph")) {
 			String query = args[1];
 			String graphname = args[2];
@@ -495,7 +485,6 @@ public class MainRunner {
 		System.out.println("\n---taxquery---");
 		System.out.println("\tcomptaxtree <name> <graphdbfolder> (construct a comprehensive tax newick)");
 		System.out.println("\tcomptaxgraph <name> <graphdbfolder> <outdotfile> (construct a comprehensive taxonomy in dot)");
-		System.out.println("\tfindcycles <name> <graphdbfolder> (find cycles in tax graph)");
 		System.out.println("\tjsgraph <name> <graphdbfolder> (constructs a json file from tax graph)");
 		System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
         System.out.println("\tgetsubtree <graphdbfolder> \"<nameslist>\" (find the subgraph for the specified taxa)");
