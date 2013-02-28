@@ -112,11 +112,11 @@ public class TaxonomyComparator {
 						names.add((String)srel.getStartNode().getProperty("name"));
 					}
 				}*/
-				System.out.print("Checking:");
-				for(String s: names){
-					System.out.print(" "+s);
-				}
-				System.out.print("\n\n");
+//				System.out.print("Checking:");
+//				for(String s: names){
+//					System.out.print(" "+s);
+//				}
+//				System.out.print("\n\n");
 				//get any matches in the other taxonomy
 				int bestsize = 0; //size of the best match
 				Node bestnode = null;
@@ -158,7 +158,7 @@ public class TaxonomyComparator {
 						}
 						//best match
 						if (test == true){
-							System.out.println("match!: "+ttn.getProperty("name")+ " "+cset.size());
+//							System.out.println("match!: "+ttn.getProperty("name")+ " "+cset.size());
 							if (cset.size() > bestsize){
 								bestsize = cset.size();
 								bestnode = ttn;
@@ -176,7 +176,8 @@ public class TaxonomyComparator {
 							toremove.add(nd);
 					}
 					nodestoadd.removeAll(toremove);
-					System.out.println("nodestoadd: "+nodestoadd.size());
+					if(nodestoadd.size()> 0)
+						System.out.println((String)tnode.getProperty("name")+" nodestoadd: "+nodestoadd.size());
 					if (nodestoadd.size() > 0){
 						matchedNodeNodesToAdd.put(tnode.getId(),nodestoadd);
 						matchedDomCompNodes.put(tnode.getId(), bestnode.getId());
@@ -236,6 +237,12 @@ public class TaxonomyComparator {
 //								System.out.println("making node: "+newnode+" "+tnode.getProperty("name"));
 								newnode.setProperty("name", (String)tnode.getProperty("name"));
 								//TODO: add uid
+								newnode.setProperty("uid", newnode.getId());
+								newnode.setProperty("source",(String)tnode.getProperty("source"));
+								if (tnode.hasProperty("rank"))
+									newnode.setProperty("rank",(String)tnode.getProperty("rank"));
+								newnode.setProperty("sourceid",(String)tnode.getProperty("sourceid"));
+								newnode.setProperty("sourcepid",(String)tnode.getProperty("sourcepid"));
 								taxaByName.add(newnode, "name", (String)tnode.getProperty("name"));
 								addednodes.add(newnode.getId());
 								addednodesch.add(tnode.getId());
@@ -327,7 +334,6 @@ public class TaxonomyComparator {
 			e.printStackTrace();
 		}
 		//get all the names that subtend a particular name and place them in the id_nameset_map
-		System.out.println("adding leaves");
 		for(String id: id_name_map.keySet()){
 			String curid = id_parent_map.get(id);
 			while(id_name_map.containsKey(curid)){

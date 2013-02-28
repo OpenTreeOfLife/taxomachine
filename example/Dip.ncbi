@@ -1,0 +1,681 @@
+4199	|	|	life	|		|	
+4200	|	4199	|	Caprifoliaceae	|	family	|	
+59171	|	4200	|	Patrinia	|	genus	|	
+59172	|	59171	|	Patrinia rupestris	|	species	|	
+183944	|	59171	|	Patrinia villosa	|	species	|	
+105272	|	59171	|	Patrinia triloba	|	species	|	
+183557	|	59171	|	Patrinia intermedia	|	species	|	
+300887	|	59171	|	Patrinia gibbosa	|	species	|	
+300888	|	59171	|	Patrinia scabiosifolia	|	species	|	
+245822	|	59171	|	Patrinia saniculifolia	|	species	|	
+180073	|	59171	|	Patrinia heterophylla	|	species	|	
+180074	|	59171	|	Patrinia scabra	|	species	|	
+59175	|	4200	|	Pterocephalus	|	genus	|	
+398315	|	59175	|	Pterocephalus dumetorum	|	species	|	
+59176	|	59175	|	Pterocephalus lasiospermus	|	species	|	
+596809	|	59175	|	Pterocephalus depressus	|	species	|	
+596808	|	59175	|	Pterocephalus brevis	|	species	|	
+183569	|	59175	|	Pterocephalus perennis	|	species	|	
+180560	|	59175	|	Pterocephalus hookeri	|	species	|	
+596814	|	59175	|	Pterocephalus spathulatus	|	species	|	
+596815	|	59175	|	Pterocephalus strictus	|	species	|	
+596812	|	59175	|	Pterocephalus papposus	|	species	|	
+596813	|	59175	|	Pterocephalus pulverulentus	|	species	|	
+596810	|	59175	|	Pterocephalus frutescens	|	species	|	
+596811	|	59175	|	Pterocephalus multiflorus	|	species	|	
+59179	|	4200	|	Triplostegia	|	genus	|	
+59180	|	59179	|	Triplostegia glandulifera	|	species	|	
+179861	|	59179	|	Triplostegia grandiflora	|	species	|	
+86866	|	4200	|	Abelia	|	genus	|	
+761856	|	86866	|	Abelia mexicana	|	species	|	
+761857	|	86866	|	Abelia occidentalis	|	species	|	
+761854	|	86866	|	Abelia floribunda	|	species	|	
+761855	|	86866	|	Abelia graebneriana	|	species	|	
+761853	|	86866	|	Abelia engleriana	|	species	|	
+761858	|	86866	|	Abelia schumannii	|	species	|	
+761859	|	86866	|	Abelia spathulata	|	species	|	
+180068	|	86866	|	Abelia chinensis	|	species	|	
+1112099	|	86866	|	Abelia serrata	|	species	|	
+1112107	|	1112099	|	Abelia serrata var. tomentosa	|	varietas	|	
+620776	|	86866	|	Abelia parvifolia	|	species	|	
+1112097	|	86866	|	Abelia uniflora	|	species	|	
+183565	|	4200	|	Pseudoscabiosa	|	genus	|	
+398313	|	183565	|	Pseudoscabiosa grosii	|	species	|	
+596807	|	183565	|	Pseudoscabiosa saxatilis	|	species	|	
+183566	|	183565	|	Pseudoscabiosa limonifolia	|	species	|	
+183567	|	4200	|	Pterocephalidium	|	genus	|	
+183568	|	183567	|	Pterocephalidium diandrum	|	species	|	
+183562	|	4200	|	Lomelosia	|	genus	|	
+398311	|	183562	|	Lomelosia palestina	|	species	|	
+398310	|	183562	|	Lomelosia cretica	|	species	|	
+398312	|	183562	|	Lomelosia simplex	|	species	|	
+596805	|	183562	|	Lomelosia songarica	|	species	|	
+596804	|	183562	|	Lomelosia graminifolia	|	species	|	
+596806	|	183562	|	Lomelosia stellata	|	species	|	
+596803	|	183562	|	Lomelosia calocephala	|	species	|	
+183564	|	183562	|	Lomelosia caucasica	|	species	|	
+183563	|	183562	|	Lomelosia argentea	|	species	|	
+1113483	|	183562	|	Lomelosia crenata	|	species	|	
+398309	|	183562	|	Lomelosia brachiata	|	species	|	
+87007	|	4200	|	Scabiosa	|	genus	|	
+1161151	|	87007	|	Scabiosa drakensbergensis	|	species	|	
+1161150	|	87007	|	Scabiosa comosa	|	species	|	
+1161153	|	87007	|	Scabiosa silenifolia	|	species	|	
+1161152	|	87007	|	Scabiosa lacerifolia	|	species	|	
+1161155	|	87007	|	Scabiosa tenuis	|	species	|	
+1161154	|	87007	|	Scabiosa taygetea	|	species	|	
+1161157	|	87007	|	Scabiosa turolensis	|	species	|	
+1161156	|	87007	|	Scabiosa triniifolia	|	species	|	
+1161158	|	87007	|	Scabiosa vestina	|	species	|	
+87008	|	87007	|	Scabiosa sp. Albach 39	|	species	|	
+242170	|	87007	|	Scabiosa atropurpurea	|	species	|	
+1053392	|	87007	|	Scabiosa nitens	|	species	|	
+1113481	|	87007	|	Scabiosa angustiloba	|	species	|	
+180067	|	87007	|	Scabiosa tschiliensis	|	species	|	
+467601	|	87007	|	Scabiosa lucida	|	species	|	
+467602	|	87007	|	Scabiosa triandra	|	species	|	
+882664	|	87007	|	Scabiosa sp. KG-2010	|	species	|	
+180561	|	87007	|	Scabiosa columbaria	|	species	|	
+183573	|	87007	|	Scabiosa japonica	|	species	|	
+183572	|	87007	|	Scabiosa africana	|	species	|	
+183574	|	87007	|	Scabiosa uniseta	|	species	|	
+1161148	|	87007	|	Scabiosa canescens	|	species	|	
+1161149	|	87007	|	Scabiosa cinerea	|	species	|	
+1161146	|	87007	|	Scabiosa achaeta	|	species	|	
+1161147	|	87007	|	Scabiosa buekiana	|	species	|	
+596818	|	87007	|	Scabiosa tysonii	|	species	|	
+596816	|	87007	|	Scabiosa ochroleuca	|	species	|	
+596817	|	87007	|	Scabiosa transvaalensis	|	species	|	
+1161159	|	87007	|	Scabiosa webbiana	|	species	|	
+105904	|	87007	|	Scabiosa mansenensis	|	species	|	
+180555	|	4200	|	Plectritis	|	genus	|	
+180556	|	180555	|	Plectritis macrocera	|	species	|	
+245828	|	180555	|	Plectritis congesta	|	species	|	
+300889	|	180555	|	Plectritis brachystemon	|	species	|	
+180553	|	4200	|	Fedia	|	genus	|	
+183943	|	180553	|	Fedia graciliflora	|	species	|	
+180554	|	180553	|	Fedia cornucopiae	|	species	|	
+184116	|	180553	|	Fedia pallescens	|	species	|	
+433485	|	4200	|	Pterocephalodes	|	genus	|	
+433486	|	433485	|	Pterocephalodes hookeri	|	species	|	
+77622	|	4200	|	Linnaea	|	genus	|	
+77623	|	77622	|	Linnaea borealis	|	species	|	
+59182	|	4200	|	Knautia	|	genus	|	
+596801	|	59182	|	Knautia midzorensis	|	species	|	
+596800	|	59182	|	Knautia drymeia	|	species	|	
+596802	|	59182	|	Knautia orientalis	|	species	|	
+596797	|	59182	|	Knautia calycina	|	species	|	
+596799	|	59182	|	Knautia dipsacifolia	|	species	|	
+596798	|	59182	|	Knautia dinarica	|	species	|	
+59183	|	59182	|	Knautia intermedia	|	species	|	
+105271	|	59182	|	Knautia arvensis	|	species	|	
+243111	|	59182	|	Knautia macedonica	|	species	|	
+42331	|	4200	|	Centranthus	|	genus	|	
+183942	|	42331	|	Centranthus trinervis	|	species	|	
+183940	|	42331	|	Centranthus calcitrapae	|	species	|	
+183941	|	42331	|	Centranthus lecoqii	|	species	|	
+42332	|	42331	|	Centranthus ruber	|	species	|	
+245818	|	42331	|	Centranthus angustifolius	|	species	|	
+368318	|	42331	|	Centranthus sieberi	|	species	|	
+1027238	|	42331	|	Centranthus cf. calcitrapae Romo & Soriano 13128	|	species	|	
+947100	|	42331	|	Centranthus longifolius	|	species	|	
+300885	|	42331	|	Centranthus macrosiphon	|	species	|	
+1027239	|	42331	|	Centranthus nevadensis	|	species	|	
+13701	|	4200	|	Symphoricarpos	|	genus	|	
+709980	|	13701	|	Symphoricarpos palmeri	|	species	|	
+433484	|	13701	|	Symphoricarpos sp. Donoghue & Winkworth 28	|	species	|	
+13702	|	13701	|	Symphoricarpos albus	|	species	|	
+486691	|	13701	|	Symphoricarpos hesperius	|	species	|	
+548155	|	13701	|	Symphoricarpos rotundifolius	|	species	|	
+180065	|	13701	|	Symphoricarpos sinensis	|	species	|	
+709979	|	13701	|	Symphoricarpos oreophilus	|	species	|	
+709978	|	13701	|	Symphoricarpos mollis	|	species	|	
+709977	|	13701	|	Symphoricarpos microphyllus	|	species	|	
+709976	|	13701	|	Symphoricarpos longiflorus	|	species	|	
+318448	|	13701	|	Symphoricarpos occidentalis	|	species	|	
+105885	|	13701	|	Symphoricarpos orbiculatus	|	species	|	
+486692	|	4200	|	Zabelia	|	genus	|	
+86867	|	486692	|	Zabelia triflora	|	species	|	
+1112104	|	486692	|	Zabelia coreana	|	species	|	
+1112105	|	486692	|	Zabelia dielsii	|	species	|	
+1112106	|	486692	|	Zabelia integrifolia	|	species	|	
+486693	|	486692	|	Zabelia biflora	|	species	|	
+761863	|	486692	|	Zabelia umbellata	|	species	|	
+761861	|	486692	|	Zabelia tyaihyoni	|	species	|	
+761860	|	486692	|	Zabelia mosanensis	|	species	|	
+863425	|	486692	|	Zabelia corymbosa	|	species	|	
+49606	|	4200	|	Lonicera	|	genus	|	
+134520	|	49606	|	Lonicera caerulea	|	species	|	
+760125	|	134520	|	Lonicera caerulea subsp. stenantha	|	subspecies	|	
+760126	|	134520	|	Lonicera caerulea subsp. kamtschatica	|	subspecies	|	
+180064	|	134520	|	Lonicera caerulea var. edulis	|	varietas	|	
+447668	|	134520	|	Lonicera caerulea var. altaica	|	varietas	|	
+134535	|	134520	|	Lonicera caerulea var. dependens	|	varietas	|	
+134521	|	49606	|	Lonicera involucrata	|	species	|	
+486684	|	49606	|	Lonicera sovetkinae	|	species	|	
+706492	|	49606	|	Lonicera stabiana	|	species	|	
+486689	|	49606	|	Lonicera tragophylla	|	species	|	
+447673	|	49606	|	Lonicera rupicola	|	species	|	
+447672	|	49606	|	Lonicera prostrata	|	species	|	
+447671	|	49606	|	Lonicera microphylla	|	species	|	
+447670	|	49606	|	Lonicera hispida	|	species	|	
+447676	|	49606	|	Lonicera tatarica	|	species	|	
+447677	|	447676	|	Lonicera tatarica var. micrantha	|	varietas	|	
+447675	|	49606	|	Lonicera ruprechtiana	|	species	|	
+447674	|	49606	|	Lonicera syringantha	|	species	|	
+486675	|	49606	|	Lonicera inconspicua	|	species	|	
+486672	|	49606	|	Lonicera henryi	|	species	|	
+486673	|	49606	|	Lonicera hispidula	|	species	|	
+112522	|	49606	|	Lonicera dasystyla	|	species	|	
+112523	|	49606	|	Lonicera similis	|	species	|	
+180558	|	49606	|	Lonicera nervosa	|	species	|	
+486663	|	49606	|	Lonicera chrysantha	|	species	|	
+486662	|	49606	|	Lonicera carnosifolia	|	species	|	
+486661	|	49606	|	Lonicera calcarata	|	species	|	
+486660	|	49606	|	Lonicera alpigena	|	species	|	
+486667	|	49606	|	Lonicera giraldii	|	species	|	
+486666	|	49606	|	Lonicera fragrantissima	|	species	|	
+486665	|	49606	|	Lonicera dioica	|	species	|	
+486664	|	49606	|	Lonicera deflexicalyx	|	species	|	
+486668	|	49606	|	Lonicera gracilipes	|	species	|	
+213829	|	49606	|	Lonicera periclymenum	|	species	|	
+566160	|	49606	|	Lonicera trichosantha	|	species	|	
+1043443	|	566160	|	Lonicera trichosantha var. trichosantha	|	varietas	|	
+233041	|	49606	|	Lonicera sp. Oxelman 2331	|	species	|	
+486690	|	49606	|	Lonicera vesicaria	|	species	|	
+566154	|	49606	|	Lonicera serreana	|	species	|	
+566155	|	49606	|	Lonicera setifera	|	species	|	
+566150	|	49606	|	Lonicera obovata	|	species	|	
+566151	|	49606	|	Lonicera oresbia	|	species	|	
+566152	|	49606	|	Lonicera pilosa	|	species	|	
+566149	|	49606	|	Lonicera oblongifolia	|	species	|	
+566148	|	49606	|	Lonicera myrtilloides	|	species	|	
+566143	|	49606	|	Lonicera implexa	|	species	|	
+566142	|	49606	|	Lonicera hirsuta	|	species	|	
+566141	|	49606	|	Lonicera floribunda	|	species	|	
+566140	|	49606	|	Lonicera flava	|	species	|	
+566147	|	49606	|	Lonicera ledebourii	|	species	|	
+566146	|	49606	|	Lonicera lanceolata	|	species	|	
+566145	|	49606	|	Lonicera korolkowii	|	species	|	
+566144	|	49606	|	Lonicera interrupta	|	species	|	
+51255	|	49606	|	Lonicera maackii	|	species	|	
+885927	|	49606	|	Lonicera sp. HD-2010	|	species	|	
+643838	|	49606	|	Lonicera fulvotomentosa	|	species	|	
+49607	|	49606	|	Lonicera orientalis	|	species	|	
+370638	|	49606	|	Lonicera confusa	|	species	|	
+486669	|	49606	|	Lonicera graebneri	|	species	|	
+180182	|	49606	|	Lonicera reticulata	|	species	|	
+255350	|	49606	|	Lonicera morrowii	|	species	|	
+232617	|	49606	|	Lonicera sp. Bergthorsson 0301	|	species	|	
+181011	|	49606	|	Lonicera sp. Palmer 679	|	species	|	
+447669	|	49606	|	Lonicera ferdinandi	|	species	|	
+134522	|	49606	|	Lonicera sempervirens	|	species	|	
+589847	|	49606	|	Lonicera vidalii	|	species	|	
+764919	|	49606	|	Lonicera sp. Qiu 05010	|	species	|	
+486674	|	49606	|	Lonicera iberica	|	species	|	
+486676	|	49606	|	Lonicera koehneana	|	species	|	
+486677	|	49606	|	Lonicera maximowiczii	|	species	|	
+486670	|	49606	|	Lonicera gynochlamydea	|	species	|	
+486671	|	49606	|	Lonicera hemsleyana	|	species	|	
+486678	|	49606	|	Lonicera modesta	|	species	|	
+486679	|	49606	|	Lonicera myrtillus	|	species	|	
+566138	|	49606	|	Lonicera cyanocarpa	|	species	|	
+566139	|	49606	|	Lonicera demissa	|	species	|	
+566136	|	49606	|	Lonicera arizonica	|	species	|	
+566137	|	49606	|	Lonicera ciliosa	|	species	|	
+566134	|	49606	|	Lonicera acuminata	|	species	|	
+566135	|	49606	|	Lonicera albiflora	|	species	|	
+638626	|	49606	|	Lonicera hypoglauca	|	species	|	
+638627	|	49606	|	Lonicera macranthoides	|	species	|	
+439141	|	49606	|	Lonicera caprifolium	|	species	|	
+439142	|	49606	|	Lonicera xylosteum	|	species	|	
+486688	|	49606	|	Lonicera tangutica	|	species	|	
+486681	|	49606	|	Lonicera nitida	|	species	|	
+486680	|	49606	|	Lonicera nigra	|	species	|	
+486683	|	49606	|	Lonicera pyrenaica	|	species	|	
+486682	|	49606	|	Lonicera pileata	|	species	|	
+486685	|	49606	|	Lonicera spinosa	|	species	|	
+486687	|	49606	|	Lonicera subsessilis	|	species	|	
+486686	|	49606	|	Lonicera standishii	|	species	|	
+432246	|	49606	|	Lonicera altmannii	|	species	|	
+245821	|	49606	|	Lonicera etrusca	|	species	|	
+350584	|	49606	|	Lonicera canadensis	|	species	|	
+1043444	|	49606	|	Lonicera webbiana	|	species	|	
+566158	|	49606	|	Lonicera subspicata	|	species	|	
+566159	|	49606	|	Lonicera tomentella	|	species	|	
+566157	|	49606	|	Lonicera steveniana	|	species	|	
+566153	|	49606	|	Lonicera quinquelocularis	|	species	|	
+318447	|	49606	|	Lonicera heteroloba	|	species	|	
+105884	|	49606	|	Lonicera japonica	|	species	|	
+936050	|	105884	|	Lonicera japonica var. chinensis	|	varietas	|	
+183558	|	4200	|	Cephalaria	|	genus	|	
+641605	|	183558	|	Cephalaria squamiflora	|	species	|	
+641606	|	641605	|	Cephalaria squamiflora subsp. mediterranea	|	subspecies	|	
+642477	|	641605	|	Cephalaria squamiflora subsp. squamiflora	|	subspecies	|	
+641607	|	641605	|	Cephalaria squamiflora subsp. balearica	|	subspecies	|	
+183560	|	183558	|	Cephalaria syriaca	|	species	|	
+596791	|	183558	|	Cephalaria aristata	|	species	|	
+596793	|	183558	|	Cephalaria microcephala	|	species	|	
+596792	|	183558	|	Cephalaria hirsuta	|	species	|	
+596795	|	183558	|	Cephalaria tenella	|	species	|	
+596794	|	183558	|	Cephalaria paphlagonica	|	species	|	
+596796	|	183558	|	Cephalaria zeyheriana	|	species	|	
+183559	|	183558	|	Cephalaria leucantha	|	species	|	
+398304	|	183558	|	Cephalaria joppensis	|	species	|	
+398305	|	183558	|	Cephalaria natalensis	|	species	|	
+1113482	|	183558	|	Cephalaria humilis	|	species	|	
+137003	|	4200	|	Heptacodium	|	genus	|	
+137004	|	137003	|	Heptacodium miconioides	|	species	|	
+183570	|	4200	|	Pycnocomon	|	genus	|	
+398314	|	183570	|	Pycnocomon intermedium	|	species	|	
+183571	|	183570	|	Pycnocomon rutifolium	|	species	|	
+183575	|	4200	|	Sixalix	|	genus	|	
+183577	|	183575	|	Sixalix farinosa	|	species	|	
+183576	|	183575	|	Sixalix atropurpurea	|	species	|	
+398551	|	183576	|	Sixalix atropurpurea subsp. maritima	|	subspecies	|	
+596819	|	183575	|	Sixalix eremophila	|	species	|	
+183578	|	4200	|	Succisella	|	genus	|	
+183579	|	183578	|	Succisella inflexa	|	species	|	
+59167	|	4200	|	Morina	|	genus	|	
+180562	|	59167	|	Morina longifolia	|	species	|	
+59168	|	59167	|	Morina coulteriana	|	species	|	
+242164	|	59167	|	Morina persica	|	species	|	
+59165	|	4200	|	Valerianella	|	genus	|	
+368329	|	59165	|	Valerianella texana	|	species	|	
+368328	|	59165	|	Valerianella stenocarpa	|	species	|	
+368323	|	59165	|	Valerianella discoidea	|	species	|	
+368322	|	59165	|	Valerianella carinata	|	species	|	
+368321	|	59165	|	Valerianella amarella	|	species	|	
+368327	|	59165	|	Valerianella radiata	|	species	|	
+368326	|	59165	|	Valerianella muricata	|	species	|	
+368325	|	59165	|	Valerianella microcarpa	|	species	|	
+368324	|	59165	|	Valerianella florifera	|	species	|	
+1027242	|	59165	|	Valerianella multidentata	|	species	|	
+1027243	|	59165	|	Valerianella turgida	|	species	|	
+300938	|	59165	|	Valerianella pumila	|	species	|	
+300939	|	59165	|	Valerianella vesicaria	|	species	|	
+300936	|	59165	|	Valerianella dentata	|	species	|	
+59166	|	59165	|	Valerianella locusta	|	species	|	
+183956	|	59165	|	Valerianella coronata	|	species	|	
+368330	|	59165	|	Valerianella umbilicata	|	species	|	
+245824	|	59165	|	Valerianella eriocarpa	|	species	|	
+768053	|	59165	|	Valerianella rimosa	|	species	|	
+59169	|	4200	|	Nardostachys	|	genus	|	
+179860	|	59169	|	Nardostachys chinensis	|	species	|	
+768052	|	59169	|	Nardostachys grandiflora	|	species	|	
+596788	|	4200	|	Bassecoia	|	genus	|	
+596790	|	596788	|	Bassecoia siamensis	|	species	|	
+626364	|	596788	|	Bassecoia sp. SEC-2009	|	species	|	
+596789	|	596788	|	Bassecoia bretschneideri	|	species	|	
+19952	|	4200	|	Valeriana	|	genus	|	
+300927	|	19952	|	Valeriana stenoptera	|	species	|	
+300926	|	19952	|	Valeriana selerorum	|	species	|	
+300925	|	19952	|	Valeriana secunda	|	species	|	
+300924	|	19952	|	Valeriana hookeri	|	species	|	
+300923	|	19952	|	Valeriana rzedowskiorum	|	species	|	
+300922	|	19952	|	Valeriana rumicoides	|	species	|	
+300921	|	19952	|	Valeriana robertianifolia	|	species	|	
+300920	|	19952	|	Valeriana pyramidalis	|	species	|	
+300929	|	19952	|	Valeriana tanacetifolia	|	species	|	
+300928	|	19952	|	Valeriana stenophylla	|	species	|	
+59170	|	19952	|	Valeriana jatamansi	|	species	|	
+59174	|	19952	|	Valeriana bracteata	|	species	|	
+882679	|	19952	|	Valeriana saxatilis	|	species	|	
+947130	|	19952	|	Valeriana stricta	|	species	|	
+368320	|	19952	|	Valeriana tuberosa	|	species	|	
+300910	|	19952	|	Valeriana naidae	|	species	|	
+183946	|	19952	|	Valeriana apula	|	species	|	
+183945	|	19952	|	Valeriana albonervata	|	species	|	
+183948	|	19952	|	Valeriana dioica	|	species	|	
+183949	|	19952	|	Valeriana laurifolia	|	species	|	
+180557	|	19952	|	Valeriana minutiflora	|	species	|	
+1027240	|	19952	|	Valeriana cf. tripteris Hidalgo 218	|	species	|	
+1027241	|	19952	|	Valeriana rotundifolia	|	species	|	
+242171	|	19952	|	Valeriana urticifolia	|	species	|	
+947119	|	19952	|	Valeriana leucocarpa	|	species	|	
+947118	|	19952	|	Valeriana lepidota	|	species	|	
+947115	|	19952	|	Valeriana lancifolia	|	species	|	
+947114	|	19952	|	Valeriana hornschuchiana	|	species	|	
+947117	|	19952	|	Valeriana laxiflora	|	species	|	
+947116	|	19952	|	Valeriana lapathifolia	|	species	|	
+947111	|	19952	|	Valeriana gracilipes	|	species	|	
+947110	|	19952	|	Valeriana fonckii	|	species	|	
+947113	|	19952	|	Valeriana hebecarpa	|	species	|	
+947112	|	19952	|	Valeriana grandifolia	|	species	|	
+59181	|	19952	|	Valeriana hirtella	|	species	|	
+300899	|	19952	|	Valeriana candolleana	|	species	|	
+300898	|	19952	|	Valeriana bulbosa	|	species	|	
+300897	|	19952	|	Valeriana bryophila	|	species	|	
+300895	|	19952	|	Valeriana barbareifolia	|	species	|	
+300894	|	19952	|	Valeriana arizonica	|	species	|	
+300893	|	19952	|	Valeriana aretioides	|	species	|	
+300892	|	19952	|	Valeriana apiifolia	|	species	|	
+300891	|	19952	|	Valeriana adscendens	|	species	|	
+300890	|	19952	|	Valeriana acutiloba	|	species	|	
+947132	|	19952	|	Valeriana vaga	|	species	|	
+947134	|	19952	|	Valeriana virescens	|	species	|	
+669860	|	19952	|	Valeriana capitata	|	species	|	
+669861	|	19952	|	Valeriana sambucifolia	|	species	|	
+669862	|	19952	|	Valeriana transjenisensis	|	species	|	
+245819	|	19952	|	Valeriana scandens	|	species	|	
+243121	|	19952	|	Valeriana henrici	|	species	|	
+243120	|	19952	|	Valeriana edulis	|	species	|	
+243123	|	19952	|	Valeriana rigida	|	species	|	
+243122	|	19952	|	Valeriana niphobia	|	species	|	
+243124	|	19952	|	Valeriana pyrenaica	|	species	|	
+300912	|	19952	|	Valeriana occidentalis	|	species	|	
+300913	|	19952	|	Valeriana palmeri	|	species	|	
+300911	|	19952	|	Valeriana nivalis	|	species	|	
+300916	|	19952	|	Valeriana plantaginea	|	species	|	
+300917	|	19952	|	Valeriana polemonioides	|	species	|	
+300914	|	19952	|	Valeriana pauciflora	|	species	|	
+300915	|	19952	|	Valeriana pinnatifida	|	species	|	
+300918	|	19952	|	Valeriana prionophylla	|	species	|	
+300919	|	19952	|	Valeriana procera	|	species	|	
+947106	|	19952	|	Valeriana clarionifolia	|	species	|	
+947107	|	19952	|	Valeriana crispa	|	species	|	
+947105	|	19952	|	Valeriana chilensis	|	species	|	
+947102	|	19952	|	Valeriana bracteosa	|	species	|	
+947103	|	19952	|	Valeriana bridgesii	|	species	|	
+300930	|	19952	|	Valeriana texana	|	species	|	
+300931	|	19952	|	Valeriana tomentosa	|	species	|	
+300932	|	19952	|	Valeriana trichostoma	|	species	|	
+300933	|	19952	|	Valeriana triphylla	|	species	|	
+300934	|	19952	|	Valeriana wallrothii	|	species	|	
+368319	|	19952	|	Valeriana asarifolia	|	species	|	
+183951	|	19952	|	Valeriana phyliciodes	|	species	|	
+183950	|	19952	|	Valeriana parviflora	|	species	|	
+183953	|	19952	|	Valeriana rosaliana	|	species	|	
+183952	|	19952	|	Valeriana pilosa	|	species	|	
+183955	|	19952	|	Valeriana tripteris	|	species	|	
+183954	|	19952	|	Valeriana sorbifolia	|	species	|	
+19953	|	19952	|	Valeriana officinalis	|	species	|	
+183957	|	19953	|	Valeriana officinalis subsp. tenuifolia	|	subspecies	|	
+323658	|	19953	|	Valeriana officinalis subsp. officinalis	|	subspecies	|	
+323659	|	323658	|	Valeriana officinalis var. latifolia	|	varietas	|	
+947133	|	19952	|	Valeriana verticillata	|	species	|	
+947131	|	19952	|	Valeriana subincisa	|	species	|	
+947108	|	19952	|	Valeriana decussata	|	species	|	
+947109	|	19952	|	Valeriana effusa	|	species	|	
+947104	|	19952	|	Valeriana carnosa	|	species	|	
+947101	|	19952	|	Valeriana boelckei	|	species	|	
+323661	|	19952	|	Valeriana pseudofficinalis	|	species	|	
+323660	|	19952	|	Valeriana amurensis	|	species	|	
+105907	|	19952	|	Valeriana fauriei	|	species	|	
+947124	|	19952	|	Valeriana pilosiuscula	|	species	|	
+947125	|	19952	|	Valeriana polemoniifolia	|	species	|	
+947126	|	19952	|	Valeriana polystachya	|	species	|	
+947127	|	19952	|	Valeriana radicalis	|	species	|	
+947121	|	19952	|	Valeriana moyanoi	|	species	|	
+947122	|	19952	|	Valeriana papilla	|	species	|	
+947123	|	19952	|	Valeriana philippiana	|	species	|	
+947128	|	19952	|	Valeriana retrorsa	|	species	|	
+947129	|	19952	|	Valeriana sichuanica	|	species	|	
+947120	|	19952	|	Valeriana lobata	|	species	|	
+245823	|	19952	|	Valeriana hardwickii	|	species	|	
+245820	|	19952	|	Valeriana tachirensis	|	species	|	
+245826	|	19952	|	Valeriana saliunca	|	species	|	
+245827	|	19952	|	Valeriana longiflora	|	species	|	
+379308	|	19952	|	Valeriana capensis	|	species	|	
+243118	|	19952	|	Valeriana montana	|	species	|	
+243119	|	19952	|	Valeriana chaerophylloides	|	species	|	
+243112	|	19952	|	Valeriana arborea	|	species	|	
+243113	|	19952	|	Valeriana sitchensis	|	species	|	
+243114	|	19952	|	Valeriana californica	|	species	|	
+243115	|	19952	|	Valeriana celtica	|	species	|	
+243116	|	19952	|	Valeriana microphylla	|	species	|	
+243117	|	19952	|	Valeriana supina	|	species	|	
+300901	|	19952	|	Valeriana clematitis	|	species	|	
+300900	|	19952	|	Valeriana ceratophylla	|	species	|	
+300903	|	19952	|	Valeriana connata	|	species	|	
+300902	|	19952	|	Valeriana coarctata	|	species	|	
+300905	|	19952	|	Valeriana flaccidissima	|	species	|	
+300904	|	19952	|	Valeriana densiflora	|	species	|	
+300907	|	19952	|	Valeriana interrupta	|	species	|	
+300906	|	19952	|	Valeriana gallinae	|	species	|	
+300909	|	19952	|	Valeriana mexicana	|	species	|	
+300908	|	19952	|	Valeriana kawakamii	|	species	|	
+179857	|	4200	|	Acanthocalyx	|	genus	|	
+242168	|	179857	|	Acanthocalyx delavayi	|	species	|	
+179859	|	179857	|	Acanthocalyx albus	|	species	|	
+179858	|	179857	|	Acanthocalyx nepalensis	|	species	|	
+105265	|	4200	|	Dipelta	|	genus	|	
+179998	|	105265	|	Dipelta floribunda	|	species	|	
+180069	|	105265	|	Dipelta yunnanensis	|	species	|	
+105266	|	105265	|	Dipelta ventricosa	|	species	|	
+105267	|	4200	|	Kolkwitzia	|	genus	|	
+105268	|	105267	|	Kolkwitzia amabilis	|	species	|	
+105269	|	4200	|	Triosteum	|	genus	|	
+105270	|	105269	|	Triosteum perfoliatum	|	species	|	
+134523	|	105269	|	Triosteum angustifolium	|	species	|	
+134526	|	105269	|	Triosteum pinnatifidum	|	species	|	
+134527	|	105269	|	Triosteum sinuatum	|	species	|	
+134524	|	105269	|	Triosteum aurantiacum	|	species	|	
+134525	|	105269	|	Triosteum himalayanum	|	species	|	
+134530	|	105269	|	Triosteum sp. Boufford et al. 27350	|	species	|	
+19933	|	4200	|	Diervilla	|	genus	|	
+79608	|	19933	|	Diervilla sessilifolia	|	species	|	
+79606	|	19933	|	Diervilla lonicera	|	species	|	
+79607	|	19933	|	Diervilla rivularis	|	species	|	
+105905	|	4200	|	Succisa	|	genus	|	
+105906	|	105905	|	Succisa pratensis	|	species	|	
+52834	|	4200	|	Leycesteria	|	genus	|	
+134519	|	52834	|	Leycesteria crocothyrsos	|	species	|	
+644878	|	52834	|	Leycesteria sp. DGH-2009	|	species	|	
+52835	|	52834	|	Leycesteria formosa	|	species	|	
+180063	|	52835	|	Leycesteria formosa var. stenosepala	|	varietas	|	
+318446	|	52834	|	Leycesteria sp. Boufford et al. 44597	|	species	|	
+40573	|	4200	|	Dipsacus	|	genus	|	
+183561	|	40573	|	Dipsacus fullonum	|	species	|	
+180559	|	40573	|	Dipsacus mitis	|	species	|	
+133547	|	40573	|	Dipsacus sp. Qiu 95111	|	species	|	
+242169	|	40573	|	Dipsacus pilosus	|	species	|	
+1113480	|	40573	|	Dipsacus inermis	|	species	|	
+398306	|	40573	|	Dipsacus japonicus	|	species	|	
+180066	|	40573	|	Dipsacus asperoides	|	species	|	
+555428	|	40573	|	Dipsacus chinensis	|	species	|	
+398308	|	40573	|	Dipsacus strigosus	|	species	|	
+398307	|	40573	|	Dipsacus laciniatus	|	species	|	
+516548	|	40573	|	Dipsacus asper	|	species	|	
+40574	|	40573	|	Dipsacus sativus	|	species	|	
+44760	|	40573	|	Dipsacus sp. Jansen 931	|	species	|	
+180070	|	4200	|	Cryptothladia	|	genus	|	
+242166	|	180070	|	Cryptothladia polyphylla	|	species	|	
+242165	|	180070	|	Cryptothladia kokonorica	|	species	|	
+180072	|	180070	|	Cryptothladia chlorantha	|	species	|	
+180071	|	180070	|	Cryptothladia chinensis	|	species	|	
+79609	|	4200	|	Weigela	|	genus	|	
+79615	|	79609	|	Weigela japonica	|	species	|	
+1008941	|	79615	|	Weigela japonica var. sinica	|	varietas	|	
+79614	|	79609	|	Weigela hortensis	|	species	|	
+79612	|	79609	|	Weigela florida	|	species	|	
+79613	|	79612	|	Weigela florida var. venusta	|	varietas	|	
+79611	|	79609	|	Weigela decora	|	species	|	
+79610	|	79609	|	Weigela coraeensis	|	species	|	
+79620	|	79609	|	Weigela subsessilis	|	species	|	
+79621	|	79609	|	Weigela toensis	|	species	|	
+79619	|	79609	|	Weigela sinica	|	species	|	
+79618	|	79609	|	Weigela praecox	|	species	|	
+79617	|	79609	|	Weigela middendorffiana	|	species	|	
+79616	|	79609	|	Weigela maximowiczii	|	species	|	
+19944	|	4199	|	Valerianaceae	|	family	|	
+4206	|	4199	|	Adoxaceae	|	family	|	
+4201	|	4206	|	Sambucus	|	genus	|	
+1045114	|	4201	|	Sambucus chinensis	|	species	|	
+1053969	|	4201	|	Sambucus sachalinensis	|	species	|	
+1053964	|	4201	|	Sambucus glauca	|	species	|	
+4203	|	4201	|	Sambucus racemosa	|	species	|	
+57013	|	4203	|	Sambucus racemosa subsp. pubens	|	subspecies	|	
+57011	|	57013	|	Sambucus racemosa var. melanocarpa	|	varietas	|	
+45463	|	4203	|	Sambucus racemosa subsp. sieboldiana	|	subspecies	|	
+386291	|	4203	|	Sambucus racemosa subsp. kamtschatica	|	subspecies	|	
+4202	|	4201	|	Sambucus nigra	|	species	|	
+883680	|	4201	|	Sambucus sp. SH-2010	|	species	|	
+1053968	|	4201	|	Sambucus palmensis	|	species	|	
+1053965	|	4201	|	Sambucus manshurica	|	species	|	
+44584	|	4201	|	Sambucus gaudichaudiana	|	species	|	
+44583	|	4201	|	Sambucus australasica	|	species	|	
+57010	|	4201	|	Sambucus maderensis	|	species	|	
+57012	|	4201	|	Sambucus peruviana	|	species	|	
+57014	|	4201	|	Sambucus wightiana	|	species	|	
+180062	|	4201	|	Sambucus williamsii	|	species	|	
+1053966	|	4201	|	Sambucus mexicana	|	species	|	
+1053967	|	4201	|	Sambucus microbotrys	|	species	|	
+1053963	|	4201	|	Sambucus buergeriana	|	species	|	
+57203	|	4201	|	Sambucus adnata	|	species	|	
+57006	|	4201	|	Sambucus cerulea	|	species	|	
+57007	|	4201	|	Sambucus callicarpa	|	species	|	
+57005	|	4201	|	Sambucus australis	|	species	|	
+57008	|	4201	|	Sambucus canadensis	|	species	|	
+57009	|	4201	|	Sambucus javanica	|	species	|	
+386292	|	4201	|	Sambucus tigranii	|	species	|	
+28503	|	4201	|	Sambucus ebulus	|	species	|	
+57004	|	28503	|	Sambucus ebulus subsp. africana	|	subspecies	|	
+4204	|	4206	|	Viburnum	|	genus	|	
+1190447	|	4204	|	Viburnum undulatum	|	species	|	
+1190445	|	4204	|	Viburnum sp. WLC-2012b	|	species	|	
+1190444	|	4204	|	Viburnum seemanii	|	species	|	
+1190443	|	4204	|	Viburnum scabrellum	|	species	|	
+1190442	|	4204	|	Viburnum pichinchense	|	species	|	
+1190441	|	4204	|	Viburnum parvifolium	|	species	|	
+1190440	|	4204	|	Viburnum obtusatum	|	species	|	
+179996	|	4204	|	Viburnum plicatum	|	species	|	
+237953	|	179996	|	Viburnum plicatum var. tomentosum	|	varietas	|	
+1190435	|	4204	|	Viburnum hallii	|	species	|	
+4205	|	4204	|	Viburnum acerifolium	|	species	|	
+1190446	|	4204	|	Viburnum taitoense	|	species	|	
+1008939	|	4204	|	Viburnum sempervirens	|	species	|	
+1008940	|	1008939	|	Viburnum sempervirens var. trichophorum	|	varietas	|	
+1127649	|	4204	|	Viburnum hupehense	|	species	|	
+1127648	|	4204	|	Viburnum hebanthum	|	species	|	
+1127643	|	4204	|	Viburnum colebrookeanum	|	species	|	
+1127642	|	4204	|	Viburnum chingii	|	species	|	
+1127641	|	4204	|	Viburnum caudatum	|	species	|	
+1127647	|	4204	|	Viburnum flavescens	|	species	|	
+1127646	|	4204	|	Viburnum discolor	|	species	|	
+1127645	|	4204	|	Viburnum corymbiflorum	|	species	|	
+1127644	|	4204	|	Viburnum coriaceum	|	species	|	
+47689	|	4204	|	Viburnum rhytidophyllum	|	species	|	
+1127640	|	4204	|	Viburnum cassinoides	|	species	|	
+436501	|	4204	|	Viburnum setigerum	|	species	|	
+436500	|	4204	|	Viburnum foetidum	|	species	|	
+1045193	|	436500	|	Viburnum foetidum var. ceanothoides	|	varietas	|	
+61589	|	4204	|	Viburnum dentatum	|	species	|	
+1220047	|	61589	|	Viburnum dentatum var. dentatum	|	varietas	|	
+1190430	|	61589	|	Viburnum dentatum var. lucidum	|	varietas	|	
+1190431	|	61589	|	Viburnum dentatum var. venosum	|	varietas	|	
+1190429	|	61589	|	Viburnum dentatum var. indianense	|	varietas	|	
+1130863	|	4204	|	Viburnum costaricanum	|	species	|	
+1127661	|	4204	|	Viburnum subalpinum	|	species	|	
+1127660	|	4204	|	Viburnum schensianum	|	species	|	
+1127663	|	4204	|	Viburnum ternatum	|	species	|	
+1127662	|	4204	|	Viburnum sulcatum	|	species	|	
+1127665	|	4204	|	Viburnum veitchii	|	species	|	
+1127664	|	4204	|	Viburnum toronis	|	species	|	
+1190449	|	4204	|	Viburnum villosum	|	species	|	
+1190448	|	4204	|	Viburnum venustum	|	species	|	
+349481	|	4204	|	Viburnum wrightii	|	species	|	
+349480	|	4204	|	Viburnum phlebotrichum	|	species	|	
+432680	|	4204	|	Viburnum sympodiale	|	species	|	
+432681	|	4204	|	Viburnum taiwanianum	|	species	|	
+1045194	|	4204	|	Viburnum fordiae	|	species	|	
+449240	|	4204	|	Viburnum treleasei	|	species	|	
+237928	|	4204	|	Viburnum cinnamomifolium	|	species	|	
+237929	|	4204	|	Viburnum clemensae	|	species	|	
+237927	|	4204	|	Viburnum carlesii	|	species	|	
+1220044	|	4204	|	Viburnum bitchiuense	|	species	|	
+224736	|	4204	|	Viburnum betulifolium	|	species	|	
+446156	|	4204	|	Viburnum cotinifolium	|	species	|	
+237962	|	4204	|	Viburnum urceolatum	|	species	|	
+237963	|	4204	|	Viburnum utile	|	species	|	
+237961	|	4204	|	Viburnum triphyllum	|	species	|	
+1127658	|	4204	|	Viburnum luzonicum	|	species	|	
+1190432	|	4204	|	Viburnum divaricatum	|	species	|	
+1190433	|	4204	|	Viburnum formosanum	|	species	|	
+1190438	|	4204	|	Viburnum microcarpum	|	species	|	
+1190439	|	4204	|	Viburnum sp. WLC-2012a	|	species	|	
+1127659	|	4204	|	Viburnum oliganthum	|	species	|	
+1127650	|	4204	|	Viburnum ichangense	|	species	|	
+1127656	|	4204	|	Viburnum loeseneri	|	species	|	
+1127657	|	4204	|	Viburnum lutescens	|	species	|	
+237948	|	4204	|	Viburnum melanocarpum	|	species	|	
+237949	|	4204	|	Viburnum molle	|	species	|	
+237944	|	4204	|	Viburnum kansuense	|	species	|	
+237945	|	4204	|	Viburnum lantana	|	species	|	
+237946	|	4204	|	Viburnum lantanoides	|	species	|	
+237947	|	4204	|	Viburnum lobophyllum	|	species	|	
+237940	|	4204	|	Viburnum furcatum	|	species	|	
+237941	|	4204	|	Viburnum hartwegii	|	species	|	
+237942	|	4204	|	Viburnum japonicum	|	species	|	
+237943	|	4204	|	Viburnum jucundum	|	species	|	
+1220045	|	4204	|	Viburnum cf. corylifolium 103-99A	|	species	|	
+1031695	|	4204	|	Viburnum rigidum	|	species	|	
+1127651	|	4204	|	Viburnum inopinatum	|	species	|	
+1127652	|	4204	|	Viburnum jamesonii	|	species	|	
+1127653	|	4204	|	Viburnum lautum	|	species	|	
+1127654	|	4204	|	Viburnum punctatum	|	species	|	
+1127655	|	1127654	|	Viburnum punctatum var. lepidotulum	|	varietas	|	
+883713	|	4204	|	Viburnum sp. SH-2010	|	species	|	
+61591	|	4204	|	Viburnum sieboldii	|	species	|	
+61590	|	4204	|	Viburnum lentago	|	species	|	
+432676	|	4204	|	Viburnum macrocephalum	|	species	|	
+1127638	|	4204	|	Viburnum bracteatum	|	species	|	
+1127639	|	4204	|	Viburnum calvum	|	species	|	
+1127632	|	4204	|	Viburnum adenophorum	|	species	|	
+1127633	|	4204	|	Viburnum amplificatum	|	species	|	
+1127636	|	4204	|	Viburnum brachyandrum	|	species	|	
+1127634	|	4204	|	Viburnum atrocyaneum	|	species	|	
+1127635	|	4204	|	Viburnum blandum	|	species	|	
+432679	|	4204	|	Viburnum propinquum	|	species	|	
+432678	|	4204	|	Viburnum orientale	|	species	|	
+1190436	|	4204	|	Viburnum integrifolium	|	species	|	
+1190437	|	4204	|	Viburnum lancifolium	|	species	|	
+1190434	|	4204	|	Viburnum glomeratum	|	species	|	
+237939	|	4204	|	Viburnum farreri	|	species	|	
+237938	|	4204	|	Viburnum erubescens	|	species	|	
+1045192	|	237938	|	Viburnum erubescens var. prattii	|	varietas	|	
+237931	|	4204	|	Viburnum cylindricum	|	species	|	
+237930	|	4204	|	Viburnum nervosum	|	species	|	
+237933	|	4204	|	Viburnum dilatatum	|	species	|	
+237934	|	4204	|	Viburnum edule	|	species	|	
+237936	|	4204	|	Viburnum ellipticum	|	species	|	
+1190423	|	4204	|	Viburnum australe	|	species	|	
+180956	|	4204	|	Viburnum sp. Qiu 95083	|	species	|	
+237932	|	4204	|	Viburnum davidii	|	species	|	
+237935	|	4204	|	Viburnum elatum	|	species	|	
+237937	|	4204	|	Viburnum erosum	|	species	|	
+85293	|	4204	|	Viburnum opulus	|	species	|	
+237960	|	85293	|	Viburnum opulus var. americanum	|	varietas	|	
+237952	|	85293	|	Viburnum opulus var. sargentii	|	varietas	|	
+453244	|	4204	|	Viburnum awabuki	|	species	|	
+237959	|	4204	|	Viburnum tinus	|	species	|	
+1211625	|	237959	|	Viburnum tinus subsp. tinus	|	subspecies	|	
+237958	|	4204	|	Viburnum suspensum	|	species	|	
+237951	|	4204	|	Viburnum odoratissimum	|	species	|	
+237950	|	4204	|	Viburnum nudum	|	species	|	
+237957	|	4204	|	Viburnum stenocalyx	|	species	|	
+237956	|	4204	|	Viburnum rufidulum	|	species	|	
+237955	|	4204	|	Viburnum rafinesquianum	|	species	|	
+1220048	|	237955	|	Viburnum rafinesquianum var. affine	|	varietas	|	
+237954	|	4204	|	Viburnum prunifolium	|	species	|	
+432677	|	4204	|	Viburnum mongolicum	|	species	|	
+432675	|	4204	|	Viburnum koreanum	|	species	|	
+432674	|	4204	|	Viburnum brachybotryum	|	species	|	
+1190428	|	4204	|	Viburnum ciliatum	|	species	|	
+1190421	|	4204	|	Viburnum acutifolium	|	species	|	
+1190422	|	4204	|	Viburnum antioquiense	|	species	|	
+1190425	|	4204	|	Viburnum brevipes	|	species	|	
+1190424	|	4204	|	Viburnum ayavacense	|	species	|	
+1190427	|	4204	|	Viburnum burejaeticum	|	species	|	
+1190426	|	4204	|	Viburnum buddleifolium	|	species	|	
+4207	|	4206	|	Adoxa	|	genus	|	
+331268	|	4207	|	Adoxa orientalis	|	species	|	
+4208	|	4207	|	Adoxa moschatellina	|	species	|	
+122249	|	4206	|	Sinadoxa	|	genus	|	
+122250	|	122249	|	Sinadoxa corydalifolia	|	species	|	
+179090	|	4206	|	Tetradoxa	|	genus	|	
+179091	|	179090	|	Tetradoxa omeiensis	|	species	|	
+59164	|	4199	|	Morinaceae	|	family	|	
+91884	|	4199	|	Diervillaceae	|	family	|	
+91885	|	4199	|	Linnaeaceae	|	family	|	
+40572	|	4199	|	Dipsacaceae	|	family	|	

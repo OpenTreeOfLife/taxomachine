@@ -26,6 +26,23 @@ import org.neo4j.kernel.Traversal;
  * TaxonomyLoader is intended to control the initial creation 
  * and addition of taxonomies to the taxonomy graph.
  *
+ * TaxonomyLoader major functions
+ * ==========================
+ * initializeTaxonomyIntoGraph (initialize a taxonomy, in our case NCBI, into the graph
+ *                              the significance of this is that this will be in the main
+ *                              index and will serve as the backbone for the taxonomy 
+ *                              synthesis. Added to the index as
+ *                              ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME)
+ *                                 as (tnode, "name", inputName))
+ * 
+ * addDisconnectedTaxonomyToGraph (add a taxonomy into the graph. this will not be connected
+ *                                 to the main taxonomy and in order to incorporate it into
+ *                                 the main taxonomy must be compared in the TaxonomyComparator.
+ *                                 Also, this will be added to 
+ *                                 ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME)
+ *                                 as (tnode, sourcename, inputName))
+ * 
+ * BOTH OF THESE MUST HAVE A LIFE NODE
  */
 public class TaxonomyLoader extends Taxonomy {
 
@@ -136,7 +153,7 @@ public class TaxonomyLoader extends Taxonomy {
 
 	/**
 	 * Reads a taxonomy file with rows formatted as:
-	 *	taxon_id\t|\tparent_id\t|\tName with spaces allowed\n
+	 *	taxon_id\t|\tparent_id\t|\tName\t|\trank with spaces allowed\n
 	 *
 	 * Creates nodes and TAXCHILDOF relationships for each line.
 	 * Nodes get a "name" property. Relationships get "source", "childid", "parentid" properties.
@@ -151,7 +168,7 @@ public class TaxonomyLoader extends Taxonomy {
 	 * @param filename file path to the taxonomy file
 	 * @param synonymfile file that holds the synonym
 	 */
-	public void initializeTaxonomyIntoGraphName(String sourcename, String filename, String synonymfile) {
+	public void initializeTaxonomyIntoGraph(String sourcename, String filename, String synonymfile) {
 		String str = "";
 		int count = 0;
 		Transaction tx;
@@ -223,7 +240,6 @@ public class TaxonomyLoader extends Taxonomy {
 				metadatanode.setProperty("weburl", weburl);
 				metadatanode.setProperty("uri", uri);
 				metadatanode.setProperty("urlprefix", urlPrefix);
-				//taxSourceIndex.add(metadatanode, "source", sourcename);
 				taxSources.add(metadatanode, "source", sourcename);
 				tx.success();
 			} finally {
@@ -242,34 +258,42 @@ public class TaxonomyLoader extends Taxonomy {
 							StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
 							int numtok = st.countTokens();
 							String inputId = st.nextToken();
-							String InputParentId = "";
-							if (numtok == 3)
-								InputParentId = st.nextToken();
-							String inputName = st.nextToken();
+							String nexttok = st.nextToken();
+							String inputParentId = "";
+							String inputName ="";
+							String rank = "";
 							Node tnode = createNode();
-							tnode.setProperty("name", inputName);
-							tnode.setProperty("uid", "");
-							//taxNodeIndex.add( tnode, "name", inputName);
-							taxaByName.add(tnode, "name", inputName);
-							dbnodes.put(inputId, tnode);
-							if (numtok == 3) {
-								parents.put(inputId, InputParentId);
-							} else { // this is the root node
+							//if it equals life it won't have a parent
+							if (nexttok.equals("life")==false){
+								inputParentId = nexttok;
+								inputName = st.nextToken();
+								if (numtok == 4){
+									tnode.setProperty("rank",st.nextToken());
+								}
+								parents.put(inputId, inputParentId);
+							}else{//root
+								inputName = nexttok;
 								System.out.println("created root node and metadata link");
 								metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
 							}
+							tnode.setProperty("name", inputName);
+							//TODO: add the ability to input these from a source if they have already been set
+							tnode.setProperty("uid", tnode.getId());
+							tnode.setProperty("sourceid", inputId);
+							tnode.setProperty("sourcepid", inputParentId);
+							tnode.setProperty("source",sourcename);
+							taxaByName.add(tnode, "name", inputName);
+							dbnodes.put(inputId, tnode);
 							// synonym processing
 							if (synFileExists) {
 								if (synonymhash.get(inputId) != null) {
 									ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
 									for (int j=0; j < syns.size(); j++) {
-										
 										String synName = syns.get(j).get(0);
 										String synNameType = syns.get(j).get(1);
-										
 										Node synode = createNode();
 										synode.setProperty("name",synName);
-										synode.setProperty("uid", "");
+										synode.setProperty("uid", synode.getId());
 										synode.setProperty("nametype",synNameType);
 										synode.setProperty("source",sourcename);
 										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
@@ -288,40 +312,48 @@ public class TaxonomyLoader extends Taxonomy {
 			br.close();
 			tx = beginTx();
 			try {
-				for (int i=0; i < templines.size(); i++) {
+				for (int i=0; i<templines.size(); i++) {
 					StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
 					int numtok = st.countTokens();
-					String first = st.nextToken();
-					String second = "";
-					if (numtok == 3)
-						second = st.nextToken();
-					String third = st.nextToken();
+					String inputId = st.nextToken();
+					String nexttok = st.nextToken();
+					String inputParentId = "";
+					String inputName ="";
+					String rank = "";
 					Node tnode = createNode();
-					tnode.setProperty("name", third);
-					tnode.setProperty("uid", "");
-					//taxNodeIndex.add( tnode, "name", third);
-					taxaByName.add( tnode, "name", third);
-					dbnodes.put(first, tnode);
-					if (numtok == 3) {
-						parents.put(first, second);
-					} else {//this is the root node
+					//if it equals life it won't have a parent
+					if (nexttok.equals("life")==false){
+						inputParentId = nexttok;
+						inputName = st.nextToken();
+						if (numtok == 4){
+							tnode.setProperty("rank",st.nextToken());
+						}
+						parents.put(inputId, inputParentId);
+					}else{//root
+						inputName = nexttok;
 						System.out.println("created root node and metadata link");
 						metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
 					}
-					//synonym processing
+					tnode.setProperty("name", inputName);
+					//TODO: add the ability to input these from a source if they have already been set
+					tnode.setProperty("uid", tnode.getId());
+					tnode.setProperty("sourceid", inputId);
+					tnode.setProperty("sourcepid", inputParentId);
+					tnode.setProperty("source",sourcename);
+					taxaByName.add(tnode, "name", inputName);
+					dbnodes.put(inputId, tnode);
+					// synonym processing
 					if (synFileExists) {
-						if (synonymhash.get(first) != null) {
-							ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+						if (synonymhash.get(inputId) != null) {
+							ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
 							for (int j=0; j < syns.size(); j++) {
-								
 								String synName = syns.get(j).get(0);
 								String synNameType = syns.get(j).get(1);
-								
 								Node synode = createNode();
 								synode.setProperty("name",synName);
+								synode.setProperty("uid", synode.getId());
 								synode.setProperty("nametype",synNameType);
 								synode.setProperty("source",sourcename);
-								synode.setProperty("uid", "");
 								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 								taxaBySynonym.add(tnode, "name", synName);
 							}
@@ -461,6 +493,23 @@ public class TaxonomyLoader extends Taxonomy {
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
 
+		// just setting source metadata manually for now
+		String author = "";
+		String weburl = "";
+		String uri = "";
+		String urlPrefix = "";
+		if (sourcename == "ncbi") {
+			author = "no one";
+			weburl = "http://ncbi.nlm.nih.gov";
+			uri = "";
+			urlPrefix = "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=";
+		} else if (sourcename == "gbif") {
+			author = "gbif";
+			weburl = "http://www.gbif.org/";
+			uri = "";
+			urlPrefix = "http://ecat-dev.gbif.org/usage/";		    
+		}
+		
 		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
 		//can plug into these by not saying name but the source itself
 		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
@@ -472,7 +521,10 @@ public class TaxonomyLoader extends Taxonomy {
 			try {
 				metadatanode = createNode();
 				metadatanode.setProperty("source", sourcename);
-				metadatanode.setProperty("author", "no one");
+				metadatanode.setProperty("author", author);
+				metadatanode.setProperty("weburl", weburl);
+				metadatanode.setProperty("uri", uri);
+				metadatanode.setProperty("urlprefix", urlPrefix);
 				//taxSourceIndex.add(metadatanode, "source", sourcename);
 				System.out.println("source: "+sourcename);
 				taxSources.add(metadatanode, "source", sourcename);
@@ -493,34 +545,42 @@ public class TaxonomyLoader extends Taxonomy {
 							StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
 							int numtok = st.countTokens();
 							String inputId = st.nextToken();
-							String InputParentId = "";
-							if (numtok == 3)
-								InputParentId = st.nextToken();
-							String inputName = st.nextToken();
+							String nexttok = st.nextToken();
+							String inputParentId = "";
+							String inputName ="";
+							String rank = "";
 							Node tnode = createNode();
-							tnode.setProperty("name", inputName);
-							tnode.setProperty("uid", "");
-							//taxNodeIndex.add( tnode, "name", inputName);
-							taxaByName.add(tnode, sourcename, inputName);
-							dbnodes.put(inputId, tnode);
-							if (numtok == 3) {
-								parents.put(inputId, InputParentId);
-							} else { // this is the root node
+							//if it equals life it won't have a parent
+							if (nexttok.equals("life")==false){
+								inputParentId = nexttok;
+								inputName = st.nextToken();
+								if (numtok == 4){
+									tnode.setProperty("rank",st.nextToken());
+								}
+								parents.put(inputId, inputParentId);
+							}else{//root
+								inputName = nexttok;
 								System.out.println("created root node and metadata link");
 								metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
 							}
+							tnode.setProperty("name", inputName);
+							//TODO: add the ability to input these from a source if they have already been set
+							tnode.setProperty("uid", tnode.getId());
+							tnode.setProperty("sourceid", inputId);
+							tnode.setProperty("sourcepid", inputParentId);
+							tnode.setProperty("source",sourcename);
+							taxaByName.add(tnode, sourcename, inputName);
+							dbnodes.put(inputId, tnode);
 							// synonym processing
 							if (synFileExists) {
 								if (synonymhash.get(inputId) != null) {
 									ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
 									for (int j=0; j < syns.size(); j++) {
-										
 										String synName = syns.get(j).get(0);
 										String synNameType = syns.get(j).get(1);
-										
 										Node synode = createNode();
 										synode.setProperty("name",synName);
-										synode.setProperty("uid", "");
+										synode.setProperty("uid", synode.getId());
 										synode.setProperty("nametype",synNameType);
 										synode.setProperty("source",sourcename);
 										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
@@ -539,40 +599,48 @@ public class TaxonomyLoader extends Taxonomy {
 			br.close();
 			tx = beginTx();
 			try {
-				for (int i=0; i < templines.size(); i++) {
+				for (int i=0; i<templines.size(); i++) {
 					StringTokenizer st = new StringTokenizer(templines.get(i),"\t|\t");
 					int numtok = st.countTokens();
-					String first = st.nextToken();
-					String second = "";
-					if (numtok == 3)
-						second = st.nextToken();
-					String third = st.nextToken();
+					String inputId = st.nextToken();
+					String nexttok = st.nextToken();
+					String inputParentId = "";
+					String inputName ="";
+					String rank = "";
 					Node tnode = createNode();
-					tnode.setProperty("name", third);
-					tnode.setProperty("uid", "");
-					//taxNodeIndex.add( tnode, "name", third);
-					taxaByName.add( tnode, sourcename, third);
-					dbnodes.put(first, tnode);
-					if (numtok == 3) {
-						parents.put(first, second);
-					} else {//this is the root node
+					//if it equals life it won't have a parent
+					if (nexttok.equals("life")==false){
+						inputParentId = nexttok;
+						inputName = st.nextToken();
+						if (numtok == 4){
+							tnode.setProperty("rank",st.nextToken());
+						}
+						parents.put(inputId, inputParentId);
+					}else{//root
+						inputName = nexttok;
 						System.out.println("created root node and metadata link");
 						metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
 					}
-					//synonym processing
+					tnode.setProperty("name", inputName);
+					//TODO: add the ability to input these from a source if they have already been set
+					tnode.setProperty("uid", tnode.getId());
+					tnode.setProperty("sourceid", inputId);
+					tnode.setProperty("sourcepid", inputParentId);
+					tnode.setProperty("source",sourcename);
+					taxaByName.add(tnode, sourcename, inputName);
+					dbnodes.put(inputId, tnode);
+					// synonym processing
 					if (synFileExists) {
-						if (synonymhash.get(first) != null) {
-							ArrayList<ArrayList<String>> syns = synonymhash.get(first);
+						if (synonymhash.get(inputId) != null) {
+							ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
 							for (int j=0; j < syns.size(); j++) {
-								
 								String synName = syns.get(j).get(0);
 								String synNameType = syns.get(j).get(1);
-								
 								Node synode = createNode();
 								synode.setProperty("name",synName);
+								synode.setProperty("uid", synode.getId());
 								synode.setProperty("nametype",synNameType);
 								synode.setProperty("source",sourcename);
-								synode.setProperty("uid", "");
 								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 								taxaBySynonym.add(tnode, sourcename, synName);
 							}

@@ -75,11 +75,11 @@ public class MainRunner {
 			System.out.println("initializing taxonomy from " + filename + " to " + graphname);
 			if (new File(sourcename).exists()) {
 				System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
-				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
+				tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
 			}
 			else {
 				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
-				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
+				tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
 			}
 			System.out.println("verifying taxonomy");
 			tl.verifyLoadedTaxonomy(sourcename);
@@ -93,11 +93,11 @@ public class MainRunner {
 			System.out.println("initializing taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
 			if (new File(sourcename).exists()) {
 				System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
-				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
+				tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
 			}
 			else {
 				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
-				tl.initializeTaxonomyIntoGraphName(sourcename, filename, synonymfile);
+				tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
 			}
 			System.out.println("verifying taxonomy");
 			tl.verifyLoadedTaxonomy(sourcename);
