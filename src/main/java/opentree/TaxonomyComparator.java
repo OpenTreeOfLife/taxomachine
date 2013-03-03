@@ -9,8 +9,10 @@ package opentree;
  */
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -317,6 +319,8 @@ public class TaxonomyComparator {
 		HashMap<String,String> id_name_map = new HashMap<String,String>();
 		HashMap<String,String> id_parent_map = new HashMap<String,String>();
 		HashMap<String,HashSet<String>> id_nameset_map = new HashMap<String,HashSet<String>>();
+		HashMap<String,HashSet<String>> id_nameset_map_name = new HashMap<String,HashSet<String>>();
+		//read all the names and ids from the file
 		try {
 			sbr = new BufferedReader(new FileReader(infilename));
 			while ((str = sbr.readLine()) != null) {
@@ -327,17 +331,23 @@ public class TaxonomyComparator {
 				id_name_map.put(id, name);
 				id_parent_map.put(id,pid);
 				id_nameset_map.put(id,new HashSet<String>());
+				id_nameset_map_name.put(id,new HashSet<String>());
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+			System.exit(0);
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.exit(0);
 		}
+
+		System.out.println("checking "+id_name_map.size()+" names");
 		//get all the names that subtend a particular name and place them in the id_nameset_map
 		for(String id: id_name_map.keySet()){
 			String curid = id_parent_map.get(id);
 			while(id_name_map.containsKey(curid)){
 				id_nameset_map.get(curid).add(id);
+				id_nameset_map_name.get(curid).add(id_name_map.get(id));
 				if(id_parent_map.containsKey(curid)){
 					curid = id_parent_map.get(curid);
 				}else{
@@ -345,18 +355,74 @@ public class TaxonomyComparator {
 				}
 			}
 		}
-		for(String id: id_name_map.keySet()){
-			if(id_nameset_map.get(id).size() > 0){
-				ArrayList<Node> tn = (ArrayList<Node>) domtax.ALLTAXA.findPrefTaxNodesByNameOrSyn(id_name_map.get(id));
-				if(tn.size()<1){
-					System.out.println(id+" "+id_name_map.get(id)+" "+tn.size());
-				}
-			}else{
-				ArrayList<Node> tn = (ArrayList<Node>) domtax.ALLTAXA.findPrefTaxNodesByNameOrSyn(id_name_map.get(id));
-				if(tn.size()<1){
-					System.out.println(id+" "+id_name_map.get(id)+" "+tn.size());
+		HashMap<Long,String> domnames = new HashMap<Long,String>();
+		HashSet<String> domtotal = new HashSet<String>();
+		long [] tmr = (long []) domtax.getLifeNode().getProperty("mrca");
+		for (int i =0;i<tmr.length;i++){
+			Node tmrn = domtax.getNodeById(tmr[i]);
+			domnames.put(tmrn.getId(), (String) tmrn.getProperty("name"));
+			domtotal.add((String) tmrn.getProperty("name"));
+		}
+		BufferedWriter bwMain = null;
+		FileWriter fw = null;
+		try{
+			bwMain = new BufferedWriter(new FileWriter(outfilename));
+			for(String id: id_name_map.keySet()){
+				if(id_nameset_map.get(id).size() > 0){
+					ArrayList<Node> tn = (ArrayList<Node>) domtax.ALLTAXA.findPrefTaxNodesByNameOrSyn(id_name_map.get(id));
+					
+					//NO MATCH
+					//if(tn.size()<1){
+					//	System.out.println(id+" "+id_name_map.get(id)+" "+tn.size());
+					//}
+					//check each name
+					for(Node ttn: tn){
+						HashSet<String> cset = new HashSet<String>();
+						long [] citmr = (long []) ttn.getProperty("mrca");
+						for (int i =0;i<citmr.length;i++){
+							Node tmrn = domtax.getNodeById(citmr[i]);
+							cset.add((String) tmrn.getProperty("name"));
+						}
+						citmr = (long []) ttn.getProperty("nested_mrca");
+						for (int i =0;i<citmr.length;i++){
+							Node tmrn = domtax.getNodeById(citmr[i]);
+							if(tmrn.getId() == ttn.getId())
+								continue;
+							cset.add((String) tmrn.getProperty("name"));
+						}
+						Set<String> domtotalmoutgroup = new HashSet<String>(domtotal); // use the copy constructor
+						domtotalmoutgroup.removeAll(cset);
+						boolean test = true;
+						Set<String> intersection1 = new HashSet<String>(id_nameset_map_name.get(id)); // use the copy constructor
+						intersection1.retainAll(cset);
+						if(intersection1.size()==0){
+							test = false;
+						}else{
+							Set<String> intersection2 = new HashSet<String>(domtotalmoutgroup); // use the copy constructor
+							intersection2.retainAll(id_nameset_map.get(id));
+							if(intersection2.size()>intersection1.size()){
+								test = false;
+							}
+						}
+						//best match
+						if (test == true){
+							//write the result and break
+							bwMain.write(id+"\t|\t"+ttn.getProperty("uid")+"\t|\t"+ttn.getProperty("name")+"\t|\t\n");
+							break;
+						}
+					}
+				}else{
+					ArrayList<Node> tn = (ArrayList<Node>) domtax.ALLTAXA.findPrefTaxNodesByNameOrSyn(id_name_map.get(id));
+					if(tn.size() == 1){
+						//write the result out
+						bwMain.write(id+"\t|\t"+tn.get(0).getProperty("uid")+"\t|\t"+tn.get(0).getProperty("name")+"\t|\t\n");
+					}
+					//if(tn.size()<1){
+					//	System.out.println(id+" "+id_name_map.get(id)+" "+tn.size());
+					//}
 				}
 			}
-		}
+			bwMain.close();
+		}catch(IOException e1){}
 	}
 }

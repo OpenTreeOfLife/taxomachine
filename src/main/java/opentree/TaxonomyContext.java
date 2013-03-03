@@ -129,6 +129,9 @@ public class TaxonomyContext {
 
     /**
      * a generic wrapper for node indexes that searches the specified index for entries with `column` matching `key`
+     * 
+     * have to escape a bunch of characters that hiccup on taxon searches
+     * 
      * @param index
      * @param column
      * @param key
@@ -138,8 +141,8 @@ public class TaxonomyContext {
         
         ArrayList<Node> foundNodes = new ArrayList<Node>();
         // lucene index.query() method will split search terms on spaces and use only the first; we must escape spaces to avoid this
-        key = key.replace(" ", "\\ ");
-        IndexHits<Node> results = index.query(column, QueryParser.escape(key));
+        key = QueryParser.escape(key).replace(" ", "\\ ");
+        IndexHits<Node> results = index.query(column, key);
         for (Node n : results) {
             foundNodes.add(n);
         }
