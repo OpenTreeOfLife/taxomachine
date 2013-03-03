@@ -7,6 +7,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
+import org.apache.lucene.queryParser.QueryParser;
+
 import opentree.ContextDescription;
 
 /**
@@ -137,7 +139,7 @@ public class TaxonomyContext {
         ArrayList<Node> foundNodes = new ArrayList<Node>();
         // lucene index.query() method will split search terms on spaces and use only the first; we must escape spaces to avoid this
         key = key.replace(" ", "\\ ");
-        IndexHits<Node> results = index.query(column, key);
+        IndexHits<Node> results = index.query(column, QueryParser.escape(key));
         for (Node n : results) {
             foundNodes.add(n);
         }
