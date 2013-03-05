@@ -438,25 +438,33 @@ public class TaxonomySynthesizer extends Taxonomy {
     public void dumpPreferredOTTOLRelationships(String outfile) {
 //    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 //                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
-
          // get the start point
          Node life = getLifeNode();
          System.out.println(life.getProperty("name"));
          PrintWriter outFile;
-         try {
+ 		 try {
              outFile = new PrintWriter(new FileWriter(outfile));
+             outFile.write("uid\t|\tparent_uid\t|\tname\t|\trank\t|\tsource\t|\tsourceid\t|\tsourcepid\t|\t\n");
              for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
+            	 outFile.write(String.valueOf(n.getProperty("uid"))+"\t|\t");
             	 if(n.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)){
             		 Relationship tr = n.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
             		 Node p = tr.getEndNode();
-            		 String source = "";
-            		 for (Relationship r: n.getRelationships(RelType.TAXCHILDOF, Direction.OUTGOING)){
-            			 source = (String)r.getProperty("source");
-            		 }
-            		 outFile.write(n.getId()+"\t"+p.getId()+"\t"+n.getProperty("name")+"\t"+source+"\n");
+            		 outFile.write(String.valueOf(p.getProperty("uid"))+"\t|\t");
             	 }else{
-            		 outFile.write(n.getId()+"\t"+"\t"+n.getProperty("name")+"\tncbi\n");
+            		 outFile.write("\t|\t");
             	 }
+            	 outFile.write(String.valueOf(n.getProperty("name"))+"\t|\t");
+            	 if (n.hasProperty("rank"))
+            		 outFile.write(String.valueOf(n.getProperty("rank"))+"\t|\t");
+            	 else
+            		 outFile.write("\t|\t");
+            	 outFile.write(String.valueOf(n.getProperty("source"))+"\t|\t");
+            	 outFile.write(String.valueOf(n.getProperty("sourceid"))+"\t|\t");
+            	 if (n.hasProperty("sourcepid"))
+            		 outFile.write(String.valueOf(n.getProperty("sourcepid"))+"\t|\t\n");
+            	 else
+            		 outFile.write("\t|\t\n");
              }
              outFile.close();
          } catch (IOException e) {
