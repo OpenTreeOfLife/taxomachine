@@ -270,6 +270,8 @@ public class MainRunner {
 			te = new TaxonomySynthesizer(taxdb);
 			System.out.println("dumping ottol relationships");
 			te.dumpPreferredOTTOLRelationships(outfile);
+			System.out.println("dumping ottol synonym relationships");
+			te.dumpPreferredOTTOLSynonymRelationships(outfile+".synonyms");
 	     } else if (args[0].equals("makecontexts")) {
             String graphname = args[1];
             taxdb = new GraphDatabaseAgent(graphname);

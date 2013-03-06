@@ -473,6 +473,38 @@ public class TaxonomySynthesizer extends Taxonomy {
     }
     
     /**
+     * 
+     * @param outfile the outfile that will have the dumped ottol information as id\tparentid\tname
+     */
+    public void dumpPreferredOTTOLSynonymRelationships(String outfile) {
+//    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+//                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
+         // get the start point
+         Node life = getLifeNode();
+         System.out.println(life.getProperty("name"));
+         PrintWriter outFile;
+ 		 try {
+             outFile = new PrintWriter(new FileWriter(outfile));
+             outFile.write("uid\t|\tacceptednode_uid\t|\tsynonymname\t|\tnametype\t|\tsource\t|\t\n");
+             for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
+            	 if(n.hasRelationship(Direction.INCOMING, RelType.SYNONYMOF)){
+            		 for(Relationship tr: n.getRelationships(Direction.INCOMING, RelType.SYNONYMOF)){
+                		 Node p = tr.getStartNode();//synonym node
+                		 outFile.write(String.valueOf(p.getProperty("uid"))+"\t|\t");
+                		 outFile.write(String.valueOf(n.getProperty("uid"))+"\t|\t");
+                		 outFile.write(String.valueOf(p.getProperty("name"))+"\t|\t");
+                		 outFile.write(String.valueOf(p.getProperty("nametype"))+"\t|\t");
+                		 outFile.write(String.valueOf(p.getProperty("source"))+"\t|\t\n");
+            		 }
+            	 }
+             }
+             outFile.close();
+         } catch (IOException e) {
+             e.printStackTrace();
+         }
+    }
+    
+    /**
      * Used to make a hierarchy for the taxonomic contexts (each ContextTreeNode contains links to immediate child ContextTreeNodes),
      * which is in turn used to do a pre-order traversal when building the contexts, which in turn ensures that the last written value
      * of each node's leastContext property contains the least inclusive context.
