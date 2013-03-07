@@ -5,10 +5,10 @@ import jade.tree.TreePrinter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
+//import java.util.NoSuchElementException;
 
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSMatch;
@@ -18,7 +18,7 @@ import opentree.tnrs.TNRSResults;
 
 import opentree.tnrs.TNRSNameScrubber;
 
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 import java.io.FileNotFoundException;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -26,15 +26,15 @@ import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.util.ParserUtils;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
-import org.neo4j.graphdb.GraphDatabaseService;
+//import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
+//import org.neo4j.graphdb.Transaction;
+//import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 
 public class MainRunner {
-    
-    private static GraphDatabaseAgent taxdb;
+	
+	private static GraphDatabaseAgent taxdb;
 
 	public void taxonomyLoadParser(String [] args) throws FileNotFoundException, IOException {
 		
@@ -62,28 +62,27 @@ public class MainRunner {
 		taxdb = new GraphDatabaseAgent(graphname);
 		TaxonomyLoader tl = new TaxonomyLoader(taxdb);
 
-        // currently we are assuming that we always want to add taxonomies to the root of the taxonomy
+		// currently we are assuming that we always want to add taxonomies to the root of the taxonomy
 		// (i.e. the life node), but this will have to be changed to add taxonomies that are more
 		// specific, such as Hibbett's fungal stuff
 		Node lifeNode = tl.getLifeNode();
 		System.out.println("life node: " + lifeNode);
 		String incomingRootNodeId = null;
 		if (lifeNode != null)
-		    incomingRootNodeId = String.valueOf(lifeNode.getId());
+			incomingRootNodeId = String.valueOf(lifeNode.getId());
 		
 		if (args[0].equals("inittax")) {
 			System.out.println("initializing taxonomy from " + filename + " to " + graphname);
 			if (new File(sourcename).exists()) {
 				System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
 				tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
-			}
-			else {
+			} else {
 				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
 				tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
 			}
 			System.out.println("verifying taxonomy");
 			tl.verifyLoadedTaxonomy(sourcename);
-		} else if(args[0].equals("addtax")) {
+		} else if (args[0].equals("addtax")) {
 			System.out.println("adding taxonomy from " + filename + " to "+ graphname);
 			//tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId ,filename, synonymfile);
 			tl.addDisconnectedTaxonomyToGraph(sourcename,filename,synonymfile);
@@ -94,8 +93,7 @@ public class MainRunner {
 			if (new File(sourcename).exists()) {
 				System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
 				tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
-			}
-			else {
+			} else {
 				System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
 				tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
 			}
@@ -118,12 +116,12 @@ public class MainRunner {
 	
 	public void taxonomyQueryParser(String [] args) {
 		
-	    if (args[0].equals("getsubtree")) {
-	        if (args.length != 3) {
-                System.out.println("arguments should be: graphdbfolder \"nameslist\"");
-                return;
-            }
-        } else if (args[0].equals("checktree")) {
+		if (args[0].equals("getsubtree")) {
+			if (args.length != 3) {
+				System.out.println("arguments should be: graphdbfolder \"nameslist\"");
+				return;
+			}
+		} else if (args[0].equals("checktree")) {
 			if (args.length != 4) {
 				System.out.println("arguments should be: treefile focalgroup graphdbfolder");
 				return;
@@ -138,104 +136,104 @@ public class MainRunner {
 				System.out.println("arguments should be: graphdbfolder");
 				return;
 			}
-        } else if(args[0].equals("dumpottol") || args[0].equals("makeottolnamedump")) {
-            if (args.length != 3 ){
-                System.out.println("arguments should be: graphdbfolder outfile");
-                return;
-            }
-        }else if(args[0].equals("makecontexts")) {
-            if (args.length != 2 ){
-                System.out.println("arguments should be: graphdbfolder");
-                return;
-            }
-		}else if (args.length != 3) {
+		} else if (args[0].equals("dumpottol") || args[0].equals("makeottolnamedump")) {
+			if (args.length != 3 ) {
+				System.out.println("arguments should be: graphdbfolder outfile");
+				return;
+			}
+		} else if (args[0].equals("makecontexts")) {
+			if (args.length != 2 ) {
+				System.out.println("arguments should be: graphdbfolder");
+				return;
+			}
+		} else if (args.length != 3) {
 			System.out.println("arguments should be: query graphdbfolder");
 			return;
 		}
 		
 		TaxonomySynthesizer te = null;
-        TNRSQuery tnrs = null;
-        Taxon taxon = null;
+		TNRSQuery tnrs = null;
+		Taxon taxon = null;
 
-        
-        if (args[0].equals("getsubtree")) {
-            String graphname = args[1];
-            String nameString = args[2];
-            
-            taxdb = new GraphDatabaseAgent(graphname);
-            Taxonomy taxonomy = new Taxonomy(taxdb);
-            tnrs = new TNRSQuery(taxonomy); 
-            
-            String[] names = nameString.split(",");
-            LinkedList<Node> tNodes = new LinkedList<Node>();
-            
-            for (String taxName : names) {
-                System.out.println("Searching for " + taxName);
-                for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName)) {
-                    System.out.println("adding " + n.getProperty("name") + " to taxon set");
-                    tNodes.add(n);                    
-                }
-            }
-            
-            TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
-            JadeTree subTree = taxa.getPrefTaxSubtree();
+		
+		if (args[0].equals("getsubtree")) {
+			String graphname = args[1];
+			String nameString = args[2];
+			
+			taxdb = new GraphDatabaseAgent(graphname);
+			Taxonomy taxonomy = new Taxonomy(taxdb);
+			tnrs = new TNRSQuery(taxonomy); 
+			
+			String[] names = nameString.split(",");
+			LinkedList<Node> tNodes = new LinkedList<Node>();
+			
+			for (String taxName : names) {
+				System.out.println("Searching for " + taxName);
+				for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName)) {
+					System.out.println("adding " + n.getProperty("name") + " to taxon set");
+					tNodes.add(n);					
+				}
+			}
+			
+			TaxonSet taxa = new TaxonSet(tNodes, taxonomy);
+			JadeTree subTree = taxa.getPrefTaxSubtree();
 
-            TreePrinter tp = new TreePrinter();
-            System.out.println(tp.printNH(subTree));
-        
-        } else if (args[0].equals("comptaxtree")) {
+			TreePrinter tp = new TreePrinter();
+			System.out.println(tp.printNH(subTree));
+		
+		} else if (args[0].equals("comptaxtree")) {
 
-            String query = args[1];
-            String graphname = args[2];
+			String query = args[1];
+			String graphname = args[2];
 
-            taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomySynthesizer(taxdb);
-            tnrs = new TNRSQuery(te);
-            try {
-                taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
-            } catch (MultipleHitsException ex) {
-                System.out.println("There was more than one match for that name");
-            }
+			taxdb = new GraphDatabaseAgent(graphname);
+			te =  new TaxonomySynthesizer(taxdb);
+			tnrs = new TNRSQuery(te);
+			try {
+				taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
+			} catch (MultipleHitsException ex) {
+				System.out.println("There was more than one match for that name");
+			}
 
-            System.out.println("constructing a comprehensive tax tree of " + query);
-    		taxon.buildTaxonomyTree();
+			System.out.println("constructing a comprehensive tax tree of " + query);
+			taxon.buildTaxonomyTree();
 
 		} else if (args[0].equals("comptaxgraph")) {
 			String query = args[1];
 			String graphname = args[2];
 			String outname = args[3];
 			
-            taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomySynthesizer(taxdb);
-            tnrs = new TNRSQuery(te);
-            try {
-                taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
-            } catch (MultipleHitsException ex) {
-                System.out.println("There was more than one match for that name");
-            }
+			taxdb = new GraphDatabaseAgent(graphname);
+			te =  new TaxonomySynthesizer(taxdb);
+			tnrs = new TNRSQuery(te);
+			try {
+				taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
+			} catch (MultipleHitsException ex) {
+				System.out.println("There was more than one match for that name");
+			}
 
-            System.out.println("exporting the subgraph for clade " + query);
-            taxon.exportGraphForClade(outname);
-            
+			System.out.println("exporting the subgraph for clade " + query);
+			taxon.exportGraphForClade(outname);
+			
 		} else if (args[0].equals("jsgraph")) {
 			String query = args[1];
 			String graphname = args[2];
 			
-            taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomySynthesizer(taxdb);
-            tnrs = new TNRSQuery(te);
-            try {
-                taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
-            } catch (MultipleHitsException ex) {
-                System.out.println("There was more than one match for that name");
-            }
+			taxdb = new GraphDatabaseAgent(graphname);
+			te =  new TaxonomySynthesizer(taxdb);
+			tnrs = new TNRSQuery(te);
+			try {
+				taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
+			} catch (MultipleHitsException ex) {
+				System.out.println("There was more than one match for that name");
+			}
 
 			System.out.println("constructing json graph data for " + query);
 			taxon.constructJSONGraph();
 
 		} else if (args[0].equals("checktree")) {
-		    System.out.println("ERROR: this option is deprecated. use `tnrstree` option instead");
-	        System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)");
+			System.out.println("ERROR: this option is deprecated. use `tnrstree` option instead");
+			System.out.println("\ttnrstree <treefile> <graphdbfolder> (check if the taxonomy graph contains names in treefile)");
 /*			String query = args[1];
 			String focalgroup = args[2];
 			String graphname = args[3];
@@ -245,25 +243,25 @@ public class MainRunner {
 
 		} else if (args[0].equals("makeottol")) {
 			String graphname = args[1];
-            taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomySynthesizer(taxdb);
+			taxdb = new GraphDatabaseAgent(graphname);
+			te =  new TaxonomySynthesizer(taxdb);
 			System.out.println("making ottol relationships");
 			te.makePreferredOTTOLRelationshipsConflicts();
 			te.makePreferredOTTOLRelationshipsNOConflicts();
 
-        } else if (args[0].equals("makeottolnamedump")) {
-            String graphname = args[1];
-            String outfile = args[2];
-            taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomySynthesizer(taxdb);
-            System.out.println("dumping names to: " + outfile);
+		} else if (args[0].equals("makeottolnamedump")) {
+			String graphname = args[1];
+			String outfile = args[2];
+			taxdb = new GraphDatabaseAgent(graphname);
+			te =  new TaxonomySynthesizer(taxdb);
+			System.out.println("dumping names to: " + outfile);
 
-            // testing
-            te.OTTOLNameDump(te.ALLTAXA.findPrefTaxNodesByName("Viburnum").get(0), outfile);
+			// testing
+			te.OTTOLNameDump(te.ALLTAXA.findPrefTaxNodesByName("Viburnum").get(0), outfile);
 
-//            te.makeOTTOLNameDump(te.ALLTAXA.getRootNode(), outfile);
+//			te.makeOTTOLNameDump(te.ALLTAXA.getRootNode(), outfile);
 		
-		} else if(args[0].equals("dumpottol")){
+		} else if (args[0].equals("dumpottol")) {
 			String graphname = args[1];
 			String outfile = args[2];
 			taxdb = new GraphDatabaseAgent(graphname);
@@ -272,21 +270,21 @@ public class MainRunner {
 			te.dumpPreferredOTTOLRelationships(outfile);
 			System.out.println("dumping ottol synonym relationships");
 			te.dumpPreferredOTTOLSynonymRelationships(outfile+".synonyms");
-	     } else if (args[0].equals("makecontexts")) {
-            String graphname = args[1];
-            taxdb = new GraphDatabaseAgent(graphname);
-            te =  new TaxonomySynthesizer(taxdb);
-            System.out.println("building context-specific indexes");
-            te.makeContexts();
+		 } else if (args[0].equals("makecontexts")) {
+			String graphname = args[1];
+			taxdb = new GraphDatabaseAgent(graphname);
+			te =  new TaxonomySynthesizer(taxdb);
+			System.out.println("building context-specific indexes");
+			te.makeContexts();
 	
-		} else if (args[0].equals("checknames")){
+		} else if (args[0].equals("checknames")) {
 			String sourcename = args[1];
 			String graphname = args[2];
 			taxdb = new GraphDatabaseAgent(graphname);
 			te = new TaxonomySynthesizer(taxdb);
 			System.out.println("checking names from source: "+sourcename);
 			te.findEquivalentNamedNodes(sourcename);
-		}else {
+		} else {
 			System.err.println("\nERROR: not a known command\n");
 			printHelp();
 			System.exit(1);
@@ -300,8 +298,8 @@ public class MainRunner {
 	 * to the ottol names and will output the mappings
 	 * @param args
 	 */
-	public void compareNames(String args[]){
-		if (args.length != 4){
+	public void compareNames(String args[]) {
+		if (args.length != 4) {
 			System.out.println("arguments should be: infile outfile graphdbfolder");
 			System.exit(0);
 		}
@@ -315,11 +313,11 @@ public class MainRunner {
 		taxdb.shutdownDb();
 	}
 	
-	public void parseGraftByComp(String args[]){
-		if (args.length != 3){
-    		System.out.println("arguments should be: graphdbfolderdom sourcenametocomp");
-    		System.exit(0);
-    	}
+	public void parseGraftByComp(String args[]) {
+		if (args.length != 3) {
+			System.out.println("arguments should be: graphdbfolderdom sourcenametocomp");
+			System.exit(0);
+		}
 		System.out.println(args);
 		String graphdomname = args[1];
 		String sourcename = args[2];
@@ -330,11 +328,11 @@ public class MainRunner {
 		tc.compareGraftTaxonomyToDominant(inga, sourcename);
 	}
 	
-	public void recalculateMRCAS(String args[]){
-		if (args.length != 2){
-    		System.out.println("arguments should be: graphdbfolder");
-    		System.exit(0);
-    	}
+	public void recalculateMRCAS(String args[]) {
+		if (args.length != 2) {
+			System.out.println("arguments should be: graphdbfolder");
+			System.exit(0);
+		}
 		System.out.println(args);
 		String graphdbname = args[1];
 		GraphDatabaseAgent inga = new GraphDatabaseAgent(graphdbname);
@@ -366,7 +364,7 @@ public class MainRunner {
 		
 		String contextName = null;
 		if (args.length == 4) {
-		    contextName = args[3];
+			contextName = args[3];
 		}
 		
 		taxdb = new GraphDatabaseAgent(graphName);
@@ -392,8 +390,8 @@ public class MainRunner {
 			results = tnrs.doFullTNRS();
 
 		} else if (args[0].equals("tnrstree")) {
-		    // TODO: for files containing multiple trees, make sure to do TNRS just once
-		    // read in the treefile
+			// TODO: for files containing multiple trees, make sure to do TNRS just once
+			// read in the treefile
 			final File treefile = new File(args[1]);
 			PhylogenyParser parser = null;
 			try {
@@ -413,12 +411,12 @@ public class MainRunner {
 			// TODO: use tree structure to help differentiate homonyms
 			String[] tipNames = phys[0].getAllExternalNodeNames();
 
-//          TNRSNameScrubber scrubber = new TNRSNameScrubber(searchStrings);
-            String[] cleanedNames = TNRSNameScrubber.scrubBasic(tipNames);
-            
-            HashSet<String> names = tnrs.stringArrayToHashset(cleanedNames);
-//          scrubber.review(); // print old and cleaned names
-            results = tnrs.initialize(names, context).doFullTNRS();
+//		  TNRSNameScrubber scrubber = new TNRSNameScrubber(searchStrings);
+			String[] cleanedNames = TNRSNameScrubber.scrubBasic(tipNames);
+			
+			HashSet<String> names = tnrs.stringArrayToHashset(cleanedNames);
+//		  scrubber.review(); // print old and cleaned names
+			results = tnrs.initialize(names, context).doFullTNRS();
 		}
 		
 		for (TNRSNameResult nameResult : results) {
@@ -463,7 +461,7 @@ public class MainRunner {
 		
 		System.out.println("\ntSucessfully cleaned names.\n");
 	} */
-    
+	
 	
 	public static void printHelp() {
 		System.out.println("==========================");
@@ -489,10 +487,10 @@ public class MainRunner {
 		System.out.println("\tcomptaxgraph <name> <graphdbfolder> <outdotfile> (construct a comprehensive taxonomy in dot)");
 		System.out.println("\tjsgraph <name> <graphdbfolder> (constructs a json file from tax graph)");
 		System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
-        System.out.println("\tgetsubtree <graphdbfolder> \"<nameslist>\" (find the subgraph for the specified taxa)");
-        System.out.println("\n---taxonomic name resolution services---");
-        System.out.println("\ttnrsbasic <querynames> <graphdbfolder> [contextname] (check if the taxonomy graph contains comma-delimited names)");
-        System.out.println("\ttnrstree <treefile> <graphdbfolder> [contextname] (check if the taxonomy graph contains names in treefile)\n");
+		System.out.println("\tgetsubtree <graphdbfolder> \"<nameslist>\" (find the subgraph for the specified taxa)");
+		System.out.println("\n---taxonomic name resolution services---");
+		System.out.println("\ttnrsbasic <querynames> <graphdbfolder> [contextname] (check if the taxonomy graph contains comma-delimited names)");
+		System.out.println("\ttnrstree <treefile> <graphdbfolder> [contextname] (check if the taxonomy graph contains names in treefile)\n");
 	}
 	/**
 	 * @param args
@@ -537,22 +535,21 @@ public class MainRunner {
 						|| args[0].equals("checknames")
 						|| args[0].equals("getsubtree")) {
 					mr.taxonomyQueryParser(args);
-				}else if(args[0].equals("recalculatemrcas")){
+				} else if (args[0].equals("recalculatemrcas")) {
 					mr.recalculateMRCAS(args);
-				}else if (args[0].equals("graftbycomp")){
+				} else if (args[0].equals("graftbycomp")) {
 					mr.parseGraftByComp(args);
-				}else if (args[0].matches("tnrsbasic|tnrstree")) {
+				} else if (args[0].matches("tnrsbasic|tnrstree")) {
 					mr.parseTNRSRequest(args);
 				// TEMP
 				} else if (args[0].equals("addlifenode")) {
-				    TaxonomySynthesizer ts = new TaxonomySynthesizer(new GraphDatabaseAgent(args[1]));
-				    Node lifeNode = ts.getLifeNode();
-				    System.out.println("lifenode: " +  lifeNode.toString() + " " + lifeNode.getProperty("name"));
-				    ts.addToPreferredIndexesAtomicTX(lifeNode, ts.ALLTAXA);
-				    
-				} else if(args[0].equals("comparenames")){
+					TaxonomySynthesizer ts = new TaxonomySynthesizer(new GraphDatabaseAgent(args[1]));
+					Node lifeNode = ts.getLifeNode();
+					System.out.println("lifenode: " +  lifeNode.toString() + " " + lifeNode.getProperty("name"));
+					ts.addToPreferredIndexesAtomicTX(lifeNode, ts.ALLTAXA);
+				} else if (args[0].equals("comparenames")) {
 					mr.compareNames(args);
-				}else {
+				} else {
 					System.err.println("Unrecognized command \"" + args[0] + "\"");
 					printHelp();
 					System.exit(1);
