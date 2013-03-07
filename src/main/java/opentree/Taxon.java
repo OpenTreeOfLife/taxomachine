@@ -160,6 +160,7 @@ public class Taxon {
         root.setName(((String) taxNode.getProperty("name")).replace(" ", "_"));
         HashMap<Node, JadeNode> nodes = new HashMap<Node, JadeNode>();
         nodes.put(taxNode, root);
+        
         int count = 0;
         for (Relationship rel : CHILDOF_TRAVERSAL.traverse(taxNode).relationships()) {
             count += 1;

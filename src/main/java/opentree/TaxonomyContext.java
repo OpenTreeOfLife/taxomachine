@@ -50,8 +50,6 @@ import opentree.ContextDescription;
 
 public class TaxonomyContext {
     
-    
-    
     private ContextDescription contextDescription;
     private Taxonomy taxonomy;
     

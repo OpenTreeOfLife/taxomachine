@@ -3,6 +3,7 @@ package opentree.tnrs;
 import java.util.HashSet;
 import java.util.Set;
 
+import opentree.ContextDescription;
 import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.Taxonomy;
@@ -65,19 +66,20 @@ public class TNRSQuery {
 
     /**
      * Initialize the query object with a set of names. The passed `context` may be set to null, in which case an attempt to infer the context
-     * based on the names will be made ((if necessary) by the appropriate functions, or the context can be explicitly inferred via a call to
+     * based on the names will be made (if necessary) by the appropriate functions, or the context can be explicitly inferred via a call to
      * `inferContext()`.
      * @param searchStrings
      * @param context
      */
-    public TNRSQuery initialize(Set<String> searchStrings, TaxonomyContext context) {
+    public TNRSQuery initialize(Set<String> searchStrings, TaxonomyContext _context) {
+        
         clearResults();
-        this.context = context;
+        queriedNames = (HashSet<String>) searchStrings;
+
         if (context != null) {
-            System.out.println(context.getDescription().name);
+//            System.out.println(context.getDescription().name);
             results.setContextName(this.context.getDescription().name);
         }
-        queriedNames = (HashSet<String>) searchStrings;
         return this;
     }
 
@@ -191,6 +193,13 @@ public class TNRSQuery {
         // exact match the names against the context; save all hits
         for (String thisName : searchStrings) {
 
+//            System.out.println("search string: " + thisName);
+//            String correctedName = ;
+            
+            if (context == null) {
+                context = new TaxonomyContext(ContextDescription.ALLTAXA, taxonomy);
+            }
+            
             IndexHits<Node> hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query("name", thisName.replace(" ", "\\ "));
 
             if (hits.size() < 1) {
@@ -408,6 +417,7 @@ public class TNRSQuery {
      */
     public TNRSResults matchExact(String searchString) {
         HashSet<String> name = new HashSet<String>();
+        name.add(searchString);
         return matchExact(name, null);
     }
     
@@ -423,6 +433,10 @@ public class TNRSQuery {
         
         initialize(searchStrings, context);
 
+        for (String name : queriedNames) {
+            System.out.println(name);
+        }
+        
         // match names against context
         HashSet<String> namesWithoutDirectTaxnameMatches = new HashSet<String>();
         getExactTaxonMatches(queriedNames, namesWithoutDirectTaxnameMatches);
