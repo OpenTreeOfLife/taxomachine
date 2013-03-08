@@ -192,6 +192,44 @@ public class Taxon {
         }
     }
 
+    /**
+     * creates a taxonomy file in the expected input format for treemachine
+     */
+    public void buildTreemachineTaxonList() {
+
+        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+                .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
+        System.out.println(taxNode.getProperty("name"));
+
+        PrintWriter outFile = null;
+        try {
+            outFile = new PrintWriter(new FileWriter("taxlist.txt"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String sep = "\t|\t";
+        outFile.write("1" + sep + "0" + sep + "life" + sep + "\n");
+        outFile.write(String.valueOf(taxNode.getId()) + sep + "1" + sep + taxNode.getProperty("name") + sep + "\n");
+
+        String badchars = " \t.,():;'";
+        
+        for (Relationship rel : CHILDOF_TRAVERSAL.traverse(taxNode).relationships()) {
+
+            String name = (String) rel.getStartNode().getProperty("name");
+            String cid = String.valueOf(rel.getStartNode().getId());
+            String pid = String.valueOf(rel.getEndNode().getId());
+
+            for (char s : badchars.toCharArray())
+                name = name.replace(s,'_');
+            
+            outFile.write(cid + sep + pid + sep + name + sep + "\n");
+        }
+        
+        outFile.close();
+    }
+
+    
     public void constructJSONGraph() {
 
         System.out.println(taxNode.getProperty("name"));
