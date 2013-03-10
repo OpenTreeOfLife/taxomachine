@@ -177,6 +177,7 @@ public class TaxonomyComparator {
 						if(stringstoadd.contains(domtax.getNodeById(nd).getProperty("name")) == false)
 							toremove.add(nd);
 					}
+
 					nodestoadd.removeAll(toremove);
 					if(nodestoadd.size()> 0)
 						System.out.println((String)tnode.getProperty("name")+" nodestoadd: "+nodestoadd.size());
@@ -191,6 +192,7 @@ public class TaxonomyComparator {
 		}
 		System.out.println("matched: "+matchedDomCompNodes.size()+" out of "+totalcount);
 		System.out.println("postorder add taxa");
+		added_source_ids = new HashSet<Long>();
 		Transaction tx = null;
 		try{
 			tx = dinga.beginTx();
@@ -206,6 +208,11 @@ public class TaxonomyComparator {
 		tl.removeMRCAs(domtax.getLifeNode());
 		tl.initMrcaForTipsAndPO(domtax.getLifeNode());
 	}
+	
+	//GLOBAL ids for added source nodes
+	//add a check for nodes that were added already because of homonym issues, if you 
+	//turn off, for example you will add Drilonematidae and things below twice
+	private HashSet<Long> added_source_ids;//will only contain added ids from the source being added 
 	
 	private void postorderAddTaxa(Node innode, Node lifenode,HashMap<Long,Long> matchedDomCompNodes
 			,HashMap<Long,HashSet<Long>> matchedNodeNodesToAdd,String compsource,GraphDatabaseAgent domgraph
@@ -233,7 +240,9 @@ public class TaxonomyComparator {
 					//need to check if the nested one is in the names to add, if not, then don't add
 					while(tnode.getId() != finishnodeid){
 						if(addednodesch.contains(tnode.getId()) == false){
-							if(cset.contains(tnode.getId()) == true){
+							//added test to make sure dups from the source aren't added, occurs with bad homonyms, for example Drilonematidae
+							Long testingadded = Long.valueOf((String)tnode.getProperty("sourceid"));
+							if(cset.contains(tnode.getId()) == true && added_source_ids.contains(testingadded)==false){
 								//adding node
 								Node newnode = domgraph.createNode();
 //								System.out.println("making node: "+newnode+" "+tnode.getProperty("name"));
@@ -244,6 +253,8 @@ public class TaxonomyComparator {
 								if (tnode.hasProperty("rank"))
 									newnode.setProperty("rank",(String)tnode.getProperty("rank"));
 								newnode.setProperty("sourceid",(String)tnode.getProperty("sourceid"));
+								//added for check on not duplicating source additions
+								added_source_ids.add(Long.valueOf((String)tnode.getProperty("sourceid")));
 								newnode.setProperty("sourcepid",(String)tnode.getProperty("sourcepid"));
 								taxaByName.add(newnode, "name", (String)tnode.getProperty("name"));
 								addednodes.add(newnode.getId());
