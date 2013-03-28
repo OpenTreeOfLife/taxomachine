@@ -165,6 +165,8 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 						.getId());
 				serializer.putString("matchedName", match.getMatchedNode()
 						.getProperty("name").toString());
+				serializer.putString("matchedOttolID", match.getMatchedNode()
+						.getProperty("uid").toString());
 				serializer.putString("parentName", match.getParentNode()
 						.getProperty("name").toString());
 				serializer.putString("sourceName", match.getSource());
