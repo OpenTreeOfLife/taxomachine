@@ -65,21 +65,22 @@ public class TNRSQuery {
     }
 
     /**
-     * Initialize the query object with a set of names. The passed `context` may be set to null, in which case an attempt to infer the context
-     * based on the names will be made (if necessary) by the appropriate functions, or the context can be explicitly inferred via a call to
-     * `inferContext()`.
+     * Initialize the query object with a set of names. The passed `predefContext` may be provided or set to null, in which case the context
+     * remains uninitialized until a subsequent call to `inferContext()` is made.
      * @param searchStrings
-     * @param context
+     * @param predefContext
      */
-    public TNRSQuery initialize(Set<String> searchStrings, TaxonomyContext _context) {
+    public TNRSQuery initialize(Set<String> searchStrings, TaxonomyContext predefContext) {
         
         clearResults();
         queriedNames = (HashSet<String>) searchStrings;
 
-        if (context != null) {
-//            System.out.println(context.getDescription().name);
+        // set the context if we have one
+        if (predefContext != null) {
+        	context = predefContext;
             results.setContextName(this.context.getDescription().name);
         }
+        
         return this;
     }
 
@@ -166,7 +167,9 @@ public class TNRSQuery {
                 results.addNameWithDirectMatch(thisName);
 
             } else { // is either a homonym match or a non-matched name
-                unmatchableNames.add(thisName);
+            	if (unmatchableNames != null) {
+            		unmatchableNames.add(thisName);
+            	}
             }
 
             hits.close();

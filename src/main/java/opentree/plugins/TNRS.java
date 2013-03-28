@@ -95,7 +95,7 @@ public class TNRS extends ServerPlugin {
 
         // Write tree string to temp file for ParserUtils. This is a hack, it would be better to just feed the parser
         // the treeString directly, but all the appropriate methods seem to want files
-        String tempFileName = "/tmp/tempTree"; // need to use timestamp to avoid overwriting on asynchronous requests
+        String tempFileName = "/tmp/tempTree"; // TODO: need to use timestamp to avoid overwriting on asynchronous requests
         FileWriter fstream = new FileWriter(tempFileName);
         BufferedWriter out = new BufferedWriter(fstream);
         out.write(treeString);

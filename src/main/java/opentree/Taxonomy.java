@@ -56,9 +56,9 @@ public class Taxonomy {
     }
     
     /**
-     * Returns a TaxonomyContext object for the ContextDescription with name matching `name`
+     * Returns a TaxonomyContext object for the ContextDescription with name matching `name`. If no context is found for `name`, returns null.
      * TaxonomyContext objects are used for accessing ALL node indexes. For more information on how to use these objects,
-     * refer to the documentation in the TaxonomyContext class file.
+     * refer to the documentation in the TaxonomyContext class file. 
      * @param name
      * @return TaxonomyContext
      */
