@@ -5,14 +5,18 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 import opentree.ContextGroup;
 import opentree.GraphDatabaseAgent;
 import opentree.Taxonomy;
 import opentree.ContextDescription;
 import opentree.TaxonomyContext;
+import opentree.tnrs.ContextResult;
 import opentree.tnrs.TNRSNameScrubber;
 import opentree.tnrs.TNRSQuery;
 import opentree.tnrs.TNRSResults;
@@ -50,14 +54,12 @@ public class TNRS extends ServerPlugin {
         TaxonomyContext inferredContext = tnrs.initialize(names, null).inferContext(namesNotMatched);
 
         // create a container to hold the results
-        HashMap<String,Object> contextResults = new HashMap<String,Object>();
-        contextResults.put("inferredContext", inferredContext.getDescription().name);
-        contextResults.put("unusedNames", namesNotMatched);
+        ContextResult contextResult = new ContextResult(inferredContext.getDescription().name, namesNotMatched);
         
         gdb.shutdownDb();
         
         // convert the results to JSON and return them
-        return OpentreeRepresentationConverter.convert(contextResults);
+        return OpentreeRepresentationConverter.convert(contextResult);
     	
     }
 	

@@ -3,6 +3,7 @@ package org.neo4j.server.rest.repr;
 import java.util.Iterator;
 import java.util.Map;
 
+import opentree.tnrs.ContextResult;
 import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
@@ -19,49 +20,109 @@ import org.neo4j.server.rest.repr.ValueRepresentation;
 
 public class OpentreeRepresentationConverter {
 
+	/**
+	 * Return a serialization of the passed in data, which is created by first converting `data` to a Representation object (which can then be serialized).
+	 * An attempts is made to determine the best approach to serializing `data` by examining the type of `data` and then calling a specialized converter method
+	 * intended to deal with that type of data. This works for primitives, simple container types that implement Iterable, and objects with explicit conversion
+	 * methods defined, but will fail on complex datatypes (e.g. classes with instance variables) that do not have explicitly defined conversion methods. New
+	 * conversion methods can be defined easily; see conversion methods for TNRSResults and ContextResult for examples.
+	 * 
+	 * @param data
+	 * @return serialized
+	 */
     public static Representation convert(final Object data)
     {
 
-        // if ( data instanceof Table ) { return new GremlinTableRepresentation( (Table) data ); }
-
-        // TNRSResults are iterable, but need special attention, so only check for iterable if it isn't TNRSResults
+    	// determine the approach to conversion by the type of the data to be converted
+    	// start with specific object classes that might be observed, and move to more general
+    	// types of containers if the data doesn't match a specific type
+    	
         if (data instanceof TNRSResults) {
             return getTNRSResultsRepresentation((TNRSResults) data);
 
+        } else if (data instanceof ContextResult) {
+        	return getContextResultRepresentation((ContextResult) data);
+
         } else if (data instanceof Iterable) {
-                return getListRepresentation((Iterable) data);
+        	return getListRepresentation( (Iterable) data);
         
-        }
-        
-        if (data instanceof Iterator) {
-            Iterator iterator = (Iterator) data;
+        } else if (data instanceof Iterator) {
+        	Iterator iterator = (Iterator) data;
             return getIteratorRepresentation(iterator);
-        }
         
-        if (data instanceof Map) {
+        } else if (data instanceof Map) {
             return getMapRepresentation( (Map) data );
+
+    	// deprecated code, probably won't ever be used here...
+        // } else if ( data instanceof Table ) { return new GremlinTableRepresentation( (Table) data );
+            
+        } else {
+        	return getSingleRepresentation(data);
+
         }
 
-        return getSingleRepresentation(data);
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  public conversion methods for specific data types below here
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    
+    /**
+     * Return a serialization of a TNRSResults object
+     * @param results
+     * @return
+     */
+    public static Representation getTNRSResultsRepresentation(TNRSResults results) {
+    	return TNRSResultsRepresentation.getResultsRepresentation(results);
     }
 
-    public static MappingRepresentation getMapRepresentation(Map data) {
-        return GeneralizedMappingRepresentation.getMapRepresentation(data);
+    /**
+     * Return a serialization of a single TNRSNameResult object
+     * @param nameResult
+     * @return
+     */
+    public static Representation getContextResultRepresentation(ContextResult result) {
+    	return TNRSResultsRepresentation.getContextRepresentation(result);
     }
-
+    
+    /**
+     * Return a serialization of a single TNRSNameResult object
+     * @param nameResult
+     * @return
+     */
     public static MappingRepresentation getTNRSNameResultRepresentation(TNRSNameResult nameResult) {
       return TNRSResultsRepresentation.getNameResultRepresentation(nameResult);
     }
 
-    public static Representation getTNRSResultsRepresentation(TNRSResults results) {
-        return TNRSResultsRepresentation.getResultsRepresentation(results);
+    /**
+     * Return a serialization of a general map type
+     * @param data
+     * @return
+     */
+    public static MappingRepresentation getMapRepresentation(Map data) {
+        return GeneralizedMappingRepresentation.getMapRepresentation(data);
     }
+
+    /**
+     * Return a serialization of a general Iterable type
+     * @param data
+     * @return
+     */
+    public static ListRepresentation getListRepresentation(Iterable data)
+    {
+        final FirstItemIterable<Representation> results = convertValuesToRepresentations(data);
+        return new ListRepresentation(getType(results), results);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  internal conversion methods below here
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     
-/*    public static MappingRepresentation getTNRSMatchRepresentation(TNRSMatch match) {
-        return TNRSRepresentation.mapMatch(match);
-    } */
-      
     static Representation getIteratorRepresentation(Iterator data)
     {
         final FirstItemIterable<Representation> results = new FirstItemIterable<Representation>(
@@ -78,12 +139,6 @@ public class OpentreeRepresentationConverter {
                     }
                 }
                 );
-        return new ListRepresentation(getType(results), results);
-    }
-
-    public static ListRepresentation getListRepresentation(Iterable data)
-    {
-        final FirstItemIterable<Representation> results = convertValuesToRepresentations(data);
         return new ListRepresentation(getType(results), results);
     }
 
@@ -113,26 +168,33 @@ public class OpentreeRepresentationConverter {
                 });
     }
 
-    static RepresentationType getType(FirstItemIterable<Representation> representations)
+    /**
+     * Infer the type of the objects contained by the Iterable `representationIter`, or if `representationIter` has no elements in its iterator,
+     * then return the type of `representationIter` itself. Used by other converter methods to sniff the datatypes of elements in containers so that the appropriate
+     * converter methods can be called.
+     * @param representationIter
+     * @return type of elements in 
+     */
+    static RepresentationType getType(FirstItemIterable<Representation> representationIter)
     {
-        Representation representation = representations.getFirst();
+        Representation representation = representationIter.getFirst();
         if (representation == null)
             return RepresentationType.STRING;
         return representation.getRepresentationType();
     }
 
+    
+    /**
+     * Return a Representation object that represents `data`. Representation objects are required by the RepresentationConverter serialization methods, so all objects to
+     * be serialized (including primitives) must be converted to a Representation; this method provides that functionality.
+     * @param data
+     * @return Representation object for data
+     */
     static Representation getSingleRepresentation(Object data)
     {
         if (data == null) {
-            return ValueRepresentation.string("null");
-        /*
-         * if ( result instanceof Neo4jVertex ) { return new NodeRepresentation( ( (Neo4jVertex) result ).getRawVertex() ); } else if ( result instanceof
-         * Neo4jEdge ) { return new RelationshipRepresentation( ( (Neo4jEdge) result ).getRawEdge() ); } else if ( result instanceof GraphDatabaseService ) {
-         * return new DatabaseRepresentation( ( (GraphDatabaseService) result ) ); } else if ( result instanceof Node ) { return new NodeRepresentation( (Node)
-         * result ); } else if ( result instanceof Relationship ) { return new RelationshipRepresentation( (Relationship) result ); } else if ( result
-         * instanceof Neo4jGraph ) { return ValueRepresentation.string( ( (Neo4jGraph) result ).getRawGraph().toString() ); }
-         */
-        
+            return ValueRepresentation.string("null");        
+
         } else if (data instanceof TNRSNameResult) {
             return getTNRSNameResultRepresentation((TNRSNameResult) data);
     
@@ -147,9 +209,10 @@ public class OpentreeRepresentationConverter {
 
         } else if (data instanceof Integer) {
             return ValueRepresentation.number(((Integer) data).intValue());
-           
+        
         } else {
             return ValueRepresentation.string(data.toString());
+        
         }
     }
 }

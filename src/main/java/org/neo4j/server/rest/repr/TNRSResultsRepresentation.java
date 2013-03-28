@@ -11,6 +11,7 @@ import java.util.Set;
 import org.neo4j.helpers.collection.FirstItemIterable;
 import org.neo4j.helpers.collection.IteratorWrapper;
 
+import opentree.tnrs.ContextResult;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
@@ -18,132 +19,202 @@ import opentree.tnrs.TNRSResults;
 
 public class TNRSResultsRepresentation extends MappingRepresentation {
 
-    public TNRSResultsRepresentation(RepresentationType type) {
-        super(type);
-    }
+	public TNRSResultsRepresentation(RepresentationType type) {
+		super(type);
+	}
 
-    TNRSResultsRepresentation(String type) {
-        super(type);
-    }
-    
-    @Override
-    String serialize( RepresentationFormat format, URI baseUri, ExtensionInjector extensions ) {
-        MappingWriter writer = format.serializeMapping( type );
-        Serializer.injectExtensions( writer, this, baseUri, extensions );
-        serialize( new MappingSerializer( writer, baseUri, extensions ) );
-        writer.done();
-        return format.complete( writer );
-    }
-    
-    @Override
-    void addTo( ListSerializer serializer ) {
-        serializer.addMapping( this );
-    }
+	TNRSResultsRepresentation(String type) {
+		super(type);
+	}
 
-    @Override
-    void putTo( MappingSerializer serializer, String key ) {
-        serializer.putMapping( key, this );
-    }
+	// ////////////////////////////////////////////////////////////////////////////////////////////////////
+	//
+	// methods for converting specific data types below here
+	//
+	// ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    protected void serialize(MappingSerializer serializer) {        
-    }
-    
-    public static TNRSResultsRepresentation getResultsRepresentation(final TNRSResults results) {
-        return new TNRSResultsRepresentation(RepresentationType.MAP.toString()) {
-            
-            @Override
-            protected void serialize( final MappingSerializer serializer ) {
+	/**
+	 * Return a Representation object capable of serializing `result` into a
+	 * map
+	 * 
+	 * @param result
+	 * @return
+	 */
+	public static TNRSResultsRepresentation getContextRepresentation(
+			final ContextResult result) {
+		return new TNRSResultsRepresentation(RepresentationType.MAP.toString()) {
 
-                HashMap<String, Object> tnrsResultsMap = new HashMap<String, Object>();
-                
-                tnrsResultsMap.put("governing_code", results.getGoverningCode());
-                tnrsResultsMap.put("unambiguous_names", results.getNamesWithDirectMatches());
-                tnrsResultsMap.put("unmatched_names", results.getUnmatchedNames());
-                tnrsResultsMap.put("matched_names", results.getMatchedNames());
-                tnrsResultsMap.put("context", results.getContextName());
-                
-                for(Map.Entry<String,Object> pair : tnrsResultsMap.entrySet()) {
-                    String key = pair.getKey();
-                    Object value = pair.getValue();
-                    
-                    if (value instanceof String) {
-                        serializer.putString(key, (String) value);
+			@Override
+			protected void serialize(final MappingSerializer serializer) {
 
-                    } else if (value instanceof Set) {
-                        serializer.putList(key, OpentreeRepresentationConverter.getListRepresentation((Set)value));
-                    }
-                }
- 
-                serializer.putList("results", OpentreeRepresentationConverter.getListRepresentation(results));
-            }
-        };
-    }
-    
-    public static MappingRepresentation getNameResultRepresentation(TNRSNameResult r) {
-        
-        final HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
-        nameResultMap.put("queried_name", r.getQueriedName());
-        nameResultMap.put("matches", r.getMatches());
-        
-        return new MappingRepresentation (RepresentationType.MAP.toString()) {
-            @Override
-            protected void serialize( final MappingSerializer serializer ) {
+				serializer.putString("context_name", result.contextName);
+				serializer.putList("ambiguous_names",
+						OpentreeRepresentationConverter
+								.getListRepresentation(result.namesNotMatched));
 
-                for(Map.Entry<String,Object> pair : nameResultMap.entrySet()) {
-                    String key = pair.getKey();
-                    Object value = pair.getValue();
-                    
-                    if (value instanceof String) {
-                        serializer.putString(key, (String) value);
-                    } else if (value instanceof TNRSMatchSet) {
-                        serializer.putList(key, getMatchSetRepresentation((TNRSMatchSet)value));
-                    } else if (value instanceof TNRSMatch) {
-                        serializer.putMapping(key, getMatchRepresentation((TNRSMatch)value));
-                    }
-                }
-            }
-        };
-    }
+			}
+		};
+	}
 
-    public static ListRepresentation getMatchSetRepresentation(final TNRSMatchSet matchSet) {
+	// ////////////////////////////////////////////////////////////////////////////////////////////////////
+	//
+	// methods for converting TNRSResults and nested types below here
+	//
+	// ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        FirstItemIterable<Representation> results = new FirstItemIterable<Representation>(
-                new IteratorWrapper<Representation, Object>((Iterator)matchSet.iterator()) {
-                    @Override
-                    protected Representation underlyingObjectToObject(Object value) {
-                        return getMatchRepresentation((TNRSMatch)value);
-                    }
-                }
-                );
-        return new ListRepresentation(RepresentationType.PROPERTIES, results);
-    }
-    
-    public static MappingRepresentation getMatchRepresentation(final TNRSMatch match) {
+	/**
+	 * Return an Representation object capable of serializing `results` into a
+	 * complex nested map structure containing all the information returned by the TNRS
+	 * 
+	 * @param results
+	 * @return
+	 */
+	public static TNRSResultsRepresentation getResultsRepresentation(
+			final TNRSResults results) {
+		return new TNRSResultsRepresentation(RepresentationType.MAP.toString()) {
 
-        return new MappingRepresentation(RepresentationType.MAP.toString()) {
-            @Override
-            protected void serialize( final MappingSerializer serializer ) {
-    
-                // should also have matchedNodeUniqueId, but this is not yet available
-                serializer.putNumber("matchedNodeId", match.getMatchedNode().getId());
-                serializer.putString("matchedName", match.getMatchedNode().getProperty("name").toString());
-                serializer.putString("parentName", match.getParentNode().getProperty("name").toString());
-                serializer.putString("sourceName", match.getSource());
-                serializer.putString("nomenCode", match.getNomenCode());
-                serializer.putBoolean("isPerfectMatch", match.getIsPerfectMatch());
-                serializer.putBoolean("isApprox", match.getIsApproximate());
-                serializer.putString("searchString", match.getSearchString());
-                serializer.putNumber("score", match.getScore());
+			@Override
+			protected void serialize(final MappingSerializer serializer) {
 
-                if (match.getNameStatusIsKnown()) {
-                    serializer.putString("matchedNameStatus", "known");
-                    serializer.putBoolean("isSynonym", match.getIsSynonym());
-                    serializer.putBoolean("isHomonym", match.getIsHomonym());
-                } else {
-                    serializer.putString("matchedNameStatus", "uncertain");
-                }
-            }
-        };
-    }
+				HashMap<String, Object> tnrsResultsMap = new HashMap<String, Object>();
+
+				tnrsResultsMap
+						.put("governing_code", results.getGoverningCode());
+				tnrsResultsMap.put("unambiguous_names",
+						results.getNamesWithDirectMatches());
+				tnrsResultsMap.put("unmatched_names",
+						results.getUnmatchedNames());
+				tnrsResultsMap.put("matched_names", results.getMatchedNames());
+				tnrsResultsMap.put("context", results.getContextName());
+
+				for (Map.Entry<String, Object> pair : tnrsResultsMap.entrySet()) {
+					String key = pair.getKey();
+					Object value = pair.getValue();
+
+					if (value instanceof String) {
+						serializer.putString(key, (String) value);
+
+					} else if (value instanceof Set) {
+						serializer.putList(key, OpentreeRepresentationConverter
+								.getListRepresentation((Set) value));
+					}
+				}
+
+				serializer.putList("results", OpentreeRepresentationConverter
+						.getListRepresentation(results));
+			}
+		};
+	}
+
+	public static MappingRepresentation getNameResultRepresentation(
+			TNRSNameResult r) {
+
+		final HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
+		nameResultMap.put("queried_name", r.getQueriedName());
+		nameResultMap.put("matches", r.getMatches());
+
+		return new MappingRepresentation(RepresentationType.MAP.toString()) {
+			@Override
+			protected void serialize(final MappingSerializer serializer) {
+
+				for (Map.Entry<String, Object> pair : nameResultMap.entrySet()) {
+					String key = pair.getKey();
+					Object value = pair.getValue();
+
+					if (value instanceof String) {
+						serializer.putString(key, (String) value);
+					} else if (value instanceof TNRSMatchSet) {
+						serializer
+								.putList(
+										key,
+										getMatchSetRepresentation((TNRSMatchSet) value));
+					} else if (value instanceof TNRSMatch) {
+						serializer.putMapping(key,
+								getMatchRepresentation((TNRSMatch) value));
+					}
+				}
+			}
+		};
+	}
+
+	public static ListRepresentation getMatchSetRepresentation(
+			final TNRSMatchSet matchSet) {
+
+		FirstItemIterable<Representation> results = new FirstItemIterable<Representation>(
+				new IteratorWrapper<Representation, Object>(
+						(Iterator) matchSet.iterator()) {
+					@Override
+					protected Representation underlyingObjectToObject(
+							Object value) {
+						return getMatchRepresentation((TNRSMatch) value);
+					}
+				});
+		return new ListRepresentation(RepresentationType.PROPERTIES, results);
+	}
+
+	public static MappingRepresentation getMatchRepresentation(
+			final TNRSMatch match) {
+
+		return new MappingRepresentation(RepresentationType.MAP.toString()) {
+			@Override
+			protected void serialize(final MappingSerializer serializer) {
+
+				// should also have matchedNodeUniqueId, but this is not yet
+				// available
+				serializer.putNumber("matchedNodeId", match.getMatchedNode()
+						.getId());
+				serializer.putString("matchedName", match.getMatchedNode()
+						.getProperty("name").toString());
+				serializer.putString("parentName", match.getParentNode()
+						.getProperty("name").toString());
+				serializer.putString("sourceName", match.getSource());
+				serializer.putString("nomenCode", match.getNomenCode());
+				serializer.putBoolean("isPerfectMatch",
+						match.getIsPerfectMatch());
+				serializer.putBoolean("isApprox", match.getIsApproximate());
+				serializer.putString("searchString", match.getSearchString());
+				serializer.putNumber("score", match.getScore());
+
+				if (match.getNameStatusIsKnown()) {
+					serializer.putString("matchedNameStatus", "known");
+					serializer.putBoolean("isSynonym", match.getIsSynonym());
+					serializer.putBoolean("isHomonym", match.getIsHomonym());
+				} else {
+					serializer.putString("matchedNameStatus", "uncertain");
+				}
+			}
+		};
+	}
+
+	// ////////////////////////////////////////////////////////////////////////////////////////////////////
+	//
+	// general serialization methods below here, mostly just copied from Neo4j
+	// RepresentationConverter classes
+	//
+	// ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+	@Override
+	String serialize(RepresentationFormat format, URI baseUri,
+			ExtensionInjector extensions) {
+		MappingWriter writer = format.serializeMapping(type);
+		Serializer.injectExtensions(writer, this, baseUri, extensions);
+		serialize(new MappingSerializer(writer, baseUri, extensions));
+		writer.done();
+		return format.complete(writer);
+	}
+
+	@Override
+	void addTo(ListSerializer serializer) {
+		serializer.addMapping(this);
+	}
+
+	@Override
+	void putTo(MappingSerializer serializer, String key) {
+		serializer.putMapping(key, this);
+	}
+
+	@Override
+	protected void serialize(MappingSerializer serializer) {
+	}
+
 }
