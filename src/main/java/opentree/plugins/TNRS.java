@@ -32,23 +32,53 @@ import org.neo4j.server.rest.repr.OpentreeRepresentationConverter;
 
 public class TNRS extends ServerPlugin {
 
+    @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names")
+    @PluginTarget(GraphDatabaseService.class)
+    public Representation getContextForNames(
+            @Source GraphDatabaseService graphDb,
+            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString) {
+
+        String[] searchStrings = queryString.split("\\s*\\,\\s*");
+        GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
+        Taxonomy taxonomy = new Taxonomy(gdb);
+
+        TNRSQuery tnrs = new TNRSQuery(taxonomy);
+        HashSet<String> names = tnrs.stringArrayToHashset(searchStrings);
+        
+        // this hashset will hold ambiguous names (i.e. synonyms)
+        HashSet<String> namesNotMatched = new HashSet<String>();
+        TaxonomyContext inferredContext = tnrs.initialize(names, null).inferContext(namesNotMatched);
+
+        // create a container to hold the results
+        HashMap<String,Object> contextResults = new HashMap<String,Object>();
+        contextResults.put("inferredContext", inferredContext.getDescription().name);
+        contextResults.put("unusedNames", namesNotMatched);
+        
+        gdb.shutdownDb();
+        
+        // convert the results to JSON and return them
+        return OpentreeRepresentationConverter.convert(contextResults);
+    	
+    }
+	
+	
     @Description("Return information on potential matches to a search query")
     @PluginTarget(GraphDatabaseService.class)
     public Representation doTNRSForNames(
             @Source GraphDatabaseService graphDb,
-            @Description("A comma-delimited string of names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
+            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
             @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) {
 
         String[] searchStrings = queryString.split("\\s*\\,\\s*");
-        GraphDatabaseAgent taxService = new GraphDatabaseAgent(graphDb);
-        Taxonomy taxonomy = new Taxonomy(taxService);
+        GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
+        Taxonomy taxonomy = new Taxonomy(gdb);
         TaxonomyContext context = taxonomy.getContextByName(contextName);
 
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
         HashSet<String> names = tnrs.stringArrayToHashset(searchStrings);
         TNRSResults results = tnrs.initialize(names, context).doFullTNRS();
 
-        taxService.shutdownDb();
+        gdb.shutdownDb();
         return OpentreeRepresentationConverter.convert(results);
     }
 
@@ -94,9 +124,6 @@ public class TNRS extends ServerPlugin {
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
         TaxonomyContext context = taxonomy.getContextByName(contextName);
-
-        // TEST
-        System.out.println(cleanNames[0] + " " + context);
 
         // do TNRS
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
