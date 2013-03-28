@@ -9,6 +9,6 @@ public class ContextResult {
 	
 	public ContextResult(String contextName, Collection<String> namesNotMatched) {
 		this.contextName = contextName;
-		this.namesNotMatched.addAll(namesNotMatched);
+		this.namesNotMatched = new LinkedList<String>(namesNotMatched);
 	}
 }
