@@ -53,6 +53,11 @@
         <version>1.9.9</version>
     </dependency>
     <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>1.17.1</version>
+    </dependency>
+    <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
         <version>4.2.1</version>
@@ -76,11 +81,6 @@
     	<groupId>org.dspace</groupId>
     	<artifactId>cql-java</artifactId>
     	<version>1.0</version>
-    </dependency>
-    <dependency>
-    	<groupId>com.sun.jersey</groupId>
-    	<artifactId>jersey-client</artifactId>
-    	<version>1.17.1</version>
     </dependency>
   </dependencies>
   <build>
