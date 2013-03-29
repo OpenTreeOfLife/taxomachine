@@ -1,5 +1,14 @@
 package opentree.tnrs;
 
+import java.util.HashSet;
+
+import javax.ws.rs.core.MediaType;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+
 /**
  * An adapter used by TNRSQuery to perform searches against the Global Names Resolver. This class is basically
  * obsolete and is on indefinite development hold because the GNR is way too slow. It will need to be mostly
@@ -10,8 +19,6 @@ package opentree.tnrs;
  *
  */
 public class TNRSAdapterGNR /* implements TNRSAdapter */ {
-
-    /*  
 
     String url = "http://resolver.globalnames.org/name_resolvers.json";
 
@@ -45,7 +52,8 @@ public class TNRSAdapterGNR /* implements TNRSAdapter */ {
 
         // System.out.println(respJSON);
 
-        // parse the JSON response
+        /*
+        // parse the JSON response using jackson library
         GNRResponse response = null;
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -62,7 +70,7 @@ public class TNRSAdapterGNR /* implements TNRSAdapter */ {
 
         for (GNRNameResult thisNameResult : response) {
             System.out.println(thisNameResult.supplied_name_string);
-            for (GNRMatch thisMatch : thisNameResult) {
+            for (GNRHit thisMatch : thisNameResult) {
                 String matchedName = thisMatch.canonical_form;
                 boolean thisNameMatched = false;
                 if (matchedName != null) {
@@ -84,6 +92,6 @@ public class TNRSAdapterGNR /* implements TNRSAdapter */ {
                     }
                 }
             }
-        }
-    } */
+        } */
+    }
 }
