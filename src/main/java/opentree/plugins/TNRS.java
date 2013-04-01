@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import opentree.ContextGroup;
+import opentree.ContextNotFoundException;
 import opentree.GraphDatabaseAgent;
 import opentree.Taxonomy;
 import opentree.ContextDescription;
@@ -63,17 +64,18 @@ public class TNRS extends ServerPlugin {
     	
     }
 	
-	
     @Description("Return information on potential matches to a search query")
     @PluginTarget(GraphDatabaseService.class)
     public Representation doTNRSForNames(
             @Source GraphDatabaseService graphDb,
             @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
-            @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) {
+            @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
 
         String[] searchStrings = queryString.split("\\s*\\,\\s*");
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
+        
+        // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
         TaxonomyContext context = taxonomy.getContextByName(contextName);
 
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
@@ -91,7 +93,7 @@ public class TNRS extends ServerPlugin {
             @Description("A string containing tree(s) in a format readable by the forester library")
                 @Parameter(name = "treeString") String treeString,
             @Description("The name of the taxonomic context to use. May be omitted if not known")
-                @Parameter(name = "contextName", optional = true) String contextName) throws IOException {
+                @Parameter(name = "contextName", optional = true) String contextName) throws IOException, ContextNotFoundException {
 
         // Write tree string to temp file for ParserUtils. This is a hack, it would be better to just feed the parser
         // the treeString directly, but all the appropriate methods seem to want files
@@ -125,6 +127,8 @@ public class TNRS extends ServerPlugin {
         // connect to taxonomy db
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
+
+        // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
         TaxonomyContext context = taxonomy.getContextByName(contextName);
 
         // do TNRS
