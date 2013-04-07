@@ -46,26 +46,19 @@ public class GetJsons extends ServerPlugin {
         Taxonomy t = new Taxonomy(new GraphDatabaseAgent(target.getGraphDatabase()));
 
         if (nubRelId != null) {
-
             Relationship rel = target.getGraphDatabase().getRelationshipById(nubRelId);
-            ArrayList<Long> rels = new ArrayList<Long>();
-            if (altrels != null)
-                for (int i = 0; i < altrels.length; i++) {
-                    rels.add(altrels[i]);
-                }
             taxon = t.getTaxon(rel.getEndNode());
-            retst = taxon.constructJSONAltRels((String) rel.getProperty("source"), rels);
-
+            domSourceToUse = (String) rel.getProperty("source");
         } else {
-
             taxon = t.getTaxon(target);
-            ArrayList<Long> rels = new ArrayList<Long>();
-            if (altrels != null)
-                for (int i = 0; i < altrels.length; i++) {
-                    rels.add(altrels[i]);
-                }
-            retst = taxon.constructJSONAltRels(domsource, rels);
+            domSourceToUse = domsource;
         }
+        ArrayList<Long> rels = new ArrayList<Long>();
+        if (altrels != null)
+            for (int i = 0; i < altrels.length; i++) {
+                rels.add(altrels[i]);
+            }
+        retst = taxon.constructJSONAltRels(domSourceToUse, rels);
 
         return retst;
 
