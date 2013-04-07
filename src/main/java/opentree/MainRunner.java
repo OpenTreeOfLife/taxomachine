@@ -394,7 +394,13 @@ public class MainRunner {
         Taxonomy taxonomy = new Taxonomy(taxdb);
 
         System.out.println("Looking for " + contextName);
-        TaxonomyContext context = taxonomy.getContextByName(contextName);
+        TaxonomyContext context = null;
+        try {
+        	context = taxonomy.getContextByName(contextName);
+        } catch (ContextNotFoundException cnfx) {
+            cnfx.printStackTrace();
+        }
+
         System.out.println("Found " + context.getDescription().name);
 
         TNRSQuery tnrs = new TNRSQuery(taxonomy);

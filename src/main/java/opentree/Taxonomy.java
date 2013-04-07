@@ -56,23 +56,29 @@ public class Taxonomy {
     }
     
     /**
-     * Returns a TaxonomyContext object for the ContextDescription with name matching `name`. If no context is found for `name`, returns null.
-     * TaxonomyContext objects are used for accessing ALL node indexes. For more information on how to use these objects,
-     * refer to the documentation in the TaxonomyContext class file. 
+     * Returns a TaxonomyContext object for the ContextDescription with name matching `name`, ignoring the case of characters.
+     * If no context is found for `name`, returns null. TaxonomyContext objects are used for accessing ALL node indexes. For more
+     * information on how to use these objects, refer to the documentation in the TaxonomyContext class file. 
      * @param name
      * @return TaxonomyContext
+     * @throws ContextNotFoundException 
      */
-    public TaxonomyContext getContextByName(String name) {
+    public TaxonomyContext getContextByName(String name) throws ContextNotFoundException {
 
+    	// if the name is empty or null
+    	if ((name.trim().length() == 0) || (name == null)) {
+    		return null;
+    	}
+
+    	// otherwise look for a context
         for (ContextDescription cd : ContextDescription.values()) {
-            if (cd.name.equals(name)) {
+            if (cd.name.equalsIgnoreCase(name)) {
                 return this.getContext(cd);
             }
         }
 
-        // if we didn't find one
-        // this might ought to throw an exception instead...
-        return null;
+        // if the name doesn't match any existing context
+        throw new ContextNotFoundException(name);
     }
 
     public Taxon getTaxon(Node node) {
