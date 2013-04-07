@@ -281,8 +281,9 @@ public class Taxon {
         RelationshipType defaultchildtype = RelType.TAXCHILDOF;
         RelationshipType defaultsourcetype = RelType.TAXCHILDOF;
         String sourcename = "ottol";
-        if (domsource != null)
+        if (domsource != null) {
             sourcename = domsource;
+        }
 
         PathFinder<Path> pf = GraphAlgoFactory.shortestPath(Traversal.pathExpanderForTypes(defaultchildtype, Direction.OUTGOING), 100);
         JadeNode root = new JadeNode();
@@ -313,8 +314,9 @@ public class Taxon {
             Relationship preferred = null;
 
             for (Relationship rel : friendnode.getRelationships(Direction.OUTGOING, defaultsourcetype)) {
-                if (preferred == null)
+                if (preferred == null) {
                     preferred = rel;
+                }
                 if (altrels.contains(rel.getId())) {
                     keep = rel;
                     returnrels.add(rel.getId());
