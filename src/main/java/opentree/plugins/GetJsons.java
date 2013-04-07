@@ -43,6 +43,7 @@ public class GetJsons extends ServerPlugin {
 
         String retst = "";
         Taxon taxon;
+        String domSourceToUse;
         Taxonomy t = new Taxonomy(new GraphDatabaseAgent(target.getGraphDatabase()));
 
         if (nubRelId != null) {
