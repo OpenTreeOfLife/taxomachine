@@ -55,7 +55,7 @@ public class TNRS extends ServerPlugin {
         TaxonomyContext inferredContext = tnrs.initialize(names, null).inferContext(namesNotMatched);
 
         // create a container to hold the results
-        ContextResult contextResult = new ContextResult(inferredContext.getDescription().name, namesNotMatched);
+        ContextResult contextResult = new ContextResult(inferredContext, namesNotMatched);
         
         gdb.shutdownDb();
         

@@ -3,12 +3,14 @@ package opentree.tnrs;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import opentree.TaxonomyContext;
+
 public class ContextResult {
-	public String contextName;
+	public TaxonomyContext context;
 	public LinkedList<String> namesNotMatched;
 	
-	public ContextResult(String contextName, Collection<String> namesNotMatched) {
-		this.contextName = contextName;
+	public ContextResult(TaxonomyContext context, Collection<String> namesNotMatched) {
+		this.context = context;
 		this.namesNotMatched = new LinkedList<String>(namesNotMatched);
 	}
 }
