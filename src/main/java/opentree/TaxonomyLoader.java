@@ -439,6 +439,301 @@ public class TaxonomyLoader extends Taxonomy {
 			tx.finish();
 		}
 	}
+
+	/**
+	 * Reads a taxonomy file with rows formatted as:
+	 *	ott_id\t|\tott_parent_id\t|\tName\t|\trank with spaces allowed\t|\tsources\t|\tunique_name\n
+	 *
+	 *  OTT identifier - these have been kept stable relative to OTToL 1.0
+	 *  OTT identifier for the parent of this taxon, or empty if none
+	 *  Name (e.g. "Rana palustris")
+	 *  Rank ("genus" etc.)
+	 *  Sources - this takes the form tag:id,tag:id where tag is a short string identifying the source taxonomy (currently just "ncbi" or "gbif") and id is the numeric accession number within that taxonomy. Examples: ncbi:8404,gbif:2427185 ncbi:1235509
+	 *  Unique name - if the name is a homonym, then the name qualified with its rank and the name of its parent taxon, e.g. "Roperia (genus in family Hemidiscaceae)"
+	 *
+	 *
+	 * Creates nodes and TAXCHILDOF relationships for each line.
+	 * Nodes get a "name" property. Relationships get "source", "childid", "parentid" properties.
+	 * 
+	 * Nodes are indexed in taxNames "name" key and id value.
+	 * 
+	 * A metadata node is created to point to the root
+	 * 
+	 * The line that has no parent will be the root of this tree
+	 * 
+	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
+	 * @param filename file path to the taxonomy file
+	 * @param synonymfile file that holds the synonym
+	 */
+	public void loadOTTIntoGraph(String sourcename, String filename, String synonymfile) {
+		String str = "";
+		int count = 0;
+		Transaction tx;
+		ArrayList<String> templines = new ArrayList<String>();
+		HashMap<String, ArrayList<ArrayList<String>>> synonymhash = null;
+		boolean synFileExists = false;
+		if (synonymfile.length() > 0) {
+			synFileExists = true;
+		}
+		//preprocess the synonym file
+		//key is the id from the taxonomy, the array has the synonym and the type of synonym
+		if (synFileExists) {
+			synonymhash = new HashMap<String, ArrayList<ArrayList<String>>>();
+			try {
+				BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
+				while ((str = sbr.readLine()) != null) {
+					StringTokenizer st = new StringTokenizer(str, "\t|\t");
+					String name = st.nextToken();
+					String id = st.nextToken();
+					ArrayList<String> tar = new ArrayList<String>();
+					tar.add(name);tar.add("from OTT");
+					if (synonymhash.get(id) == null) {
+						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
+						synonymhash.put(id, ttar);
+					}
+					synonymhash.get(id).add(tar);
+				}
+				sbr.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+			System.out.println("synonyms: " + synonymhash.size());
+		}
+		//finished processing synonym file
+
+		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
+		HashMap<String, String> parents = new HashMap<String, String>();
+
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
+		
+		Node metadatanode = null;
+		try {
+			tx = beginTx();
+			//create the metadata node
+			try {
+				metadatanode = createNode();
+				metadatanode.setProperty("source", sourcename);
+				metadatanode.setProperty("author", "open tree of life project");
+				metadatanode.setProperty("weburl", "https://github.com/OpenTreeOfLife/opentree/wiki/Open-Tree-Taxonomy");
+				metadatanode.setProperty("uri", "");
+				metadatanode.setProperty("urlprefix", '"');
+				taxSources.add(metadatanode, "source", sourcename);
+				tx.success();
+			} finally {
+				tx.finish();
+			}
+			BufferedReader br = new BufferedReader(new FileReader(filename));
+			while ((str = br.readLine()) != null) {
+				count += 1;
+				templines.add(str);
+				if (count % transaction_iter == 0) {
+					System.out.print(count);
+					System.out.print("\n");
+					tx = beginTx();
+					try {
+						for (int i = 0; i < templines.size(); i++) {
+							StringTokenizer st = new StringTokenizer(templines.get(i), "\t|\t");
+							int numtok = st.countTokens();
+							String inputId = st.nextToken();
+							String nexttok = st.nextToken();
+							String inputParentId = "";
+							String rank = "";
+							String inputName = "";
+							String input_sources = "";
+							String uniqname = "";
+							Node tnode = createNode();
+							//if it equals life it won't have a parent
+							if (nexttok.equals("life") == false) {
+								inputParentId = nexttok;
+								inputName = st.nextToken();
+								parents.put(inputId, inputParentId);
+							} else {//root
+								inputName = nexttok;
+								System.out.println("created root node and metadata link");
+								metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
+							}
+							tnode.setProperty("name", inputName);
+							tnode.setProperty("uid", inputId);
+							tnode.setProperty("sourceid", inputId);
+							tnode.setProperty("sourcepid", inputParentId);
+							tnode.setProperty("source", sourcename);
+							rank = st.nextToken();
+							input_sources = st.nextToken();
+							tnode.setProperty("rank",rank);
+							tnode.setProperty("input_sources",input_sources);
+							if(st.hasMoreTokens()){
+								uniqname = st.nextToken();
+								tnode.setProperty("uniqname",uniqname);
+							}
+							taxaByName.add(tnode, "name", inputName);
+							dbnodes.put(inputId, tnode);
+							// synonym processing
+							if (synFileExists) {
+								if (synonymhash.get(inputId) != null) {
+									ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
+									for (int j = 0; j < syns.size(); j++) {
+										String synName = syns.get(j).get(0);
+										String synNameType = syns.get(j).get(1);
+										Node synode = createNode();
+										synode.setProperty("name", synName);
+										synode.setProperty("uid", synode.getId());
+										synode.setProperty("nametype", synNameType);
+										synode.setProperty("source", sourcename);
+										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+										taxaBySynonym.add(tnode, "name", synName);
+									}
+								}
+							}
+						}
+						tx.success();
+					} finally {
+						tx.finish();
+					}
+					templines.clear();
+				}
+			}
+			br.close();
+			tx = beginTx();
+			try {
+				for (int i = 0; i < templines.size(); i++) {
+					StringTokenizer st = new StringTokenizer(templines.get(i), "\t|\t");
+					int numtok = st.countTokens();
+					String inputId = st.nextToken();
+					String nexttok = st.nextToken();
+					String inputParentId = "";
+					String rank = "";
+					String inputName = "";
+					String input_sources = "";
+					String uniqname = "";
+					Node tnode = createNode();
+					//if it equals life it won't have a parent
+					if (nexttok.equals("life") == false) {
+						inputParentId = nexttok;
+						inputName = st.nextToken();
+						parents.put(inputId, inputParentId);
+					} else {//root
+						inputName = nexttok;
+						System.out.println("created root node and metadata link");
+						metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
+					}
+					tnode.setProperty("name", inputName);
+					tnode.setProperty("uid", inputId);
+					tnode.setProperty("sourceid", inputId);
+					tnode.setProperty("sourcepid", inputParentId);
+					tnode.setProperty("source", sourcename);
+					rank = st.nextToken();
+					input_sources = st.nextToken();
+					tnode.setProperty("rank",rank);
+					tnode.setProperty("input_sources",input_sources);
+					if(st.hasMoreTokens()){
+						uniqname = st.nextToken();
+						tnode.setProperty("uniqname",uniqname);
+					}
+					taxaByName.add(tnode, "name", inputName);
+					dbnodes.put(inputId, tnode);
+					// synonym processing
+					if (synFileExists) {
+						if (synonymhash.get(inputId) != null) {
+							ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
+							for (int j = 0; j < syns.size(); j++) {
+								String synName = syns.get(j).get(0);
+								String synNameType = syns.get(j).get(1);
+								Node synode = createNode();
+								synode.setProperty("name", synName);
+								synode.setProperty("uid", synode.getId());
+								synode.setProperty("nametype", synNameType);
+								synode.setProperty("source", sourcename);
+								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+								taxaBySynonym.add(tnode, "name", synName);
+							}
+						}
+					}
+				}
+				tx.success();
+			} finally {
+				tx.finish();
+			}
+			templines.clear();
+			//add the relationships
+			ArrayList<String> temppar = new ArrayList<String>();
+			count = 0;
+			for (String key: dbnodes.keySet()) {
+				count += 1;
+				temppar.add(key);
+				if (count % transaction_iter == 0) {
+					System.out.println(count);
+					tx = beginTx();
+					try {
+						for (int i = 0; i < temppar.size(); i++) {
+							try {
+								Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
+								rel.setProperty("source", sourcename);
+								rel.setProperty("childid", temppar.get(i));
+								rel.setProperty("parentid", parents.get(temppar.get(i)));
+							} catch(java.lang.IllegalArgumentException io) {
+//								System.out.println(temppar.get(i));
+								continue;
+							}
+						}
+						tx.success();
+					} finally {
+						tx.finish();
+					}
+					temppar.clear();
+				}
+			}
+			tx = beginTx();
+			try {
+				for (int i = 0; i < temppar.size(); i++) {
+					try {
+						Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
+						rel.setProperty("source", sourcename);
+						rel.setProperty("childid", temppar.get(i));
+						rel.setProperty("parentid", parents.get(temppar.get(i)));
+					} catch(java.lang.IllegalArgumentException io) {
+//						System.out.println(temppar.get(i));
+						continue;
+					}
+				}
+				tx.success();
+			} finally {
+				tx.finish();
+			}
+		} catch(IOException ioe) {}
+		//mark all of the barrier nodes with additional metadata
+		System.out.println("setting barrier nodes");
+		BarrierNodes bn = new BarrierNodes(this);
+		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
+		HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
+		TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
+				.relationships( RelType.TAXCHILDOF,Direction.INCOMING );
+		tx = beginTx();
+		try {
+			for (int i = 0; i < barrierNodes.size(); i++) {
+				for (Node currentNode : CHILDREN_TRAVERSAL.traverse(barrierNodes.get(i)).nodes()) {
+					currentNode.setProperty("taxcode", barrierNodesMap.get(barrierNodes.get(i).getProperty("name")));
+				}
+			}
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+		
+		//start the mrcas
+		System.out.println("calculating mrcas");
+		try {
+			tx = graphDb.beginTx();
+			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+	}
+
+	
 	
 	HashMap<String, ArrayList<String>> globalchildren = null;
 	HashMap<String,String> globalidnamemap = null;

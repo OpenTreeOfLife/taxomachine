@@ -47,7 +47,7 @@ public class MainRunner {
             } else {
                 graphname = args[3];
             }
-        } else if (args[0].equals("inittaxsyn") || args[0].equals("addtaxsyn")) {
+        } else if (args[0].equals("inittaxsyn") || args[0].equals("addtaxsyn") || args[0].equals("loadtaxsyn")) {
             if (args.length != 5) {
                 System.out.println("arguments should be: sourcename filename synonymfile graphdbfolder");
                 return;
@@ -103,6 +103,12 @@ public class MainRunner {
             System.out.println("adding taxonomy from " + filename + "and synonym file " + synonymfile + " to " + graphname);
             // tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId, filename,synonymfile);
             tl.addDisconnectedTaxonomyToGraph(sourcename, filename, synonymfile);
+            System.out.println("verifying taxonomy");
+            tl.verifyLoadedTaxonomy(sourcename);
+        } else if (args[0].equals("loadtaxsyn")) {
+            System.out.println("loading taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
+            //this will create the ott relationships
+            tl.loadOTTIntoGraph(sourcename, filename, synonymfile);
             System.out.println("verifying taxonomy");
             tl.verifyLoadedTaxonomy(sourcename);
         } else {
@@ -487,18 +493,18 @@ public class MainRunner {
         System.out.println("\tinittax <sourcename> <filename> <graphdbfolder> (initializes the tax graph with a tax list)");
         System.out.println("\taddtax <sourcename> <filename> <graphdbfolder> (adds a tax list into the tax graph)");
         System.out.println("\tinittaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (initializes the tax graph with a list and synonym file)");
+        System.out.println("\tloadtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (load ott from the files created in opentree)");
         System.out.println("\taddtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (adds a tax list and synonym file)");
         System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
         System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
         System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be ingested elsewhere)");
-        System.out
-                .println("\tmakeottolnamedump <graphdbfolder> <filename> (dumps the recognized ottol names in a format consistent with phylotastic treestores)");
+        System.out.println("\tmakeottolnamedump <graphdbfolder> <filename> (dumps the recognized ottol names in a format consistent with phylotastic treestores)");
         System.out.println("\tgraftbycomp <graphdbfolder_dom> <sourcename> (graphs an addedtaxonomy into main using the comparator)");
         System.out.println("\trecalculatemrcas <graphdbfolder> (deletes the mrca and nested mrcas and recalculates them)");
         System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
         System.out.println("\tchecknames <sourcename> <graphdbfolder>");
-        System.out
-                .println("\tcomparenames <filename> <outfile> <graphdbfolder> (compare the names from a file to the ottol names and output the mappings of names)");
+        System.out.println("\tcomparenames <filename> <outfile> <graphdbfolder> (compare the names from a file to the ottol names and output the mappings of names)");
+        
         System.out.println("\n---taxquery---");
         System.out.println("\tcomptaxtree <name> <graphdbfolder> (construct a comprehensive tax newick)");
         System.out.println("\tcomptaxlist <name> <graphdbfolder> (construct a comprehensive tax list in the input format expected by treemachine/taxomachine)");
@@ -506,6 +512,7 @@ public class MainRunner {
         System.out.println("\tjsgraph <name> <graphdbfolder> (constructs a json file from tax graph)");
         System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
         System.out.println("\tgetsubtree <graphdbfolder> \"<nameslist>\" (find the subgraph for the specified taxa)");
+        
         System.out.println("\n---taxonomic name resolution services---");
         System.out.println("\ttnrsbasic <querynames> <graphdbfolder> [contextname] (check if the taxonomy graph contains comma-delimited names)");
         System.out.println("\ttnrstree <treefile> <graphdbfolder> [contextname] (check if the taxonomy graph contains names in treefile)\n");
@@ -538,7 +545,8 @@ public class MainRunner {
                 if (args[0].equals("inittax")
                         || args[0].equals("addtax")
                         || args[0].equals("inittaxsyn")
-                        || args[0].equals("addtaxsyn")) {
+                        || args[0].equals("addtaxsyn")
+                        || args[0].equals("loadtaxsyn")) {
                     mr.taxonomyLoadParser(args);
                 } else if (args[0].equals("comptaxtree")
                         || args[0].equals("comptaxlist")
