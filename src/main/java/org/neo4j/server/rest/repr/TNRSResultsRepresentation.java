@@ -48,7 +48,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			protected void serialize(final MappingSerializer serializer) {
 
 				serializer.putString("context_name", result.context.getDescription().name);
-				serializer.putNumber("content_rootnode_ottol_id", result.context.getRootNode().getProperty("uid").toString();
+				serializer.putNumber("content_rootnode_ottol_id", result.context.getRootNode().getProperty("uid").toString());
 				serializer.putList("ambiguous_names",
 						OpentreeRepresentationConverter
 								.getListRepresentation(result.namesNotMatched));
