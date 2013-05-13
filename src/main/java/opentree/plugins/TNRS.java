@@ -76,7 +76,10 @@ public class TNRS extends ServerPlugin {
         Taxonomy taxonomy = new Taxonomy(gdb);
         
         // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
-        TaxonomyContext context = taxonomy.getContextByName(contextName);
+        TaxonomyContext context = null;
+        if (!contextName.equals(null)) {
+        	context = taxonomy.getContextByName(contextName);
+        }
 
         TNRSQuery tnrs = new TNRSQuery(taxonomy);
         HashSet<String> names = tnrs.stringArrayToHashset(searchStrings);
