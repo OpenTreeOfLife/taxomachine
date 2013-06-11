@@ -47,7 +47,7 @@ import org.neo4j.kernel.Traversal;
 public class TaxonomyLoader extends Taxonomy {
 
 	static Logger _LOG = Logger.getLogger(TaxonomyLoader.class);
-	int transaction_iter = 100000;
+	public static int transaction_iter = 100000;
 	int LARGE = 100000000;
 	int globaltransactionnum = 0;
 	Transaction gtx = null;

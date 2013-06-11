@@ -516,6 +516,9 @@ public class MainRunner {
         System.out.println("\n---taxonomic name resolution services---");
         System.out.println("\ttnrsbasic <querynames> <graphdbfolder> [contextname] (check if the taxonomy graph contains comma-delimited names)");
         System.out.println("\ttnrstree <treefile> <graphdbfolder> [contextname] (check if the taxonomy graph contains names in treefile)\n");
+
+        System.out.println("\n---System properties that affect taxomachine behavior ---");
+        System.out.println("\t-Dopentree.taxomachine.num.transactions=# Sets the maximum # of transactions that will be buffered.\n\t\t\tDefault: 10000. Use higher for better performance, and lower #s for less memory usage.");
     }
 
     /**
@@ -525,7 +528,23 @@ public class MainRunner {
 
         PropertyConfigurator.configure(System.getProperties());
         System.out.println("\ntaxomachine version alpha.alpha.prealpha");
-
+        // read the max # of database transactions to be buffered from a system property
+        String numTransactionsProperty = System.getProperty("opentree.taxomachine.num.transactions");
+        if (numTransactionsProperty != null) {
+            try {
+                int ntp = Integer.parseInt(numTransactionsProperty);
+                if (ntp < 1) {
+                    throw new NumberFormatException();
+                }
+                TaxonomyLoader.transaction_iter = ntp;
+                TaxonomySynthesizer.transaction_iter = ntp;
+                System.err.println("\n# transactions read from properties =" + ntp);
+            } catch (NumberFormatException nfe) {
+                System.err.println("\nExpected a positive number for the opentree.taxomachine.num.transactions property, but got \"" + numTransactionsProperty + "\"\nExiting...\n");
+                System.exit(1);
+            }
+        }
+        
         try {
             if (args.length == 0 || args[0].equals("help")) {
                 printHelp();

@@ -36,7 +36,7 @@ import org.neo4j.kernel.Traversal;
 
 public class TaxonomySynthesizer extends Taxonomy {
 
-    int transaction_iter = 10000;
+    public static int transaction_iter = 10000;
 
     private static final TraversalDescription PREFTAXCHILDOF_TRAVERSAL = Traversal.description().breadthFirst().
             relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);

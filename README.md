@@ -44,3 +44,22 @@ Usage
 For the standalone version, view the help message by running:
 
 	java -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+
+Bootstrapping from OTT
+----------------------
+If you have ott2.0 store in /data/ott2.0
+and you want to create a new db at taxomachine.db
+then you can use:
+
+	java -Xmx10g -XX:-UseConcMarkSweepGC -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar loadtaxsyn ott /data/ott2.0/taxonomy /data/ott2.0/synonyms taxomachine.db
+
+System Properties
+-----------------
+Using:
+
+	java ... -Dopentree.taxomachine.num.transactions=1000 ...  -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar ...
+
+in your invocation of taxomachine will sets the maximum # of transactions that will be buffered to 1000.
+The default # of transactions is 10000. Higher numbers lead to faster importing of a new taxonomy, 
+but using lower numbers will mean that taxomachine will require less memory.
+
