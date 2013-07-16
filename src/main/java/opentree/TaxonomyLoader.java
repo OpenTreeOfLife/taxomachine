@@ -567,10 +567,12 @@ public class TaxonomyLoader extends Taxonomy {
 							tnode.setProperty("input_sources",input_sources);
 							if(st.hasMoreTokens()){
 								String nt = st.nextToken();
-								if(nt.equals("D"))
+								if(nt.equalsIgnoreCase("D")){
 									dubious = true;
-								else
+								}else{
+									uniqname = nt;
 									tnode.setProperty("uniqname",uniqname);
+								}
 								if(st.hasMoreTokens()){//has unique name and dubious
 									nt = st.nextToken();
 									if (nt.equals("D")){
@@ -642,13 +644,15 @@ public class TaxonomyLoader extends Taxonomy {
 					tnode.setProperty("input_sources",input_sources);
 					if(st.hasMoreTokens()){
 						String nt = st.nextToken();
-						if(nt.equals("D"))
+						if(nt.equalsIgnoreCase("D")){
 							dubious = true;
-						else
+						}else{
+							uniqname = nt;
 							tnode.setProperty("uniqname",uniqname);
+						}
 						if(st.hasMoreTokens()){//has unique name and dubious
 							nt = st.nextToken();
-							if (nt.equals("D")){
+							if (nt.equalsIgnoreCase("D")){
 								dubious = true;
 							}
 						}
