@@ -544,6 +544,7 @@ public class TaxonomyLoader extends Taxonomy {
 							String inputName = "";
 							String input_sources = "";
 							String uniqname = "";
+							boolean dubious = false;
 							Node tnode = createNode();
 							//if it equals life it won't have a parent
 							if (nexttok.equals("life") == false) {
@@ -565,9 +566,19 @@ public class TaxonomyLoader extends Taxonomy {
 							tnode.setProperty("rank",rank);
 							tnode.setProperty("input_sources",input_sources);
 							if(st.hasMoreTokens()){
-								uniqname = st.nextToken();
-								tnode.setProperty("uniqname",uniqname);
+								String nt = st.nextToken();
+								if(nt.equals("D"))
+									dubious = true;
+								else
+									tnode.setProperty("uniqname",uniqname);
+								if(st.hasMoreTokens()){//has unique name and dubious
+									nt = st.nextToken();
+									if (nt.equals("D")){
+										dubious = true;
+									}
+								}
 							}
+							tnode.setProperty("dubious", dubious);
 							taxaByName.add(tnode, "name", inputName);
 							dbnodes.put(inputId, tnode);
 							// synonym processing
@@ -608,6 +619,7 @@ public class TaxonomyLoader extends Taxonomy {
 					String inputName = "";
 					String input_sources = "";
 					String uniqname = "";
+					boolean dubious = false;
 					Node tnode = createNode();
 					//if it equals life it won't have a parent
 					if (nexttok.equals("life") == false) {
@@ -629,9 +641,19 @@ public class TaxonomyLoader extends Taxonomy {
 					tnode.setProperty("rank",rank);
 					tnode.setProperty("input_sources",input_sources);
 					if(st.hasMoreTokens()){
-						uniqname = st.nextToken();
-						tnode.setProperty("uniqname",uniqname);
+						String nt = st.nextToken();
+						if(nt.equals("D"))
+							dubious = true;
+						else
+							tnode.setProperty("uniqname",uniqname);
+						if(st.hasMoreTokens()){//has unique name and dubious
+							nt = st.nextToken();
+							if (nt.equals("D")){
+								dubious = true;
+							}
+						}
 					}
+					tnode.setProperty("dubious", dubious);
 					taxaByName.add(tnode, "name", inputName);
 					dbnodes.put(inputId, tnode);
 					// synonym processing
