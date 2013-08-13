@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.net.ssl.SSLException;
 
+import opentree.NodeIndexDescription;
 import opentree.Taxon;
 import opentree.Taxonomy;
 import opentree.tnrs.TNRSAdapter;
@@ -16,7 +17,6 @@ import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
-import opentree.NodeIndexDescription;
 import opentree.tnrs.adaptersupport.iplant.StatusMessage;
 import opentree.tnrs.adaptersupport.iplant.iPlantHit;
 import opentree.tnrs.adaptersupport.iplant.iPlantNameResult;

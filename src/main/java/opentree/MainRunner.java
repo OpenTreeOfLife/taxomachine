@@ -11,12 +11,14 @@ import java.util.LinkedList;
 //import java.util.NoSuchElementException;
 
 import opentree.tnrs.MultipleHitsException;
+import opentree.tnrs.MultiNameContextQuery;
+import opentree.tnrs.SimpleQuery;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
-import opentree.tnrs.TNRSQuery;
 import opentree.tnrs.TNRSResults;
 
 import opentree.tnrs.TNRSNameScrubber;
+import opentree.utils.Utils;
 
 //import org.apache.log4j.Logger;
 import java.io.FileNotFoundException;
@@ -168,7 +170,7 @@ public class MainRunner {
         }
 
         TaxonomySynthesizer te = null;
-        TNRSQuery tnrs = null;
+        SimpleQuery tnrs = null;
         Taxon taxon = null;
 
         if (args[0].equals("getsubtree")) {
@@ -177,7 +179,7 @@ public class MainRunner {
 
             taxdb = new GraphDatabaseAgent(graphname);
             Taxonomy taxonomy = new Taxonomy(taxdb);
-            tnrs = new TNRSQuery(taxonomy);
+//            tnrs = new SimpleQuery(taxonomy);
 
             String[] names = nameString.split(",");
             LinkedList<Node> tNodes = new LinkedList<Node>();
@@ -203,11 +205,11 @@ public class MainRunner {
 
             taxdb = new GraphDatabaseAgent(graphname);
             te = new TaxonomySynthesizer(taxdb);
-            tnrs = new TNRSQuery(te);
+            tnrs = new SimpleQuery(te);
             try {
                 taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
-                System.out.println("There was more than one match for that name");
+                System.out.println("There is more than one taxon with the name " + query);
             }
 
             System.out.println("constructing a comprehensive tax tree of " + query);
@@ -220,7 +222,7 @@ public class MainRunner {
 
             taxdb = new GraphDatabaseAgent(graphname);
             te = new TaxonomySynthesizer(taxdb);
-            tnrs = new TNRSQuery(te);
+            tnrs = new SimpleQuery(te);
             try {
                 taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
@@ -237,7 +239,7 @@ public class MainRunner {
 
             taxdb = new GraphDatabaseAgent(graphname);
             te = new TaxonomySynthesizer(taxdb);
-            tnrs = new TNRSQuery(te);
+            tnrs = new SimpleQuery(te);
             try {
                 taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
@@ -253,7 +255,7 @@ public class MainRunner {
 
             taxdb = new GraphDatabaseAgent(graphname);
             te = new TaxonomySynthesizer(taxdb);
-            tnrs = new TNRSQuery(te);
+            tnrs = new SimpleQuery(te);
             try {
                 taxon = te.getTaxon(tnrs.matchExact(query).getSingleMatch().getMatchedNode());
             } catch (MultipleHitsException ex) {
@@ -409,20 +411,22 @@ public class MainRunner {
 
         System.out.println("Found " + context.getDescription().name);
 
-        TNRSQuery tnrs = new TNRSQuery(taxonomy);
+        MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
         // TNRSAdapteriPlant iplant = new TNRSAdapteriPlant();
         TNRSResults results = null;
 
         if (args[0].equals("tnrsbasic")) {
             String[] searchStrings = args[1].split("\\s*\\,\\s*");
 
-            HashSet<String> names = tnrs.stringArrayToHashset(searchStrings);
+            HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
 
             for (int i = 0; i < searchStrings.length; i++) {
                 System.out.println(searchStrings[i]);
             }
-            tnrs.initialize(names, context);
-            results = tnrs.doFullTNRS();
+            tnrs.setSearchStrings(names);
+            tnrs.setContext(context);
+            tnrs.setAutomaticContextInference(false);
+            results = tnrs.getTNRSResultsForSetNames();
 
         } else if (args[0].equals("tnrstree")) {
             // TODO: for files containing multiple trees, make sure to do TNRS just once
@@ -449,9 +453,12 @@ public class MainRunner {
             // TNRSNameScrubber scrubber = new TNRSNameScrubber(searchStrings);
             String[] cleanedNames = TNRSNameScrubber.scrubBasic(tipNames);
 
-            HashSet<String> names = tnrs.stringArrayToHashset(cleanedNames);
+            HashSet<String> names = Utils.stringArrayToHashset(cleanedNames);
             // scrubber.review(); // print old and cleaned names
-            results = tnrs.initialize(names, context).doFullTNRS();
+            tnrs.setSearchStrings(names);
+            tnrs.setContext(context);
+            tnrs.setAutomaticContextInference(false);
+            results = tnrs.getTNRSResultsForSetNames();
         }
 
         for (TNRSNameResult nameResult : results) {

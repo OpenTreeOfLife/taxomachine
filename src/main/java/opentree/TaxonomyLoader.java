@@ -699,6 +699,12 @@ public class TaxonomyLoader extends Taxonomy {
 								rel.setProperty("source", sourcename);
 								rel.setProperty("childid", temppar.get(i));
 								rel.setProperty("parentid", parents.get(temppar.get(i)));
+
+								// don't need to wait to makeottol anymore
+								Relationship prefRel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.PREFTAXCHILDOF);
+								prefRel.setProperty("source", sourcename);
+								prefRel.setProperty("childid", temppar.get(i));
+								prefRel.setProperty("parentid", parents.get(temppar.get(i)));
 							} catch(java.lang.IllegalArgumentException io) {
 //								System.out.println(temppar.get(i));
 								continue;
@@ -719,6 +725,12 @@ public class TaxonomyLoader extends Taxonomy {
 						rel.setProperty("source", sourcename);
 						rel.setProperty("childid", temppar.get(i));
 						rel.setProperty("parentid", parents.get(temppar.get(i)));
+
+						// don't need to wait to makeottol anymore
+						Relationship prefRel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.PREFTAXCHILDOF);
+						prefRel.setProperty("source", sourcename);
+						prefRel.setProperty("childid", temppar.get(i));
+						prefRel.setProperty("parentid", parents.get(temppar.get(i)));
 					} catch(java.lang.IllegalArgumentException io) {
 //						System.out.println(temppar.get(i));
 						continue;

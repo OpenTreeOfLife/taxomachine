@@ -11,16 +11,17 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import opentree.ContextDescription;
 import opentree.ContextGroup;
 import opentree.ContextNotFoundException;
 import opentree.GraphDatabaseAgent;
 import opentree.Taxonomy;
-import opentree.ContextDescription;
 import opentree.TaxonomyContext;
 import opentree.tnrs.ContextResult;
+import opentree.tnrs.MultiNameContextQuery;
 import opentree.tnrs.TNRSNameScrubber;
-import opentree.tnrs.TNRSQuery;
 import opentree.tnrs.TNRSResults;
+import opentree.utils.Utils;
 
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.util.ParserUtils;
@@ -47,12 +48,12 @@ public class TNRS extends ServerPlugin {
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
 
-        TNRSQuery tnrs = new TNRSQuery(taxonomy);
-        HashSet<String> names = tnrs.stringArrayToHashset(searchStrings);
+        MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
+        HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
         
         // this hashset will hold ambiguous names (i.e. synonyms)
-        HashSet<String> namesNotMatched = new HashSet<String>();
-        TaxonomyContext inferredContext = tnrs.initialize(names, null).inferContext(namesNotMatched);
+        HashSet<String> namesNotMatched = (HashSet<String>) tnrs.setSearchStrings(names).inferContextAndReturnAmbiguousNames();
+        TaxonomyContext inferredContext = tnrs.getContext();
 
         // create a container to hold the results
         ContextResult contextResult = new ContextResult(inferredContext, namesNotMatched);
@@ -77,13 +78,15 @@ public class TNRS extends ServerPlugin {
         
         // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
+        boolean useAutoInference = true;
         if (!contextName.equals(null)) {
         	context = taxonomy.getContextByName(contextName);
+        	useAutoInference = false;
         }
 
-        TNRSQuery tnrs = new TNRSQuery(taxonomy);
-        HashSet<String> names = tnrs.stringArrayToHashset(searchStrings);
-        TNRSResults results = tnrs.initialize(names, context).doFullTNRS();
+        MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
+        HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
+        TNRSResults results = tnrs.setSearchStrings(names).setContext(context).setAutomaticContextInference(useAutoInference).getTNRSResultsForSetNames();
 
         gdb.shutdownDb();
         return OpentreeRepresentationConverter.convert(results);
@@ -94,9 +97,9 @@ public class TNRS extends ServerPlugin {
     public Representation doTNRSForTrees(
             @Source GraphDatabaseService graphDb,
             @Description("A string containing tree(s) in a format readable by the forester library")
-                @Parameter(name = "treeString") String treeString,
+                @Parameter(name = "treeString") String treeString/*,
             @Description("The name of the taxonomic context to use. May be omitted if not known")
-                @Parameter(name = "contextName", optional = true) String contextName) throws IOException, ContextNotFoundException {
+                @Parameter(name = "contextName", optional = true) String contextName*/) throws IOException, ContextNotFoundException {
 
         // Write tree string to temp file for ParserUtils. This is a hack, it would be better to just feed the parser
         // the treeString directly, but all the appropriate methods seem to want files
@@ -132,12 +135,12 @@ public class TNRS extends ServerPlugin {
         Taxonomy taxonomy = new Taxonomy(gdb);
 
         // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
-        TaxonomyContext context = taxonomy.getContextByName(contextName);
+//        TaxonomyContext context = taxonomy.getContextByName(contextName);
 
         // do TNRS
-        TNRSQuery tnrs = new TNRSQuery(taxonomy);
-        HashSet<String> names = tnrs.stringArrayToHashset(cleanNames);
-        TNRSResults results = tnrs.initialize(names, context).doFullTNRS();
+        MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
+        HashSet<String> names = Utils.stringArrayToHashset(cleanNames);
+        TNRSResults results = tnrs.setSearchStrings(names).getTNRSResultsForSetNames();
 
         gdb.shutdownDb();
         return OpentreeRepresentationConverter.convert(results);

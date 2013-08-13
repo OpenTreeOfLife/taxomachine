@@ -23,7 +23,7 @@ import org.neo4j.kernel.Traversal;
 public class Taxonomy {
 
     GraphDatabaseAgent graphDb;
-    public final static float DEFAULT_FUZZYMATCH_IDENTITY = (float) 0.70;
+//    public final static float DEFAULT_FUZZYMATCH_IDENTITY = (float) 0.70;
     final static String LIFE_NODE_NAME = "life";
     public final TaxonomyContext ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
 

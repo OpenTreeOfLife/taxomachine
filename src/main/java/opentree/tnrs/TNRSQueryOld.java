@@ -4,11 +4,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map.Entry;
+
+import opentree.NodeIndexDescription;
+import opentree.RelType;
 import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.Taxonomy;
-import opentree.NodeIndexDescription;
-import opentree.RelType;
 import opentree.utils.Levenshtein;
 
 import org.apache.lucene.index.Term;

@@ -12,9 +12,10 @@ import opentree.GraphDatabaseAgent;
 import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.Taxonomy;
+import opentree.tnrs.MultiNameContextQuery;
+import opentree.tnrs.SimpleQuery;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
-import opentree.tnrs.TNRSQuery;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -217,7 +218,7 @@ public class GetJsons extends ServerPlugin {
         results.put("nodeid", new ArrayList<Long>());
 
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
-        TNRSQuery tnrs = new TNRSQuery(new Taxonomy(gdb));
+        SimpleQuery tnrs = new SimpleQuery(new Taxonomy(gdb));
 
         TNRSNameResult matches = tnrs.matchExact(nodename).iterator().next();
 

@@ -11,7 +11,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import opentree.tnrs.MultipleHitsException;
-import opentree.tnrs.TNRSQuery;
+import opentree.tnrs.MultiNameContextQuery;
+import opentree.tnrs.SimpleQuery;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
@@ -435,12 +436,12 @@ public class Taxon {
         return ret;
     }
 
-    public void runittest() {
+/*    public void runittest() {
 
         String pathToGraphDb = "";
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(pathToGraphDb);
         Taxonomy t = new Taxonomy(gdb);
-        TNRSQuery tnrs = new TNRSQuery(new Taxonomy(gdb));
+        SimpleQuery tnrs = new SimpleQuery(new Taxonomy(gdb));
 
         Taxon lonicera = null;
         try {
@@ -454,5 +455,5 @@ public class Taxon {
         lonicera.buildTaxonomyTree();
 
         gdb.shutdownDb();
-    }
+    } */
 }
