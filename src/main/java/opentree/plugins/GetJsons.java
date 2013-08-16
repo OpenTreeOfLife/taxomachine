@@ -12,10 +12,10 @@ import opentree.GraphDatabaseAgent;
 import opentree.Taxon;
 import opentree.TaxonSet;
 import opentree.Taxonomy;
-import opentree.tnrs.MultiNameContextQuery;
-import opentree.tnrs.SimpleQuery;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
+import opentree.tnrs.queries.MultiNameContextQuery;
+import opentree.tnrs.queries.SimpleQuery;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;

@@ -68,27 +68,27 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 
     // setters
     
-    protected void addNameResult(TNRSNameResult result) {
+    public void addNameResult(TNRSNameResult result) {
         results.put(result.getQueriedName(), result);
     }
 
-    protected void addUnmatchedName(String name) {
+    public void addUnmatchedName(String name) {
         unmatchedNames.add(name);
     }
 
-    protected void addNameWithDirectMatch(String name) {
+    public void addNameWithDirectMatch(String name) {
         unambiguousNames.add(name);
     }
 
-    protected void setGoverningCode(String code) {
+    public void setGoverningCode(String code) {
         governingCode = code;
     }
     
-    protected void setContextName(String contextName) {
+    public void setContextName(String contextName) {
         this.contextName = contextName;
     }
     
-    protected void setMinimumScore(double s) {
+    public void setMinimumScore(double s) {
         minimumScore = s;
     }
 }

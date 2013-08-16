@@ -18,9 +18,9 @@ import opentree.GraphDatabaseAgent;
 import opentree.Taxonomy;
 import opentree.TaxonomyContext;
 import opentree.tnrs.ContextResult;
-import opentree.tnrs.MultiNameContextQuery;
 import opentree.tnrs.TNRSNameScrubber;
 import opentree.tnrs.TNRSResults;
+import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.utils.Utils;
 
 import org.forester.io.parsers.PhylogenyParser;

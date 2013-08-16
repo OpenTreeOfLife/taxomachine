@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import opentree.tnrs.MultipleHitsException;
-import opentree.tnrs.MultiNameContextQuery;
-import opentree.tnrs.SimpleQuery;
+import opentree.tnrs.queries.MultiNameContextQuery;
+import opentree.tnrs.queries.SimpleQuery;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;

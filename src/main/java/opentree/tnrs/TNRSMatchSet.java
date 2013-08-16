@@ -50,7 +50,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
      * Adds a match to the set, using the data within the passed TNRSHit object.
      * @param TNRSHit to be added
      */
-    protected void addMatch(TNRSHit m) {
+    public void addMatch(TNRSHit m) {
         Match match = new Match(m);
         matches.add(match);
     }

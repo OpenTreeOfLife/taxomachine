@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import opentree.tnrs.MultipleHitsException;
-import opentree.tnrs.MultiNameContextQuery;
+import opentree.tnrs.queries.MultiNameContextQuery;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;

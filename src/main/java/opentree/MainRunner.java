@@ -10,20 +10,21 @@ import java.util.HashSet;
 import java.util.LinkedList;
 //import java.util.NoSuchElementException;
 
+
 import opentree.tnrs.MultipleHitsException;
-import opentree.tnrs.MultiNameContextQuery;
-import opentree.tnrs.SimpleQuery;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
-
 import opentree.tnrs.TNRSNameScrubber;
+import opentree.tnrs.queries.MultiNameContextQuery;
+import opentree.tnrs.queries.SimpleQuery;
 import opentree.utils.Utils;
+
 
 //import org.apache.log4j.Logger;
 import java.io.FileNotFoundException;
-import org.apache.log4j.PropertyConfigurator;
 
+import org.apache.log4j.PropertyConfigurator;
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.util.ParserUtils;
 import org.forester.phylogeny.Phylogeny;
