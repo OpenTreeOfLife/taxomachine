@@ -5,7 +5,7 @@ public enum Nomenclature {
     ICBN        ("ICBN",    "plants, fungi, and some protists?"),
     ICNB        ("ICNB",    "bacteria"),
     ICZN        ("ICZN",    "animals"),
-    Undefined   ("",        "governing code unclear, nonexistent, or multiple codes");
+    Undefined   ("undefined",        "governing code unclear, nonexistent, or multiple codes");
     
     public final String code;
     public final String description;

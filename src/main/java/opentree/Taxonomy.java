@@ -25,10 +25,11 @@ public class Taxonomy {
     GraphDatabaseAgent graphDb;
 //    public final static float DEFAULT_FUZZYMATCH_IDENTITY = (float) 0.70;
     final static String LIFE_NODE_NAME = "life";
-    public final TaxonomyContext ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
+    public final TaxonomyContext ALLTAXA;
 
     public Taxonomy(GraphDatabaseAgent gdb) {
         graphDb = gdb;
+        ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
     }
    
     public Node getLifeNode() {

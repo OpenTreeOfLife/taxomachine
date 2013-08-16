@@ -36,6 +36,7 @@ public abstract class TNRSQuery {
      */
     public TNRSQuery(Taxonomy taxonomy) {
 		initialize();
+		this.taxonomy = taxonomy;
 		setContextAbstract(taxonomy.ALLTAXA);
 	}
 
@@ -45,6 +46,7 @@ public abstract class TNRSQuery {
      */
 	public TNRSQuery(Taxonomy taxonomy, TaxonomyContext context) {
 		initialize();
+		this.taxonomy = taxonomy;
         setContextAbstract(context);
 	}
 	
@@ -158,7 +160,7 @@ public abstract class TNRSQuery {
 			this.context = context;
 		}
 		results.setContextName(this.context.getDescription().name);
-        results.setGoverningCode(context.getDescription().nomenclature.code);
+        results.setGoverningCode(this.context.getDescription().nomenclature.code);
 	}
 	
     /**

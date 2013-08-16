@@ -79,7 +79,7 @@ public class TNRS extends ServerPlugin {
         // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
         boolean useAutoInference = true;
-        if (!contextName.equals(null)) {
+        if (contextName != null) {
         	context = taxonomy.getContextByName(contextName);
         	useAutoInference = false;
         }
