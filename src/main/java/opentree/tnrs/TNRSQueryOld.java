@@ -24,7 +24,7 @@ import org.neo4j.graphdb.index.IndexHits;
  * 
  */
 public class TNRSQueryOld {
-
+/*
 //    private static final double TEMP_SCORE = 0.75;
     private static final double DEFAULT_NOMEN_CODE_SUPERMAJORITY_PROPORTION = 0.75;
     private static final double DEFAULT_MIN_SCORE = 0.01;
@@ -66,7 +66,7 @@ public class TNRSQueryOld {
      * @param searchStrings
      * @return results
      * 
-     */
+     *
     public TNRSResults getExactMatches(String[] searchStrings) {
         boolean exactOnly = true;
         return getResults(searchStrings, exactOnly, (TNRSAdapter)null);
@@ -78,7 +78,7 @@ public class TNRSQueryOld {
      * @param searchString
      * @return results
      * 
-     */
+     *
     public TNRSResults getExactMatches(String searchString) {
         String[] searchStrings = new String[1];
         searchStrings[0] = searchString;
@@ -92,7 +92,7 @@ public class TNRSQueryOld {
      * @param searchStrings
      * @return results
      * 
-     */
+     *
     public TNRSResults getAllMatches(String searchString) {
         String[] searchStrings = new String[1];
         searchStrings[0] = searchString;
@@ -106,7 +106,7 @@ public class TNRSQueryOld {
      * @param searchStrings
      * @return results
      * 
-     */
+     *
     public TNRSResults getAllMatches(String[] searchStrings) {
         boolean exactOnly = false;
         return getResults(searchStrings, exactOnly, (TNRSAdapter)null);
@@ -384,7 +384,7 @@ public class TNRSQueryOld {
      * 
      * @param name
      * @return minIdentity
-     */
+     *
     public float getMinIdentity(String name) {
         
         float ql = name.length();
@@ -400,4 +400,5 @@ public class TNRSQueryOld {
             
         return (ql - (maxEdits + 1)) / ql;
     }
+    */
 }
