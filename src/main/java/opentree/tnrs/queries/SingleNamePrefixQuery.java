@@ -46,7 +46,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     private int minLengthForApproxQuery;
     
     private final int DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY = 4;
-    private final int DEFAULT_MIN_LENGTH_FOR_APPROX_QUERY = 5;
+    private final int DEFAULT_MIN_LENGTH_FOR_APPROX_QUERY = 6;
     
     public SingleNamePrefixQuery(Taxonomy taxonomy) {
     	super(taxonomy);
