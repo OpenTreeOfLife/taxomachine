@@ -31,6 +31,7 @@ import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
+import org.neo4j.server.rest.repr.AbbreviatedTNRSResultsRepresentation;
 import org.neo4j.server.rest.repr.Representation;
 import org.neo4j.server.rest.repr.OpentreeRepresentationConverter;
 import org.neo4j.server.rest.repr.TNRSResultsRepresentation;
@@ -83,7 +84,7 @@ public class TNRS extends ServerPlugin {
         SingleNamePrefixQuery snpq = new SingleNamePrefixQuery(taxonomy, context);
         TNRSResults results = snpq.setQueryString(queryString).runQuery().getResults();
     	
-    	return TNRSResultsRepresentation.getAutocompleteBoxResultsRepresentation(results);
+    	return AbbreviatedTNRSResultsRepresentation.getResultsRepresentation(results);
     }
     
     @Description("Return information on potential matches to a search query")
