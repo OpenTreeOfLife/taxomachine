@@ -33,43 +33,27 @@ import org.neo4j.graphdb.index.IndexHits;
  * @author cody hinchliff
  * 
  */
-public class SingleNamePrefixQuery extends TNRSQuery {
+public class SingleNamePrefixQuery extends AbstractBaseQuery {
     
     private String queryString;
     
     public SingleNamePrefixQuery(Taxonomy taxonomy) {
     	super(taxonomy);
-        reset();
     }
     
     public SingleNamePrefixQuery(Taxonomy taxonomy, TaxonomyContext context) {
     	super(taxonomy, context);
-        reset();
     }
 
     /**
-     * Initialize the query object with a query string. Returns self on success.
+     * Initialize the query object with a query string.
      * @param queryString
      */
     public SingleNamePrefixQuery setQueryString(String queryString) {
-        reset();
+//        reset();
         this.queryString = QueryParser.escape(queryString);
         return this;
     }
-
-    /*
-     * Set the behavior for inferring contexts. The default behavior is that context inference will always be used
-     * to attempt to infer the shallowest context for the names. To avoid this, pass a value of false to this method.
-     * If context inference is turned off, then matches will always be made against the currently set context, which
-     * will be ALLTAXA unless it is manually changed using setContext() or inferContext().
-     * 
-     * @param useContextInference
-     * @return
-     *
-    public SingleNamePrefixQuery setAutomaticContextInference(boolean useContextInference) {
-    	this.contextAutoInferenceIsOn = useContextInference;
-    	return this;
-    } */
     
     /**
      * Perform a simple query optimized for the autocomplete box on the opentree website.

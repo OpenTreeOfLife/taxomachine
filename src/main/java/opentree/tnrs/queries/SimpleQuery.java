@@ -1,5 +1,6 @@
 package opentree.tnrs.queries;
 
+import org.apache.lucene.queryParser.QueryParser;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
 
@@ -13,8 +14,10 @@ import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
 
-public class SimpleQuery extends TNRSQuery {
+public class SimpleQuery extends AbstractBaseQuery {
 
+	private String queryString;
+	
 	public SimpleQuery(Taxonomy taxonomy) {
 		super(taxonomy);
 	}
@@ -22,46 +25,29 @@ public class SimpleQuery extends TNRSQuery {
 	public SimpleQuery(Taxonomy taxonomy, TaxonomyContext context) {
 		super(taxonomy, context);
 	}
-
-	/*
-     * Returns *ONLY* exact matches to a single string `searchString`; the context is determined automatically.
-     *         
-     * @param searchStrings
-     * @return results
-     * 
-     *
-    public TNRSResults matchExact(String searchString) {
-        HashSet<String> name = new HashSet<String>();
-        name.add(searchString);
-        return matchExact(name, null);
-    } */
     
     /**
-     * Returns *ONLY* exact matches to `searchStrings` within `context`.
-     *         
-     * @param searchStrings
-     * @param context
-     * @return results
-     * @throws MultipleHitsException 
+     * Returns *ONLY* exact name or synonym matches to `searchString` within `context`.
      * 
      */
     public TNRSResults matchExact(String searchString) {
-        
-//        initialize(searchStrings, context);
-
-//        for (String name : queriedNames) {
-//            System.out.println(name);
-//        }
+    	setQueryString(searchString);
+    	runQuery();
+    	return getResults();
+    }
+    
+    public SimpleQuery setQueryString(String queryString) {
+    	this.queryString = QueryParser.escape(queryString);
+    	return this;
+    }
+    
+    public SimpleQuery runQuery() {
         
     	results = new TNRSResults();
-        // match names against context
-//        HashSet<String> namesWithoutDirectTaxnameMatches = new HashSet<String>();
-//        getExactTaxonMatches(queriedNames, namesWithoutDirectTaxnameMatches);
+    	IndexHits<Node> hits = null;
+    	try {
+    		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query("name", queryString); //.replace(" ", "\\ "));
 
-    	// TODO: make sure the spaces are escaped appropriately
-    	IndexHits<Node> hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query("name", searchString); //.replace(" ", "\\ "));
-
-         try {
         	 // at least 1 hit; prepare to record matches
         	 TNRSMatchSet matches = new TNRSMatchSet();
 
@@ -72,17 +58,20 @@ public class SimpleQuery extends TNRSQuery {
         	 }
 
         	 // add matches to the TNRS results
-            results.addNameResult(new TNRSNameResult(searchString, matches));
+            results.addNameResult(new TNRSNameResult(queryString, matches));
 	            
          } finally {
          	hits.close();
          }
     	
-        // record the names that couldn't be matched
-//        for (String name : namesWithoutDirectTaxnameMatches) {
-//	           results.addUnmatchedName(name);
-//        }
-        
+         return this;
+    }
+
+    /**
+     * Return the results of the last query
+     */
+    @Override
+    public TNRSResults getResults() {
         return results;
     }
     
@@ -90,8 +79,27 @@ public class SimpleQuery extends TNRSQuery {
 	 * Set the context to `context`. If `context` is null, the context will be set to ALLTAXA.
 	 * @param context
 	 */
+	@Override
 	public SimpleQuery setContext(TaxonomyContext context) {
-		setContextAbstract(context);
+		super.setContext(context);
+		return this;
+	}
+	
+	/**
+	 * Clear the results and search strings from last query.
+	 */
+	@Override
+	public SimpleQuery clear() {
+		queryString = "";
+		results = new TNRSResults();
+		return this;
+	}
+
+	/**
+	 * SimpleQuery has no parameters to return to defaults; this just returns the object.
+	 */
+	@Override
+	public SimpleQuery setDefaults() {
 		return this;
 	}
 }

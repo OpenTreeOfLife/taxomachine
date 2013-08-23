@@ -34,7 +34,7 @@ import org.neo4j.graphdb.index.IndexHits;
  * @author cody hinchliff
  * 
  */
-public class MultiNameContextQuery extends TNRSQuery {
+public class MultiNameContextQuery extends AbstractBaseQuery {
     
     private HashSet<String> queriedNames;
     private Taxon bestGuessLICAForNames; // used for the inferred context
@@ -49,12 +49,12 @@ public class MultiNameContextQuery extends TNRSQuery {
     
     public MultiNameContextQuery(Taxonomy taxonomy) {
     	super(taxonomy);
-        reset();
+//        reset();
     }
     
     public MultiNameContextQuery(Taxonomy taxonomy, TaxonomyContext context) {
     	super(taxonomy, context);
-        reset();
+//        reset();
     }
     
     /**
@@ -63,7 +63,7 @@ public class MultiNameContextQuery extends TNRSQuery {
      * @param predefContext
      */
     public MultiNameContextQuery setSearchStrings(Set<String> searchStrings) {
-        reset();
+        clear();
         for (String s : searchStrings) {
         	queriedNames.add(QueryParser.escape(s));
         }
@@ -89,7 +89,7 @@ public class MultiNameContextQuery extends TNRSQuery {
 	 * @param context
 	 */
 	public MultiNameContextQuery setContext(TaxonomyContext context) {
-		setContextAbstract(context);
+		super.setContext(context);
 		return this;
 	}
     
@@ -100,7 +100,7 @@ public class MultiNameContextQuery extends TNRSQuery {
      * 
      * @return
      */
-    public TNRSResults getTNRSResultsForSetNames() {
+    public MultiNameContextQuery runQuery() {
         
 //        HashSet<String> namesWithoutDirectTaxnameMatches = new HashSet<String>();
 //        HashSet<String> namesWithoutDirectSynonymMatches = new HashSet<String>();
@@ -134,7 +134,15 @@ public class MultiNameContextQuery extends TNRSQuery {
         // record unmatchable names to results
         for (String name : namesWithoutApproxTaxnameOrSynonymMatches)
             results.addUnmatchedName(name);
-                    
+        
+        return this;
+    }
+    
+    /**
+     * Return the results of the previous query
+     */
+    @Override
+    public TNRSResults getResults() {
         return results;
     }
    
@@ -417,22 +425,30 @@ public class MultiNameContextQuery extends TNRSQuery {
     }
     
     /**
-     * Clears the previous results, search strings, and inferred contexts, and sets parameters to default values. Used when setting up a new query.
+     * Clears the previous results, search strings, and inferred contexts.
      */
-    private void reset() {
+    @Override
+    public MultiNameContextQuery clear() {
         queriedNames = new HashSet<String>();
         taxaWithExactMatches = new HashSet<Taxon>();
         bestGuessLICAForNames = null;
         results = new TNRSResults();
-        contextAutoInferenceIsOn = true;
         setContext(taxonomy.ALLTAXA);
         
         // special-purpose containers used during search procedure
         namesWithoutExactNameMatches = new HashSet<String>();
         namesWithoutExactSynonymMatches = new HashSet<String>();
     	namesWithoutApproxTaxnameOrSynonymMatches = new HashSet<String>();
-    }
-    
-    // TODO: create methods that leverage external adapters to match names. (update, this is very low priority as the current TNRS seems to work fine)
 
+    	return this;
+    }
+
+    /**
+     * Reset default search parameters
+     */
+    @Override
+    public MultiNameContextQuery setDefaults() {
+        contextAutoInferenceIsOn = true;
+    	return this;
+    }
 }
