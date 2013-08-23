@@ -49,12 +49,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     
     public MultiNameContextQuery(Taxonomy taxonomy) {
     	super(taxonomy);
-//        reset();
     }
     
     public MultiNameContextQuery(Taxonomy taxonomy, TaxonomyContext context) {
     	super(taxonomy, context);
-//        reset();
     }
     
     /**
@@ -102,7 +100,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         taxaWithExactMatches = new HashSet<Taxon>();
         bestGuessLICAForNames = null;
         results = new TNRSResults();
-//        setContext(taxonomy.ALLTAXA);
         
         // special-purpose containers used during search procedure
         namesWithoutExactNameMatches = new HashSet<String>();
@@ -130,11 +127,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      */
     public MultiNameContextQuery runQuery() {
         
-//        HashSet<String> namesWithoutDirectTaxnameMatches = new HashSet<String>();
-//        HashSet<String> namesWithoutDirectSynonymMatches = new HashSet<String>();
-//        HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches = new HashSet<String>();
-//        HashSet<String> unmatchableNames = new HashSet<String>();
-
         // infer context if we are allowed to, and determine names to be matched against it
         HashSet<String> namesToMatchAgainstContext = new HashSet<String>();
         if (contextAutoInferenceIsOn) {
@@ -144,7 +136,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         }
         
         // direct match unmatched names within context
-//        getExactTaxonMatches(namesToMatchAgainstContext, namesWithoutDirectTaxnameMatches);
         getExactNameMatches(namesToMatchAgainstContext);
         
         // direct match unmatched names against synonyms
@@ -156,8 +147,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         // do fuzzy matching for any names we couldn't match
         getApproxTaxnameOrSynonymMatches(namesWithoutExactSynonymMatches);
         
-        // last-ditch effort to match yet-unmatched names: try truncating names in case there are accession-id modifiers
-//        getApproxTaxnameOrSynonymMatches(namesWithoutApproxTaxnameOrSynonymMatches, unmatchableNames);
+        // TODO: last-ditch effort to match yet-unmatched names: try truncating names in case there are accession-id modifiers?
 
         // record unmatchable names to results
         for (String name : namesWithoutApproxTaxnameOrSynonymMatches)
@@ -194,10 +184,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	for (String thisName : queriedNames) {
 
             // Attempt to find exact matches against *ALL* preferred taxa
-    		// TODO: check if the spaces still need to be escaped now that we are using the QueryParser to escape the strings when they're supplied
-            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query("name", thisName); //.replace(" ", "\\ "));
-
+            IndexHits<Node> hits = null;
             try {
+            	hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query("name", thisName);
 	            if (hits.size() == 1) { // an exact match
 	
 	                // WE (MUST) ASSUME that users have spelled names correctly, but havoc will ensure if this assumption

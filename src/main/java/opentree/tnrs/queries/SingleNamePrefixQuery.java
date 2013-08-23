@@ -44,8 +44,6 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     private TNRSMatchSet matches;
     private HashMap<String, Boolean> homonyms;
     
-//	private PhraseQuery queryForFullName;
-    
     private int minLengthForPrefixQuery;
     private int minLengthForApproxQuery;
     
@@ -68,11 +66,6 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 
     	// index is lower case, query string should be as well!
     	this.queryString = QueryParser.escape(queryString).toLowerCase();    	
-/*    	queryForFullName = new PhraseQuery();
-    	for (String namePart : queryString.split("\\s+")) {
-    		queryForFullName.add(new Term("name", namePart));
-    	} */
-    	
     	return this;
     }
 
@@ -81,7 +74,6 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     public SingleNamePrefixQuery clear() {
     	this.queryString = "";
-//    	this.queryForFullName = new PhraseQuery();
     	this.homonyms = new HashMap<String, Boolean>();
     	this.results = new TNRSResults();
     	this.matches = new TNRSMatchSet(taxonomy);
@@ -150,7 +142,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getExactNameOrSynonymMatches() {
 
-    	PrefixQuery simpleQuery = new PrefixQuery(new Term("name", queryString));
+    	TermQuery simpleQuery = new TermQuery(new Term("name", queryString));
     	IndexHits<Node> hits = null;
     	try {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
@@ -178,7 +170,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getPrefixNameOrSynonymMatches() {
     	
-    	TermQuery prefixQuery = new TermQuery(new Term("name", queryString.concat("*")));
+    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", queryString.concat("*")));
     	IndexHits<Node> hits = null;
     	try {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
