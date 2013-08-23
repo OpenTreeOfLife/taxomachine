@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import opentree.ContextDescription;
 import opentree.ContextGroup;
@@ -15,6 +17,8 @@ import opentree.GraphDatabaseAgent;
 import opentree.Taxonomy;
 import opentree.TaxonomyContext;
 import opentree.tnrs.ContextResult;
+import opentree.tnrs.TNRSMatch;
+import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSNameScrubber;
 import opentree.tnrs.TNRSResults;
 import opentree.tnrs.queries.MultiNameContextQuery;
@@ -83,8 +87,14 @@ public class TNRS extends ServerPlugin {
 
         SingleNamePrefixQuery snpq = new SingleNamePrefixQuery(taxonomy, context);
         TNRSResults results = snpq.setQueryString(queryString).runQuery().getResults();
-    	
-    	return AbbreviatedTNRSResultsRepresentation.getResultsRepresentation(results);
+ 
+        Iterator<TNRSNameResult> nameResultIter = results.iterator();
+        // return results if they exist, otherwise spoof an empty match set to return (should just return a blank list)
+        if (nameResultIter.hasNext()) {
+        	return AbbreviatedTNRSResultsRepresentation.getMatchSetRepresentation(nameResultIter.next().getMatches());
+        } else {
+        	return OpentreeRepresentationConverter.convert(new LinkedList<TNRSMatch>());
+        }
     }
 
     @Description("DEPRECATED. An alias for `contextQueryForNames`, left in for compatibility only. Use `contextQueryForNames` instead.")
