@@ -43,7 +43,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     private TNRSMatchSet matches;
     private HashMap<String, Boolean> homonyms;
     
-	private PhraseQuery phraseQueryForNamePrefix;
+	private PhraseQuery phraseQueryForFullName;
     
     private int minLengthForPrefixQuery;
     private int minLengthForApproxQuery;
@@ -70,10 +70,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	// build a phrase query
     	String[] nameParts = queryString.split("\\s");
     	for (String part : nameParts) {
-    		phraseQueryForNamePrefix.add(new Term("name", part));
+    		phraseQueryForFullName.add(new Term("name", part));
     	}
 
-    	return this;
+    	throw new IllegalStateException(phraseQueryForFullName.toString());
+    	
+//    	return this;
     }
 
     /**
@@ -81,7 +83,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     public SingleNamePrefixQuery clear() {
     	this.queryString = "";
-    	this.phraseQueryForNamePrefix = new PhraseQuery();
+    	this.phraseQueryForFullName = new PhraseQuery();
     	this.homonyms = new HashMap<String, Boolean>();
     	this.results = new TNRSResults();
     	this.matches = new TNRSMatchSet(taxonomy);
@@ -154,7 +156,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	try {
         	// TODO: check if the spaces still need to be escaped
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-    				query(phraseQueryForNamePrefix); //.replace(" ", "\\ "));
+    				query(phraseQueryForFullName); //.replace(" ", "\\ "));
 
             boolean isHomonym = false;
             if (hits.size() > 1) {
