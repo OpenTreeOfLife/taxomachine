@@ -81,6 +81,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     public SingleNamePrefixQuery clear() {
     	this.queryString = "";
+    	this.phraseQueryForNamePrefix = new PhraseQuery();
     	this.homonyms = new HashMap<String, Boolean>();
     	this.results = new TNRSResults();
     	this.matches = new TNRSMatchSet(taxonomy);
