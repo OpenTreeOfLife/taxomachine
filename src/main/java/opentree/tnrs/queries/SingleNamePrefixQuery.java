@@ -150,7 +150,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getExactNameOrSynonymMatches() {
 
-    	TermQuery simpleQuery = new TermQuery(new Term("name", queryString));
+    	PrefixQuery simpleQuery = new PrefixQuery(new Term("name", queryString));
     	IndexHits<Node> hits = null;
     	try {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
