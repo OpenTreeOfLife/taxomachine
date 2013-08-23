@@ -197,7 +197,8 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				if (rank == "species" || rank == "subspecies" || rank == "variety" || rank == "forma") {
 					isHigher = false;
 				}
-				
+
+				serializer.putString("rank", match.getRank()); // rank
 				serializer.putBoolean("higher", isHigher); // is higher taxon
 			}
 		};
