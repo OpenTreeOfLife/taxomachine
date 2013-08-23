@@ -194,7 +194,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				
 				boolean isHigher = true;
 				String rank = String.valueOf(match.getRank());
-				if (rank == "species" || rank == "subspecies" || rank == "variety" || rank == "forma") {
+				if (rank == "species" || rank.equals("subspecies") || rank == "variety" || rank == "forma") {
 					isHigher = false;
 				}
 
