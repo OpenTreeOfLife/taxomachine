@@ -190,9 +190,15 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				serializer.putString("ottId", match.getMatchedNode().getProperty("uid").toString()); // matched ottol id
 //				serializer.putString("matchedName", match.getMatchedNode().getProperty("name").toString());
 				serializer.putString("name", match.getUniqueName()); // unique name
-				serializer.putBoolean("higher", match.getRank().equals("species") ? false : true); // is higher taxon
 				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
-
+				
+				boolean isHigher = true;
+				String rank = match.getRank();
+				if (rank == "species" || rank == "subspecies" || rank == "variety" || rank == "forma") {
+					isHigher = false;
+				}
+				
+				serializer.putBoolean("higher", isHigher); // is higher taxon
 			}
 		};
 	}
