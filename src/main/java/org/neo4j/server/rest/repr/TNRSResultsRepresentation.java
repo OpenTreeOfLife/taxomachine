@@ -139,12 +139,10 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
 
-				// should also have matchedNodeUniqueId, but this is not yet
-				// available
 				serializer.putNumber("matchedNodeId", match.getMatchedNode().getId());
 				serializer.putString("matchedName", match.getMatchedNode().getProperty("name").toString());
 				serializer.putString("uniqueName", match.getUniqueName());
-				serializer.putString("rank", match.getRank());
+				serializer.putString("rank", match.getRank()); // currently not set
 				serializer.putString("matchedOttolID", match.getMatchedNode().getProperty("uid").toString());
 				serializer.putString("parentName", match.getParentNode().getProperty("name").toString());
 				serializer.putString("sourceName", match.getSource());
@@ -164,11 +162,45 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			}
 		};
 	}
+	
+	// ////////////////////////////////////////////////////////////////////////////////////////////////////
+	//
+	// these are for the autocomplete box query, and omit unnecessary information
+	//
+	// ///////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	public static ListRepresentation getMatchSetRepresentationForAutocompleteBox(final TNRSMatchSet matchSet) {
+
+		FirstItemIterable<Representation> results = new FirstItemIterable<Representation>(new IteratorWrapper<Representation, Object>((Iterator) matchSet.iterator()) {
+			@Override
+			protected Representation underlyingObjectToObject(Object value) {
+				return getMatchRepresentationForAutocompleteBox((TNRSMatch) value);
+			}
+		});
+		return new ListRepresentation(RepresentationType.PROPERTIES, results);
+	}
+
+	public static MappingRepresentation getMatchRepresentationForAutocompleteBox(final TNRSMatch match) {
+
+		return new MappingRepresentation(RepresentationType.MAP.toString()) {
+			@Override
+			protected void serialize(final MappingSerializer serializer) {
+
+				serializer.putNumber("nodeId", match.getMatchedNode().getId()); // matched node id
+				serializer.putString("ottId", match.getMatchedNode().getProperty("uid").toString()); // matched ottol id
+//				serializer.putString("matchedName", match.getMatchedNode().getProperty("name").toString());
+				serializer.putString("name", match.getUniqueName()); // unique name
+				serializer.putBoolean("higher", match.getRank() == "species" ? false : true); // is higher taxon
+				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
+
+			}
+		};
+	}
+	
 
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
-	// general serialization methods below here, mostly just copied from Neo4j
-	// RepresentationConverter classes
+	// general serialization methods below here, mostly just copied from Neo4j RepresentationConverter classes
 	//
 	// ///////////////////////////////////////////////////////////////////////////////////////////////////
 

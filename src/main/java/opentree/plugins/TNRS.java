@@ -35,7 +35,6 @@ import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
-import org.neo4j.server.rest.repr.AbbreviatedTNRSResultsRepresentation;
 import org.neo4j.server.rest.repr.Representation;
 import org.neo4j.server.rest.repr.OpentreeRepresentationConverter;
 import org.neo4j.server.rest.repr.TNRSResultsRepresentation;
@@ -91,7 +90,7 @@ public class TNRS extends ServerPlugin {
         Iterator<TNRSNameResult> nameResultIter = results.iterator();
         // return results if they exist, otherwise spoof an empty match set to return (should just return a blank list)
         if (nameResultIter.hasNext()) {
-        	return AbbreviatedTNRSResultsRepresentation.getMatchSetRepresentation(nameResultIter.next().getMatches());
+        	return TNRSResultsRepresentation.getMatchSetRepresentationForAutocompleteBox(nameResultIter.next().getMatches());
         } else {
         	return OpentreeRepresentationConverter.convert(new LinkedList<TNRSMatch>());
         }
