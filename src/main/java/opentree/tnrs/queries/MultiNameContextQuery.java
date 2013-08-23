@@ -146,7 +146,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         // this will need an external concept-resolution service, which as yet does not seem to exist...
 
         // do fuzzy matching for any names we couldn't match
-//        getApproxTaxnameOrSynonymMatches(namesWithoutExactSynonymMatches);
+        getApproxTaxnameOrSynonymMatches(namesWithoutExactSynonymMatches);
         
         // TODO: last-ditch effort to match yet-unmatched names: try truncating names in case there are accession-id modifiers?
 
@@ -359,10 +359,11 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             
             // fuzzy match names against ALL within-context taxa and synonyms
             float minIdentity = getMinIdentity(thisName);
-            IndexHits<Node> hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-                    query(new FuzzyQuery(new Term("name", thisName), minIdentity));
+            IndexHits<Node> hits = null;
+            FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term("name", thisName), minIdentity);
 
             try {
+            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query(fuzzyQuery);
 	            if (hits.size() < 1) {
 	                // no direct matches, move on to next name
 	                namesWithoutApproxTaxnameOrSynonymMatches.add(thisName);
