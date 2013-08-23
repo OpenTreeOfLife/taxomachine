@@ -48,8 +48,8 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     private int minLengthForPrefixQuery;
     private int minLengthForApproxQuery;
     
-    private final int DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY = 4;
-    private final int DEFAULT_MIN_LENGTH_FOR_APPROX_QUERY = 6;
+    private final int DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY = 5;
+//    private final int DEFAULT_MIN_LENGTH_FOR_APPROX_QUERY = 6;
     
     public SingleNamePrefixQuery(Taxonomy taxonomy) {
     	super(taxonomy);
@@ -88,7 +88,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	@Override
 	public SingleNamePrefixQuery setDefaults() {
 		minLengthForPrefixQuery = DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY;
-		minLengthForApproxQuery = DEFAULT_MIN_LENGTH_FOR_APPROX_QUERY;
+//		minLengthForApproxQuery = DEFAULT_MIN_LENGTH_FOR_APPROX_QUERY;
 		return this;
 	}
 
@@ -119,12 +119,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	}
     	
     	// this is of dubious utility
-    	if (queryString.length() >= minLengthForApproxQuery) {
+//    	if (queryString.length() >= minLengthForApproxQuery) {
     		if (matches.size() < 1) { // only do fuzzy queries if we haven't matched anything yet
 	    		// attempt fuzzy query
 	    		getApproxNameOrSynonymMatches();
     		}
-    	}
+//    	}
     	
     	return this;
     }
