@@ -64,7 +64,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     public MultiNameContextQuery setSearchStrings(Set<String> searchStrings) {
         clear();
         for (String s : searchStrings) {
-        	queriedNames.add(QueryParser.escape(s));
+        	queriedNames.add(QueryParser.escape(s).toLowerCase());
         }
         return this;
     }
