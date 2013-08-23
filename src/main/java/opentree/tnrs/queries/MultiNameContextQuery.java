@@ -94,7 +94,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	}
     
     /**
-     * Clears the previous results, search strings, and inferred contexts. Also called by the constructor to initialize the query object.
+     * Clears the previous results and search strings. Also called by the constructor to initialize the query object.
      */
     @Override
     public MultiNameContextQuery clear() {
@@ -102,7 +102,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         taxaWithExactMatches = new HashSet<Taxon>();
         bestGuessLICAForNames = null;
         results = new TNRSResults();
-        setContext(taxonomy.ALLTAXA);
+//        setContext(taxonomy.ALLTAXA);
         
         // special-purpose containers used during search procedure
         namesWithoutExactNameMatches = new HashSet<String>();
