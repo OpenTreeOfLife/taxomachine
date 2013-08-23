@@ -109,10 +109,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 
     	if (queryString.length() >= minLengthForPrefixQuery) {
 	        // attempt prefix query
-	        getPrefixNameOrSynonymMatches();
+    		throw new IllegalStateException("attempting prefix query");
+//	        getPrefixNameOrSynonymMatches();
     	}
     	
-    	if (queryString.length() > minLengthForApproxQuery) {
+    	if (queryString.length() >= minLengthForApproxQuery) {
     		// attempt fuzzy query
     		getApproxNameOrSynonymMatches();
     	}
