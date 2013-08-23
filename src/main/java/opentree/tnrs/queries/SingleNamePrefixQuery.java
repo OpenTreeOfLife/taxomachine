@@ -66,7 +66,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     public SingleNamePrefixQuery setQueryString(String queryString) {
 
-    	this.queryString = QueryParser.escape(queryString);
+    	this.queryString = queryString; // QueryParser.escape(queryString);
 //    	throw new IllegalStateException(queryForFullName.toString());
     	
     	return this;
