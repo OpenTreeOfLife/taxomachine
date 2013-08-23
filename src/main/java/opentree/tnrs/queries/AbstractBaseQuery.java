@@ -117,10 +117,11 @@ public abstract class AbstractBaseQuery implements TNRSQuery {
 		} else {
 			context = c;
 		}
-		results.setContextName(context.getDescription().name);
-        results.setGoverningCode(context.getDescription().nomenclature.code);
+		throw new IllegalStateException(context.toString());
+//		results.setContextName(context.getDescription().name);
+//	    results.setGoverningCode(context.getDescription().nomenclature.code);
         
-        return this;
+//        return this;
 	}
 	
     /**

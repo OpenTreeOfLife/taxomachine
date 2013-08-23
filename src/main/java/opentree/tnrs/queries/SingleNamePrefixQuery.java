@@ -76,6 +76,25 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     }
     
     /**
+     * Return the search settings parameters to their default values
+     */
+	@Override
+	public SingleNamePrefixQuery setDefaults() {
+		minLengthForPrefixQuery = DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY;
+		minLengthForApproxQuery = DEFAULT_MIN_LENGTH_FOR_APPROX_QUERY;
+		return this;
+	}
+
+	/**
+	 * Set the context to the passed context. If the passed context is null, the context will be set to ALLTAXA.
+	 */
+	@Override
+	public SingleNamePrefixQuery setContext(TaxonomyContext c) {
+		super.setContext(c);
+		return this;
+	}
+	
+    /**
      * Perform a simple query optimized for the autocomplete box on the opentree website.
      * 
      * @return
@@ -214,14 +233,4 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	
     	return isHomonym;
     }
-    
-    /**
-     * Return the search settings parameters to their default values
-     */
-	@Override
-	public SingleNamePrefixQuery setDefaults() {
-		minLengthForPrefixQuery = DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY;
-		minLengthForApproxQuery = DEFAULT_MIN_LENGTH_FOR_APPROX_QUERY;
-		return this;
-	}
 }
