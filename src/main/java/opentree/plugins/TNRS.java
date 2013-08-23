@@ -5,11 +5,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 import opentree.ContextDescription;
 import opentree.ContextGroup;
@@ -21,6 +18,7 @@ import opentree.tnrs.ContextResult;
 import opentree.tnrs.TNRSNameScrubber;
 import opentree.tnrs.TNRSResults;
 import opentree.tnrs.queries.MultiNameContextQuery;
+import opentree.tnrs.queries.SingleNamePrefixQuery;
 import opentree.utils.Utils;
 
 import org.forester.io.parsers.PhylogenyParser;
@@ -35,6 +33,7 @@ import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.Representation;
 import org.neo4j.server.rest.repr.OpentreeRepresentationConverter;
+import org.neo4j.server.rest.repr.TNRSResultsRepresentation;
 
 public class TNRS extends ServerPlugin {
 
@@ -64,10 +63,32 @@ public class TNRS extends ServerPlugin {
         return OpentreeRepresentationConverter.convert(contextResult);
     	
     }
-	
+
+    @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names")
+    @PluginTarget(GraphDatabaseService.class)
+    public Representation autcompleteBoxQuery(
+            @Source GraphDatabaseService graphDb,
+            @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
+    		@Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
+
+        GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
+        Taxonomy taxonomy = new Taxonomy(gdb);
+        
+        // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
+        TaxonomyContext context = null;
+        if (contextName != null) {
+        	context = taxonomy.getContextByName(contextName);
+        }
+
+        SingleNamePrefixQuery snpq = new SingleNamePrefixQuery(taxonomy, context);
+        TNRSResults results = snpq.setQueryString(queryString).runQuery().getResults();
+    	
+    	return TNRSResultsRepresentation.getAutocompleteBoxResultsRepresentation(results);
+    }
+    
     @Description("Return information on potential matches to a search query")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation doTNRSForNames(
+    public Representation contextQueryForNames(
             @Source GraphDatabaseService graphDb,
             @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
             @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
@@ -84,9 +105,9 @@ public class TNRS extends ServerPlugin {
         	useAutoInference = false;
         }
 
-        MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
+        MultiNameContextQuery mncq = new MultiNameContextQuery(taxonomy);
         HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
-        TNRSResults results = tnrs.
+        TNRSResults results = mncq.
         		setSearchStrings(names).
         		setContext(context).
         		setAutomaticContextInference(useAutoInference).
@@ -97,8 +118,18 @@ public class TNRS extends ServerPlugin {
         return OpentreeRepresentationConverter.convert(results);
     }
 
+    /**
+     * Deprecated. Never used. Use contextQueryForNames instead.
+     * 
+     * @param graphDb
+     * @param treeString
+     * @return
+     * @throws IOException
+     * @throws ContextNotFoundException
+     */
     @Description("Return information on potential matches to a search query")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation doTNRSForTrees(
             @Source GraphDatabaseService graphDb,
             @Description("A string containing tree(s) in a format readable by the forester library")

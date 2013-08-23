@@ -189,6 +189,16 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 		};
 	}
 
+	public static Representation getAutocompleteBoxResultsRepresentation(TNRSResults results) {
+
+		
+		// FILL THIS IN. Might want to put this in a different class.
+		
+		return null;
+		
+    }
+
+	
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
 	// general serialization methods below here, mostly just copied from Neo4j
