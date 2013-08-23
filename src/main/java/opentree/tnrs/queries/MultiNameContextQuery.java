@@ -20,6 +20,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.MultiFieldQueryParser;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.TermQuery;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
@@ -139,13 +140,13 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         getExactNameMatches(namesToMatchAgainstContext);
         
         // direct match unmatched names against synonyms
-        getExactSynonymMatches(namesWithoutExactNameMatches);
+//        getExactSynonymMatches(namesWithoutExactNameMatches);
         
         // TODO: external concept resolution for still-unmatched names? (direct match returned concepts against context)
         // this will need an external concept-resolution service, which as yet does not seem to exist...
 
         // do fuzzy matching for any names we couldn't match
-        getApproxTaxnameOrSynonymMatches(namesWithoutExactSynonymMatches);
+//        getApproxTaxnameOrSynonymMatches(namesWithoutExactSynonymMatches);
         
         // TODO: last-ditch effort to match yet-unmatched names: try truncating names in case there are accession-id modifiers?
 
@@ -185,8 +186,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 
             // Attempt to find exact matches against *ALL* preferred taxa
             IndexHits<Node> hits = null;
+            TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
-            	hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query("name", thisName);
+            	hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query(exactQuery);
 	            if (hits.size() == 1) { // an exact match
 	
 	                // WE (MUST) ASSUME that users have spelled names correctly, but havoc will ensure if this assumption
@@ -255,9 +257,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 //                context = new TaxonomyContext(ContextDescription.ALLTAXA, taxonomy);
 //            }
             
-            IndexHits<Node> hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query("name", thisName.replace(" ", "\\ "));
-
+            IndexHits<Node> hits = null;
+            TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
+            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query(exactQuery);
 	            if (hits.size() < 1) {
 	                // no direct matches, move on to next name
 	                namesWithoutExactNameMatches.add(thisName);
