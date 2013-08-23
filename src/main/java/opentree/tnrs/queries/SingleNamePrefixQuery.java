@@ -168,7 +168,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	IndexHits<Node> hits = null;
     	try {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-    				query(new PrefixQuery(new Term("name", queryString)));
+    				query("name", queryString.concat("*"));
 
             for (Node hit : hits) {
                 Taxon matchedTaxon = taxonomy.getTaxon(hit);
@@ -192,7 +192,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
         IndexHits<Node> hits = null;
         try {
         	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-            query(new FuzzyQuery(new Term("name", queryString), minIdentity));
+            query(new FuzzyQuery(new Term("name", queryString.concat("*")), minIdentity));
         	
             for (Node hit : hits) {                
                 Taxon matchedTaxon = taxonomy.getTaxon(hit);
