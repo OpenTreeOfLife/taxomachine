@@ -140,7 +140,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         getExactNameMatches(namesToMatchAgainstContext);
         
         // direct match unmatched names against synonyms
-//        getExactSynonymMatches(namesWithoutExactNameMatches);
+        getExactSynonymMatches(namesWithoutExactNameMatches);
         
         // TODO: external concept resolution for still-unmatched names? (direct match returned concepts against context)
         // this will need an external concept-resolution service, which as yet does not seem to exist...
@@ -191,8 +191,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             	hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query(exactQuery);
 	            if (hits.size() == 1) { // an exact match
 	
-	                // WE (MUST) ASSUME that users have spelled names correctly, but havoc will ensure if this assumption
-	                // is violated, as mispelled names are likely to yield direct matches to distantly related taxa!
+	                // WE (MUST) ASSUME that users have spelled names correctly, but havoc may ensue if this assumption
+	                // is violated, as slight misspellings are likely to yield direct matches to distantly related taxa.
 	
 	                // add this taxon to the list of unambigous matches
 	                Taxon matchedTaxon = taxonomy.getTaxon(hits.getSingle());
@@ -214,13 +214,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                results.addNameWithDirectMatch(thisName);
 	
 	            } else { // is either a homonym match or there is no exact match
-	            	
-	            	// remember the name if a container has been provided
-//	            	if (unmatchableNames != null) {
-//	            		unmatchableNames.add(thisName);
-//	            	if (namesUnmatchableAgainstAllTaxaContext != null) {
-	            		namesUnmatchableAgainstAllTaxaContext.add(thisName);
-//	            	}
+	            	namesUnmatchableAgainstAllTaxaContext.add(thisName);
+
 	            }
             } finally {
             	hits.close();
@@ -250,13 +245,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	// exact match the names against the context; save all hits
         for (String thisName : searchStrings) {
 
-//            System.out.println("search string: " + thisName);
-//            String correctedName = ;
-            
-//            if (context == null) {
-//                context = new TaxonomyContext(ContextDescription.ALLTAXA, taxonomy);
-//            }
-            
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
@@ -320,9 +308,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	// exact match unmatched names against context synonym index
         for (String thisName : searchStrings) {
 
-            IndexHits<Node> hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM).query("name", thisName.replace(" ", "\\ "));
-
+            IndexHits<Node> hits = null;
+            TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
+            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM).query(exactQuery);
 	            if (hits.size() < 1) {
 	                // no direct matches, move on to next name
 	                namesWithoutExactSynonymMatches.add(thisName);
