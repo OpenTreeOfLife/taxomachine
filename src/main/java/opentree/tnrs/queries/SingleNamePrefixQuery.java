@@ -21,6 +21,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.MultiFieldQueryParser;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
@@ -42,6 +43,8 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     private TNRSMatchSet matches;
     private HashMap<String, Boolean> homonyms;
     
+	private PhraseQuery phraseQueryForNamePrefix;
+    
     private int minLengthForPrefixQuery;
     private int minLengthForApproxQuery;
     
@@ -61,8 +64,16 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      * @param queryString
      */
     public SingleNamePrefixQuery setQueryString(String queryString) {
-        this.queryString = queryString; // QueryParser.escape(queryString);
-        return this;
+
+    	this.queryString = queryString; // QueryParser.escape(queryString);
+
+    	// build a phrase query
+    	String[] nameParts = queryString.split("\\s");
+    	for (String part : nameParts) {
+    		phraseQueryForNamePrefix.add(new Term("name", part));
+    	}
+
+    	return this;
     }
 
     /**
@@ -142,7 +153,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	try {
         	// TODO: check if the spaces still need to be escaped
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-    				query("name", queryString); //.replace(" ", "\\ "));
+    				query(phraseQueryForNamePrefix); //.replace(" ", "\\ "));
 
             boolean isHomonym = false;
             if (hits.size() > 1) {
