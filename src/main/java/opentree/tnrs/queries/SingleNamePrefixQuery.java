@@ -43,6 +43,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	private String queryString;
     private TNRSMatchSet matches;
     private HashMap<String, Boolean> homonyms;
+    private HashSet<Node> matchedNodes;
     
     private int minLengthForPrefixQuery;
     private int minLengthForApproxQuery;
@@ -75,6 +76,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     public SingleNamePrefixQuery clear() {
     	this.queryString = "";
     	this.homonyms = new HashMap<String, Boolean>();
+    	this.matchedNodes = new HashSet<Node>();
     	this.results = new TNRSResults();
     	this.matches = new TNRSMatchSet(taxonomy);
     	return this;
@@ -156,11 +158,14 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
             }
 
             for (Node hit : hits) {
-                Taxon matchedTaxon = taxonomy.getTaxon(hit);
-                matches.addMatch(new TNRSHit().
-                        setMatchedTaxon(matchedTaxon).
-                        setRank(matchedTaxon.getRank()).
-                        setIsHomonym(isHomonym));
+            	if (matchedNodes.contains(hit) == false) {
+	            	matchedNodes.add(hit);
+	                Taxon matchedTaxon = taxonomy.getTaxon(hit);
+	                matches.addMatch(new TNRSHit().
+	                        setMatchedTaxon(matchedTaxon).
+	                        setRank(matchedTaxon.getRank()).
+	                        setIsHomonym(isHomonym));
+            	}
             }
     	} finally {
     		hits.close();
@@ -179,11 +184,14 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     				query(prefixQuery);
 
             for (Node hit : hits) {
-                Taxon matchedTaxon = taxonomy.getTaxon(hit);
-                matches.addMatch(new TNRSHit().
-                        setMatchedTaxon(matchedTaxon).
-                        setRank(matchedTaxon.getRank()).
-                        setIsHomonym(isHomonym(matchedTaxon.getName())));
+            	if (matchedNodes.contains(hit) == false) {
+	            	matchedNodes.add(hit);
+	                Taxon matchedTaxon = taxonomy.getTaxon(hit);
+	                matches.addMatch(new TNRSHit().
+	                        setMatchedTaxon(matchedTaxon).
+	                        setRank(matchedTaxon.getRank()).
+	                        setIsHomonym(isHomonym(matchedTaxon.getName())));
+            	}
             }
     	} finally {
     		hits.close();
@@ -204,11 +212,14 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
         	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
             query(fuzzyQuery);
         	
-            for (Node hit : hits) {                
-                Taxon matchedTaxon = taxonomy.getTaxon(hit);
-                matches.addMatch(new TNRSHit().
-                        setMatchedTaxon(matchedTaxon).
-                        setIsHomonym(isHomonym(matchedTaxon.getName())));
+            for (Node hit : hits) {               
+            	if (matchedNodes.contains(hit) == false) {
+	            	matchedNodes.add(hit);
+	                Taxon matchedTaxon = taxonomy.getTaxon(hit);
+	                matches.addMatch(new TNRSHit().
+	                        setMatchedTaxon(matchedTaxon).
+	                        setIsHomonym(isHomonym(matchedTaxon.getName())));
+            	}
             }
         } finally {
         	hits.close();
