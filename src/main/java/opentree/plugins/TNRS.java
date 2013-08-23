@@ -67,7 +67,7 @@ public class TNRS extends ServerPlugin {
 
     @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation autcompleteBoxQuery(
+    public Representation autocompleteBoxQuery(
             @Source GraphDatabaseService graphDb,
             @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
     		@Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
