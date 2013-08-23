@@ -127,7 +127,7 @@ public class TNRS extends ServerPlugin {
      * @throws IOException
      * @throws ContextNotFoundException
      */
-    @Description("Return information on potential matches to a search query")
+/*    @Description("Return information on potential matches to a search query")
     @PluginTarget(GraphDatabaseService.class)
     @Deprecated
     public Representation doTNRSForTrees(
@@ -135,7 +135,7 @@ public class TNRS extends ServerPlugin {
             @Description("A string containing tree(s) in a format readable by the forester library")
                 @Parameter(name = "treeString") String treeString/*,
             @Description("The name of the taxonomic context to use. May be omitted if not known")
-                @Parameter(name = "contextName", optional = true) String contextName*/) throws IOException, ContextNotFoundException {
+                @Parameter(name = "contextName", optional = true) String contextName*) throws IOException, ContextNotFoundException {
 
         // Write tree string to temp file for ParserUtils. This is a hack, it would be better to just feed the parser
         // the treeString directly, but all the appropriate methods seem to want files
@@ -183,7 +183,7 @@ public class TNRS extends ServerPlugin {
 
         gdb.shutdownDb();
         return OpentreeRepresentationConverter.convert(results);
-    }
+    } */
 
     @Description("Return information on available taxonomic contexts")
     @PluginTarget(GraphDatabaseService.class)

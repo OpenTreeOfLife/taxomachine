@@ -107,14 +107,12 @@ public abstract class AbstractBaseQuery implements TNRSQuery {
     }
 
 	/**
-	 * Set the context to `context`. If `context` is null, the context will be set to ALLTAXA. Protected because it should be wrapped in
-	 * an individual method in non-abstract query classes, which should return the query object. See MultiNameContextQuery or SimpleQuery
-	 * for examples.
+	 * Set the context to `context`. If `context` is null, the context will be set to ALLTAXA.
 	 * @param context
 	 */
     @Override
 	public TNRSQuery setContext(TaxonomyContext context) {
-		if (context == null) {
+		if (context.equals(null)) {
 			this.context = taxonomy.ALLTAXA;
 		} else {
 			this.context = context;
