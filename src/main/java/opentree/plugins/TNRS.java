@@ -64,7 +64,7 @@ public class TNRS extends ServerPlugin {
         return OpentreeRepresentationConverter.convert(contextResult);
     	
     }
-
+    
     @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names")
     @PluginTarget(GraphDatabaseService.class)
     public Representation autocompleteBoxQuery(
@@ -85,6 +85,16 @@ public class TNRS extends ServerPlugin {
         TNRSResults results = snpq.setQueryString(queryString).runQuery().getResults();
     	
     	return AbbreviatedTNRSResultsRepresentation.getResultsRepresentation(results);
+    }
+
+    @Description("DEPRECATED. An alias for `contextQueryForNames`, left in for compatibility only. Use `contextQueryForNames` instead.")
+    @PluginTarget(GraphDatabaseService.class)
+    public Representation doTNRSForNames(
+            @Source GraphDatabaseService graphDb,
+            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
+            @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
+
+    	return contextQueryForNames(graphDb, queryString, contextName);
     }
     
     @Description("Return information on potential matches to a search query")
