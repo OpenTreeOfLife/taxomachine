@@ -117,11 +117,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	matches = new TNRSMatchSet(taxonomy);
     	
     	getExactNameOrSynonymMatches();
-
-    	if (queryString.length() >= minLengthForPrefixQuery) {
+    
+/*    	if (queryString.length() >= minLengthForPrefixQuery) {
 	        // attempt prefix query
 	        getPrefixNameOrSynonymMatches();
-    	}
+    	} */
     	
     	// this does not seem to be helpful
 /*    	if (queryString.length() >= minLengthForApproxQuery) {
