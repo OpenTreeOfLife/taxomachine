@@ -111,14 +111,14 @@ public abstract class AbstractBaseQuery implements TNRSQuery {
 	 * @param context
 	 */
     @Override
-	public TNRSQuery setContext(TaxonomyContext context) {
-		if (context.equals(null)) {
-			this.context = taxonomy.ALLTAXA;
+	public TNRSQuery setContext(TaxonomyContext c) {
+		if (c == null) {
+			context = taxonomy.ALLTAXA;
 		} else {
-			this.context = context;
+			context = c;
 		}
-		results.setContextName(this.context.getDescription().name);
-        results.setGoverningCode(this.context.getDescription().nomenclature.code);
+		results.setContextName(context.getDescription().name);
+        results.setGoverningCode(context.getDescription().nomenclature.code);
         
         return this;
 	}
