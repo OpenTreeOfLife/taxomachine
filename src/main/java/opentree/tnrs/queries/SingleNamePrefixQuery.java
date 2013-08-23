@@ -72,7 +72,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	this.queryString = "";
     	this.homonyms = new HashMap<String, Boolean>();
     	this.results = new TNRSResults();
-    	this.matches = new TNRSMatchSet();
+    	this.matches = new TNRSMatchSet(taxonomy);
     	return this;
     }
     
@@ -103,7 +103,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     @Override
     public SingleNamePrefixQuery runQuery() {
         
-    	matches = new TNRSMatchSet();
+    	matches = new TNRSMatchSet(taxonomy);
     	
     	getExactNameOrSynonymMatches();
 
@@ -153,6 +153,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
                 Taxon matchedTaxon = taxonomy.getTaxon(hit);
                 matches.addMatch(new TNRSHit().
                         setMatchedTaxon(matchedTaxon).
+                        setRank(matchedTaxon.getRank()).
                         setIsHomonym(isHomonym));
             }
     	} finally {

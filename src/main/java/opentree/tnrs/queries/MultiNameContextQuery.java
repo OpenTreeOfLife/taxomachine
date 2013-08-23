@@ -208,7 +208,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                taxaWithExactMatches.add(matchedTaxon);
 	
 	                // add the match to the TNRS results
-	                TNRSMatchSet matches = new TNRSMatchSet();
+	                TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
 	                matches.addMatch(new TNRSHit().
 	                        setMatchedTaxon(matchedTaxon).
 	                        setSearchString(thisName).
@@ -276,7 +276,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	
 	            } else {
 	                // at least 1 hit; prepare to record matches
-	                TNRSMatchSet matches = new TNRSMatchSet();
+	                TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
 	
 	                // determine within-context homonym status
 	                boolean isHomonym = false;
@@ -338,7 +338,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	
 	            } else {
 	                // at least 1 hit; prepare to record matches
-	                TNRSMatchSet matches = new TNRSMatchSet();
+	                TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
 	
 	                for (Node hit : hits) {
 	                    // add this match to the match set
@@ -389,7 +389,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	
 	            } else {
 	                // at least 1 hit; prepare to record matches
-	                TNRSMatchSet matches = new TNRSMatchSet();
+	                TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
 	                
 	                for (Node hit : hits) {
 	                    

@@ -58,7 +58,7 @@ public class SimpleQuery extends AbstractBaseQuery {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query("name", queryString); //.replace(" ", "\\ "));
 
         	 // at least 1 hit; prepare to record matches
-        	 TNRSMatchSet matches = new TNRSMatchSet();
+        	 TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
 
         	 for (Node hit : hits) {
                 // add this match to the match set

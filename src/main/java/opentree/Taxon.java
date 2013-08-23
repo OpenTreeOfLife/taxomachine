@@ -59,6 +59,10 @@ public class Taxon {
         return taxNode.getProperty("name").toString();
     }
     
+    public String getRank() {
+    	return taxNode.getProperty("rank").toString();
+    }
+    
     /**
      * Returns the least inclusive TaxonomyContext object that contains `taxon`
      * @param taxon
