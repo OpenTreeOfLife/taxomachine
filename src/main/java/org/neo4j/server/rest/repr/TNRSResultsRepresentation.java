@@ -193,7 +193,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
 				
 				boolean isHigher = true;
-				String rank = match.getRank();
+				String rank = String.valueOf(match.getRank());
 				if (rank == "species" || rank == "subspecies" || rank == "variety" || rank == "forma") {
 					isHigher = false;
 				}
