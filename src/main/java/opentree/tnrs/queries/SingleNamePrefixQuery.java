@@ -216,6 +216,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	                Taxon matchedTaxon = taxonomy.getTaxon(hit);
 	                matches.addMatch(new TNRSHit().
 	                        setMatchedTaxon(matchedTaxon).
+	                        setRank(matchedTaxon.getRank()).
 	                        setIsHomonym(isHomonym(matchedTaxon.getName())));
             	}
             }
@@ -240,7 +241,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	} else {
 	    	IndexHits<Node> hits = null;
 	    	try {
-	    		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
+	    		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).
 	    				query("name", name);
 		        if (hits.size() > 1) {
 		            isHomonym = true;
