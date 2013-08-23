@@ -66,8 +66,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     public SingleNamePrefixQuery setQueryString(String queryString) {
 
-    	this.queryString = QueryParser.escape(queryString).toLowerCase();
-//    	throw new IllegalStateException(queryForFullName.toString());
+    	// index is lower case, query string should be as well!
+    	this.queryString = QueryParser.escape(queryString).toLowerCase();    	
+/*    	queryForFullName = new PhraseQuery();
+    	for (String namePart : queryString.split("\\s+")) {
+    		queryForFullName.add(new Term("name", namePart));
+    	} */
     	
     	return this;
     }
@@ -115,10 +119,10 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	
     	getExactNameOrSynonymMatches();
     
-/*    	if (queryString.length() >= minLengthForPrefixQuery) {
+    	if (queryString.length() >= minLengthForPrefixQuery) {
 	        // attempt prefix query
 	        getPrefixNameOrSynonymMatches();
-    	} */
+    	}
     	
     	// this does not seem to be helpful
 /*    	if (queryString.length() >= minLengthForApproxQuery) {
@@ -146,11 +150,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getExactNameOrSynonymMatches() {
 
+    	TermQuery simpleQuery = new TermQuery(new Term("name", queryString));
     	IndexHits<Node> hits = null;
     	try {
-        	// TODO: check if the spaces still need to be escaped
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-    				query(new TermQuery(new Term("name", queryString))); //.replace(" ", "\\ "));
+    				query(simpleQuery);
 
             boolean isHomonym = false;
             if (hits.size() > 1) {
@@ -158,7 +162,6 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
             }
 
             for (Node hit : hits) {
-                // add this match to the match set
                 Taxon matchedTaxon = taxonomy.getTaxon(hit);
                 matches.addMatch(new TNRSHit().
                         setMatchedTaxon(matchedTaxon).
@@ -175,15 +178,17 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getPrefixNameOrSynonymMatches() {
     	
+    	TermQuery prefixQuery = new TermQuery(new Term("name", queryString.concat("*")));
     	IndexHits<Node> hits = null;
     	try {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-    				query("name", queryString.concat("*"));
+    				query(prefixQuery);
 
             for (Node hit : hits) {
                 Taxon matchedTaxon = taxonomy.getTaxon(hit);
                 matches.addMatch(new TNRSHit().
                         setMatchedTaxon(matchedTaxon).
+                        setRank(matchedTaxon.getRank()).
                         setIsHomonym(isHomonym(matchedTaxon.getName())));
             }
     	} finally {
