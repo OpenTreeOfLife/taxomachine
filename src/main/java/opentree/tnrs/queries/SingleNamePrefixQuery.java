@@ -112,10 +112,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	        getPrefixNameOrSynonymMatches();
     	}
     	
-    	if (queryString.length() >= minLengthForApproxQuery) {
+    	// this does not seem to be helpful
+/*    	if (queryString.length() >= minLengthForApproxQuery) {
     		// attempt fuzzy query
     		getApproxNameOrSynonymMatches();
-    	}
+    	} */
     	
     	return this;
     }
