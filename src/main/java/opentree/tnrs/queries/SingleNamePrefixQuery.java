@@ -116,11 +116,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	        getPrefixNameOrSynonymMatches();
     	}
     	
-    	// this does not seem to be helpful
-/*    	if (queryString.length() >= minLengthForApproxQuery) {
+    	// this is of dubious utility
+    	if (queryString.length() >= minLengthForApproxQuery) {
     		// attempt fuzzy query
     		getApproxNameOrSynonymMatches();
-    	} */
+    	}
     	
     	return this;
     }
@@ -196,10 +196,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	float minIdentity = getMinIdentity(queryString);
 
     	// fuzzy match names against ALL within-context taxa and synonyms
+    	FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term("name", queryString), minIdentity);
         IndexHits<Node> hits = null;
         try {
         	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-            query(new FuzzyQuery(new Term("name", queryString.concat("*")), minIdentity));
+            query(fuzzyQuery);
         	
             for (Node hit : hits) {                
                 Taxon matchedTaxon = taxonomy.getTaxon(hit);
