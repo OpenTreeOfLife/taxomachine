@@ -68,7 +68,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	this.queryString = queryString; // QueryParser.escape(queryString);
 
     	// build a phrase query
-    	String[] nameParts = queryString.split(" ");
+    	String[] nameParts = queryString.split("\\s");
     	for (String part : nameParts) {
     		phraseQueryForFullName.add(new Term("name", part));
     	}
