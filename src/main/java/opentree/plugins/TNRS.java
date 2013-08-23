@@ -86,7 +86,12 @@ public class TNRS extends ServerPlugin {
 
         MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
         HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
-        TNRSResults results = tnrs.setSearchStrings(names).setContext(context).setAutomaticContextInference(useAutoInference).getTNRSResultsForSetNames();
+        TNRSResults results = tnrs.
+        		setSearchStrings(names).
+        		setContext(context).
+        		setAutomaticContextInference(useAutoInference).
+        		runQuery().
+        		getResults();
 
         gdb.shutdownDb();
         return OpentreeRepresentationConverter.convert(results);
@@ -140,7 +145,10 @@ public class TNRS extends ServerPlugin {
         // do TNRS
         MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
         HashSet<String> names = Utils.stringArrayToHashset(cleanNames);
-        TNRSResults results = tnrs.setSearchStrings(names).getTNRSResultsForSetNames();
+        TNRSResults results = tnrs.
+        		setSearchStrings(names).
+        		runQuery().
+        		getResults();
 
         gdb.shutdownDb();
         return OpentreeRepresentationConverter.convert(results);

@@ -424,10 +424,12 @@ public class MainRunner {
             for (int i = 0; i < searchStrings.length; i++) {
                 System.out.println(searchStrings[i]);
             }
-            tnrs.setSearchStrings(names);
-            tnrs.setContext(context);
-            tnrs.setAutomaticContextInference(false);
-            results = tnrs.getTNRSResultsForSetNames();
+            results = tnrs.
+            		setSearchStrings(names).
+            		setContext(context).
+            		setAutomaticContextInference(false).
+            		runQuery().
+            		getResults();
 
         } else if (args[0].equals("tnrstree")) {
             // TODO: for files containing multiple trees, make sure to do TNRS just once
@@ -456,10 +458,13 @@ public class MainRunner {
 
             HashSet<String> names = Utils.stringArrayToHashset(cleanedNames);
             // scrubber.review(); // print old and cleaned names
-            tnrs.setSearchStrings(names);
-            tnrs.setContext(context);
-            tnrs.setAutomaticContextInference(false);
-            results = tnrs.getTNRSResultsForSetNames();
+            
+            results = tnrs.
+            		setSearchStrings(names).
+            		setContext(context).
+            		setAutomaticContextInference(false).
+            		runQuery().
+            		getResults();
         }
 
         for (TNRSNameResult nameResult : results) {
