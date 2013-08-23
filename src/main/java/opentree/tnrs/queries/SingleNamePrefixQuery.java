@@ -66,11 +66,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     }
 
     /**
-     * Clear the results and search strings from the previous query.
+     * Clear the results and search strings from the previous query. Also called by the constructor to initialize the object.
      */
     public SingleNamePrefixQuery clear() {
     	this.queryString = "";
     	this.homonyms = new HashMap<String, Boolean>();
+    	this.results = new TNRSResults();
     	this.matches = new TNRSMatchSet();
     	return this;
     }
@@ -124,7 +125,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     @Override
     public TNRSResults getResults() {
-    	results = new TNRSResults();
+//    	results = new TNRSResults();
     	results.addNameResult(new TNRSNameResult(queryString, matches));
         return results;
     }

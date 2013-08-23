@@ -36,11 +36,20 @@ public class SimpleQuery extends AbstractBaseQuery {
     	return getResults();
     }
     
+    /**
+     * Initialize the query with a query string
+     * @param queryString
+     * @return
+     */
     public SimpleQuery setQueryString(String queryString) {
+    	clear();
     	this.queryString = QueryParser.escape(queryString);
     	return this;
     }
     
+    /**
+     * Run the query using the set string and context
+     */
     public SimpleQuery runQuery() {
         
     	results = new TNRSResults();
@@ -86,7 +95,7 @@ public class SimpleQuery extends AbstractBaseQuery {
 	}
 	
 	/**
-	 * Clear the results and search strings from last query.
+	 * Clear the results and search strings from last query. Also called by the constructor to initialize the query.
 	 */
 	@Override
 	public SimpleQuery clear() {

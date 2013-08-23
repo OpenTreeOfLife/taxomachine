@@ -85,14 +85,42 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     }
     
 	/**
-	 * Set the context to `context`. If `context` is null, the context will be set to ALLTAXA.
-	 * @param context
+	 * Set the context to `c`. If `c` is null, the context will be set to ALLTAXA.
+	 * @param c
 	 */
-	public MultiNameContextQuery setContext(TaxonomyContext context) {
-		super.setContext(context);
+	public MultiNameContextQuery setContext(TaxonomyContext c) {
+		super.setContext(c);
 		return this;
 	}
     
+    /**
+     * Clears the previous results, search strings, and inferred contexts. Also called by the constructor to initialize the query object.
+     */
+    @Override
+    public MultiNameContextQuery clear() {
+        queriedNames = new HashSet<String>();
+        taxaWithExactMatches = new HashSet<Taxon>();
+        bestGuessLICAForNames = null;
+        results = new TNRSResults();
+        setContext(taxonomy.ALLTAXA);
+        
+        // special-purpose containers used during search procedure
+        namesWithoutExactNameMatches = new HashSet<String>();
+        namesWithoutExactSynonymMatches = new HashSet<String>();
+    	namesWithoutApproxTaxnameOrSynonymMatches = new HashSet<String>();
+
+    	return this;
+    }
+
+    /**
+     * Reset default search parameters
+     */
+    @Override
+    public MultiNameContextQuery setDefaults() {
+        contextAutoInferenceIsOn = true;
+    	return this;
+    }
+	
     /**
      * Perform a full TNRS query against the names set using setSearchStrings(). First matches all names to exact taxon
      * names, exact synonyms, and then to approximate taxon names and synonyms, and return the results as a TNRSResults
@@ -422,33 +450,5 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             bestGuessLICAForNames = ts.getLICA();
         else
             bestGuessLICAForNames = taxonomy.getTaxon(taxonomy.ALLTAXA.getRootNode());
-    }
-    
-    /**
-     * Clears the previous results, search strings, and inferred contexts.
-     */
-    @Override
-    public MultiNameContextQuery clear() {
-        queriedNames = new HashSet<String>();
-        taxaWithExactMatches = new HashSet<Taxon>();
-        bestGuessLICAForNames = null;
-        results = new TNRSResults();
-        setContext(taxonomy.ALLTAXA);
-        
-        // special-purpose containers used during search procedure
-        namesWithoutExactNameMatches = new HashSet<String>();
-        namesWithoutExactSynonymMatches = new HashSet<String>();
-    	namesWithoutApproxTaxnameOrSynonymMatches = new HashSet<String>();
-
-    	return this;
-    }
-
-    /**
-     * Reset default search parameters
-     */
-    @Override
-    public MultiNameContextQuery setDefaults() {
-        contextAutoInferenceIsOn = true;
-    	return this;
     }
 }
