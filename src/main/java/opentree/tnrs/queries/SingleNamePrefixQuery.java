@@ -29,11 +29,7 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
 /**
- * Provides access to the default TNRS query, which accepts a set of taxonomic names, from which it will attempt to infer
- * the taxonomic context for the provided names, and will optimize queries based on that inferred context. This query returns a
- * fairly exhaustive set of information about the taxon hits to the queried names. It is a general-purpose option for development,
- * testing, and getting information about names in the taxonomy. More specific-purpose solutions to name querying are implemented
- * in other classes that extend the base TNRSQuery class.
+ * Provides access to a tnrs query tailored for autocomplete boxes.
  * 
  * @author cody hinchliff
  * 
@@ -86,7 +82,6 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	@Override
 	public SingleNamePrefixQuery setDefaults() {
 		minLengthForPrefixQuery = DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY;
-//		minLengthForApproxQuery = DEFAULT_MIN_LENGTH_FOR_APPROX_QUERY;
 		return this;
 	}
 
