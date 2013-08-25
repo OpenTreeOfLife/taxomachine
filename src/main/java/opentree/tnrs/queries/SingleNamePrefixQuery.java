@@ -42,8 +42,9 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     private HashSet<Node> matchedNodes;
     
     private int minLengthForPrefixQuery;
+    private final int minLengthForQuery = 2;
     
-    private final int DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY = 5;
+    private final int DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY = 4;
     
     public SingleNamePrefixQuery(Taxonomy taxonomy) {
     	super(taxonomy);
@@ -103,14 +104,20 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     public SingleNamePrefixQuery runQuery() {
         
     	matches = new TNRSMatchSet(taxonomy);
+
+    	if (queryString.length() < minLengthForQuery) {
+    		return this;
+    	}
     	
     	getExactNameOrSynonymMatches();
     
     	if (queryString.length() >= minLengthForPrefixQuery) {
-	        // attempt prefix query
-	        getPrefixNameOrSynonymMatches();
+	        // only attempt prefix queries on full genus names if the string is short
+        	getPrefixNameOrSynonymMatches(queryString.concat(" "));
+    	} else {
+        	getPrefixNameOrSynonymMatches();
     	}
-    	
+
     	// only do fuzzy queries if we haven't matched anything: they are slow!
 		if (matches.size() < 1) {
     		// attempt fuzzy query
@@ -125,7 +132,6 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     @Override
     public TNRSResults getResults() {
-//    	results = new TNRSResults();
     	results.addNameResult(new TNRSNameResult(queryString, matches));
         return results;
     }
@@ -167,8 +173,15 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      * Attempt to find prefix query matches against the search string.
      */
     private void getPrefixNameOrSynonymMatches() {
+    	getPrefixNameOrSynonymMatches(queryString);
+    }
+    
+    /**
+     * Attempt to find prefix query matches against the search string.
+     */
+    private void getPrefixNameOrSynonymMatches(String prefix) {
     	
-    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", queryString));
+    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", prefix));
     	IndexHits<Node> hits = null;
     	try {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
