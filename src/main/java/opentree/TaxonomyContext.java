@@ -86,6 +86,7 @@ public class TaxonomyContext {
         IndexHits<Node> rootMatches = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).get("name", contextDescription.licaNodeName);
         Node rn = null;
         for (Node n : rootMatches) {
+        	System.out.println(n.getProperty("name"));
             if (n.getProperty("name").equals(taxonomy.getLifeNode().getProperty("name"))) {
                 // if we find the life node, just return it
                 rn = n;
@@ -100,7 +101,7 @@ public class TaxonomyContext {
         if (rn != null) {
             return rn;
         } else {
-            throw new java.lang.IllegalStateException("Could not find the root node: " + contextDescription.licaNodeName + " in nomenclature + " + contextDescription.nomenclature.code);
+            throw new java.lang.IllegalStateException("Could not find the root node: " + contextDescription.licaNodeName + " in nomenclature " + contextDescription.nomenclature.code);
         }
     }
 
