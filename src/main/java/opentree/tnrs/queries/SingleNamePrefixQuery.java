@@ -113,7 +113,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     
     	if (queryString.length() >= minLengthForPrefixQuery) {
 	        // only attempt prefix queries on full genus names if the string is short
-        	getPrefixNameOrSynonymMatches(queryString.concat(" "));
+        	getPrefixNameOrSynonymMatches(QueryParser.escape(queryString.concat(" ")));
     	} else {
         	getPrefixNameOrSynonymMatches();
     	}
