@@ -27,6 +27,8 @@ import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.util.Version;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
@@ -188,9 +190,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getPrefixNameOrSynonymMatches(String prefix) throws ParseException {
     	
-    	QueryParser parser = new QueryParser(Version.LUCENE_35, "name", new KeywordAnalyzer());
+/*    	QueryParser parser = new QueryParser(Version.LUCENE_35, "name", new KeywordAnalyzer());
     	Query query = null;
-    	query = parser.parse(prefix.concat("*"));
+    	query = parser.parse(prefix.concat("*")); */
+    	
+    	SpanTermQuery query = new SpanTermQuery(new Term("name", prefix));
 
 //    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", prefix));
 
