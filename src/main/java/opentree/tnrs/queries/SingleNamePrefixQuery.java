@@ -17,12 +17,15 @@ import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
 import opentree.utils.Levenshtein;
 
+import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.MultiFieldQueryParser;
+import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
@@ -181,11 +184,22 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getPrefixNameOrSynonymMatches(String prefix) {
     	
-    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", prefix));
+    	QueryParser parser = new QueryParser(null, "name", new KeywordAnalyzer());
+    	Query query = null;
+		try {
+			query = parser.parse(queryString);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			return;
+		}
+
+//    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", prefix));
+
     	IndexHits<Node> hits = null;
     	try {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-    				query(prefixQuery);
+//    				query(prefixQuery);
+    				query(query);
 
             for (Node hit : hits) {
             	if (matchedNodes.contains(hit) == false) {
