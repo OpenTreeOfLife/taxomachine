@@ -190,19 +190,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getPrefixNameOrSynonymMatches(String prefix) throws ParseException {
     	
-/*    	QueryParser parser = new QueryParser(Version.LUCENE_35, "name", new KeywordAnalyzer());
-    	Query query = null;
-    	query = parser.parse(prefix.concat("*")); */
-    	
-    	SpanTermQuery query = new SpanTermQuery(new Term("name", prefix));
-
-//    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", prefix));
+    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", prefix));
 
     	IndexHits<Node> hits = null;
     	try {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-//    				query(prefixQuery);
-    				query(query);
+    				query(prefixQuery);
 
             for (Node hit : hits) {
             	if (matchedNodes.contains(hit) == false) {
