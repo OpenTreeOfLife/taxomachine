@@ -105,7 +105,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	matches = new TNRSMatchSet(taxonomy);
 
     	if (queryString.length() < minLengthForQuery) {
-    		return this;
+    		throw new IllegalArgumentException("cannot perform query on less than " + minLengthForQuery + " characters");
     	}
     	
     	getExactNameOrSynonymMatches();
@@ -142,11 +142,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getExactNameOrSynonymMatches() {
 
-    	TermQuery simpleQuery = new TermQuery(new Term("name", queryString));
+    	TermQuery exactQuery = new TermQuery(new Term("name", queryString));
     	IndexHits<Node> hits = null;
     	try {
     		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).
-    				query(simpleQuery);
+    				query(exactQuery);
 
             boolean isHomonym = false;
             if (hits.size() > 1) {
