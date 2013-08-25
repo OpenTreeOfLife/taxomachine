@@ -83,7 +83,10 @@ public class TaxonomyContext {
      * @return rootNode
      */
     public Node getRootNode() {
-        IndexHits<Node> rootMatches = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).get("name", contextDescription.licaNodeName);
+        IndexHits<Node> rootMatches = taxonomy.ALLTAXA.
+//        		getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).
+        		getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).
+        		get("name", contextDescription.licaNodeName);
         Node rn = null;
         for (Node n : rootMatches) {
         	System.out.println(n.getProperty("name"));
