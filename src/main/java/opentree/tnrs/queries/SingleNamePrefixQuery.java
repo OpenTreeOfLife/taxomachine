@@ -190,7 +190,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	
     	QueryParser parser = new QueryParser(Version.LUCENE_35, "name", new KeywordAnalyzer());
     	Query query = null;
-    	query = parser.parse(prefix);
+    	query = parser.parse(prefix.concat("*"));
 
 //    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", prefix));
 
