@@ -102,9 +102,10 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      * Perform a simple query optimized for the autocomplete box on the opentree website.
      * 
      * @return
+     * @throws ParseException 
      */
     @Override
-    public SingleNamePrefixQuery runQuery() {
+    public SingleNamePrefixQuery runQuery() throws ParseException {
         
     	matches = new TNRSMatchSet(taxonomy);
 
@@ -174,24 +175,21 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 
     /**
      * Attempt to find prefix query matches against the search string.
+     * @throws ParseException 
      */
-    private void getPrefixNameOrSynonymMatches() {
+    private void getPrefixNameOrSynonymMatches() throws ParseException {
     	getPrefixNameOrSynonymMatches(queryString);
     }
     
     /**
      * Attempt to find prefix query matches against the search string.
+     * @throws ParseException 
      */
-    private void getPrefixNameOrSynonymMatches(String prefix) {
+    private void getPrefixNameOrSynonymMatches(String prefix) throws ParseException {
     	
     	QueryParser parser = new QueryParser(null, "name", new KeywordAnalyzer());
     	Query query = null;
-		try {
-			query = parser.parse(queryString);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			return;
-		}
+    	query = parser.parse(queryString);
 
 //    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", prefix));
 

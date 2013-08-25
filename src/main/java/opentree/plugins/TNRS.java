@@ -25,6 +25,7 @@ import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.tnrs.queries.SingleNamePrefixQuery;
 import opentree.utils.Utils;
 
+import org.apache.lucene.queryParser.ParseException;
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.util.ParserUtils;
 import org.forester.phylogeny.Phylogeny;
@@ -73,7 +74,7 @@ public class TNRS extends ServerPlugin {
     public Representation autocompleteBoxQuery(
             @Source GraphDatabaseService graphDb,
             @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
-    		@Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
+    		@Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException, ParseException {
 
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
