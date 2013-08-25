@@ -652,24 +652,54 @@ public class TaxonomySynthesizer extends Taxonomy {
      */
     public void addToPreferredIndexes(Node node, TaxonomyContext context) {
 
-        Index<Node> prefTaxNodesByName = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
-        Index<Node> prefTaxNodesBySynonym = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
-        Index<Node> prefTaxNodesByNameOrSynonym = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+        Index<Node> nameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
+        Index<Node> synonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
+        Index<Node> nameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+        
+        // species and subspecific ranks
+        Index<Node> speciesNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_SPECIES);
+//        Index<Node> prefTaxNodesBySynonymSpecies = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM_SPECIES);
+//        Index<Node> speciesOnlyIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_SPECIES);
+
+        // genera only
+        Index<Node> genusNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_GENERA);
+//        Index<Node> prefTaxNodesBySynonymGenera = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM_GENERA);
+//        Index<Node> genusOnlyIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_GENERA);
+
+        // higher taxa
+        Index<Node> higherNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_HIGHER);
+//      Index<Node> prefTaxNodesBySynonymHigher = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM_HIGHER);
+//        Index<Node> higherOnlyIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
         
         // update the leastcontext property (notion of "least" assumes this is being called by recursive context-building)
         node.setProperty("leastcontext", context.getDescription().toString());
 
         // add the taxon node under its own name
-        prefTaxNodesByName.add(node, "name", node.getProperty("name"));
-        prefTaxNodesByNameOrSynonym.add(node, "name", node.getProperty("name"));
+        nameIndex.add(node, "name", node.getProperty("name"));
+        nameOrSynonymIndex.add(node, "name", node.getProperty("name"));
 
+        String rank = "";
+        if (node.hasProperty("rank")) {
+        	rank = String.valueOf(node.getProperty("rank")).toLowerCase();
+        }
+        
+        // add to the rank-specific indexes
+        if (rank.equals("species") || rank.equals("subspecies") || rank.equals("variety") || rank.equals("forma")) {
+        	speciesNameIndex.add(node, "name", node.getProperty("name"));
+        } else if (rank.equals("genus")) {
+        	genusNameIndex.add(node, "name", node.getProperty("name"));
+        	higherNameIndex.add(node, "name", node.getProperty("name"));
+        } else {
+        	higherNameIndex.add(node, "name", node.getProperty("name"));
+        }
+        
         // add the taxon node under all its synonym names
         for (Node sn : Traversal.description()
                 .breadthFirst()
                 .relationships(RelType.SYNONYMOF,Direction.INCOMING )
                 .traverse(node).nodes()) {
-            prefTaxNodesBySynonym.add(node, "name", sn.getProperty("name"));
-            prefTaxNodesByNameOrSynonym.add(node, "name", sn.getProperty("name"));
+            synonymIndex.add(node, "name", sn.getProperty("name"));
+            nameOrSynonymIndex.add(node, "name", sn.getProperty("name"));
         }
     }    
 

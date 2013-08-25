@@ -41,7 +41,36 @@ import org.neo4j.graphdb.index.IndexHits;
  * 
  */
 public class SingleNamePrefixQuery extends AbstractBaseQuery {
-    
+
+	
+	/*
+	 * If the search string contains a space:
+	 * 		If the search string contains two words:
+	 * 			Hit it against the species index.
+	 * 
+	 *			If there is no exact hit against the species index, then hit the first word against the genus name index
+	 *     
+	 *			If there is no exact hit against the genus index, do fuzzy match against the species name index, return results
+	 *			Otherwise build a span query with the first word as a term and the second word as a prefix term
+	 *			If there are no hits against the prefix span query, use a fuzzy match for the second term
+	 * 
+	 * 		Otherwise, hit the first word against the genus index:
+	 * 			1. If there is an exact hit, record all the species in this genus
+	 * 			2. Do a prefix search against the higher taxon index, record all results
+	 * 		
+	 * 			If there are no results, do a fuzzy search against the higher taxon index
+	 * 
+	 * Otherwise, hit it against the higher taxon index.
+	 * 
+	 *		If there is an exact hit, return it
+	 *		Otherwise, do a prefix query against the higher taxon index
+	 *			If there are no results:
+	 *				Do a prefix query against the all taxa synonym index
+	 *				If there are no results,
+	 *					Do a fuzzy query against the higher taxon name index
+	 * 
+	 */
+	
 	private String queryString;
     private TNRSMatchSet matches;
     private HashMap<String, Boolean> homonyms;
