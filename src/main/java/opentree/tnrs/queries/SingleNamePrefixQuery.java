@@ -92,15 +92,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 		return this;
 	}
 
-	/**
-	 * Set the context to the passed context. If the passed context is null, the context will be set to ALLTAXA.
-	 */
-	@Override
-	public SingleNamePrefixQuery setContext(TaxonomyContext c) {
-		super.setContext(c);
-		return this;
-	}
-	
+
     /**
      * Perform a simple query optimized for the autocomplete box on the opentree website.
      * 
@@ -119,9 +111,9 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	getExactNameOrSynonymMatches();
     
     	if (queryString.length() >= minLengthForPrefixQuery) {
-	        // only attempt prefix queries on full genus names if the string is short
+/*	        // only attempt prefix queries on full genus names if the string is short
         	getPrefixNameOrSynonymMatches(QueryParser.escape(queryString.concat(" ")));
-    	} else {
+    	} else { */
         	getPrefixNameOrSynonymMatches();
     	}
 
@@ -181,16 +173,8 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      * @throws ParseException 
      */
     private void getPrefixNameOrSynonymMatches() throws ParseException {
-    	getPrefixNameOrSynonymMatches(queryString);
-    }
-    
-    /**
-     * Attempt to find prefix query matches against the search string.
-     * @throws ParseException 
-     */
-    private void getPrefixNameOrSynonymMatches(String prefix) throws ParseException {
     	
-    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", prefix));
+    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", queryString));
 
     	IndexHits<Node> hits = null;
     	try {
