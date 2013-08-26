@@ -52,15 +52,6 @@ public class TaxonomyLoader extends Taxonomy {
 	int globaltransactionnum = 0;
 	Transaction gtx = null;
 	
-	private Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
-	//can plug into these by not saying name but the source itself
-	private Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
-	private Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
-	private Index<Node> preferredTaxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
-	private Index<Node> preferredTaxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
-	private Index<Node> preferredTaxaByNameOrSynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
-
-	
 	static String graphname;
 	
 	// basic traversal method
@@ -216,10 +207,9 @@ public class TaxonomyLoader extends Taxonomy {
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
 
-		/*
 		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
 		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
-		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM); */
+		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
 
 		// just setting source metadata manually for now
 		String author = "";
@@ -291,7 +281,7 @@ public class TaxonomyLoader extends Taxonomy {
 							tnode.setProperty("sourceid", inputId);
 							tnode.setProperty("sourcepid", inputParentId);
 							tnode.setProperty("source", sourcename);
-							taxaByName.add(tnode, "name", inputName);							
+							taxaByName.add(tnode, "name", inputName);
 							dbnodes.put(inputId, tnode);
 							// synonym processing
 							if (synFileExists) {
@@ -349,7 +339,7 @@ public class TaxonomyLoader extends Taxonomy {
 					tnode.setProperty("sourceid", inputId);
 					tnode.setProperty("sourcepid", inputParentId);
 					tnode.setProperty("source", sourcename);
-					taxaByName.add(tnode, "name", inputName);					
+					taxaByName.add(tnode, "name", inputName);
 					dbnodes.put(inputId, tnode);
 					// synonym processing
 					if (synFileExists) {
@@ -515,11 +505,9 @@ public class TaxonomyLoader extends Taxonomy {
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
 
-		/*
 		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
 		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
-		*/
 		
 		Node metadatanode = null;
 		try {
@@ -594,13 +582,6 @@ public class TaxonomyLoader extends Taxonomy {
 							}
 							tnode.setProperty("dubious", dubious);
 							taxaByName.add(tnode, "name", inputName);
-							
-							// newly added
-							if (!dubious) { // do not add "dubious" to preferred indexes
-								preferredTaxaByName.add(tnode, "name", inputName);
-								preferredTaxaByNameOrSynonym.add(tnode, "name", inputName);
-							}
-							
 							dbnodes.put(inputId, tnode);
 							// synonym processing
 							if (synFileExists) {
@@ -616,12 +597,6 @@ public class TaxonomyLoader extends Taxonomy {
 										synode.setProperty("source", sourcename);
 										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 										taxaBySynonym.add(tnode, "name", synName);
-										
-										// newly added
-										if (!dubious) { // do not add "dubious" to preferred indexes
-											preferredTaxaBySynonym.add(tnode, "name", synName);
-											preferredTaxaByNameOrSynonym.add(tnode, "name", synName);
-										}
 									}
 								}
 							}
@@ -684,13 +659,6 @@ public class TaxonomyLoader extends Taxonomy {
 					}
 					tnode.setProperty("dubious", dubious);
 					taxaByName.add(tnode, "name", inputName);
-					
-					// newly added
-					if (!dubious) { // do not add "dubious" to preferred indexes
-						preferredTaxaByName.add(tnode, "name", inputName);
-						preferredTaxaByNameOrSynonym.add(tnode, "name", inputName);
-					}
-					
 					dbnodes.put(inputId, tnode);
 					// synonym processing
 					if (synFileExists) {
@@ -706,12 +674,6 @@ public class TaxonomyLoader extends Taxonomy {
 								synode.setProperty("source", sourcename);
 								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 								taxaBySynonym.add(tnode, "name", synName);
-								
-								// newly added
-								if (!dubious) { // do not add "dubious" to preferred indexes
-									preferredTaxaBySynonym.add(tnode, "name", synName);
-									preferredTaxaByNameOrSynonym.add(tnode, "name", synName);
-								}
 							}
 						}
 					}
@@ -882,6 +844,10 @@ public class TaxonomyLoader extends Taxonomy {
 			urlPrefix = "http://ecat-dev.gbif.org/usage/";		    
 		}
 		
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+		//can plug into these by not saying name but the source itself
+		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
 		Node metadatanode = null;
 		try {
 			tx = beginTx();
@@ -937,7 +903,7 @@ public class TaxonomyLoader extends Taxonomy {
 							tnode.setProperty("sourceid", inputId);
 							tnode.setProperty("sourcepid", inputParentId);
 							tnode.setProperty("source", sourcename);
-							taxaByName.add(tnode, sourcename, inputName);							
+							taxaByName.add(tnode, sourcename, inputName);
 							dbnodes.put(inputId, tnode);
 							// synonym processing
 							if (synFileExists) {
