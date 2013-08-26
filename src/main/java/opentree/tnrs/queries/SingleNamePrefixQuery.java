@@ -183,6 +183,8 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
             }
 
             for (Node hit : hits) {
+    			throw new IllegalStateException("found a hit");
+    			/*
             	if (matchedNodes.contains(hit) == false) {
 	            	matchedNodes.add(hit);
 	                Taxon matchedTaxon = taxonomy.getTaxon(hit);
@@ -190,7 +192,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	                        setMatchedTaxon(matchedTaxon).
 	                        setRank(matchedTaxon.getRank()).
 	                        setIsHomonym(isHomonym));
-            	}
+            	} */
             }
     	} finally {
     		hits.close();
