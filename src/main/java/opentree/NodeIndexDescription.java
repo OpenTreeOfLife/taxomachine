@@ -27,19 +27,13 @@ public enum NodeIndexDescription {
     PREFERRED_TAXON_BY_NAME_OR_SYNONYM  ("prefTaxNodesByNameOrSyn"),
 
     // species and subspecific ranks
-    PREFERRED_TAXON_BY_NAME_SPECIES     ("prefTaxNodesByNameSpecies"), // currently unused, here in case it becomes useful
-    PREFERRED_TAXON_BY_SYNONYM_SPECIES  ("prefTaxNodesBySynSpecies"), // currently unused, here in case it becomes useful
-    PREFERRED_TAXON_BY_NAME_OR_SYNONYM_SPECIES  ("prefTaxNodesByNameOrSynSpecies"),
+    PREFERRED_TAXON_BY_NAME_SPECIES     ("prefTaxNodesByNameSpecies"),
 
     // genera only
-    PREFERRED_TAXON_BY_NAME_GENERA     ("prefTaxNodesByNameGenera"), // currently unused, here in case it becomes useful
-    PREFERRED_TAXON_BY_SYNONYM_GENERA  ("prefTaxNodesBySynGenera"), // currently unused, here in case it becomes useful
-    PREFERRED_TAXON_BY_NAME_OR_SYNONYM_GENERA  ("prefTaxNodesByNameOrSynGenera"),
+    PREFERRED_TAXON_BY_NAME_GENERA     ("prefTaxNodesByNameGenera"),
 
     // higher taxa
-    PREFERRED_TAXON_BY_NAME_HIGHER     ("prefTaxNodesByNameHigher"), // currently unused, here in case it becomes useful
-    PREFERRED_TAXON_BY_SYNONYM_HIGHER  ("prefTaxNodesBySynHigher"), // currently unused, here in case it becomes useful
-    PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER  ("prefTaxNodesByNameOrSynHigher"),
+    PREFERRED_TAXON_BY_NAME_HIGHER     ("prefTaxNodesByNameHigher"),
     
     TAX_SOURCES                 ("taxSources"),             // ?
     TAX_STATUS                  ("taxStatus"),
