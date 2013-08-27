@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;

@@ -1,9 +1,9 @@
 package opentree.tnrs;
 
-import opentree.GraphDatabaseAgent;
-import opentree.RelType;
-import opentree.Taxon;
-import opentree.Taxonomy;
+import opentree.taxonomy.GraphDatabaseAgent;
+import opentree.taxonomy.RelType;
+import opentree.taxonomy.Taxon;
+import opentree.taxonomy.Taxonomy;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;

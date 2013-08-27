@@ -2,7 +2,7 @@ package opentree.tnrs.queries;
 
 import org.apache.lucene.queryParser.ParseException;
 
-import opentree.TaxonomyContext;
+import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.TNRSResults;
 
 public interface TNRSQuery {

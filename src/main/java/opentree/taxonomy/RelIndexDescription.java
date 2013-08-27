@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy;
 
 /**
  * Defines relationship indexes for the db. Not clear that these are even being used...

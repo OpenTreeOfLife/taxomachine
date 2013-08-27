@@ -4,10 +4,10 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
 
-import opentree.NodeIndexDescription;
-import opentree.Taxon;
-import opentree.Taxonomy;
-import opentree.TaxonomyContext;
+import opentree.taxonomy.Taxon;
+import opentree.taxonomy.Taxonomy;
+import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatchSet;

@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy;
 
 import java.util.Map;
 

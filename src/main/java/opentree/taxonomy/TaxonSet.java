@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy;
 
 import jade.tree.JadeNode;
 import jade.tree.JadeTree;

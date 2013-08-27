@@ -1,6 +1,6 @@
-package opentree;
+package opentree.taxonomy.contexts;
 
-import opentree.ContextGroup;
+import opentree.taxonomy.contexts.ContextGroup;
 
 /**
  * Definitions for the various taxonomic contexts. These are used to access the node indexes in order to locate nodes by name, synonym name, etc.

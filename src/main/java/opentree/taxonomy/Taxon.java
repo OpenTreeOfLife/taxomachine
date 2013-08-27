@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy;
 
 import jade.tree.JadeNode;
 import jade.tree.JadeTree;
@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import opentree.taxonomy.contexts.ContextDescription;
+import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.tnrs.queries.SimpleQuery;
@@ -70,13 +72,19 @@ public class Taxon {
      */
     public TaxonomyContext getLeastInclusiveContext() {
         
-        // look for a matching ContextDescription, if we don't find one
-        for (ContextDescription cd : ContextDescription.values())
-            if (cd.toString().equals(taxNode.getProperty("leastcontext")))
-                return new TaxonomyContext(cd, taxonomy);
+        // look for a matching ContextDescription
+        for (ContextDescription cd : ContextDescription.values()) {
+        	if (taxNode.hasProperty("leastcontext")) {
+	            if (cd.toString().equals(taxNode.getProperty("leastcontext"))) {
+	                return new TaxonomyContext(cd, taxonomy);
+	            }
+        	} else {
+        		return taxonomy.ALLTAXA;
+        	}
+        }
 
         // if we didn't find a match
-        return null;
+		return taxonomy.ALLTAXA;
     }
     
     public boolean isPreferredTaxChildOf(Taxon parent) {

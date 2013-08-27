@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy;
 
 /**
  * TaxonomyComparator functions
@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
+
+import opentree.taxonomy.contexts.NodeIndexDescription;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -203,7 +205,7 @@ public class TaxonomyComparator {
 			tx.finish();
 		}
 		//remake the mrca
-		TaxonomyLoader tl = new TaxonomyLoader(dinga);
+		TaxonomyLoaderPreottol tl = new TaxonomyLoaderPreottol(dinga);
 		System.out.println("calculating mrcas");
 		tl.removeMRCAs(domtax.getLifeNode());
 		tl.initMrcaForTipsAndPO(domtax.getLifeNode());

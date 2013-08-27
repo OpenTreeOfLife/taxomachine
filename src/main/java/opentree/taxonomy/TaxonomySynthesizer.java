@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -11,6 +11,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 
+import opentree.taxonomy.contexts.ContextDescription;
+import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.queries.MultiNameContextQuery;
 
@@ -669,7 +672,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         // higher taxa
         Index<Node> higherNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_HIGHER);
 //      Index<Node> prefTaxNodesBySynonymHigher = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM_HIGHER);
-//        Index<Node> higherOnlyIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+        Index<Node> higherNameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
         
         // update the leastcontext property (notion of "least" assumes this is being called by recursive context-building)
         node.setProperty("leastcontext", context.getDescription().toString());
@@ -689,8 +692,10 @@ public class TaxonomySynthesizer extends Taxonomy {
         } else if (rank.equals("genus")) {
         	genusNameIndex.add(node, "name", node.getProperty("name"));
         	higherNameIndex.add(node, "name", node.getProperty("name"));
+        	higherNameOrSynonymIndex.add(node, "name", node.getProperty("name"));
         } else {
         	higherNameIndex.add(node, "name", node.getProperty("name"));
+        	higherNameOrSynonymIndex.add(node, "name", node.getProperty("name"));
         }
         
         // add the taxon node under all its synonym names
@@ -700,6 +705,9 @@ public class TaxonomySynthesizer extends Taxonomy {
                 .traverse(node).nodes()) {
             synonymIndex.add(node, "name", sn.getProperty("name"));
             nameOrSynonymIndex.add(node, "name", sn.getProperty("name"));
+            if (!rank.equals("species") && !rank.equals("subspecies") && !rank.equals("variety") && !rank.equals("forma")) {
+            	higherNameOrSynonymIndex.add(node, "name", sn.getProperty("name"));
+            }
         }
     }    
 

@@ -1,8 +1,5 @@
 package opentree.plugins;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,26 +7,21 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import opentree.ContextDescription;
-import opentree.ContextGroup;
-import opentree.ContextNotFoundException;
-import opentree.GraphDatabaseAgent;
-import opentree.Taxonomy;
-import opentree.TaxonomyContext;
+import opentree.taxonomy.GraphDatabaseAgent;
+import opentree.taxonomy.Taxonomy;
+import opentree.taxonomy.contexts.ContextDescription;
+import opentree.taxonomy.contexts.ContextGroup;
+import opentree.taxonomy.contexts.ContextNotFoundException;
+import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.ContextResult;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
-import opentree.tnrs.TNRSNameScrubber;
 import opentree.tnrs.TNRSResults;
 import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.tnrs.queries.SingleNamePrefixQuery;
 import opentree.utils.Utils;
 
 import org.apache.lucene.queryParser.ParseException;
-import org.forester.io.parsers.PhylogenyParser;
-import org.forester.io.parsers.util.ParserUtils;
-import org.forester.phylogeny.Phylogeny;
-import org.forester.phylogeny.PhylogenyMethods;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.server.plugins.Description;
 import org.neo4j.server.plugins.Parameter;

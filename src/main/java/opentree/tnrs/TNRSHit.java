@@ -3,7 +3,7 @@ package opentree.tnrs;
 import java.util.HashMap;
 import java.util.Map;
 
-import opentree.Taxon;
+import opentree.taxonomy.Taxon;
 
 import org.neo4j.graphdb.Node;
 

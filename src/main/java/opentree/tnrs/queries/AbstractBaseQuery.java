@@ -7,10 +7,10 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
-import opentree.Taxon;
-import opentree.TaxonSet;
-import opentree.Taxonomy;
-import opentree.TaxonomyContext;
+import opentree.taxonomy.Taxon;
+import opentree.taxonomy.TaxonSet;
+import opentree.taxonomy.Taxonomy;
+import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.TNRSResults;
 
 public abstract class AbstractBaseQuery implements TNRSQuery {

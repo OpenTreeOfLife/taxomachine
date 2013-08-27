@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy;
 
 import jade.tree.JadeTree;
 import jade.tree.TreePrinter;
@@ -11,6 +11,9 @@ import java.util.LinkedList;
 //import java.util.NoSuchElementException;
 
 
+
+import opentree.taxonomy.contexts.ContextNotFoundException;
+import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
@@ -19,6 +22,7 @@ import opentree.tnrs.TNRSNameScrubber;
 import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.tnrs.queries.SimpleQuery;
 import opentree.utils.Utils;
+
 
 
 //import org.apache.log4j.Logger;
@@ -63,57 +67,69 @@ public class MainRunner {
         String filename = args[2];
 
         taxdb = new GraphDatabaseAgent(graphname);
-        TaxonomyLoader tl = new TaxonomyLoader(taxdb);
+        TaxonomyLoaderPreottol tld = new TaxonomyLoaderPreottol(taxdb);
+        TaxonomyLoaderOTT tlo = new TaxonomyLoaderOTT(taxdb);
 
         // currently we are assuming that we always want to add taxonomies to the root of the taxonomy
         // (i.e. the life node), but this will have to be changed to add taxonomies that are more
         // specific, such as Hibbett's fungal stuff
-        Node lifeNode = tl.getLifeNode();
+        Node lifeNode = tld.getLifeNode();
         System.out.println("life node: " + lifeNode);
         String incomingRootNodeId = null;
         if (lifeNode != null)
             incomingRootNodeId = String.valueOf(lifeNode.getId());
 
+        
+        // ===================================== deprecated methods from days of preottol
+        
         if (args[0].equals("inittax")) {
             System.out.println("initializing taxonomy from " + filename + " to " + graphname);
             if (new File(sourcename).exists()) {
                 System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
-                tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
+                tld.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
             } else {
                 System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
-                tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
+                tld.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
             }
             System.out.println("verifying taxonomy");
-            tl.verifyLoadedTaxonomy(sourcename);
+            tld.verifyLoadedTaxonomy(sourcename);
         } else if (args[0].equals("addtax")) {
             System.out.println("adding taxonomy from " + filename + " to " + graphname);
             // tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId ,filename, synonymfile);
-            tl.addDisconnectedTaxonomyToGraph(sourcename, filename, synonymfile);
+            tld.addDisconnectedTaxonomyToGraph(sourcename, filename, synonymfile);
             System.out.println("verifying taxonomy");
-            tl.verifyLoadedTaxonomy(sourcename);
+            tld.verifyLoadedTaxonomy(sourcename);
         } else if (args[0].equals("inittaxsyn")) {
             System.out.println("initializing taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
             if (new File(sourcename).exists()) {
                 System.out.println("Sourcename \"" + sourcename + "\" is a file. This will be read as a properties file describing this source");
-                tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
+                tld.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
             } else {
                 System.out.println("Sourcename \"" + sourcename + "\" is not a filepath. It will be treated as the source\'s name");
-                tl.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
+                tld.initializeTaxonomyIntoGraph(sourcename, filename, synonymfile);
             }
             System.out.println("verifying taxonomy");
-            tl.verifyLoadedTaxonomy(sourcename);
+            tld.verifyLoadedTaxonomy(sourcename);
         } else if (args[0].equals("addtaxsyn")) {
             System.out.println("adding taxonomy from " + filename + "and synonym file " + synonymfile + " to " + graphname);
             // tl.addAdditionalTaxonomyToGraph(sourcename, incomingRootNodeId, filename,synonymfile);
-            tl.addDisconnectedTaxonomyToGraph(sourcename, filename, synonymfile);
+            tld.addDisconnectedTaxonomyToGraph(sourcename, filename, synonymfile);
             System.out.println("verifying taxonomy");
-            tl.verifyLoadedTaxonomy(sourcename);
-        } else if (args[0].equals("loadtaxsyn")) {
+            tld.verifyLoadedTaxonomy(sourcename);
+            
+
+        // ===================================== current method using ott taxonomy from smasher
+            
+        } else if (args[0].equals("loadtaxsyn")) { 
             System.out.println("loading taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
             //this will create the ott relationships
-            tl.loadOTTIntoGraph(sourcename, filename, synonymfile);
+            tlo.loadOTTIntoGraph(sourcename, filename, synonymfile);
             System.out.println("verifying taxonomy");
-            tl.verifyLoadedTaxonomy(sourcename);
+            tlo.verifyLoadedTaxonomy(sourcename);
+
+        
+        // ================= other
+            
         } else {
             System.err.println("\nERROR: not a known command");
             taxdb.shutdownDb();
@@ -369,14 +385,14 @@ public class MainRunner {
         String graphdbname = args[1];
         GraphDatabaseAgent inga = new GraphDatabaseAgent(graphdbname);
         System.out.println("setting database: " + graphdbname);
-        TaxonomyLoader tl = new TaxonomyLoader(inga);
-        Node dbnode = tl.getLifeNode();
+        TaxonomyLoaderPreottol tld = new TaxonomyLoaderPreottol(inga);
+        Node dbnode = tld.getLifeNode();
         System.out.println("removing mrcas");
-        tl.removeMRCAs(dbnode);
+        tld.removeMRCAs(dbnode);
         System.out.println("adding mrcas");
-        tl.initMrcaForTipsAndPO(dbnode);
+        tld.initMrcaForTipsAndPO(dbnode);
         System.out.println("verifying taxonomy");
-        tl.verifyMainTaxonomy();
+        tld.verifyMainTaxonomy();
     }
 
     public void parseTNRSRequest(String args[]) {
@@ -549,7 +565,7 @@ public class MainRunner {
                 if (ntp < 1) {
                     throw new NumberFormatException();
                 }
-                TaxonomyLoader.transaction_iter = ntp;
+                TaxonomyLoaderOTT.transaction_iter = ntp;
                 TaxonomySynthesizer.transaction_iter = ntp;
                 System.err.println("\n# transactions read from properties =" + ntp);
             } catch (NumberFormatException nfe) {
