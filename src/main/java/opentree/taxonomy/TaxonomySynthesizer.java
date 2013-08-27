@@ -650,7 +650,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         for (Node genus : ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK).get("rank", "genus")) {
         	tx = beginTx();
         	try {
-	        	String gid = String.valueOf(genus.getProperty("taxuid"));
+	        	String gid = String.valueOf(genus.getProperty("tax_uid"));
 	        	for (Node sp : prefTaxChildOfTraversal.evaluator(new isSpecificEvaluator()).traverse(genus).nodes()) {
 	        		prefSpeciesByGenus.add(sp, "genus_taxuid", gid);
 	        	}
@@ -686,7 +686,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                 
                 i++;
                 if (i % 100000 == 0)
-                    System.out.println(i / 1000 + "K nodes processed");
+                    System.out.println(i / 1000);
             }
         }
         tx.success();
@@ -711,23 +711,17 @@ public class TaxonomySynthesizer extends Taxonomy {
         Index<Node> nameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
         Index<Node> synonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
         Index<Node> nameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
-        
-        // preferred taxon indexes
+
         Index<Node> rankIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK);
         
         // species and subspecific ranks
         Index<Node> speciesNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_SPECIES);
-//        Index<Node> prefTaxNodesBySynonymSpecies = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM_SPECIES);
-//        Index<Node> speciesOnlyIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_SPECIES);
 
         // genera only
         Index<Node> genusNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_GENERA);
-//        Index<Node> prefTaxNodesBySynonymGenera = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM_GENERA);
-//        Index<Node> genusOnlyIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_GENERA);
 
         // higher taxa
         Index<Node> higherNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_HIGHER);
-//      Index<Node> prefTaxNodesBySynonymHigher = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM_HIGHER);
         Index<Node> higherNameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
         
         // update the leastcontext property (notion of "least" assumes this is being called by recursive context-building)
