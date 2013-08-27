@@ -19,18 +19,18 @@ public enum NodeIndexDescription {
 	
 	// all taxon indexes
 	
-	/** Record all taxa. Field is "name" and key is taxon name */
+	/** Records all taxa. Field is "name" and key is taxon name. */
     TAXON_BY_NAME               ("taxNodesByName"),         // all taxon nodes by name
 
-	/** Record all taxa. Field is "name" and key is synonymous name */
+	/** Records all taxa. Field is "name" and key is synonymous name. */
     TAXON_BY_SYNONYM            ("taxNodesBySyn"),          // all taxon nodes by synonym
 
-    /** Records all taxa. Field is "rank" and key is taxon rank. Only set for ALLTAXA context. */
+    /** Records all taxa. Field is "rank" and key is taxon rank. */
     TAXON_BY_RANK					 ("taxNodesByRank"),
 
     // preferred taxon indexes
     
-    /** Records preferred taxa. Field is "rank" and key is taxon rank. Only set for ALLTAXA context. */
+    /** Records preferred taxa. Field is "rank" and key is taxon rank. */
     PREFERRED_TAXON_BY_RANK			 ("prexTaxNodesByRank"),
     
     /** Records species and infraspecific ranks. Field is "genus_taxuid" and key is the ott id of the enclosing genus. */

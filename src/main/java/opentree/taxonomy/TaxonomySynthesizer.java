@@ -712,6 +712,9 @@ public class TaxonomySynthesizer extends Taxonomy {
         Index<Node> synonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
         Index<Node> nameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
         
+        // preferred taxon indexes
+        Index<Node> rankIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK);
+        
         // species and subspecific ranks
         Index<Node> speciesNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_SPECIES);
 //        Index<Node> prefTaxNodesBySynonymSpecies = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM_SPECIES);
@@ -737,6 +740,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         String rank = "";
         if (node.hasProperty("rank")) {
         	rank = String.valueOf(node.getProperty("rank")).toLowerCase();
+        	rankIndex.add(node, "rank", rank);
         }
         
         // add to the rank-specific indexes
