@@ -20,10 +20,13 @@ import opentree.tnrs.queries.MultiNameContextQuery;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.NotFoundException;
+import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.neo4j.graphdb.traversal.Evaluation;
+import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
@@ -47,6 +50,8 @@ public class TaxonomySynthesizer extends Taxonomy {
     private static final TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description().breadthFirst().
             relationships(RelType.TAXCHILDOF, Direction.INCOMING);
     
+	private final Index<Node> prefSpeciesByGenus = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_SPECIES_BY_GENUS);
+
     public TaxonomySynthesizer(GraphDatabaseAgent t) {
         super(t);
     }
@@ -87,7 +92,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         
         String sourceJSON = "\"externalSources\":{";
         // first need to get list of sources, currently including 'nodeid' source
-        Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+        Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
         IndexHits<Node> sourceNodes = taxSources.query("source", "*");
         boolean first0 = true;
         for (Node metadataNode : sourceNodes) {
@@ -412,7 +417,7 @@ public class TaxonomySynthesizer extends Taxonomy {
 		IndexHits<Node> hits = null;
 		Node startnode = null;
     	try{
-    		hits = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES).get("source", domsource);
+    		hits = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES).get("source", domsource);
     		startnode = hits.getSingle().getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode();//there should only be one source with that name
     	}finally{
     		hits.close();
@@ -610,7 +615,55 @@ public class TaxonomySynthesizer extends Taxonomy {
 
         // make the contexts!
         makeContextsRecursive(contextHierarchyRoot);
-        
+    }
+    
+    class isSpecificEvaluator implements Evaluator {
+		
+		@Override
+		public Evaluation evaluate(Path inPath) {
+
+			String rank = "";
+			if (inPath.startNode().hasProperty("rank")) {
+				inPath.startNode().getProperty("rank");
+			}
+			
+    		if (Taxonomy.isSpecific(rank)) {
+    			return Evaluation.INCLUDE_AND_CONTINUE;
+    		} else {
+    			return Evaluation.EXCLUDE_AND_CONTINUE;
+    		}	
+		}
+    }
+    
+    /**
+     * Make an index recording all the species + infraspecific taxa within each genus.
+     */
+    public void makeGenericIndexes() {
+    	
+    	int genCount = 0;
+    	int genReportFreq = 1000;
+
+        TraversalDescription prefTaxChildOfTraversal = Traversal.description().depthFirst().
+                relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
+
+        Transaction tx;
+        for (Node genus : ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK).get("rank", "genus")) {
+        	tx = beginTx();
+        	try {
+	        	String gid = String.valueOf(genus.getProperty("taxuid"));
+	        	for (Node sp : prefTaxChildOfTraversal.evaluator(new isSpecificEvaluator()).traverse(genus).nodes()) {
+	        		prefSpeciesByGenus.add(sp, "genus_taxuid", gid);
+	        	}
+	        	
+	        	if (genCount % genReportFreq == 0) {
+	        		System.out.println(genCount / 1000 + "K genera processed");
+	        	}
+	        	tx.success();
+        	} finally {
+        		tx.finish();
+        	}
+        	genCount++;
+        }
     }
     
     /**
@@ -633,7 +686,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                 
                 i++;
                 if (i % 100000 == 0)
-                    System.out.println(i);
+                    System.out.println(i / 1000 + "K nodes processed");
             }
         }
         tx.success();
@@ -687,7 +740,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
         
         // add to the rank-specific indexes
-        if (rank.equals("species") || rank.equals("subspecies") || rank.equals("variety") || rank.equals("forma")) {
+        if (isSpecific(rank)) {
         	speciesNameIndex.add(node, "name", node.getProperty("name"));
         } else if (rank.equals("genus")) {
         	genusNameIndex.add(node, "name", node.getProperty("name"));
@@ -705,7 +758,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                 .traverse(node).nodes()) {
             synonymIndex.add(node, "name", sn.getProperty("name"));
             nameOrSynonymIndex.add(node, "name", sn.getProperty("name"));
-            if (!rank.equals("species") && !rank.equals("subspecies") && !rank.equals("variety") && !rank.equals("forma")) {
+            if (!isSpecific(rank)) {
             	higherNameOrSynonymIndex.add(node, "name", sn.getProperty("name"));
             }
         }

@@ -29,6 +29,7 @@ public class Taxonomy {
 	public GraphDatabaseAgent graphDb;
 	public final static String LIFE_NODE_NAME = "life";
 	public final TaxonomyContext ALLTAXA;
+	public static final String[] SPECIFIC_RANKS = {"species", "subspecies", "variety", "varietas", "forma", "form"};
 
 	public Taxonomy(GraphDatabaseAgent gdb) {
 		graphDb = gdb;
@@ -89,6 +90,24 @@ public class Taxonomy {
 
 		// if the name doesn't match any existing context
 		throw new ContextNotFoundException(name);
+	}
+	
+	/**
+	 * Check a rank (provided as a string) against a known set of specific and infraspecific ranks. 
+	 * @param rank
+	 * @return isSpecific
+	 */
+	public static boolean isSpecific(String rank) {
+		
+		boolean isSpecific = false;
+		for (String specificRank : SPECIFIC_RANKS) {
+			if (rank.equals(specificRank)) {
+				isSpecific = true;
+				break;
+			}
+		}
+		
+		return isSpecific;
 	}
 
 	public Taxon getTaxon(Node node) {

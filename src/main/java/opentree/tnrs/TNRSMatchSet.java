@@ -4,6 +4,8 @@ import opentree.taxonomy.GraphDatabaseAgent;
 import opentree.taxonomy.RelType;
 import opentree.taxonomy.Taxon;
 import opentree.taxonomy.Taxonomy;
+import opentree.taxonomy.contexts.ContextDescription;
+import opentree.taxonomy.contexts.TaxonomyContext;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -165,11 +167,16 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         public String getUniqueName() {
         	String uniqueName = getMatchedNode().getProperty("name").toString();
         	if (isHomonym) {
-        		uniqueName = uniqueName.
-        				concat(" (").
-        				concat(new Taxon(getMatchedNode(), TNRSMatchSet.this.taxonomy).getLeastInclusiveContext().getDescription().name).
-        				concat(")");
+	    		if (getMatchedNode().hasProperty("leastcontext")) {
+	    			String leastContext = String.valueOf(getMatchedNode().getProperty("leastcontext"));
+	    			for (ContextDescription cd : ContextDescription.values()) {
+	    				if (cd.toString().equals(leastContext)) {
+	    					uniqueName = uniqueName.concat(" (").concat(cd.name).concat(")");
+	    				}
+	    			}
+	    		}
         	}
+
 			return uniqueName;
         }
         

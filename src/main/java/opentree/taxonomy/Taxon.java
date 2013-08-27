@@ -72,18 +72,21 @@ public class Taxon {
      */
     public TaxonomyContext getLeastInclusiveContext() {
         
+    	String leastContext = "";
+    	if (taxNode.hasProperty("leastcontext")) {
+    		leastContext = String.valueOf(taxNode.getProperty("leastcontext"));
+    	} else {
+    		return taxonomy.ALLTAXA;
+    	}
+    	
         // look for a matching ContextDescription
         for (ContextDescription cd : ContextDescription.values()) {
-        	if (taxNode.hasProperty("leastcontext")) {
-	            if (cd.toString().equals(taxNode.getProperty("leastcontext"))) {
-	                return new TaxonomyContext(cd, taxonomy);
-	            }
-        	} else {
-        		return taxonomy.ALLTAXA;
-        	}
+            if (cd.toString().equals(leastContext)) {
+                return new TaxonomyContext(cd, taxonomy);
+            }
         }
 
-        // if we didn't find a match
+        // if we didn't find a match, should probably throw an exception
 		return taxonomy.ALLTAXA;
     }
     

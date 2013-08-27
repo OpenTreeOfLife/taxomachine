@@ -39,7 +39,7 @@ public enum ContextDescription {
     PLATYHELMINTHES     ("Platyhelminthes", ContextGroup.ANIMALS,   "Platyhelminthes",  "Platyhelminthes",  Nomenclature.ICZN),
     ANNELIDS            ("Annelids",        ContextGroup.ANIMALS,   "Annelids",         "Annelida",         Nomenclature.ICZN),
     CNIDARIA            ("Cnidarians",      ContextGroup.ANIMALS,   "Cnidarians",       "Cnidaria",         Nomenclature.ICZN),
-    ARACHNIDES          ("Arachnides",      ContextGroup.ANIMALS,   "Arachnides",       "Arachnida",        Nomenclature.ICZN),
+    ARACHNIDES          ("Arachnides",      ContextGroup.ANIMALS,   "Arachnids",		"Arachnida",        Nomenclature.ICZN),
     INSECTS             ("Insects",         ContextGroup.ANIMALS,   "Insects",          "Insecta",          Nomenclature.ICZN),
 
     // FUNGI group

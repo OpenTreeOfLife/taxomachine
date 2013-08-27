@@ -54,7 +54,7 @@ public class TaxonomyComparator {
 	public void compareGraftTaxonomyToDominant(GraphDatabaseAgent dinga,String comparisonsource){
 		Taxonomy domtax = new Taxonomy(dinga);		
 
-		Index<Node> taxSources = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+		Index<Node> taxSources = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
 		Index<Node> taxaByName = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 		
 		//get the root of the comparison taxonomy
@@ -324,7 +324,7 @@ public class TaxonomyComparator {
 	 */
 	public void compareDontAddNamesToOTTOL(String infilename, String outfilename,GraphDatabaseAgent dinga){
 		Taxonomy domtax = new Taxonomy(dinga);		
-		Index<Node> taxSources = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+		Index<Node> taxSources = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
 		Index<Node> taxaByName = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 		
 		String str = "";

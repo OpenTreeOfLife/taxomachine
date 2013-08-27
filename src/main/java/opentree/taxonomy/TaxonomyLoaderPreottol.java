@@ -214,7 +214,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
 
-		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
 		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
 
@@ -517,7 +517,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 			urlPrefix = "http://ecat-dev.gbif.org/usage/";		    
 		}
 		
-		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
 		//can plug into these by not saying name but the source itself
 		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);

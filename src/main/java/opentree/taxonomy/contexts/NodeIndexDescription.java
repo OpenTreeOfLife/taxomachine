@@ -16,35 +16,83 @@ package opentree.taxonomy.contexts;
  *
  */
 public enum NodeIndexDescription {
+	
+	// all taxon indexes
+	
+	/** Record all taxa. Field is "name" and key is taxon name */
     TAXON_BY_NAME               ("taxNodesByName"),         // all taxon nodes by name
+
+	/** Record all taxa. Field is "name" and key is synonymous name */
     TAXON_BY_SYNONYM            ("taxNodesBySyn"),          // all taxon nodes by synonym
 
-    // preferred taxon nodes
+    /** Records all taxa. Field is "rank" and key is taxon rank. Only set for ALLTAXA context. */
+    TAXON_BY_RANK					 ("taxNodesByRank"),
+
+    // preferred taxon indexes
+    
+    /** Records preferred taxa. Field is "rank" and key is taxon rank. Only set for ALLTAXA context. */
+    PREFERRED_TAXON_BY_RANK			 ("prexTaxNodesByRank"),
+    
+    /** Records species and infraspecific ranks. Field is "genus_taxuid" and key is the ott id of the enclosing genus. */
+    PREFERRED_SPECIES_BY_GENUS		("prefSpeciesNodesByGenus"),
     
     // all ranks
+
+    /** Records all preferred taxa. Field is "name", key is taxon name. */
     PREFERRED_TAXON_BY_NAME     ("prefTaxNodesByName"),
+
+    /** Records all preferred taxa. Field is "name", key is synonymous name. */
     PREFERRED_TAXON_BY_SYNONYM  ("prefTaxNodesBySyn"),
+
+    /** Records all preferred taxa. Field is "name", key is taxon name or synonymous name. */
     PREFERRED_TAXON_BY_NAME_OR_SYNONYM  ("prefTaxNodesByNameOrSyn"),
 
     // species and subspecific ranks
+
+    /** Records preferred species and infraspecific taxa. Field is "name", key is taxon name. */
     PREFERRED_TAXON_BY_NAME_SPECIES     ("prefTaxNodesByNameSpecies"),
-//    PREFERRED_TAXON_BY_SYNONYM_SPECIES  ("prefTaxNodesBySynSpecies"), // currently unused, here in case it becomes useful
-//    PREFERRED_TAXON_BY_NAME_OR_SYNONYM_SPECIES  ("prefTaxNodesByNameOrSynSpecies"), // currently unused, here in case it becomes useful
+
+//    /** Records preferred species and infraspecific taxa. Field is "name", key is synonymous name. */
+//    PREFERRED_TAXON_BY_SYNONYM_SPECIES  ("prefTaxNodesBySynSpecies"),
+
+//    /** Records preferred species and infraspecific taxa. Field is "name", key is taxon name or synonymous name. */
+//    PREFERRED_TAXON_BY_NAME_OR_SYNONYM_SPECIES  ("prefTaxNodesByNameOrSynSpecies"),
 
     // genera only
+
+    /** Records preferred genera. Field is "name", key is taxon name. */
     PREFERRED_TAXON_BY_NAME_GENERA     ("prefTaxNodesByNameGenera"),
-//    PREFERRED_TAXON_BY_SYNONYM_GENERA  ("prefTaxNodesBySynGenera"), // currently unused, here in case it becomes useful
-//    PREFERRED_TAXON_BY_NAME_OR_SYNONYM_GENERA  ("prefTaxNodesByNameOrSynGenera"), // currently unused, here in case it becomes useful
+
+//    /** Records preferred genera. Field is "name", key is synonymous name. */
+//    PREFERRED_TAXON_BY_SYNONYM_GENERA  ("prefTaxNodesBySynGenera"),
+
+//    /** Records preferred genera. Field is "name", key is taxon name or synonymous name. */
+//    PREFERRED_TAXON_BY_NAME_OR_SYNONYM_GENERA  ("prefTaxNodesByNameOrSynGenera"),
 
     // higher taxa
+
+    /** Records preferred higher taxa. Field is "name", key is taxon name. */
     PREFERRED_TAXON_BY_NAME_HIGHER     ("prefTaxNodesByNameHigher"),
+
+//    /** Records preferred taxa. Field is "name", key is synonymous name. */
 //    PREFERRED_TAXON_BY_SYNONYM_HIGHER  ("prefTaxNodesBySynHigher"), // currently unused, here in case it becomes useful
+
+    /** Records preferred higher taxa. Field is "name", key is taxon name or synonymous name. */
     PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER  ("prefTaxNodesByNameOrSynHigher"), 
+
+    /** Stores information about the source taxonomies used to build OTT. */
+    TAXONOMY_SOURCES                 ("taxSources"),
     
-    TAX_SOURCES                 ("taxSources"),             // ?
+    /** Not used. Was used for preottol. */
+    @Deprecated
     TAX_STATUS                  ("taxStatus"),
+
+    /** Not used. Was used for preottol. */
+    @Deprecated
     TAX_RANK                    ("taxRank"),
     
+    /** Not used. Not clear what this is for. If this becomes used, please dpcument what it is for. */
+    @Deprecated
     TAXON_UNIQID				("taxUniqId");
 
     public final String namePrefix;

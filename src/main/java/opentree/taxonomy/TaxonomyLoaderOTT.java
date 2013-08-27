@@ -35,9 +35,13 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	// =================== instance variables elevated from within functions
 	
-	Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_SOURCES);
+	Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
 	Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 	Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
+
+	Index<Node> taxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_RANK);
+	Index<Node> prefTaxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK);
+	
 	Index<Node> prefTaxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
 	Index<Node> prefTaxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
 	Index<Node> prefTaxaByNameOrSynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
@@ -320,14 +324,16 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		}
 		tnode.setProperty("dubious", dubious);
 		taxaByName.add(tnode, "name", inputName);
+		taxaByRank.add(tnode, "rank", rank);
 		
 		// addl indexing
 		if (!dubious) {
 			prefTaxaByName.add(tnode, "name", inputName);
 			prefTaxaByNameOrSynonym.add(tnode, "name", inputName);
+			prefTaxaByRank.add(tnode, "rank", rank);
 			
 			// add to the rank-specific indexes
-	        if (rank.equals("species") || rank.equals("subspecies") || rank.equals("variety") || rank.equals("forma")) {
+	        if (isSpecific(rank)) {
 	        	prefTaxaByNameSpecies.add(tnode, "name", inputName);
 	        } else if (rank.equals("genus")) {
 	        	prefTaxaByNameGenera.add(tnode, "name", inputName);
@@ -361,7 +367,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 						prefTaxaBySynonym.add(tnode,"name",synName);
 						prefTaxaByNameOrSynonym.add(tnode,"name",synName);
 						
-			            if (!rank.equals("species") && !rank.equals("subspecies") && !rank.equals("variety") && !rank.equals("forma")) {
+			            if (!isSpecific(rank)) {
 			            	prefTaxaByNameOrSynonymHigher.add(tnode, "name", synName);
 			            }
 					}

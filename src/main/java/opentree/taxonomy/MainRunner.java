@@ -181,6 +181,11 @@ public class MainRunner {
                 System.out.println("arguments should be: graphdbfolder");
                 return;
             }
+        } else if (args[0].equals("makegenusindexes")) {
+            if (args.length != 2) {
+                System.out.println("arguments should be: graphdbfolder");
+                return;
+            }
         } else if (args.length != 3) {
             System.out.println("arguments should be: query graphdbfolder");
             return;
@@ -325,7 +330,14 @@ public class MainRunner {
             te = new TaxonomySynthesizer(taxdb);
             System.out.println("building context-specific indexes");
             te.makeContexts();
+        } else if (args[0].equals("makegenusindexes")) {
+            String graphname = args[1];
+            taxdb = new GraphDatabaseAgent(graphname);
+            te = new TaxonomySynthesizer(taxdb);
+            System.out.println("making species indexes by genus");
+            te.makeGenericIndexes();
 
+            
         } else if (args[0].equals("checknames")) {
             String sourcename = args[1];
             String graphname = args[2];
@@ -531,6 +543,7 @@ public class MainRunner {
         System.out.println("\tgraftbycomp <graphdbfolder_dom> <sourcename> (graphs an addedtaxonomy into main using the comparator)");
         System.out.println("\trecalculatemrcas <graphdbfolder> (deletes the mrca and nested mrcas and recalculates them)");
         System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
+        System.out.println("\tmakegenusindexes <graphdbfolder> (build indexes of species for each genus; requires that makeottol has already been run)");
         System.out.println("\tchecknames <sourcename> <graphdbfolder>");
         System.out.println("\tcomparenames <filename> <outfile> <graphdbfolder> (compare the names from a file to the ottol names and output the mappings of names)");
         
@@ -606,6 +619,7 @@ public class MainRunner {
                         || args[0].equals("makeottolnamedump")
                         || args[0].equals("dumpottol")
                         || args[0].equals("makecontexts")
+                        || args[0].equals("makegenusindexes")
                         || args[0].equals("checknames")
                         || args[0].equals("getsubtree")) {
                     mr.taxonomyQueryParser(args);
