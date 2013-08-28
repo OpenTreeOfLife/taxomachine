@@ -1,7 +1,9 @@
 package opentree.tnrs.queries;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 import opentree.taxonomy.RelType;
@@ -12,6 +14,7 @@ import opentree.taxonomy.contexts.ContextDescription;
 import opentree.taxonomy.contexts.NodeIndexDescription;
 import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.TNRSHit;
+import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
@@ -34,6 +37,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
+import scala.actors.threadpool.Arrays;
+
 /**
  * Provides access to a tnrs query tailored for autocomplete boxes.
  * 
@@ -51,7 +56,8 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     private final int minLengthForQuery = 2;
     
     private final int DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY = 3;
-    
+
+    private Index<Node> prefSpeciesNodesByGenus;
     private Index<Node> prefTaxNodesByNameHigher;
 	private Index<Node> prefTaxNodesByNameOrSynonymHigher;
     private Index<Node> prefTaxNodesByNameGenera;
@@ -61,10 +67,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	
     public SingleNamePrefixQuery(Taxonomy taxonomy) {
     	super(taxonomy);
+    	prefSpeciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_SPECIES_BY_GENUS);
     }
     
     public SingleNamePrefixQuery(Taxonomy taxonomy, TaxonomyContext context) {
     	super(taxonomy, context);
+    	prefSpeciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_SPECIES_BY_GENUS);
     }
 
     /**
@@ -137,45 +145,86 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     		
     		String[] parts = queryString.split("\\s+",2);
 
-    		if (parts.length > 1) { // If the search string contains two words:
+//    		throw new IllegalArgumentException("test: the name contains " + parts.length + " parts");
+    		
+//    		if (parts.length > 1) { // If the search string contains two words: // see below, seems to be unnecessary
 
-    			// Hit it against the species index.
-    			getExactMatches(escapedQuery, prefTaxNodesByNameSpecies);
-    			
-    			if (matches.size() < 1) { // no exact hit against the species index
+			// Hit it against the species index.
+			getExactMatches(escapedQuery, prefTaxNodesByNameSpecies);
+			
+			if (matches.size() < 1) { // no exact hit against the species index
+				
+    			// Hit the first word against the genus name index
+    			getExactMatches(QueryParser.escape(parts[0]), prefTaxNodesByNameGenera);
+
+    			if (matches.size() > 0) { // the first word was an exact match against the genus index
     				
-	    			// Hit the first word against the genus name index
-	    			getExactMatches(QueryParser.escape(parts[0]), prefTaxNodesByNameGenera);
-
-	    			if (matches.size() > 0) { // the first word was an exact match against the genus index
+    				LinkedList<TNRSMatch> genusMatches = new LinkedList<TNRSMatch>();
+    				for (TNRSMatch match : matches) {
+    					genusMatches.add(match);
+    				}
+    				
+    				// erase the genus matches, since we're looking for more specific matches using the provided epithet
+    				matches = new TNRSMatchSet(taxonomy);
+    				
+    				// retrieve all the species/subspecific taxa in each matched genus (may be homonym)
+    				for (TNRSMatch genusMatch : genusMatches) {
 	    				
-	    				// retrieve all the species in this genus (need index)
+    					IndexHits<Node> speciesHits = null;
+	    				try {
+	    					speciesHits = prefSpeciesNodesByGenus.get("genus_uid", genusMatch.getMatchedNode().getProperty("uid"));
 	    				
-	    				// add all the ones that match the second term prefix
-	    				
-	    				throw new IllegalArgumentException("test: this is an exact match to the genus " + matches.iterator().next().getUniqueName() + "");
+		    				String genusName = String.valueOf(genusMatch.getMatchedNode().getProperty("name"));
+		    				char[] searchEpithet = parts[1].toCharArray();
+		    				
+		    				// add any species to the results whose name matches the second search term prefix
+		    				for (Node sp : speciesHits) {
+		    					
+		    					// use substring position to get just the epithet of this species match
+		    					char[] hitName = String.valueOf(sp.getProperty("name")).substring(genusName.length()+1).toCharArray();
 
-	    				
-	    			} else { // no exact hit for first word against the genus index
-
-	    				// Hit it against the synonym index and the higher taxon index
-		    			getExactMatches(escapedQuery, prefTaxNodesBySynonym);
-		    			getExactMatches(escapedQuery, prefTaxNodesByNameHigher);
-		    			
-	    				if (matches.size() < 1) {
-	    					
-	    					// Prefix query against the higher taxon index
-	    					getPrefixMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher);
-
-		    				if (matches.size() < 1) {
-
-		    					// last resort: fuzzy match against entire index
-			    				getApproxMatches(escapedQuery, prefTaxNodesByNameOrSynonym);
+		    					boolean prefixMatch = true;
+		    					for (int i = 0; i < searchEpithet.length; i++) {
+		    						if (hitName[i] != searchEpithet[i]) {
+		    							prefixMatch = false;
+		    							break;
+		    						}
+		    					}
+		    					if (prefixMatch) {
+		    						matches.addMatch(new TNRSHit().
+		    								setMatchedTaxon(new Taxon(sp, taxonomy)).
+		    								setIsHomonym(isHomonym(String.valueOf(sp.getProperty("name")))).
+		    								setRank(String.valueOf(sp.getProperty("rank"))));
+		    					}
 		    				}
+	    				} finally {
+	    					speciesHits.close();
 	    				}
-	    			}
+
+    				}
+    				
+    			} else { // no exact hit for first word against the genus index
+
+    				// Hit it against the synonym index and the higher taxon index
+	    			getExactMatches(escapedQuery, prefTaxNodesBySynonym);
+	    			getExactMatches(escapedQuery, prefTaxNodesByNameHigher);
+	    			
+    				if (matches.size() < 1) {
+    					
+    					// Prefix query against the higher taxon index
+    					getPrefixMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher);
+
+	    				if (matches.size() < 1) {
+
+	    					// last resort: fuzzy match against entire index
+		    				getApproxMatches(escapedQuery, prefTaxNodesByNameOrSynonym);
+	    				}
+    				}
     			}
-	    		 
+			}
+			
+    			
+/*    		// this block may actually not be necessary, this case is already handled by above code
     		} else { // only contains one word
     			
     			// Hit the first word against the genus index
@@ -196,8 +245,9 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 					// If there are no results, do a fuzzy search against the higher taxon index
     				getApproxMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher);
 				}
-    		}
-    		
+    		} */
+
+    			
     	} else { // does not contain a space at all
 
     		getExactMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher);

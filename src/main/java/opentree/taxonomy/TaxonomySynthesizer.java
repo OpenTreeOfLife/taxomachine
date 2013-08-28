@@ -622,12 +622,16 @@ public class TaxonomySynthesizer extends Taxonomy {
 		@Override
 		public Evaluation evaluate(Path inPath) {
 
+//			System.out.println("traversing " + inPath.endNode().getProperty("name"));
+			
 			String rank = "";
-			if (inPath.startNode().hasProperty("rank")) {
-				inPath.startNode().getProperty("rank");
+			if (inPath.endNode().hasProperty("rank")) {
+				rank = String.valueOf(inPath.endNode().getProperty("rank"));
 			}
 			
-    		if (Taxonomy.isSpecific(rank)) {
+//			System.out.println("rank = " + rank);
+			
+    		if (isSpecific(rank)) {
     			return Evaluation.INCLUDE_AND_CONTINUE;
     		} else {
     			return Evaluation.EXCLUDE_AND_CONTINUE;
@@ -641,29 +645,30 @@ public class TaxonomySynthesizer extends Taxonomy {
     public void makeGenericIndexes() {
     	
     	int genCount = 0;
-    	int genReportFreq = 1000;
+    	int genReportFreq = 100000;
 
-        TraversalDescription prefTaxChildOfTraversal = Traversal.description().depthFirst().
+        TraversalDescription prefTaxChildOfTraversal = Traversal.description().
                 relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
 
-        Transaction tx;
-        for (Node genus : ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK).get("rank", "genus")) {
-        	tx = beginTx();
-        	try {
-	        	String gid = String.valueOf(genus.getProperty("tax_uid"));
+        Transaction tx = beginTx();
+    	try {
+    		for (Node genus : ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK).get("rank", "genus")) {
+//        		System.out.println("starting on genus: " + genus.getProperty("name"));
+	        	String gid = String.valueOf(genus.getProperty("uid"));
 	        	for (Node sp : prefTaxChildOfTraversal.evaluator(new isSpecificEvaluator()).traverse(genus).nodes()) {
-	        		prefSpeciesByGenus.add(sp, "genus_taxuid", gid);
+//	        		System.out.println("returned " + sp.getProperty("name"));
+	        		prefSpeciesByGenus.add(sp, "genus_uid", gid);
 	        	}
 	        	
 	        	if (genCount % genReportFreq == 0) {
-	        		System.out.println(genCount / 1000 + "K genera processed");
+	        		System.out.println(genCount / 1000 + "K");
 	        	}
-	        	tx.success();
-        	} finally {
-        		tx.finish();
-        	}
-        	genCount++;
-        }
+	        	genCount++;
+    		}
+    		tx.success();
+    	} finally {
+    		tx.finish();
+    	}
     }
     
     /**
@@ -686,7 +691,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                 
                 i++;
                 if (i % 100000 == 0)
-                    System.out.println(i / 1000);
+                    System.out.println(i / 1000 + "K");
             }
         }
         tx.success();

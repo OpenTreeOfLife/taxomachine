@@ -33,7 +33,7 @@ public enum NodeIndexDescription {
     /** Records preferred taxa. Field is "rank" and key is taxon rank. */
     PREFERRED_TAXON_BY_RANK			 ("prexTaxNodesByRank"),
     
-    /** Records species and infraspecific ranks. Field is "genus_taxuid" and key is the ott id of the enclosing genus. */
+    /** Records species and infraspecific ranks. Field is "genus_uid" and key is the ott id of the enclosing genus. */
     PREFERRED_SPECIES_BY_GENUS		("prefSpeciesNodesByGenus"),
     
     // all ranks
