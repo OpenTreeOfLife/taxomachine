@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy;
 
 import jade.tree.JadeNode;
 import jade.tree.JadeTree;
@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import opentree.taxonomy.contexts.ContextDescription;
+import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.tnrs.queries.SimpleQuery;
@@ -59,6 +61,10 @@ public class Taxon {
         return taxNode.getProperty("name").toString();
     }
     
+    public String getRank() {
+    	return taxNode.getProperty("rank").toString();
+    }
+    
     /**
      * Returns the least inclusive TaxonomyContext object that contains `taxon`
      * @param taxon
@@ -66,13 +72,22 @@ public class Taxon {
      */
     public TaxonomyContext getLeastInclusiveContext() {
         
-        // look for a matching ContextDescription, if we don't find one
-        for (ContextDescription cd : ContextDescription.values())
-            if (cd.toString().equals(taxNode.getProperty("leastcontext")))
+    	String leastContext = "";
+    	if (taxNode.hasProperty("leastcontext")) {
+    		leastContext = String.valueOf(taxNode.getProperty("leastcontext"));
+    	} else {
+    		return taxonomy.ALLTAXA;
+    	}
+    	
+        // look for a matching ContextDescription
+        for (ContextDescription cd : ContextDescription.values()) {
+            if (cd.toString().equals(leastContext)) {
                 return new TaxonomyContext(cd, taxonomy);
+            }
+        }
 
-        // if we didn't find a match
-        return null;
+        // if we didn't find a match, should probably throw an exception
+		return taxonomy.ALLTAXA;
     }
     
     public boolean isPreferredTaxChildOf(Taxon parent) {

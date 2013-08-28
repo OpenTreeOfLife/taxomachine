@@ -1,6 +1,11 @@
 package opentree.tnrs;
 
-import opentree.RelType;
+import opentree.taxonomy.GraphDatabaseAgent;
+import opentree.taxonomy.RelType;
+import opentree.taxonomy.Taxon;
+import opentree.taxonomy.Taxonomy;
+import opentree.taxonomy.contexts.ContextDescription;
+import opentree.taxonomy.contexts.TaxonomyContext;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -25,11 +30,13 @@ import java.util.List;
 public class TNRSMatchSet implements Iterable<TNRSMatch> {
     
     private List<TNRSMatch> matches;
+    private Taxonomy taxonomy;
 
     // TODO: add sort features
 
-    public TNRSMatchSet() {
+    public TNRSMatchSet(Taxonomy tax) {
         matches = new ArrayList<TNRSMatch>();
+        taxonomy = tax;
     }
     
     /**
@@ -69,6 +76,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         private boolean isApprox;                     // whether this is a fuzzy match (presumably misspellings)
         private boolean isSynonym;                    // whether the match points to a known synonym (not necessarily in the graph, nor necessarily pointing to a node in the graph)
         private boolean isHomonym;                     // whether the match points to a known homonym
+        private String rank;							// the taxonomic rank
         private boolean nameStatusIsKnown;              // whether we know if the match involves a synonym and/or homonym
         private double score;                         // the score of this match
         private HashMap<String,String> otherData;     // other data provided by the match source
@@ -81,6 +89,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             isApprox = m.getIsApprox();
             isSynonym = m.getIsSynonym();
             isHomonym = m.getIsHomonym();
+            rank = m.getRank();
             nameStatusIsKnown = m.getNameStatusIsKnown();
             searchString = m.getSearchString();
             score = m.getScore();
@@ -143,12 +152,32 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             return isHomonym;
         }
         
+        public String getRank() {
+        	return rank;
+        }
+        
         public boolean getNameStatusIsKnown() {
             return nameStatusIsKnown;
         }
 
         public double getScore() {
             return score;
+        }
+        
+        public String getUniqueName() {
+        	String uniqueName = getMatchedNode().getProperty("name").toString();
+        	if (isHomonym) {
+	    		if (getMatchedNode().hasProperty("leastcontext")) {
+	    			String leastContext = String.valueOf(getMatchedNode().getProperty("leastcontext"));
+	    			for (ContextDescription cd : ContextDescription.values()) {
+	    				if (cd.toString().equals(leastContext)) {
+	    					uniqueName = uniqueName.concat(" (").concat(cd.name).concat(")");
+	    				}
+	    			}
+	    		}
+        	}
+
+			return uniqueName;
         }
         
         /**

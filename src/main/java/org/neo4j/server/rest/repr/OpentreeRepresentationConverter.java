@@ -78,7 +78,7 @@ public class OpentreeRepresentationConverter {
     public static Representation getTNRSResultsRepresentation(TNRSResults results) {
     	return TNRSResultsRepresentation.getResultsRepresentation(results);
     }
-
+    
     /**
      * Return a serialization of a single TNRSNameResult object
      * @param nameResult

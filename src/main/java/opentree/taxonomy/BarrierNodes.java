@@ -1,10 +1,13 @@
-package opentree;
+package opentree.taxonomy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.Nomenclature;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
