@@ -8,10 +8,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import opentree.GraphDatabaseAgent;
-import opentree.Taxon;
-import opentree.TaxonSet;
-import opentree.Taxonomy;
+import opentree.taxonomy.GraphDatabaseAgent;
+import opentree.taxonomy.Taxon;
+import opentree.taxonomy.TaxonSet;
+import opentree.taxonomy.Taxonomy;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.queries.MultiNameContextQuery;

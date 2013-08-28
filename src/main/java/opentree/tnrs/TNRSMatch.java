@@ -20,6 +20,8 @@ public abstract class TNRSMatch {
     public abstract boolean getIsApproximate();
     public abstract boolean getIsSynonym();
     public abstract boolean getIsHomonym();
+    public abstract String getRank();
+    public abstract String getUniqueName();
     public abstract boolean getNameStatusIsKnown();
     public abstract double getScore();
     public abstract String getMatchType();

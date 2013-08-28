@@ -3,7 +3,7 @@ package opentree.tnrs;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import opentree.TaxonomyContext;
+import opentree.taxonomy.contexts.TaxonomyContext;
 
 public class ContextResult {
 	public TaxonomyContext context;

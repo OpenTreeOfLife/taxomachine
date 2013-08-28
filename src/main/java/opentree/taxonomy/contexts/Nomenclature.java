@@ -1,4 +1,4 @@
-package opentree;
+package opentree.taxonomy.contexts;
 
 public enum Nomenclature {
 //  Name         code       description    
