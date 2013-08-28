@@ -53,6 +53,11 @@ then you can use:
 
 	java -Xmx10g -XX:-UseConcMarkSweepGC -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar loadtaxsyn ott /data/ott2.0/taxonomy /data/ott2.0/synonyms taxomachine.db
 
+For the new database to function for TNRS, it is necessary to build additional indexes. This can be very memory-intensive:
+
+	java -Xmx30g -XX:-UseConcMarkSweepGC -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar makecontexts taxomachine.db
+	java -Xmx30g -XX:-UseConcMarkSweepGC -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar makegenusindexes taxomachine.db
+
 System Properties
 -----------------
 Using:
