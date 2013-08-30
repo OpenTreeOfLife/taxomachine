@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.StringTokenizer;
 
 import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.OTTFlag;
 
 import org.apache.log4j.Logger;
 import org.neo4j.graphalgo.GraphAlgoFactory;
@@ -54,6 +56,9 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 	HashMap<String, String> parents = new HashMap<String, String>();
+	HashMap<String, OTTFlag> flags;
+	
+	HashSet<Node> dubiousNodes = new HashSet<Node>();
 
 	Node metadatanode = null;
 	
@@ -72,7 +77,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	public TaxonomyLoaderOTT(GraphDatabaseAgent gdb) {
 		super(gdb);
-		// TODO Auto-generated constructor stub
+		buildFlagMap();
 	}
 	
 	/**
@@ -262,10 +267,12 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			rel.setProperty("parentid", parents.get(childId));
 
 			// don't need to wait to makeottol anymore
-			Relationship prefRel = dbnodes.get(childId).createRelationshipTo(dbnodes.get(parents.get(childId)), RelType.PREFTAXCHILDOF);
-			prefRel.setProperty("source", sourceName);
-			prefRel.setProperty("childid", childId);
-			prefRel.setProperty("parentid", parents.get(childId));
+			if (!dubiousNodes.contains(dbnodes.get(childId))) {
+				Relationship prefRel = dbnodes.get(childId).createRelationshipTo(dbnodes.get(parents.get(childId)), RelType.PREFTAXCHILDOF);
+				prefRel.setProperty("source", sourceName);
+				prefRel.setProperty("childid", childId);
+				prefRel.setProperty("parentid", parents.get(childId));
+			}
 
 		} catch(java.lang.IllegalArgumentException io) {
 			io.printStackTrace();
@@ -287,6 +294,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		String input_sources = "";
 		String uniqname = "";
 		boolean dubious = false;
+		boolean forceVisible = false;
 		Node tnode = createNode();
 		//if it equals life it won't have a parent
 		if (nexttok.equals("life") == false) {
@@ -307,22 +315,44 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		input_sources = st.nextToken();
 		tnode.setProperty("rank",rank);
 		tnode.setProperty("input_sources",input_sources);
-		if(st.hasMoreTokens()){
+		while (st.hasMoreTokens()) {
+			
 			String nt = st.nextToken();
-			if(nt.equalsIgnoreCase("D")){
+/*			if(nt.equalsIgnoreCase("D")){
 				dubious = true;
-			}else{
+			} */
+
+			if (flags.containsKey(nt)) {
+
+				OTTFlag flag = flags.get(nt);
+				tnode.setProperty(flag.label, true); // record the flag on the node
+				
+				if (flag == OTTFlag.FORCE_VISIBLE) {
+					forceVisible = true;
+					if (dubiousNodes.contains(tnode)) {
+						dubious = false;
+						dubiousNodes.remove(tnode);
+					}
+				}
+				
+				if (!flag.includeInPrefIndexes && !forceVisible) {
+					dubious = true;
+					dubiousNodes.add(tnode);
+				}
+
+			} else {
 				uniqname = nt;
 				tnode.setProperty("uniqname",uniqname);
 			}
-			if(st.hasMoreTokens()){//has unique name and dubious
+			
+/*			if(st.hasMoreTokens()){//has unique name and dubious
 				nt = st.nextToken();
 				if (nt.equalsIgnoreCase("D")){
 					dubious = true;
 				}
-			}
+			} */
 		}
-		tnode.setProperty("dubious", dubious);
+//		tnode.setProperty("dubious", dubious);
 		taxaByName.add(tnode, "name", inputName);
 		taxaByRank.add(tnode, "rank", rank);
 		
@@ -376,6 +406,16 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		}
 	}
 
+	/**
+	 * Make a map of flags by their tag strings coming in from the file so we can quickly look them up during import
+	 */
+	private void buildFlagMap() {
+		flags = new HashMap<String, OTTFlag>();
+		for (OTTFlag f : OTTFlag.values()) {
+			flags.put(f.label, f);
+		}
+	}
+	
 	private void createMetadataNode() {
 		metadatanode = createNode();
 		metadatanode.setProperty("source", sourceName);
@@ -386,10 +426,10 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		taxSources.add(metadatanode, "source", sourceName);
 	}
 	
-	HashMap<String, ArrayList<String>> globalchildren = null;
+/*	HashMap<String, ArrayList<String>> globalchildren = null;
 	HashMap<String,String> globalidnamemap = null;
 	PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelType.TAXCHILDOF, Direction.OUTGOING), 10000);
-	HashMap<Node,Node> lastexistingmatchparents = new HashMap<Node,Node>();
+	HashMap<Node,Node> lastexistingmatchparents = new HashMap<Node,Node>(); */
 
 }
 
