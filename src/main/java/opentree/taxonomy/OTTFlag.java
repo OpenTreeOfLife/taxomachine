@@ -2,28 +2,73 @@ package opentree.taxonomy;
 
 public enum OTTFlag {
 
-	// not a valid taxon. never made available for mapping
+	// ==== flags designating suppression unless overriden
+	
+	/**
+	 * not a valid taxon. never made available for mapping
+	 */
 	NOT_OTU ("not_otu", false),
 	
 	// dubious flags: guilty until proven innocent
-	BARREN ("barren", false), // no species in this subtree
-	ENVIRONMENTAL ("unclassified3", false),
+	
+	/**
+	 * higher taxa with zero children...
+	 */
+	BARREN ("barren", false),
+	
+	/**
+	 * things with the string "environmental" in the name
+	 */
+	ENVIRONMENTAL ("environmental", false),
+	
+	/**
+	 * obvious
+	 */
 	HYBRID ("hybrid", false),
-	UNCLASSIFIED_INHERITED ("unclassified1", false),
-	UNCLASSIFIED_EXACT ("unclassified2", false),
-	UNCLASSIFIED4 ("unclassified4", false), // still not sure what to call this
+
+	/**
+	 * low-rank children of high-rank taxa (e.g. genus child of class)
+	 */
+	MAJOR_RANK_CONFLICT ("major_rank_conflict", false),
+
+	/**
+	 * children of unclassified containers
+	 */
+	UNCLASSIFIED_INHERITED ("unclassified_inherited", false),
+	UNCLASSIFIED_DIRECT ("unclassified_direct", false),
 	VIRAL ("viral", false),
 
-	// other
-	INCERTAE_SEDIS ("incertae_sedis", true), // things explicitly identified as incertae sedis
-	INFRASPECIFIC ("infraspecific", true), // obvious meaning
+	// ===== flags not designating suppression
+	
+	/**
+	 * ?
+	 */
+	INCERTAE_SEDIS ("incertae_sedis", true),
+	
+	/**
+	 * ?
+	 */
+	INCERTAE_SEDIS_DIRECT ("incertae_sedis_direct", true),
 
-	// TODO: not quite sure what to do with these...
-	SUB_SIBLING ("countme", true),
-	SUPER_SIBLING ("unplaced", true),
+	/**
+	 * obvious
+	 */
+	INFRASPECIFIC ("infraspecific", true),
 
-	// user override
-	FORCE_VISIBLE ("", true);
+	/**
+	 * a sibling is of a lower (higher?) rank than this taxon
+	 */
+	SIBLING_LOWER ("sibling_lower", true),
+	
+	/**
+	 * a sibling is of a higher (lower?) rank than this taxon
+	 */
+	SIBLING_HIGHER ("sibling_higher", true),
+
+	/**
+	 * designates that the taxon should not be suppressed even if it has flags designating suppression
+	 */
+	FORCE_VISIBLE ("forced_visible", true);
 	
 	String label;
 	boolean includeInPrefIndexes;
