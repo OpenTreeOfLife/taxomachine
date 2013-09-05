@@ -22,7 +22,7 @@ public enum OTTFlag {
 	ENVIRONMENTAL ("environmental", false),
 	
 	/**
-	 * obvious
+	 * taxa of known hybrid origin
 	 */
 	HYBRID ("hybrid", false),
 
@@ -35,7 +35,15 @@ public enum OTTFlag {
 	 * children of unclassified containers
 	 */
 	UNCLASSIFIED_INHERITED ("unclassified_inherited", false),
+	
+	/**
+	 * ?
+	 */
 	UNCLASSIFIED_DIRECT ("unclassified_direct", false),
+	
+	/**
+	 * viruses
+	 */
 	VIRAL ("viral", false),
 
 	// ===== flags not designating suppression
@@ -51,7 +59,7 @@ public enum OTTFlag {
 	INCERTAE_SEDIS_DIRECT ("incertae_sedis_direct", true),
 
 	/**
-	 * obvious
+	 * contained with a species-rank taxon
 	 */
 	INFRASPECIFIC ("infraspecific", true),
 
