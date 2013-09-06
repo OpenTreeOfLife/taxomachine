@@ -306,7 +306,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     @Override
     public TNRSResults getResults() {
-    	results.addNameResult(new TNRSNameResult(queryString, matches));
+    	results.addNameResult(new TNRSNameResult(queryString, queryString, matches));
         return results;
     }
    

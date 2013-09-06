@@ -74,9 +74,9 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				HashMap<String, Object> tnrsResultsMap = new HashMap<String, Object>();
 
 				tnrsResultsMap.put("governing_code", results.getGoverningCode());
-				tnrsResultsMap.put("unambiguous_names", results.getNamesWithDirectMatches());
-				tnrsResultsMap.put("unmatched_names", results.getUnmatchedNames());
-				tnrsResultsMap.put("matched_names", results.getMatchedNames());
+				tnrsResultsMap.put("unambiguous_name_ids", results.getNameIdsWithDirectMatches()); // was "unambiguous_names"
+				tnrsResultsMap.put("unmatched_name_ids", results.getUnmatchedNameIds()); // was "unmatched_names"
+				tnrsResultsMap.put("matched_name_ids", results.getMatchedNameIds()); // was "matched_names"
 				tnrsResultsMap.put("context", results.getContextName());
 
 				for (Map.Entry<String, Object> pair : tnrsResultsMap.entrySet()) {
@@ -99,6 +99,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	public static MappingRepresentation getNameResultRepresentation(TNRSNameResult r) {
 
 		final HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
+		nameResultMap.put("id", r.getId());
 		nameResultMap.put("queried_name", r.getQueriedName());
 		nameResultMap.put("matches", r.getMatches());
 
