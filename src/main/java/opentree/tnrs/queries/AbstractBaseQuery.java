@@ -130,7 +130,7 @@ public abstract class AbstractBaseQuery implements TNRSQuery {
      * @param name
      * @return minIdentity
      */
-    protected float getMinIdentity(String name) {
+    public static float getMinIdentity(String name) {
         
         float ql = name.length();
 
