@@ -2,10 +2,12 @@ package opentree.plugins;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 
 import opentree.taxonomy.GraphDatabaseAgent;
 import opentree.taxonomy.Taxonomy;
@@ -38,21 +40,30 @@ public class TNRS extends ServerPlugin {
     @PluginTarget(GraphDatabaseService.class)
     public Representation getContextForNames(
             @Source GraphDatabaseService graphDb,
-            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString) {
+            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db")
+            	// TODO: convert this to accept a JSON array
+            	@Parameter(name = "queryString", optional = false) String queryString) {
 
+    	Map<String, String> idNameMap = new HashMap<String, String>();
+    	
+    	// TODO: convert this to accept an array
         String[] searchStrings = queryString.split("\\s*\\,\\s*");
+
+		for (String name : searchStrings) {
+			idNameMap.put(name, name);
+		}
+    	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
 
         MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
-        HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
         
         // this hashset will hold ambiguous names (i.e. synonyms)
-        HashSet<String> namesNotMatched = (HashSet<String>) tnrs.setSearchStrings(names).inferContextAndReturnAmbiguousNames();
+        Collection<Object> namesIdsNotMatched = tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().keySet();
         TaxonomyContext inferredContext = tnrs.getContext();
 
         // create a container to hold the results
-        ContextResult contextResult = new ContextResult(inferredContext, namesNotMatched);
+        ContextResult contextResult = new ContextResult(inferredContext, namesIdsNotMatched);
         
         gdb.shutdownDb();
         
@@ -89,6 +100,7 @@ public class TNRS extends ServerPlugin {
         }
     }
 
+    /*
     @Description("DEPRECATED. An alias for `contextQueryForNames`, left in for compatibility only. Use `contextQueryForNames` instead.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation doTNRSForNames(
@@ -97,18 +109,42 @@ public class TNRS extends ServerPlugin {
             @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
 
     	return contextQueryForNames(graphDb, queryString, contextName);
-    }
+    } */
     
     @Description("Return information on potential matches to a search query")
     @PluginTarget(GraphDatabaseService.class)
     public Representation contextQueryForNames(
             @Source GraphDatabaseService graphDb,
-            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
-            @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
+            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db")
+            	@Parameter(name = "queryString") String queryString,
+            @Description("The name of the taxonomic context to be searched")
+            	@Parameter(name = "contextName", optional = true) String contextName,
+        	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result")
+        		@Parameter(name="ids", optional = true) String[] ids) throws ContextNotFoundException {
 
-        String[] searchStrings = queryString.split("\\s*\\,\\s*");
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
+
+    	// TODO: convert this to accept an array
+        String[] searchStrings = queryString.split("\\s*\\,\\s*");
+        Map<String, String> idNameMap = new HashMap<String, String>();
+    	if (ids != null) {
+    		int i = 0;
+            for (String name : searchStrings) {
+            	try {
+            		idNameMap.put(ids[i++], name);
+            	} catch (ArrayIndexOutOfBoundsException ex) {
+            		throw new IllegalArgumentException("There are more names than ids");
+            	}
+            }
+            if (ids.length > i) {
+        		throw new IllegalArgumentException("There are more ids than names");
+            }
+    	} else {
+    		for (String name : searchStrings) {
+    			idNameMap.put(name, name);
+    		}
+    	}
         
         // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
@@ -117,11 +153,11 @@ public class TNRS extends ServerPlugin {
         	context = taxonomy.getContextByName(contextName);
         	useAutoInference = false;
         }
-
+    	
         MultiNameContextQuery mncq = new MultiNameContextQuery(taxonomy);
         HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
         TNRSResults results = mncq.
-        		setSearchStrings(names).
+        		setSearchStrings(idNameMap).
         		setContext(context).
         		setAutomaticContextInference(useAutoInference).
         		runQuery().

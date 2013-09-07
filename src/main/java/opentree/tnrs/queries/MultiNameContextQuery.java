@@ -41,7 +41,7 @@ import org.neo4j.graphdb.index.IndexHits;
 public class MultiNameContextQuery extends AbstractBaseQuery {
     
 //    private HashSet<String> queriedNames;
-	private Map<String, String> queriedNames;
+	private Map<Object, String> queriedNames;
     private Taxon bestGuessLICAForNames; // used for the inferred context
     private HashSet<Taxon> taxaWithExactMatches; // To store taxa/names for which we can/cannot find direct (exact, n=1) matches
     private boolean contextAutoInferenceIsOn;
@@ -52,10 +52,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 //    private HashSet<String> namesWithoutExactSynonymMatches;
 //    private HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches;
 
-    private Map<String, String> namesUnmatchableAgainstAllTaxaContext;
-    private Map<String, String> namesWithoutExactNameMatches;
-    private Map<String, String> namesWithoutExactSynonymMatches;
-    private Map<String, String> namesWithoutApproxTaxnameOrSynonymMatches;
+//    private Map<Object, String> namesUnmatchableAgainstAllTaxaContext;
+    private Map<Object, String> namesWithoutExactNameMatches;
+    private Map<Object, String> namesWithoutExactSynonymMatches;
+    private Map<Object, String> namesWithoutApproxTaxnameOrSynonymMatches;
 
     
     public MultiNameContextQuery(Taxonomy taxonomy) {
@@ -66,30 +66,44 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	super(taxonomy, context);
     }
     
-    /**
+    /*
      * Initialize the query object with a set of names. Returns self on success. The result will be returned
      * with the original search strings as the ids.
      * @param searchStrings
      * @param predefContext
-     */
+     *
     public MultiNameContextQuery setSearchStrings(Set<String> searchStrings) {
         clear();
         for (String s : searchStrings) {
         	queriedNames.put(s, QueryParser.escape(s).toLowerCase());
         }
         return this;
-    }
+    } 
+
+    /**
+     * Initialize the query object with a map containing ids and names. Returns self on success. The result will
+     * be returned with the values used for ids in the map.
+     * @param searchStrings
+     * @param predefContext
+     *
+    public MultiNameContextQuery setSearchStrings(Map<Object, String> idToNameMap) {
+        clear();
+        for (Entry<Object, String> entry : idToNameMap.entrySet()) {
+        	queriedNames.put(entry.getKey(), QueryParser.escape(entry.getValue()).toLowerCase());
+        }
+        return this;
+    }*/
 
     /**
      * Initialize the query object with a set of names. Returns self on success. The result will be returned
-     * with the keys of the incoming map keys set as the ids.
+     * with the incoming map keys set as the ids.
      * @param searchStrings
      * @param predefContext
      */
-    public MultiNameContextQuery setSearchStrings(Map<String, String> searchStringsWithIds) {
+    public MultiNameContextQuery setSearchStrings(Map<String, String> idToNameMap) {
         clear();
-        for (Entry<String, String> entry : searchStringsWithIds.entrySet()) {
-        	queriedNames.put(entry.getKey(), QueryParser.escape(entry.getValue()).toLowerCase());
+        for (Object id : idToNameMap.keySet()) {
+        	queriedNames.put(id, QueryParser.escape(idToNameMap.get(id)).toLowerCase());
         }
         return this;
     }
@@ -123,8 +137,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     @Override
     public MultiNameContextQuery clear() {
 //        queriedNames = new HashSet<String>();
-    	queriedNames = new HashMap<String, String>();
-        taxaWithExactMatches = new HashSet<Taxon>();
+//    	queriedNames = new HashMap<String, String>();
+    	queriedNames = new HashMap<Object, String>();
+    	taxaWithExactMatches = new HashSet<Taxon>();
         bestGuessLICAForNames = null;
         results = new TNRSResults();
         
@@ -133,11 +148,15 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 //        namesWithoutExactSynonymMatches = new HashSet<String>();
 //    	namesWithoutApproxTaxnameOrSynonymMatches = new HashSet<String>();
 
-        namesWithoutExactNameMatches = new HashMap<String, String>();
-        namesWithoutExactSynonymMatches = new HashMap<String, String>();
-        namesWithoutApproxTaxnameOrSynonymMatches = new HashMap<String, String>();
+//        namesWithoutExactNameMatches = new HashMap<String, String>();
+//        namesWithoutExactSynonymMatches = new HashMap<String, String>();
+//        namesWithoutApproxTaxnameOrSynonymMatches = new HashMap<String, String>();
 
-    	return this;
+        namesWithoutExactNameMatches = new HashMap<Object, String>();
+        namesWithoutExactSynonymMatches = new HashMap<Object, String>();
+        namesWithoutApproxTaxnameOrSynonymMatches = new HashMap<Object, String>();
+
+        return this;
     }
 
     /**
@@ -160,10 +179,12 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         
         // infer context if we are allowed to, and determine names to be matched against it
 //        HashSet<String> namesToMatchAgainstContext = new HashSet<String>();
-    	Map<String, String> namesToMatchAgainstContext =  new HashMap<String, String>();
-        if (contextAutoInferenceIsOn) {
+//    	Map<String, String> namesToMatchAgainstContext =  new HashMap<String, String>();
+    	Map<Object, String> namesToMatchAgainstContext =  new HashMap<Object, String>();
+       if (contextAutoInferenceIsOn) {
 //        	namesToMatchAgainstContext = (HashSet<String>) inferContextAndReturnAmbiguousNames();
-        	namesToMatchAgainstContext = (HashMap<String, String>) inferContextAndReturnAmbiguousNames();
+//        	namesToMatchAgainstContext = (HashMap<String, String>) inferContextAndReturnAmbiguousNames();
+        	namesToMatchAgainstContext = (HashMap<Object, String>) inferContextAndReturnAmbiguousNames();
         } else {
             namesToMatchAgainstContext = queriedNames;
         }
@@ -184,8 +205,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 
         // record unmatchable names to results
 //        for (String name : namesWithoutApproxTaxnameOrSynonymMatches)
-        for (Entry<String, String> nameEntry : namesWithoutApproxTaxnameOrSynonymMatches.entrySet()) {
-            results.addUnmatchedName(nameEntry.getKey(), nameEntry.getValue());
+//        for (Entry<String, String> nameEntry : namesWithoutApproxTaxnameOrSynonymMatches.entrySet()) {
+        for (Entry<Object, String> nameEntry : namesWithoutApproxTaxnameOrSynonymMatches.entrySet()) {
+          results.addUnmatchedName(nameEntry.getKey(), nameEntry.getValue());
         }
         
         return this;
@@ -212,16 +234,20 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * @return the initiating NameslistStandardQuery object
      */
 //    public Set<String> inferContextAndReturnAmbiguousNames() {
-    public Map<String, String> inferContextAndReturnAmbiguousNames() {
+//    public Map<String, String> inferContextAndReturnAmbiguousNames() {
+    public Map<Object, String> inferContextAndReturnAmbiguousNames() {
 
     	// we will return the names without exact matches
 //    	HashSet<String> namesUnmatchableAgainstAllTaxaContext = new HashSet<String>();
-    	Map<String, String> namesUnmatchableAgainstAllTaxaContext = new HashMap<String, String>();
-    	
+//    	Map<String, String> namesUnmatchableAgainstAllTaxaContext = new HashMap<String, String>();
+    	Map<Object, String> namesUnmatchableAgainstAllTaxaContext = new HashMap<Object, String>();
+  	
 //    	for (String thisName : queriedNames) {
-    	for (Entry<String, String> nameEntry : queriedNames.entrySet()) {
+//    	for (Entry<String, String> nameEntry : queriedNames.entrySet()) {
+    	for (Entry<Object, String> nameEntry : queriedNames.entrySet()) {
 
-    		String thisId = nameEntry.getKey();
+//    		String thisId = nameEntry.getKey();
+    		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
     		
             // Attempt to find exact matches against *ALL* preferred taxa
@@ -282,13 +308,16 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * @param searchStrings
      */
 //    private void getExactNameMatches(HashSet<String> searchStrings) {
-    private void getExactNameMatches(Map<String, String> searchStrings) {
+//    private void getExactNameMatches(Map<String, String> searchStrings) {
+    private void getExactNameMatches(Map<Object, String> searchStrings) {
 
     	// exact match the names against the context; save all hits
 //        for (String thisName : searchStrings) {
-        for (Entry <String, String> nameEntry : searchStrings.entrySet()) {
-
-    		String thisId = nameEntry.getKey();
+//        for (Entry <String, String> nameEntry : searchStrings.entrySet()) {
+        for (Entry <Object, String> nameEntry : searchStrings.entrySet()) {
+        	
+//    		String thisId = nameEntry.getKey();
+    		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
     		        	
             IndexHits<Node> hits = null;
@@ -353,13 +382,16 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * 
      */
 //    private void getExactSynonymMatches(HashSet<String> searchStrings) {
-    private void getExactSynonymMatches(Map<String, String> searchStrings) {
-    	
+//    private void getExactSynonymMatches(Map<String, String> searchStrings) {
+    private void getExactSynonymMatches(Map<Object, String> searchStrings) {
+  	
     	// exact match unmatched names against context synonym index
 //        for (String thisName : searchStrings) {
-        for (Entry <String, String> nameEntry : searchStrings.entrySet()) {
+//        for (Entry <String, String> nameEntry : searchStrings.entrySet()) {
+        for (Entry <Object, String> nameEntry : searchStrings.entrySet()) {
 
-    		String thisId = nameEntry.getKey();
+//    		String thisId = nameEntry.getKey();
+    		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
     		
             IndexHits<Node> hits = null;
@@ -410,12 +442,15 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * @param searchStrings
      */
 //    private void getApproxTaxnameOrSynonymMatches(HashSet<String> searchStrings) {
-    private void getApproxTaxnameOrSynonymMatches(Map<String, String> searchStrings) {
+//    private void getApproxTaxnameOrSynonymMatches(Map<String, String> searchStrings) {
+    private void getApproxTaxnameOrSynonymMatches(Map<Object, String> searchStrings) {
     	
 //        for (String thisName : searchStrings) {
-        for (Entry <String, String> nameEntry : searchStrings.entrySet()) {
+//        for (Entry <String, String> nameEntry : searchStrings.entrySet()) {
+        for (Entry <Object, String> nameEntry : searchStrings.entrySet()) {
 
-    		String thisId = nameEntry.getKey();
+//    		String thisId = nameEntry.getKey();
+    		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
     		
             // fuzzy match names against ALL within-context taxa and synonyms

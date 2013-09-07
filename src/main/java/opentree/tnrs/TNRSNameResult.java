@@ -4,11 +4,13 @@ import java.util.Iterator;
 
 public class TNRSNameResult implements Iterable<TNRSMatch> {
 
-	private final String id;
+//	private final String id;
+	private final Object id;
     private final String queriedName;
 	private final TNRSMatchSet matches;
 	
-	public TNRSNameResult(String id, String queriedName, TNRSMatchSet matches) {
+//	public TNRSNameResult(String id, String queriedName, TNRSMatchSet matches) {
+	public TNRSNameResult(Object id, String queriedName, TNRSMatchSet matches) {
 		this.id = id;
 	    this.queriedName = queriedName;
 	    this.matches = matches;
@@ -18,7 +20,8 @@ public class TNRSNameResult implements Iterable<TNRSMatch> {
 	    return matches;
 	}
 	
-	public String getId() {
+//	public String getId() {
+	public Object getId() {
 		return id;
 	}
 
