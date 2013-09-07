@@ -503,7 +503,7 @@ public class MainRunner {
         }
 
         System.out.println("\nNames that could not be matched:");
-        for (String name : results.getUnmatchedNames()) {
+        for (String name : results.getUnmatchedNameIds()) {
             System.out.println(name);
         }
         taxdb.shutdownDb();
