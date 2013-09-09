@@ -99,13 +99,8 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	public static MappingRepresentation getNameResultRepresentation(TNRSNameResult r) {
 
 		final HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
-<<<<<<< HEAD
 		nameResultMap.put("id", r.getId());
 //		nameResultMap.put("queried_name", r.getQueriedName());
-=======
-		nameResultMap.put("id", r.getId());		
-		nameResultMap.put("queried_name", r.getQueriedName());
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
 		nameResultMap.put("matches", r.getMatches());
 
 		return new MappingRepresentation(RepresentationType.MAP.toString()) {

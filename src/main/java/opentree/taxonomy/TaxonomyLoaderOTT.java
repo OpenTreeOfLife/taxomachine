@@ -355,26 +355,11 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 						}
 					}
 				}
-<<<<<<< HEAD
-				
-				if (!flag.includeInPrefIndexes && !forceVisible) {
-					dubious = true;
-					dubiousNodes.add(tnode);
-				}
-
-			} else { // TODO: get jonathan to put uniqname before the flags so we know once when we are on uniqname and then can just do all the rest as flags
-				uniqname = nt;
-				tnode.setProperty("uniqname",uniqname);
-=======
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
 			}
 		}
-<<<<<<< HEAD
-=======
 		
 //		System.out.println("Set " + k + " flags on node " + tnode.getId());
 		
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
 		tnode.setProperty("dubious", dubious);
 		taxaByName.add(tnode, "name", inputName);
 		taxaByNameOrSynonym.add(tnode, "name", inputName);
@@ -415,11 +400,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 					synode.setProperty("source", sourceName);
 					synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 					taxaBySynonym.add(tnode, "name", synName);
-<<<<<<< HEAD
 					taxaByNameOrSynonym.add(tnode, "name", synName);
-=======
-					taxaByNameOrSynonym.add(tnode, "name", inputName);
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
 
 					// addl indexing
 					if (!dubious) {

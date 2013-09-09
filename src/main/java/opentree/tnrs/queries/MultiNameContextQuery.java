@@ -60,18 +60,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 //    private HashSet<String> namesWithoutExactSynonymMatches;
 //    private HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches;
 
-<<<<<<< HEAD
-//    private Map<String, String> namesUnmatchableAgainstAllTaxaContext;
-    private Map<String, String> namesWithoutExactNameMatches;
-    private Map<String, String> namesWithoutExactSynonymMatches;
-    private Map<String, String> namesWithoutApproxTaxnameOrSynonymMatches;
-=======
 //    private Map<Object, String> namesUnmatchableAgainstAllTaxaContext;
     private Map<Object, String> namesWithoutExactNameMatches;
     private Map<Object, String> namesWithoutExactSynonymMatches;
     private Map<Object, String> namesWithoutApproxTaxnameOrSynonymMatches;
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
-
     
     public MultiNameContextQuery(Taxonomy taxonomy) {
     	super(taxonomy);
@@ -369,8 +361,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	
 	                // determine within-context homonym status
 	                boolean isHomonym = false;
-	                if (hits.size() > 1)
+	                if (hits.size() > 1) {
 	                    isHomonym = true;
+	                }
 	
 	                for (Node hit : hits) {
 	                    // add this match to the match set

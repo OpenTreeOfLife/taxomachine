@@ -26,9 +26,6 @@ public enum NodeIndexDescription {
     TAXON_BY_SYNONYM            ("taxNodesBySyn"),          // all taxon nodes by synonym
     
     /** Records all taxa. Field is "name", key is taxon name or synonymous name. */
-    TAXON_BY_NAME_OR_SYNONYM  ("taxNodesByNameOrSyn"),
-
-	/** Records all taxa. Field is "name" and key is synonymous name. */
     TAXON_BY_NAME_OR_SYNONYM            ("taxNodesByNameOrSyn"),          // all taxon nodes by name or synonym
 
     /** Records all taxa. Field is "rank" and key is taxon rank. */

@@ -2,16 +2,11 @@ package opentree.plugins;
 
 import java.io.IOException;
 import java.util.ArrayList;
-<<<<<<< HEAD
 import java.util.Map;
-=======
 import java.util.Collection;
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Map;
 
 import opentree.taxonomy.GraphDatabaseAgent;
 import opentree.taxonomy.Taxonomy;
@@ -25,8 +20,6 @@ import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
 import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.tnrs.queries.SingleNamePrefixQuery;
-import opentree.utils.Utils;
-
 import org.apache.lucene.queryParser.ParseException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.server.plugins.Description;
@@ -62,21 +55,11 @@ public class TNRS extends ServerPlugin {
 
         MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
         
-        // this hashset will hold ambiguous names (i.e. synonyms)
-<<<<<<< HEAD
-//        HashSet<String> namesNotMatched = (HashSet<String>) tnrs.setSearchStrings(names).inferContextAndReturnAmbiguousNames();
-        Map<String, String> namesNotMatchedIdNamePairs = tnrs.setSearchStrings(names).inferContextAndReturnAmbiguousNames();
-        TaxonomyContext inferredContext = tnrs.getContext();
-
-        // create a container to hold the results
-        ContextResult contextResult = new ContextResult(inferredContext, namesNotMatchedIdNamePairs.keySet());
-=======
         Collection<Object> namesIdsNotMatched = tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().keySet();
         TaxonomyContext inferredContext = tnrs.getContext();
 
         // create a container to hold the results
         ContextResult contextResult = new ContextResult(inferredContext, namesIdsNotMatched);
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
         
         gdb.shutdownDb();
         
@@ -122,23 +105,14 @@ public class TNRS extends ServerPlugin {
             @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
 
     	return contextQueryForNames(graphDb, queryString, contextName);
-<<<<<<< HEAD
     }
     */
-=======
-    } */
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
     
     @Description("Return information on potential matches to a search query")
     @PluginTarget(GraphDatabaseService.class)
     public Representation contextQueryForNames(
             @Source GraphDatabaseService graphDb,
-<<<<<<< HEAD
-            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
-            @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName,
-            @Description("Whether or not to include suppressed (i.e. dubious) names in the results") @Parameter(name="includeDubious", optional= true) Boolean includeDubiousQueryParameter)
-            		throws ContextNotFoundException {
-=======
+
             @Description("A comma-delimited string of taxon names to be queried against the taxonomy db")
             	@Parameter(name = "queryString", optional = true) String queryString,
             @Description("The name of the taxonomic context to be searched")
@@ -148,9 +122,9 @@ public class TNRS extends ServerPlugin {
         	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result")
     			@Parameter(name="idStrings", optional = true) String[] idStrings,
         	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result")
-    			@Parameter(name="idInts", optional = true) Long[] idInts) throws ContextNotFoundException {
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
-
+    			@Parameter(name="idInts", optional = true) Long[] idInts,
+    		@Description("Whether to include so-called 'dubious' taxa--those which are not accepted by OTT.")
+            	@Parameter(name="includeDubious", optional=true) String includeDubiousStr) throws ContextNotFoundException {
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
@@ -211,17 +185,19 @@ public class TNRS extends ServerPlugin {
         	context = taxonomy.getContextByName(contextName);
         	useAutoInference = false;
         }
-<<<<<<< HEAD
-        
+
+        // parse the include dubious. we use a string because we can't do a null comparison on a boolean
         boolean includeDubious = false;
-        if (includeDubiousQueryParameter != null) {
-//        	context = taxonomy.getContextByName(contextName);
-        	includeDubious = includeDubiousQueryParameter;
+        if (includeDubiousStr != null) {
+        	if (includeDubiousStr.equalsIgnoreCase("true")) {
+        		includeDubious = true;
+        	} else if (includeDubiousStr.equalsIgnoreCase("false")) {
+        		includeDubious = false;
+        	} else {
+        		throw new IllegalArgumentException("The includeDubious parameter may only be set to 'true' or 'false'.");
+        	}
         }
 
-=======
-    	
->>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
         MultiNameContextQuery mncq = new MultiNameContextQuery(taxonomy);
 //        HashSet<String> namesSet = Utils.stringArrayToHashset(searchStrings);
         TNRSResults results = mncq.
