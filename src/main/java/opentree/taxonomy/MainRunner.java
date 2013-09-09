@@ -5,12 +5,17 @@ import jade.tree.TreePrinter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 //import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 //import java.util.NoSuchElementException;
 
 
+
+
+
+import java.util.Map;
 
 import opentree.taxonomy.contexts.ContextNotFoundException;
 import opentree.taxonomy.contexts.TaxonomyContext;
@@ -22,6 +27,9 @@ import opentree.tnrs.TNRSNameScrubber;
 import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.tnrs.queries.SimpleQuery;
 import opentree.utils.Utils;
+
+
+
 
 
 
@@ -447,13 +455,19 @@ public class MainRunner {
         if (args[0].equals("tnrsbasic")) {
             String[] searchStrings = args[1].split("\\s*\\,\\s*");
 
-            HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
+/*            HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
 
             for (int i = 0; i < searchStrings.length; i++) {
                 System.out.println(searchStrings[i]);
-            }
+            } */
+            
+            Map<Object, String> idNameMap = new HashMap<Object, String>();
+    		for (String name : searchStrings) {
+    			idNameMap.put(name, name);
+    		}
+    		
             results = tnrs.
-            		setSearchStrings(names).
+            		setSearchStrings(idNameMap).
             		setContext(context).
             		setAutomaticContextInference(false).
             		runQuery().
@@ -487,8 +501,13 @@ public class MainRunner {
             HashSet<String> names = Utils.stringArrayToHashset(cleanedNames);
             // scrubber.review(); // print old and cleaned names
             
+            Map<Object, String> idNameMap = new HashMap<Object, String>();
+    		for (String name : names) {
+    			idNameMap.put(name, name);
+    		}
+            
             results = tnrs.
-            		setSearchStrings(names).
+            		setSearchStrings(idNameMap).
             		setContext(context).
             		setAutomaticContextInference(false).
             		runQuery().
@@ -503,8 +522,8 @@ public class MainRunner {
         }
 
         System.out.println("\nNames that could not be matched:");
-        for (String name : results.getUnmatchedNameIds()) {
-            System.out.println(name);
+        for (Object id: results.getUnmatchedNameIds()) {
+            System.out.println(id);
         }
         taxdb.shutdownDb();
     }

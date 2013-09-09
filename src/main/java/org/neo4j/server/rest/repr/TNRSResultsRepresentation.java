@@ -99,8 +99,13 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	public static MappingRepresentation getNameResultRepresentation(TNRSNameResult r) {
 
 		final HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
+<<<<<<< HEAD
 		nameResultMap.put("id", r.getId());
 //		nameResultMap.put("queried_name", r.getQueriedName());
+=======
+		nameResultMap.put("id", r.getId());		
+		nameResultMap.put("queried_name", r.getQueriedName());
+>>>>>>> 35464a1265fc06be6fee448ab9349353ca37298e
 		nameResultMap.put("matches", r.getMatches());
 
 		return new MappingRepresentation(RepresentationType.MAP.toString()) {
@@ -117,6 +122,12 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 						serializer.putList(key, getMatchSetRepresentation((TNRSMatchSet) value));
 					} else if (value instanceof TNRSMatch) {
 						serializer.putMapping(key, getMatchRepresentation((TNRSMatch) value));
+					} else if (value instanceof Long) {
+						serializer.putNumber(key, (Long) value);
+					} else if (value instanceof Double) {
+						serializer.putNumber(key, (Long) value);
+					} else {
+						throw new UnsupportedOperationException("unrecognized type for value: " + value + " of key " + key);
 					}
 				}
 			}
