@@ -461,7 +461,7 @@ public class MainRunner {
                 System.out.println(searchStrings[i]);
             } */
             
-            Map<String, String> idNameMap = new HashMap<String, String>();
+            Map<Object, String> idNameMap = new HashMap<Object, String>();
     		for (String name : searchStrings) {
     			idNameMap.put(name, name);
     		}
@@ -501,7 +501,7 @@ public class MainRunner {
             HashSet<String> names = Utils.stringArrayToHashset(cleanedNames);
             // scrubber.review(); // print old and cleaned names
             
-            Map<String, String> idNameMap = new HashMap<String, String>();
+            Map<Object, String> idNameMap = new HashMap<Object, String>();
     		for (String name : names) {
     			idNameMap.put(name, name);
     		}

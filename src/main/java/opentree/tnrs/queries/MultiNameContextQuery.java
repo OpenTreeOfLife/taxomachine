@@ -100,10 +100,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * @param searchStrings
      * @param predefContext
      */
-    public MultiNameContextQuery setSearchStrings(Map<String, String> idToNameMap) {
+    public MultiNameContextQuery setSearchStrings(Map<Object, String> idNameMap) {
         clear();
-        for (Object id : idToNameMap.keySet()) {
-        	queriedNames.put(id, QueryParser.escape(idToNameMap.get(id)).toLowerCase());
+        for (Object id : idNameMap.keySet()) {
+        	queriedNames.put(id, QueryParser.escape(idNameMap.get(id)).toLowerCase());
         }
         return this;
     }

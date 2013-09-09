@@ -297,10 +297,12 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		String rank = tokens[i++];
 		String inputSources = tokens[i++];
 		String uniqname = tokens[i++];
+
+//		System.out.println("\nincoming string: " + tokens[i]);
 		
 		// the last token is the flags. don't try parsing them unless they exist
 		String[] flags = tokens[i] != null ? tokens[i].split("\\,") : null;
-//		System.out.println(Arrays.toString(flags));
+//		System.out.println("processed array: " + Arrays.toString(flags));
 		
 		// we determine these bits later based on flags
 		boolean dubious = false;
@@ -324,31 +326,39 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		tnode.setProperty("input_sources",inputSources);
 		tnode.setProperty("uniqname",uniqname);
 
-		if (flags != null) {
+//		int k=0;
+		if (flags.length > 0) {
 			for (String label : flags) {
 				
-				// record all flags as node properties, whether we recognize them or not
-				tnode.setProperty(label, true);
+//				System.out.println("iterating: " + label);
 
-				// if we recognize the flag, check if it implies additional action
-				if (ottFlags.containsKey(label)) {
-					OTTFlag flag = ottFlags.get(label);
-
-					if (flag == OTTFlag.FORCE_VISIBLE) {
-						forceVisible = true;
-						if (dubiousNodes.contains(tnode)) {
-							dubious = false;
-							dubiousNodes.remove(tnode);
+				if (!label.equals("")) {
+					// record all flags as node properties, whether we recognize them or not
+					tnode.setProperty(label, true);
+//					k++;
+	
+					// if we recognize the flag, check if it implies additional action
+					if (ottFlags.containsKey(label)) {
+						OTTFlag flag = ottFlags.get(label);
+	
+						if (flag == OTTFlag.FORCE_VISIBLE) {
+							forceVisible = true;
+							if (dubiousNodes.contains(tnode)) {
+								dubious = false;
+								dubiousNodes.remove(tnode);
+							}
 						}
-					}
-				
-					if (!flag.includeInPrefIndexes && !forceVisible) {
-						dubious = true;
-						dubiousNodes.add(tnode);
+					
+						if (!flag.includeInPrefIndexes && !forceVisible) {
+							dubious = true;
+							dubiousNodes.add(tnode);
+						}
 					}
 				}
 			}
 		}
+		
+//		System.out.println("Set " + k + " flags on node " + tnode.getId());
 		
 		tnode.setProperty("dubious", dubious);
 		taxaByName.add(tnode, "name", inputName);
