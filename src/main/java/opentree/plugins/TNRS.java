@@ -2,6 +2,7 @@ package opentree.plugins;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,11 +49,12 @@ public class TNRS extends ServerPlugin {
         HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
         
         // this hashset will hold ambiguous names (i.e. synonyms)
-        HashSet<String> namesNotMatched = (HashSet<String>) tnrs.setSearchStrings(names).inferContextAndReturnAmbiguousNames();
+//        HashSet<String> namesNotMatched = (HashSet<String>) tnrs.setSearchStrings(names).inferContextAndReturnAmbiguousNames();
+        Map<String, String> namesNotMatchedIdNamePairs = tnrs.setSearchStrings(names).inferContextAndReturnAmbiguousNames();
         TaxonomyContext inferredContext = tnrs.getContext();
 
         // create a container to hold the results
-        ContextResult contextResult = new ContextResult(inferredContext, namesNotMatched);
+        ContextResult contextResult = new ContextResult(inferredContext, namesNotMatchedIdNamePairs.keySet());
         
         gdb.shutdownDb();
         
@@ -89,6 +91,7 @@ public class TNRS extends ServerPlugin {
         }
     }
 
+    /*
     @Description("DEPRECATED. An alias for `contextQueryForNames`, left in for compatibility only. Use `contextQueryForNames` instead.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation doTNRSForNames(
@@ -98,13 +101,16 @@ public class TNRS extends ServerPlugin {
 
     	return contextQueryForNames(graphDb, queryString, contextName);
     }
+    */
     
     @Description("Return information on potential matches to a search query")
     @PluginTarget(GraphDatabaseService.class)
     public Representation contextQueryForNames(
             @Source GraphDatabaseService graphDb,
             @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
-            @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
+            @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName,
+            @Description("Whether or not to include suppressed (i.e. dubious) names in the results") @Parameter(name="includeDubious", optional= true) Boolean includeDubiousQueryParameter)
+            		throws ContextNotFoundException {
 
         String[] searchStrings = queryString.split("\\s*\\,\\s*");
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
@@ -117,6 +123,12 @@ public class TNRS extends ServerPlugin {
         	context = taxonomy.getContextByName(contextName);
         	useAutoInference = false;
         }
+        
+        boolean includeDubious = false;
+        if (includeDubiousQueryParameter != null) {
+//        	context = taxonomy.getContextByName(contextName);
+        	includeDubious = includeDubiousQueryParameter;
+        }
 
         MultiNameContextQuery mncq = new MultiNameContextQuery(taxonomy);
         HashSet<String> names = Utils.stringArrayToHashset(searchStrings);
@@ -124,6 +136,7 @@ public class TNRS extends ServerPlugin {
         		setSearchStrings(names).
         		setContext(context).
         		setAutomaticContextInference(useAutoInference).
+        		setIncludeDubious(includeDubious).
         		runQuery().
         		getResults();
 

@@ -47,7 +47,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				serializer.putString("context_name", result.context.getDescription().name);
 				serializer.putString("content_rootnode_ottol_id", result.context.getRootNode().getProperty("uid").toString());
-				serializer.putList("ambiguous_names", OpentreeRepresentationConverter.getListRepresentation(result.namesNotMatched));
+				serializer.putList("ambiguous_name_ids", OpentreeRepresentationConverter.getListRepresentation(result.nameIdsNotMatched));
 
 			}
 		};
@@ -100,7 +100,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 		final HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
 		nameResultMap.put("id", r.getId());
-		nameResultMap.put("queried_name", r.getQueriedName());
+//		nameResultMap.put("queried_name", r.getQueriedName());
 		nameResultMap.put("matches", r.getMatches());
 
 		return new MappingRepresentation(RepresentationType.MAP.toString()) {
@@ -152,6 +152,8 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				serializer.putBoolean("isApprox", match.getIsApproximate());
 				serializer.putString("searchString", match.getSearchString());
 				serializer.putNumber("score", match.getScore());
+				serializer.putBoolean("dubious_name", match.getIsDubiousName());
+				serializer.putList("flags", OpentreeRepresentationConverter.getListRepresentation(match.getFlags()));
 
 				if (match.getNameStatusIsKnown()) {
 					serializer.putString("matchedNameStatus", "known");

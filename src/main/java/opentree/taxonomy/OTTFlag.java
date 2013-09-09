@@ -46,7 +46,9 @@ public enum OTTFlag {
 	 * Viruses.
 	 */
 	VIRAL ("viral", false),
-
+	
+	// TODO: add flag for force suppressed
+	
 	// ===== flags not designating suppression
 	
 	/**
@@ -79,8 +81,8 @@ public enum OTTFlag {
 	 */
 	FORCE_VISIBLE ("forced_visible", true);
 	
-	String label;
-	boolean includeInPrefIndexes;
+	public final String label;
+	public final boolean includeInPrefIndexes;
 	
 	OTTFlag(String label, boolean includeInPrefIndexes) {
 		this.label = label;

@@ -67,7 +67,7 @@ public class SimpleQuery extends AbstractBaseQuery {
         	 }
 
         	 // add matches to the TNRS results
-            results.addNameResult(new TNRSNameResult(queryString, queryString, matches));
+            results.addNameResult(new TNRSNameResult(queryString, matches));
 	            
          } finally {
          	hits.close();

@@ -496,7 +496,7 @@ public class MainRunner {
         }
 
         for (TNRSNameResult nameResult : results) {
-            System.out.println(nameResult.getQueriedName());
+            System.out.println(nameResult.getId());
             for (TNRSMatch m : nameResult) {
                 System.out.println("\t" + m.toString());
             }

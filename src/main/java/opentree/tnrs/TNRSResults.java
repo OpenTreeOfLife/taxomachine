@@ -88,7 +88,8 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 	// setters
 
 	public void addNameResult(TNRSNameResult result) {
-		results.put(result.getQueriedName(), result);
+//		results.put(result.getQueriedName(), result);
+		results.put(result.getId(), result);
 	}
 
 /*	public void addUnmatchedName(String name) {

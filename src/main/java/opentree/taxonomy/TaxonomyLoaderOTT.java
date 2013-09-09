@@ -40,6 +40,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
 	Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
 	Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
+	Index<Node> taxaByNameOrSynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME_OR_SYNONYM);
 
 	Index<Node> taxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_RANK);
 	Index<Node> prefTaxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK);
@@ -82,7 +83,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	/**
 	 * Reads a taxonomy file with rows formatted as:
-	 *	ott_id\t|\tott_parent_id\t|\tName\t|\trank with spaces allowed\t|\tsources\t|\tunique_name\n
+	 *	ott_id\t|\tott_parent_id\t|\tName\t|\trank with spaces allowed\t|\tsources\t|\tunique_name\n TODO: add flags to this description
 	 *
 	 *  OTT identifier - these have been kept stable relative to OTToL 1.0
 	 *  OTT identifier for the parent of this taxon, or empty if none
@@ -340,7 +341,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 					dubiousNodes.add(tnode);
 				}
 
-			} else {
+			} else { // TODO: get jonathan to put uniqname before the flags so we know once when we are on uniqname and then can just do all the rest as flags
 				uniqname = nt;
 				tnode.setProperty("uniqname",uniqname);
 			}
@@ -352,8 +353,9 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				}
 			} */
 		}
-//		tnode.setProperty("dubious", dubious);
+		tnode.setProperty("dubious", dubious);
 		taxaByName.add(tnode, "name", inputName);
+		taxaByNameOrSynonym.add(tnode, "name", inputName);
 		taxaByRank.add(tnode, "rank", rank);
 		
 		// addl indexing
@@ -391,6 +393,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 					synode.setProperty("source", sourceName);
 					synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
 					taxaBySynonym.add(tnode, "name", synName);
+					taxaByNameOrSynonym.add(tnode, "name", synName);
 
 					// addl indexing
 					if (!dubious) {

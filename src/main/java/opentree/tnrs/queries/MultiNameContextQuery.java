@@ -44,7 +44,15 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	private Map<String, String> queriedNames;
     private Taxon bestGuessLICAForNames; // used for the inferred context
     private HashSet<Taxon> taxaWithExactMatches; // To store taxa/names for which we can/cannot find direct (exact, n=1) matches
+
+    // set during construction by setDefaults()
     private boolean contextAutoInferenceIsOn;
+    private boolean includeDubious;
+    
+    // different indexes may be used depending on preferences (such as whether to include dubious taxa)
+    private Index<Node> nameIndex;
+    private Index<Node> synonymIndex;
+    private Index<Node> nameOrSynonymIndex;
     
     // special-purpose containers used during search
 //    private HashSet<String> namesUnmatchableAgainstAllTaxaContext;
@@ -52,7 +60,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 //    private HashSet<String> namesWithoutExactSynonymMatches;
 //    private HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches;
 
-    private Map<String, String> namesUnmatchableAgainstAllTaxaContext;
+//    private Map<String, String> namesUnmatchableAgainstAllTaxaContext;
     private Map<String, String> namesWithoutExactNameMatches;
     private Map<String, String> namesWithoutExactSynonymMatches;
     private Map<String, String> namesWithoutApproxTaxnameOrSynonymMatches;
@@ -116,6 +124,16 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 		super.setContext(c);
 		return this;
 	}
+	
+	/**
+	 * Set the behavior for including dubious names in the results.
+	 * @param includeDubious
+	 * @return
+	 */
+	public MultiNameContextQuery setIncludeDubious(boolean includeDubious) {
+		this.includeDubious = includeDubious;
+		return this;
+	}
     
     /**
      * Clears the previous results and search strings. Also called by the constructor to initialize the query object.
@@ -146,9 +164,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     @Override
     public MultiNameContextQuery setDefaults() {
         contextAutoInferenceIsOn = true;
+        includeDubious = false;
     	return this;
     }
-	
+    
     /**
      * Perform a full TNRS query against the names set using setSearchStrings(). First matches all names to exact taxon
      * names, exact synonyms, and then to approximate taxon names and synonyms, and return the results as a TNRSResults
@@ -157,6 +176,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * @return
      */
     public MultiNameContextQuery runQuery() {
+    	
+    	setIndexes();
         
         // infer context if we are allowed to, and determine names to be matched against it
 //        HashSet<String> namesToMatchAgainstContext = new HashSet<String>();
@@ -214,6 +235,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 //    public Set<String> inferContextAndReturnAmbiguousNames() {
     public Map<String, String> inferContextAndReturnAmbiguousNames() {
 
+    	setIndexes();
+    	
     	// we will return the names without exact matches
 //    	HashSet<String> namesUnmatchableAgainstAllTaxaContext = new HashSet<String>();
     	Map<String, String> namesUnmatchableAgainstAllTaxaContext = new HashMap<String, String>();
@@ -228,7 +251,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
-            	hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query(exactQuery);
+//            	hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query(exactQuery);
+            	hits = nameIndex.query(exactQuery);
+
 	            if (hits.size() == 1) { // an exact match
 	
 	                // WE (MUST) ASSUME that users have spelled names correctly, but havoc may ensue if this assumption
@@ -250,7 +275,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                        setSourceName(DEFAULT_TAXONOMY_NAME).
 	                        setScore(PERFECT_SCORE));
 	
-	                results.addNameResult(new TNRSNameResult(thisId, thisName, matches));
+	                results.addNameResult(new TNRSNameResult(thisId, matches));
 //	                results.addNameWithDirectMatch(thisName);
 	                results.addNameWithDirectMatch(thisId, thisName);
 	
@@ -294,7 +319,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
-            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query(exactQuery);
+//            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query(exactQuery);
+            	hits = nameIndex.query(exactQuery);
 	            if (hits.size() < 1) {
 	                // no direct matches, move on to next name
 //	                namesWithoutExactNameMatches.add(thisName);
@@ -332,7 +358,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 
 	                // add matches to the TNRS results
 //	                results.addNameResult(new TNRSNameResult(thisName, matches));
-	                results.addNameResult(new TNRSNameResult(thisId, thisName, matches));
+	                results.addNameResult(new TNRSNameResult(thisId, matches));
 	            }
             } finally {
             	hits.close();
@@ -365,7 +391,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
-            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM).query(exactQuery);
+//            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM).query(exactQuery);
+            	hits = synonymIndex.query(exactQuery);
 	            if (hits.size() < 1) {
 	                // no direct matches, move on to next name
 //	                namesWithoutExactSynonymMatches.add(thisName);
@@ -393,7 +420,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	
 	                // add matches to the TNRS results
 //	                results.addNameResult(new TNRSNameResult(thisName, matches));
-	                results.addNameResult(new TNRSNameResult(thisId, thisName, matches));
+	                results.addNameResult(new TNRSNameResult(thisId, matches));
 	            }
             } finally {
             	hits.close();
@@ -424,7 +451,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term("name", thisName), minIdentity);
 
             try {
-            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query(fuzzyQuery);
+//            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query(fuzzyQuery);
+            	hits = nameOrSynonymIndex.query(fuzzyQuery);
 	            if (hits.size() < 1) {
 	                // no direct matches, move on to next name
 //	                namesWithoutApproxTaxnameOrSynonymMatches.add(thisName);
@@ -474,7 +502,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                // add the matches (if any) to the TNRS results
 	                if (matches.size() > 0)
 //	                    results.addNameResult(new TNRSNameResult(thisName, matches));
-	                    results.addNameResult(new TNRSNameResult(thisId, thisName, matches));
+		                results.addNameResult(new TNRSNameResult(thisId, matches));
 	                else
 //	                    namesWithoutApproxTaxnameOrSynonymMatches.add(thisName);
 	                    namesWithoutApproxTaxnameOrSynonymMatches.put(thisId, thisName);
@@ -496,5 +524,20 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             bestGuessLICAForNames = ts.getLICA();
         else
             bestGuessLICAForNames = taxonomy.getTaxon(taxonomy.ALLTAXA.getRootNode());
+    }
+
+    /**
+     * Sets the index to be used for queries.
+     */
+    private void setIndexes() {
+    	if (includeDubious) {
+    		nameIndex = context.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+    		synonymIndex = context.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
+    		nameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME_OR_SYNONYM);
+    	} else {
+    		nameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
+    		synonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
+    		nameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+    	}
     }
 }

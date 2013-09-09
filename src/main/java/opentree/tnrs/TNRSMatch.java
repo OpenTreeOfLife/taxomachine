@@ -1,6 +1,10 @@
 package opentree.tnrs;
 
+import java.util.List;
+
 import org.neo4j.graphdb.Node;
+
+import opentree.taxonomy.OTTFlag;
 
 /**
  * A TNRSMatch object represents a validated hit for some query string to a recognized name or synonym in some source, and as such they
@@ -20,6 +24,8 @@ public abstract class TNRSMatch {
     public abstract boolean getIsApproximate();
     public abstract boolean getIsSynonym();
     public abstract boolean getIsHomonym();
+    public abstract boolean getIsDubiousName();
+    public abstract List<OTTFlag> getFlags();
     public abstract String getRank();
     public abstract String getUniqueName();
     public abstract boolean getNameStatusIsKnown();

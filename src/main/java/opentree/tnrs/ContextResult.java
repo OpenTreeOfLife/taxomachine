@@ -7,10 +7,10 @@ import opentree.taxonomy.contexts.TaxonomyContext;
 
 public class ContextResult {
 	public TaxonomyContext context;
-	public LinkedList<String> namesNotMatched;
+	public LinkedList<String> nameIdsNotMatched;
 	
-	public ContextResult(TaxonomyContext context, Collection<String> namesNotMatched) {
+	public ContextResult(TaxonomyContext context, Collection<String> nameIdsNotMatched) {
 		this.context = context;
-		this.namesNotMatched = new LinkedList<String>(namesNotMatched);
+		this.nameIdsNotMatched = new LinkedList<String>(nameIdsNotMatched);
 	}
 }
