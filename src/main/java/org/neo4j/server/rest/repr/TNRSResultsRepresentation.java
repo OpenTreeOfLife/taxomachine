@@ -100,7 +100,6 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 		final HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
 		nameResultMap.put("id", r.getId());
-//		nameResultMap.put("queried_name", r.getQueriedName());
 		nameResultMap.put("matches", r.getMatches());
 
 		return new MappingRepresentation(RepresentationType.MAP.toString()) {
@@ -197,7 +196,6 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				serializer.putNumber("nodeId", match.getMatchedNode().getId()); // matched node id
 				serializer.putString("ottId", match.getMatchedNode().getProperty("uid").toString()); // matched ottol id
-//				serializer.putString("matchedName", match.getMatchedNode().getProperty("name").toString());
 				serializer.putString("name", match.getUniqueName()); // unique name
 				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
 				
@@ -207,7 +205,6 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 					isHigher = false;
 				}
 
-//				serializer.putString("rank", match.getRank()); // rank
 				serializer.putBoolean("higher", isHigher); // is higher taxon
 			}
 		};

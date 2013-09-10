@@ -227,7 +227,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 //        for (String name : namesWithoutApproxTaxnameOrSynonymMatches)
 //        for (Entry<String, String> nameEntry : namesWithoutApproxTaxnameOrSynonymMatches.entrySet()) {
         for (Entry<Object, String> nameEntry : namesWithoutApproxTaxnameOrSynonymMatches.entrySet()) {
-          results.addUnmatchedName(nameEntry.getKey(), nameEntry.getValue());
+        	results.addUnmatchedName(nameEntry.getKey(), nameEntry.getValue());
         }
         
         return this;
@@ -276,7 +276,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
-//            	hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query(exactQuery);
             	hits = nameIndex.query(exactQuery);
 
 	            if (hits.size() == 1) { // an exact match
@@ -301,7 +300,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                        setScore(PERFECT_SCORE));
 	
 	                results.addNameResult(new TNRSNameResult(thisId, matches));
-//	                results.addNameWithDirectMatch(thisName);
 	                results.addNameWithDirectMatch(thisId, thisName);
 	
 	            } else { // is either a homonym match or there is no exact match
@@ -331,27 +329,20 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * 
      * @param searchStrings
      */
-//    private void getExactNameMatches(HashSet<String> searchStrings) {
-//    private void getExactNameMatches(Map<String, String> searchStrings) {
     private void getExactNameMatches(Map<Object, String> searchStrings) {
 
     	// exact match the names against the context; save all hits
-//        for (String thisName : searchStrings) {
-//        for (Entry <String, String> nameEntry : searchStrings.entrySet()) {
         for (Entry <Object, String> nameEntry : searchStrings.entrySet()) {
         	
-//    		String thisId = nameEntry.getKey();
     		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
     		        	
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
-//            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).query(exactQuery);
             	hits = nameIndex.query(exactQuery);
 	            if (hits.size() < 1) {
 	                // no direct matches, move on to next name
-//	                namesWithoutExactNameMatches.add(thisName);
 	                namesWithoutExactNameMatches.put(thisId, thisName);
 	                continue;
 	
@@ -386,7 +377,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                }
 
 	                // add matches to the TNRS results
-//	                results.addNameResult(new TNRSNameResult(thisName, matches));
 	                results.addNameResult(new TNRSNameResult(thisId, matches));
 	            }
             } finally {
@@ -407,27 +397,20 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * Called by getTNRSResultsForSetNames().
      * 
      */
-//    private void getExactSynonymMatches(HashSet<String> searchStrings) {
-//    private void getExactSynonymMatches(Map<String, String> searchStrings) {
     private void getExactSynonymMatches(Map<Object, String> searchStrings) {
   	
     	// exact match unmatched names against context synonym index
-//        for (String thisName : searchStrings) {
-//        for (Entry <String, String> nameEntry : searchStrings.entrySet()) {
         for (Entry <Object, String> nameEntry : searchStrings.entrySet()) {
 
-//    		String thisId = nameEntry.getKey();
     		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
     		
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term("name", thisName));
             try {
-//            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM).query(exactQuery);
             	hits = synonymIndex.query(exactQuery);
 	            if (hits.size() < 1) {
 	                // no direct matches, move on to next name
-//	                namesWithoutExactSynonymMatches.add(thisName);
 	                namesWithoutExactSynonymMatches.put(thisId, thisName);
 	                continue;
 	
@@ -451,7 +434,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                }
 	
 	                // add matches to the TNRS results
-//	                results.addNameResult(new TNRSNameResult(thisName, matches));
 	                results.addNameResult(new TNRSNameResult(thisId, matches));
 	            }
             } finally {
@@ -468,15 +450,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * 
      * @param searchStrings
      */
-//    private void getApproxTaxnameOrSynonymMatches(HashSet<String> searchStrings) {
-//    private void getApproxTaxnameOrSynonymMatches(Map<String, String> searchStrings) {
     private void getApproxTaxnameOrSynonymMatches(Map<Object, String> searchStrings) {
     	
-//        for (String thisName : searchStrings) {
-//        for (Entry <String, String> nameEntry : searchStrings.entrySet()) {
         for (Entry <Object, String> nameEntry : searchStrings.entrySet()) {
 
-//    		String thisId = nameEntry.getKey();
     		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
     		
@@ -486,11 +463,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term("name", thisName), minIdentity);
 
             try {
-//            	hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query(fuzzyQuery);
             	hits = nameOrSynonymIndex.query(fuzzyQuery);
 	            if (hits.size() < 1) {
 	                // no direct matches, move on to next name
-//	                namesWithoutApproxTaxnameOrSynonymMatches.add(thisName);
 	                namesWithoutApproxTaxnameOrSynonymMatches.put(thisId, thisName);
 	                continue;
 	
@@ -503,13 +478,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                    Taxon matchedTaxon = taxonomy.getTaxon(hit);
 	
 	                    // use edit distance to calculate base score for fuzzy matches
-	                    //          System.out.println("comparing " + queriedName + " to " + matchedTaxon.getName());
 	                    double l = Levenshtein.distance(thisName, matchedTaxon.getName());
-	                    //          System.out.println("l = " + String.valueOf(l));
 	                    double s = Math.min(matchedTaxon.getName().length(), thisName.length());
-	                    //          System.out.println("s = " + String.valueOf(s));
 	                    double baseScore = (s - l) / s;
-	                    //          System.out.println("baseScore = " + String.valueOf(baseScore));
 	                    
 	                    // weight scores by distance outside of inferred lica (this may need to go away if it is a speed bottleneck)
 	                    double scoreModifier = 1;
@@ -536,10 +507,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	
 	                // add the matches (if any) to the TNRS results
 	                if (matches.size() > 0)
-//	                    results.addNameResult(new TNRSNameResult(thisName, matches));
 		                results.addNameResult(new TNRSNameResult(thisId, matches));
 	                else
-//	                    namesWithoutApproxTaxnameOrSynonymMatches.add(thisName);
 	                    namesWithoutApproxTaxnameOrSynonymMatches.put(thisId, thisName);
 	            }
             } finally {
