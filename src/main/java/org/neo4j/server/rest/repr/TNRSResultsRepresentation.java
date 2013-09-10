@@ -4,13 +4,16 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.neo4j.graphdb.Node;
 import org.neo4j.helpers.collection.FirstItemIterable;
 import org.neo4j.helpers.collection.IteratorWrapper;
 
+import opentree.taxonomy.OTTFlag;
 import opentree.tnrs.ContextResult;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSMatchSet;
@@ -145,27 +148,44 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
 
-				serializer.putNumber("matchedNodeId", match.getMatchedNode().getId());
-				serializer.putString("matchedName", match.getMatchedNode().getProperty("name").toString());
-				serializer.putString("uniqueName", match.getUniqueName());
-				serializer.putString("rank", match.getRank()); // currently not set
-				serializer.putString("matchedOttolID", match.getMatchedNode().getProperty("uid").toString());
-				serializer.putString("parentName", match.getParentNode().getProperty("name").toString());
-				serializer.putString("sourceName", match.getSource());
-				serializer.putString("nomenCode", match.getNomenCode());
-				serializer.putBoolean("isPerfectMatch", match.getIsPerfectMatch());
-				serializer.putBoolean("isApprox", match.getIsApproximate());
-				serializer.putString("searchString", match.getSearchString());
+				Node matchedNode = match.getMatchedNode();
+				
+				serializer.putNumber("matched_node_id", matchedNode.getId());
+				serializer.putString("matched_name", matchedNode.getProperty("name").toString());
+				serializer.putString("unique_name", match.getUniqueName());
+				serializer.putString("rank", match.getRank());
+				serializer.putString("matched_ott_id", matchedNode.getProperty("uid").toString());
+				serializer.putString("parent_name", match.getParentNode().getProperty("name").toString());
+				serializer.putString("source_name", match.getSource());
+				serializer.putString("nomenclature_code", match.getNomenCode());
+				serializer.putBoolean("is_perfect_match", match.getIsPerfectMatch());
+				serializer.putBoolean("is_approximate_match", match.getIsApproximate());
+				serializer.putString("search_string", match.getSearchString());
 				serializer.putNumber("score", match.getScore());
-				serializer.putBoolean("dubious_name", match.getIsDubiousName());
-				serializer.putList("flags", OpentreeRepresentationConverter.getListRepresentation(match.getFlags()));
 
+				// check dubiousness
+				boolean isDubious = false;
+				if (matchedNode.hasProperty("dubious")) {
+					isDubious = (Boolean) matchedNode.getProperty("dubious");
+				}
+				serializer.putBoolean("dubious_name", isDubious);
+
+				// get all flags
+	        	List<OTTFlag> flags = new LinkedList<OTTFlag>();
+	        	for (OTTFlag flag : OTTFlag.values()) {
+	        		if (matchedNode.hasProperty(flag.label)) {
+	        			flags.add(flag);
+	        		}
+	        	}
+				serializer.putList("flags", OpentreeRepresentationConverter.getListRepresentation(flags));
+				
+				
 				if (match.getNameStatusIsKnown()) {
-					serializer.putString("matchedNameStatus", "known");
-					serializer.putBoolean("isSynonym", match.getIsSynonym());
-					serializer.putBoolean("isHomonym", match.getIsHomonym());
+					serializer.putString("synonym_or_homonym_status", "known");
+					serializer.putBoolean("is_synonym", match.getIsSynonym());
+					serializer.putBoolean("is_homonym", match.getIsHomonym());
 				} else {
-					serializer.putString("matchedNameStatus", "uncertain");
+					serializer.putString("synonym_or_homonym_status", "uncertain");
 				}
 			}
 		};
@@ -194,6 +214,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
 
+				// TODO: transition these to lower case with underscores
 				serializer.putNumber("nodeId", match.getMatchedNode().getId()); // matched node id
 				serializer.putString("ottId", match.getMatchedNode().getProperty("uid").toString()); // matched ottol id
 				serializer.putString("name", match.getUniqueName()); // unique name

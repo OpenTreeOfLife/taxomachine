@@ -15,11 +15,11 @@
         <version>1.9.M01</version>
         <classifier>docs</classifier>
     </dependency>
-    <dependency>
+    <!-- dependency>
         <groupId>org.forester</groupId>
         <artifactId>forester</artifactId>
         <version>1.005</version>
-    </dependency>
+    </dependency-->
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>server-api</artifactId>

@@ -6,8 +6,6 @@ import jade.tree.TreePrinter;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-//import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 //import java.util.NoSuchElementException;
 
@@ -23,24 +21,16 @@ import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSMatch;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
-import opentree.tnrs.TNRSNameScrubber;
 import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.tnrs.queries.SimpleQuery;
-import opentree.utils.Utils;
-
-
-
-
-
-
 //import org.apache.log4j.Logger;
 import java.io.FileNotFoundException;
 
 import org.apache.log4j.PropertyConfigurator;
-import org.forester.io.parsers.PhylogenyParser;
-import org.forester.io.parsers.util.ParserUtils;
-import org.forester.phylogeny.Phylogeny;
-import org.forester.phylogeny.PhylogenyMethods;
+//import org.forester.io.parsers.PhylogenyParser;
+//import org.forester.io.parsers.util.ParserUtils;
+//import org.forester.phylogeny.Phylogeny;
+//import org.forester.phylogeny.PhylogenyMethods;
 //import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 //import org.neo4j.graphdb.Transaction;
@@ -474,7 +464,10 @@ public class MainRunner {
             		getResults();
 
         } else if (args[0].equals("tnrstree")) {
-            // TODO: for files containing multiple trees, make sure to do TNRS just once
+
+        	System.out.println("\n\nnot implemented\n\n");
+//      	System.exit(0);
+/*            // TODO: for files containing multiple trees, make sure to do TNRS just once
             // read in the treefile
             final File treefile = new File(args[1]);
             PhylogenyParser parser = null;
@@ -511,7 +504,7 @@ public class MainRunner {
             		setContext(context).
             		setAutomaticContextInference(false).
             		runQuery().
-            		getResults();
+            		getResults(); */
         }
 
         for (TNRSNameResult nameResult : results) {
@@ -525,7 +518,7 @@ public class MainRunner {
         for (Object id: results.getUnmatchedNameIds()) {
             System.out.println(id);
         }
-        taxdb.shutdownDb();
+        taxdb.shutdownDb(); 
     }
 
     /*

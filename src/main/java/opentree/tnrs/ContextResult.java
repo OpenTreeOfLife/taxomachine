@@ -13,6 +13,9 @@ public class ContextResult {
 	
 	public ContextResult(TaxonomyContext context, Collection<Object> namesNotMatched) {
 		this.context = context;
-		this.nameIdsNotMatched = new LinkedList<Object>(nameIdsNotMatched);
+		this.nameIdsNotMatched = new LinkedList<Object>();
+		for (Object name : nameIdsNotMatched) {
+			nameIdsNotMatched.add(name);
+		}
 	}
 }

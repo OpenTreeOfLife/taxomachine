@@ -150,19 +150,9 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             return isSynonym;
         }
         
-        public boolean getIsDubiousName() {
+/*        public boolean getIsDubiousName() {
         	return (Boolean) matchedNode.getProperty("dubious");
-        }
-        
-        public List<OTTFlag> getFlags() {
-        	List<OTTFlag> flags = new LinkedList<OTTFlag>();
-        	for (OTTFlag flag : OTTFlag.values()) {
-        		if (matchedNode.hasProperty(flag.label)) {
-        			flags.add(flag);
-        		}
-        	}
-        	return flags;
-        }
+        } */
 
         public boolean getIsHomonym() {
             return isHomonym;

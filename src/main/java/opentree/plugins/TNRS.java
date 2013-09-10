@@ -2,6 +2,7 @@ package opentree.plugins;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
 import opentree.tnrs.queries.MultiNameContextQuery;
 import opentree.tnrs.queries.SingleNamePrefixQuery;
+
 import org.apache.lucene.queryParser.ParseException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.server.plugins.Description;
@@ -37,16 +39,18 @@ public class TNRS extends ServerPlugin {
     @PluginTarget(GraphDatabaseService.class)
     public Representation getContextForNames(
             @Source GraphDatabaseService graphDb,
-            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db")
+/*            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db")
             	// TODO: convert this to accept a JSON array
-            	@Parameter(name = "queryString", optional = false) String queryString) {
+            	@Parameter(name = "queryString", optional = false) String queryString) { */
+            @Description("An array of taxon names to be queried.")
+    			@Parameter(name="names", optional = false) String[] names) {
 
     	Map<Object, String> idNameMap = new HashMap<Object, String>();
     	
     	// TODO: convert this to accept an array
-        String[] searchStrings = queryString.split("\\s*\\,\\s*");
+//        String[] searchStrings = queryString.split("\\s*\\,\\s*");
 
-		for (String name : searchStrings) {
+		for (String name : names) {
 			idNameMap.put(name, name);
 		}
     	
@@ -55,11 +59,14 @@ public class TNRS extends ServerPlugin {
 
         MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
         
-        Collection<Object> namesIdsNotMatched = tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().keySet();
+        Collection<Object> nameIdsNotMatched = tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().keySet();
+        if (nameIdsNotMatched.isEmpty()) {
+        	nameIdsNotMatched = (Collection<Object>) new HashSet<Object>();
+        }
         TaxonomyContext inferredContext = tnrs.getContext();
 
         // create a container to hold the results
-        ContextResult contextResult = new ContextResult(inferredContext, namesIdsNotMatched);
+        ContextResult contextResult = new ContextResult(inferredContext, nameIdsNotMatched);
         
         gdb.shutdownDb();
         
@@ -113,15 +120,15 @@ public class TNRS extends ServerPlugin {
     public Representation contextQueryForNames(
             @Source GraphDatabaseService graphDb,
 
-            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db")
+            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db. This is an alternative to the use of the 'names' parameter")
             	@Parameter(name = "queryString", optional = true) String queryString,
             @Description("The name of the taxonomic context to be searched")
             	@Parameter(name = "contextName", optional = true) String contextName,
-        	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result")
+        	@Description("An array of taxon names to be queried. This is an alternative to the use of the 'queryString' parameter")
         		@Parameter(name="names", optional = true) String[] names,
-        	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result")
+        	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result. If this parameter is used, ids will be treated as strings.")
     			@Parameter(name="idStrings", optional = true) String[] idStrings,
-        	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result")
+        	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result. If this parameter is used, ids will be treated as ints.")
     			@Parameter(name="idInts", optional = true) Long[] idInts,
     		@Description("Whether to include so-called 'dubious' taxa--those which are not accepted by OTT.")
             	@Parameter(name="includeDubious", optional=true) String includeDubiousStr) throws ContextNotFoundException {

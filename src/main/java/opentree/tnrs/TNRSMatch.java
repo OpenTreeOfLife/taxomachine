@@ -24,8 +24,8 @@ public abstract class TNRSMatch {
     public abstract boolean getIsApproximate();
     public abstract boolean getIsSynonym();
     public abstract boolean getIsHomonym();
-    public abstract boolean getIsDubiousName();
-    public abstract List<OTTFlag> getFlags();
+//    public abstract boolean getIsDubiousName();
+//    public abstract List<OTTFlag> getFlags();
     public abstract String getRank();
     public abstract String getUniqueName();
     public abstract boolean getNameStatusIsKnown();
