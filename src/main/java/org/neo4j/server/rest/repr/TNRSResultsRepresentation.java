@@ -47,7 +47,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				serializer.putString("context_name", result.context.getDescription().name);
 				serializer.putString("content_rootnode_ottol_id", result.context.getRootNode().getProperty("uid").toString());
-				serializer.putList("ambiguous_names", OpentreeRepresentationConverter.getListRepresentation(result.namesNotMatched));
+				serializer.putList("ambiguous_name_ids", OpentreeRepresentationConverter.getListRepresentation(result.nameIdsNotMatched));
 
 			}
 		};
@@ -74,9 +74,9 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				HashMap<String, Object> tnrsResultsMap = new HashMap<String, Object>();
 
 				tnrsResultsMap.put("governing_code", results.getGoverningCode());
-				tnrsResultsMap.put("unambiguous_names", results.getNamesWithDirectMatches());
-				tnrsResultsMap.put("unmatched_names", results.getUnmatchedNames());
-				tnrsResultsMap.put("matched_names", results.getMatchedNames());
+				tnrsResultsMap.put("unambiguous_name_ids", results.getNameIdsWithDirectMatches()); // was "unambiguous_names"
+				tnrsResultsMap.put("unmatched_name_ids", results.getUnmatchedNameIds()); // was "unmatched_names"
+				tnrsResultsMap.put("matched_name_ids", results.getMatchedNameIds()); // was "matched_names"
 				tnrsResultsMap.put("context", results.getContextName());
 
 				for (Map.Entry<String, Object> pair : tnrsResultsMap.entrySet()) {
@@ -99,7 +99,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	public static MappingRepresentation getNameResultRepresentation(TNRSNameResult r) {
 
 		final HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
-		nameResultMap.put("queried_name", r.getQueriedName());
+		nameResultMap.put("id", r.getId());
 		nameResultMap.put("matches", r.getMatches());
 
 		return new MappingRepresentation(RepresentationType.MAP.toString()) {
@@ -116,6 +116,12 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 						serializer.putList(key, getMatchSetRepresentation((TNRSMatchSet) value));
 					} else if (value instanceof TNRSMatch) {
 						serializer.putMapping(key, getMatchRepresentation((TNRSMatch) value));
+					} else if (value instanceof Long) {
+						serializer.putNumber(key, (Long) value);
+					} else if (value instanceof Double) {
+						serializer.putNumber(key, (Long) value);
+					} else {
+						throw new UnsupportedOperationException("unrecognized type for value: " + value + " of key " + key);
 					}
 				}
 			}
@@ -151,6 +157,8 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				serializer.putBoolean("isApprox", match.getIsApproximate());
 				serializer.putString("searchString", match.getSearchString());
 				serializer.putNumber("score", match.getScore());
+				serializer.putBoolean("dubious_name", match.getIsDubiousName());
+				serializer.putList("flags", OpentreeRepresentationConverter.getListRepresentation(match.getFlags()));
 
 				if (match.getNameStatusIsKnown()) {
 					serializer.putString("matchedNameStatus", "known");
@@ -188,7 +196,6 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				serializer.putNumber("nodeId", match.getMatchedNode().getId()); // matched node id
 				serializer.putString("ottId", match.getMatchedNode().getProperty("uid").toString()); // matched ottol id
-//				serializer.putString("matchedName", match.getMatchedNode().getProperty("name").toString());
 				serializer.putString("name", match.getUniqueName()); // unique name
 				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
 				
@@ -198,7 +205,6 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 					isHigher = false;
 				}
 
-//				serializer.putString("rank", match.getRank()); // rank
 				serializer.putBoolean("higher", isHigher); // is higher taxon
 			}
 		};

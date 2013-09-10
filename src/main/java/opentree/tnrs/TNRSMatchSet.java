@@ -6,6 +6,7 @@ import opentree.taxonomy.Taxon;
 import opentree.taxonomy.Taxonomy;
 import opentree.taxonomy.contexts.ContextDescription;
 import opentree.taxonomy.contexts.TaxonomyContext;
+import opentree.taxonomy.OTTFlag;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -18,6 +19,7 @@ import org.neo4j.server.rest.repr.MappingSerializer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -146,6 +148,20 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 
         public boolean getIsSynonym() {
             return isSynonym;
+        }
+        
+        public boolean getIsDubiousName() {
+        	return (Boolean) matchedNode.getProperty("dubious");
+        }
+        
+        public List<OTTFlag> getFlags() {
+        	List<OTTFlag> flags = new LinkedList<OTTFlag>();
+        	for (OTTFlag flag : OTTFlag.values()) {
+        		if (matchedNode.hasProperty(flag.label)) {
+        			flags.add(flag);
+        		}
+        	}
+        	return flags;
         }
 
         public boolean getIsHomonym() {

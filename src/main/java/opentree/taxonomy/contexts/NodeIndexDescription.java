@@ -24,6 +24,9 @@ public enum NodeIndexDescription {
 
 	/** Records all taxa. Field is "name" and key is synonymous name. */
     TAXON_BY_SYNONYM            ("taxNodesBySyn"),          // all taxon nodes by synonym
+    
+    /** Records all taxa. Field is "name", key is taxon name or synonymous name. */
+    TAXON_BY_NAME_OR_SYNONYM            ("taxNodesByNameOrSyn"),          // all taxon nodes by name or synonym
 
     /** Records all taxa. Field is "rank" and key is taxon rank. */
     TAXON_BY_RANK					 ("taxNodesByRank"),
@@ -91,7 +94,7 @@ public enum NodeIndexDescription {
     @Deprecated
     TAX_RANK                    ("taxRank"),
     
-    /** Not used. Not clear what this is for. If this becomes used, please dpcument what it is for. */
+    /** Not used. Not clear what this is for. If this becomes used, please document what it is for. */
     @Deprecated
     TAXON_UNIQID				("taxUniqId");
 
