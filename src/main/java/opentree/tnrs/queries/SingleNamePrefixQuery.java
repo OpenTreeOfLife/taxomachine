@@ -278,6 +278,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      * @return
      * @throws ParseException 
      */
+    @Deprecated
     public SingleNamePrefixQuery runQueryOld() throws ParseException {
         
     	matches = new TNRSMatchSet(taxonomy);
