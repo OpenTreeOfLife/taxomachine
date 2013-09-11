@@ -45,6 +45,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	Index<Node> taxaByNameOrSynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME_OR_SYNONYM);
 
 	Index<Node> taxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_RANK);
+	Index<Node> taxaByFlag = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_FLAG);
 	Index<Node> prefTaxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK);
 	
 	Index<Node> prefTaxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
@@ -335,6 +336,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				if (!label.equals("")) {
 					// record all flags as node properties, whether we recognize them or not
 					tnode.setProperty(label, true);
+					taxaByFlag.add(tnode, "flag", label);
 //					k++;
 	
 					// if we recognize the flag, check if it implies additional action
@@ -361,6 +363,10 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 //		System.out.println("Set " + k + " flags on node " + tnode.getId());
 		
 		tnode.setProperty("dubious", dubious);
+		if (dubious) {
+			taxaByFlag.add(tnode, "flag", "dubious");
+		}
+		
 		taxaByName.add(tnode, "name", inputName);
 		taxaByNameOrSynonym.add(tnode, "name", inputName);
 		taxaByRank.add(tnode, "rank", rank);
