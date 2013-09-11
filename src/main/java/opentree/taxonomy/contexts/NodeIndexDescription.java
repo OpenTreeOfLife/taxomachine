@@ -31,7 +31,7 @@ public enum NodeIndexDescription {
     /** Records all taxa. Field is "rank" and key is taxon rank. */
     TAXON_BY_RANK					 ("taxNodesByRank"),
 
-    /** Records all taxa. Field is "rank" and key is taxon rank. */
+    /** Records all taxa. Field is "flag" and key is flag name. */
     TAXON_BY_FLAG					("taxNodesByFlag"),
 
     // preferred taxon indexes
