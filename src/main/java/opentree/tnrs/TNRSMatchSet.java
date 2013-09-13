@@ -63,6 +63,10 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         Match match = new Match(m);
         matches.add(match);
     }
+    
+    public List<TNRSMatch> getMatchList() {
+    	return matches;
+    }
         
     /**
      * An internal container compatible with the TNRSMatch specification.
@@ -101,18 +105,21 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         /**
          * @return the original search string which produced this match
          */
-        public String getSearchString() {
+		@Override
+		public String getSearchString() {
             return searchString;
         }
         
         /**
          * @return the Neo4j Node object for the recognized name to which this match points
          */
-        public Node getMatchedNode() {
+		@Override
+		public Node getMatchedNode() {
             return matchedNode;
         }
         
-        public Node getParentNode() {
+		@Override
+		public Node getParentNode() {
             TraversalDescription prefTaxTD = Traversal.description().breadthFirst().
                     relationships(RelType.PREFTAXCHILDOF, Direction.OUTGOING).evaluator(Evaluators.toDepth(1));
             
@@ -127,26 +134,31 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
                 throw new java.lang.IllegalStateException("Node " + matchedNode + " doesn't seem to have a preferred parent!");
         }
 
-        public boolean getIsPerfectMatch() {
+		@Override
+		public boolean getIsPerfectMatch() {
             return isPerfectMatch;
         }
 
-        public boolean getIsApproximate() {
+		@Override
+		public boolean getIsApproximate() {
             return isApprox;
         }
 
         /**
          * @return the TNRS source that produced this match
          */
-        public String getSource() {
+		@Override
+		public String getSource() {
             return sourceName;
         }
         
-        public String getNomenCode() {
+		@Override
+		public String getNomenCode() {
             return nomenCode;
         }
 
-        public boolean getIsSynonym() {
+		@Override
+		public boolean getIsSynonym() {
             return isSynonym;
         }
         
@@ -154,23 +166,38 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         	return (Boolean) matchedNode.getProperty("dubious");
         } */
 
-        public boolean getIsHomonym() {
+		@Override
+		public boolean getIsHomonym() {
             return isHomonym;
         }
         
-        public String getRank() {
+		@Override
+		public String getRank() {
         	return rank;
         }
         
-        public boolean getNameStatusIsKnown() {
+		@Override
+		public Boolean getIsHigherTaxon() {
+			boolean isHigher = true;
+			String rank = this.getRank();
+			if (rank.equals("species") || rank.equals("subspecies") || rank.equals("variety") || rank.equals("forma")) {
+				isHigher = false;
+			}
+			return isHigher;
+		}
+        
+		@Override
+		public boolean getNameStatusIsKnown() {
             return nameStatusIsKnown;
         }
 
-        public double getScore() {
+		@Override
+		public double getScore() {
             return score;
         }
         
-        public String getUniqueName() {
+		@Override
+		public String getUniqueName() {
         	String uniqueName = getMatchedNode().getProperty("name").toString();
         	if (isHomonym) {
 	    		if (getMatchedNode().hasProperty("leastcontext")) {
@@ -189,7 +216,8 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         /**
          * @return a textual description of the type of match this is
          */
-        public String getMatchType() {
+		@Override
+		public String getMatchType() {
             String desc = "";
                         
             if (isPerfectMatch) {

@@ -197,9 +197,9 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	//
 	// ///////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public static ListRepresentation getMatchSetRepresentationForAutocompleteBox(final TNRSMatchSet matchSet) {
+	public static ListRepresentation getMatchSetRepresentationForAutocompleteBox(final Iterator<TNRSMatch> matchIter) {
 
-		FirstItemIterable<Representation> results = new FirstItemIterable<Representation>(new IteratorWrapper<Representation, Object>((Iterator) matchSet.iterator()) {
+		FirstItemIterable<Representation> results = new FirstItemIterable<Representation>(new IteratorWrapper<Representation, Object>((Iterator) matchIter) {
 			@Override
 			protected Representation underlyingObjectToObject(Object value) {
 				return getMatchRepresentationForAutocompleteBox((TNRSMatch) value);
@@ -219,14 +219,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				serializer.putString("ottId", match.getMatchedNode().getProperty("uid").toString()); // matched ottol id
 				serializer.putString("name", match.getUniqueName()); // unique name
 				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
-				
-				boolean isHigher = true;
-				String rank = match.getRank();
-				if (rank.equals("species") || rank.equals("subspecies") || rank.equals("variety") || rank.equals("forma")) {
-					isHigher = false;
-				}
-
-				serializer.putBoolean("higher", isHigher); // is higher taxon
+				serializer.putBoolean("higher", match.getIsHigherTaxon()); // is higher taxon
 			}
 		};
 	}

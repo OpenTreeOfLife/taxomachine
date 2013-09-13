@@ -27,6 +27,7 @@ public abstract class TNRSMatch {
 //    public abstract boolean getIsDubiousName();
 //    public abstract List<OTTFlag> getFlags();
     public abstract String getRank();
+    public abstract Boolean getIsHigherTaxon();
     public abstract String getUniqueName();
     public abstract boolean getNameStatusIsKnown();
     public abstract double getScore();

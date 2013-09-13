@@ -2,7 +2,10 @@ package opentree.plugins;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,6 +20,7 @@ import opentree.taxonomy.contexts.ContextNotFoundException;
 import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.ContextResult;
 import opentree.tnrs.TNRSMatch;
+import opentree.tnrs.TNRSMatchSet;
 import opentree.tnrs.TNRSNameResult;
 import opentree.tnrs.TNRSResults;
 import opentree.tnrs.queries.MultiNameContextQuery;
@@ -91,29 +95,77 @@ public class TNRS extends ServerPlugin {
         	context = taxonomy.getContextByName(contextName);
         }
 
-        SingleNamePrefixQuery snpq = new SingleNamePrefixQuery(taxonomy, context);
-        TNRSResults results = snpq.setQueryString(queryString).runQuery().getResults();
- 
-        Iterator<TNRSNameResult> nameResultIter = results.iterator();
-        // return results if they exist, otherwise spoof an empty match set to return (should just return a blank list)
-        if (nameResultIter.hasNext()) {
-        	return TNRSResultsRepresentation.getMatchSetRepresentationForAutocompleteBox(nameResultIter.next().getMatches());
-        } else {
-        	return OpentreeRepresentationConverter.convert(new LinkedList<TNRSMatch>());
+        SingleNamePrefixQuery query = new SingleNamePrefixQuery(taxonomy, context);
+        TNRSResults results = query.setQueryString(queryString).runQuery().getResults();
+
+        // return results if they exist, 
+        if (results.iterator().hasNext()) {
+
+        	List<TNRSMatch> matches = results.iterator().next().getMatches().getMatchList();
+        	
+            if (!matches.isEmpty()) {
+
+            	Collections.sort(matches, new MatchComparator());
+
+            	return TNRSResultsRepresentation.getMatchSetRepresentationForAutocompleteBox(matches.iterator());
+            }
         }
+        
+        // else just return an empty JSON array
+        return OpentreeRepresentationConverter.convert(new LinkedList<TNRSMatch>());
     }
 
-    /*
-    @Description("DEPRECATED. An alias for `contextQueryForNames`, left in for compatibility only. Use `contextQueryForNames` instead.")
-    @PluginTarget(GraphDatabaseService.class)
-    public Representation doTNRSForNames(
-            @Source GraphDatabaseService graphDb,
-            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db") @Parameter(name = "queryString") String queryString,
-            @Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException {
+	/**
+	 * A small custom comparator to facilitate sorting matches for the autocomplete box.
+	 * @author cody
+	 */
+	private static class MatchComparator implements Comparator<TNRSMatch> {
+		@Override
+		public int compare(TNRSMatch match1, TNRSMatch match2) {
+			
+			// sorts in reverse order: higher priority matches to lower indexes
 
-    	return contextQueryForNames(graphDb, queryString, contextName);
-    }
-    */
+			// exact matches are top priority
+			if ((Boolean) match1.getIsPerfectMatch() == true && (Boolean) match2.getIsPerfectMatch() == false) {
+				return -1;
+			} else if ((Boolean) match1.getIsPerfectMatch() == false && (Boolean) match2.getIsPerfectMatch() == true) {
+				return 1;
+			}
+			
+			// higher taxa are higher priority
+			if ((Boolean) match1.getIsHigherTaxon() == true && (Boolean) match1.getIsHigherTaxon() == false) {
+				return -1;
+			} else if ((Boolean) match1.getIsHigherTaxon() == false && (Boolean) match1.getIsHigherTaxon() == true) {
+				return 1;
+			}
+
+			// alphabetical order by name
+			char[] name1 = match1.getUniqueName().toCharArray();
+			char[] name2 = match2.getUniqueName().toCharArray();
+			for (int i = 0; i < name1.length; i++) {
+				
+				// if name 1 contains all of name 2 as a prefix but is longer, it is lower priority
+				if (i >= name2.length) {
+					return 1;
+				}
+				
+				// check the current letter
+				if (name1[i] > name2[i]) {
+					return 1;
+				} else if (name1[i] < name2[i]) {
+					return -1;
+				}
+			}
+			
+			// if name 2 contains all of name 1 as a prefix but is longer, it is lower priority
+			if (name2.length > name1.length) {
+				return -1;
+			}
+			
+			// hits are identical (e.g. valid homonyms...)
+			return 0;
+		}
+	}
     
     @Description("Return information on potential matches to a search query")
     @PluginTarget(GraphDatabaseService.class)
@@ -218,73 +270,6 @@ public class TNRS extends ServerPlugin {
         gdb.shutdownDb();
         return OpentreeRepresentationConverter.convert(results);
     }
-
-    /**
-     * Deprecated. Never used. Use contextQueryForNames instead.
-     * 
-     * @param graphDb
-     * @param treeString
-     * @return
-     * @throws IOException
-     * @throws ContextNotFoundException
-     */
-/*    @Description("Return information on potential matches to a search query")
-    @PluginTarget(GraphDatabaseService.class)
-    @Deprecated
-    public Representation doTNRSForTrees(
-            @Source GraphDatabaseService graphDb,
-            @Description("A string containing tree(s) in a format readable by the forester library")
-                @Parameter(name = "treeString") String treeString/*,
-            @Description("The name of the taxonomic context to use. May be omitted if not known")
-                @Parameter(name = "contextName", optional = true) String contextName*) throws IOException, ContextNotFoundException {
-
-        // Write tree string to temp file for ParserUtils. This is a hack, it would be better to just feed the parser
-        // the treeString directly, but all the appropriate methods seem to want files
-        String tempFileName = "/tmp/tempTree"; // TODO: need to use timestamp to avoid overwriting on asynchronous requests
-        FileWriter fstream = new FileWriter(tempFileName);
-        BufferedWriter out = new BufferedWriter(fstream);
-        out.write(treeString);
-        out.close();
-
-        // read in the treefile
-        final File treefile = new File(tempFileName);
-
-        PhylogenyParser parser = null;
-        try {
-            parser = ParserUtils.createParserDependingOnFileType(treefile, true);
-        } catch (final IOException e) {
-            e.printStackTrace();
-        }
-
-        Phylogeny[] phys = null;
-
-        try {
-            phys = PhylogenyMethods.readPhylogenies(parser, treefile);
-        } catch (final IOException e) {
-            e.printStackTrace();
-        }
-
-        // clean the names extracted from the treefile
-        String[] cleanNames = TNRSNameScrubber.scrubBasic(phys[0].getAllExternalNodeNames());
-        
-        // connect to taxonomy db
-        GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
-        Taxonomy taxonomy = new Taxonomy(gdb);
-
-        // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
-//        TaxonomyContext context = taxonomy.getContextByName(contextName);
-
-        // do TNRS
-        MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
-        HashSet<String> names = Utils.stringArrayToHashset(cleanNames);
-        TNRSResults results = tnrs.
-        		setSearchStrings(names).
-        		runQuery().
-        		getResults();
-
-        gdb.shutdownDb();
-        return OpentreeRepresentationConverter.convert(results);
-    } */
 
     @Description("Return information on available taxonomic contexts")
     @PluginTarget(GraphDatabaseService.class)

@@ -11,7 +11,6 @@ import opentree.tnrs.TNRSResults;
 import org.neo4j.helpers.collection.FirstItemIterable;
 import org.neo4j.helpers.collection.IterableWrapper;
 import org.neo4j.helpers.collection.IteratorWrapper;
-
 import org.neo4j.server.rest.repr.ListRepresentation;
 import org.neo4j.server.rest.repr.MappingRepresentation;
 import org.neo4j.server.rest.repr.Representation;
@@ -144,10 +143,7 @@ public class OpentreeRepresentationConverter {
 
     static FirstItemIterable<Representation> convertValuesToRepresentations(Iterable data)
     {
-        /*
-         * if ( data instanceof Table ) { return new FirstItemIterable<Representation>(Collections.<Representation>singleton(new GremlinTableRepresentation(
-         * (Table) data ))); }
-         */
+
         return new FirstItemIterable<Representation>(
                 new IterableWrapper<Representation, Object>(data) {
 
@@ -161,6 +157,10 @@ public class OpentreeRepresentationConverter {
                             final FirstItemIterable<Representation> nested = convertValuesToRepresentations((Iterable) value);
                             return new ListRepresentation(getType(nested), nested);
                         
+                    	} else if (value instanceof Map<?, ?>) {
+                          return GeneralizedMappingRepresentation.getMapRepresentation((Map<String, Object>) value);
+                          
+                            
                         } else {
                             return getSingleRepresentation(value);
                         }
