@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
@@ -37,26 +38,32 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	static String graphname;
 	
-	// =================== instance variables elevated from within functions
+	// ===== indexes. see setupIndexes method for more info
 	
-	Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
-	Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
-	Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
-	Index<Node> taxaByNameOrSynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME_OR_SYNONYM);
+	// just record the original sources
+	Index<Node> taxSources;
+	
+	// all taxa names
+	Index<Node> taxaByName;
+	Index<Node> taxaBySynonym;
+	Index<Node> taxaByNameOrSynonym;
 
-	Index<Node> taxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_RANK);
-	Index<Node> taxaByFlag = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_FLAG);
-	Index<Node> prefTaxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK);
-	
-	Index<Node> prefTaxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
-	Index<Node> prefTaxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
-	Index<Node> prefTaxaByNameOrSynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
-	
-	Index<Node> prefTaxaByNameHigher = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_HIGHER);
-	Index<Node> prefTaxaByNameOrSynonymHigher = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+	// all taxa by other info
+	Index<Node> taxaByOTTId;
+	Index<Node> taxaByRank;
+	Index<Node> taxaByFlag;
 
-	Index<Node> prefTaxaByNameGenera = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_GENERA);
-	Index<Node> prefTaxaByNameSpecies = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_SPECIES);
+	// preferred names
+	Index<Node> prefTaxaByName;
+	Index<Node> prefTaxaBySynonym;
+	Index<Node> prefTaxaByNameOrSynonym;	
+	Index<Node> prefTaxaByNameHigher;
+	Index<Node> prefTaxaByNameOrSynonymHigher;
+
+	// preferred rank-based
+	Index<Node> prefTaxaByRank;	
+	Index<Node> prefTaxaByNameGenera;
+	Index<Node> prefTaxaByNameSpecies;
 	
 	HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 	HashMap<String, String> parents = new HashMap<String, String>();
@@ -73,6 +80,14 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	HashMap<String, ArrayList<ArrayList<String>>> synonymhash = null;
 	boolean synFileExists = false;
 	
+	// ===== install options
+	
+	private boolean addSynonyms = true;
+	private boolean addBarrierNodes = true;
+	private boolean buildPreferredIndexes = true; // requires that preferred rels are also built.
+	private boolean buildPreferredRels = true;
+	private boolean createOTTIdIndexes = false;
+	
 	// ========================================
 	
 	// basic traversal method
@@ -82,6 +97,41 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	public TaxonomyLoaderOTT(GraphDatabaseAgent gdb) {
 		super(gdb);
 		buildFlagMap();
+	}
+	
+	public TaxonomyLoaderOTT(GraphDatabaseService gds) {
+		super(gds);
+		buildFlagMap();
+	}
+	
+	public void setCreateOTTIdIndexes (boolean createOTTIdIndexes) {
+		this.createOTTIdIndexes = createOTTIdIndexes;
+	}
+	
+	public void setAddSynonyms(boolean addSynonyms) {
+		this.addSynonyms = addSynonyms;
+	}
+
+	public void setAddBarrierNodes (boolean addBarrierNodes) {
+		this.addBarrierNodes = addBarrierNodes;
+	}
+
+	public void setbuildPreferredIndexes (boolean buildPreferredIndexes) {
+		this.buildPreferredIndexes = buildPreferredIndexes;
+	}
+
+	public void setbuildPreferredRels (boolean buildPreferredRels) {
+		this.buildPreferredRels = buildPreferredRels;
+	}
+
+	/**
+	 * Just a wrapper for the no synonyms case. See javadoc for this method with the synonyms option for full description.
+	 * @param sourcename
+	 * @param filename
+	 */
+	public void loadOTTIntoGraph(String sourcename, String filename) {
+		setAddSynonyms(false);
+		loadOTTIntoGraph(sourcename, filename, "");
 	}
 	
 	/**
@@ -110,40 +160,51 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	 * @param synonymfile file that holds the synonym
 	 */
 	public void loadOTTIntoGraph(String sourcename, String filename, String synonymfile) {
+		
+		setupIndexes(); // have to call this here instead of on construction so that we don't make indexes we're not going to use
+		
 		this.sourceName = sourcename;
 		String str = "";
 		int count = 0;
 		ArrayList<String> templines = new ArrayList<String>();
-		if (synonymfile.length() > 0) {
-			synFileExists = true;
-		}
-		//preprocess the synonym file
-		//key is the id from the taxonomy, the array has the synonym and the type of synonym
-		if (synFileExists) {
-			synonymhash = new HashMap<String, ArrayList<ArrayList<String>>>();
-			try {
-				BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
-				while ((str = sbr.readLine()) != null) {
-					StringTokenizer st = new StringTokenizer(str, "\t|\t");
-					String name = st.nextToken();
-					String id = st.nextToken();
-					ArrayList<String> tar = new ArrayList<String>();
-					tar.add(name);tar.add("from OTT");
-					if (synonymhash.get(id) == null) {
-						ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
-						synonymhash.put(id, ttar);
-					}
-					synonymhash.get(id).add(tar);
-				}
-				sbr.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.exit(0);
-			}
-			System.out.println("synonyms: " + synonymhash.size());
-		}
-		//finished processing synonym file
 
+		if (addSynonyms) {
+			if (synonymfile.length() > 0) {
+				synFileExists = true;
+			}
+
+			// preprocess the synonym file
+			// key is the id from the taxonomy, the array has the synonym and the type of synonym
+			if (synFileExists) {
+				synonymhash = new HashMap<String, ArrayList<ArrayList<String>>>();
+				try {
+					BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
+					while ((str = sbr.readLine()) != null) {
+						StringTokenizer st = new StringTokenizer(str, "\t|\t");
+						String name = st.nextToken();
+						String id = st.nextToken();
+						ArrayList<String> tar = new ArrayList<String>();
+						tar.add(name);tar.add("from OTT");
+						if (synonymhash.get(id) == null) {
+							ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
+							synonymhash.put(id, ttar);
+						}
+						synonymhash.get(id).add(tar);
+					}
+					sbr.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.exit(0);
+				}
+				System.out.println("synonyms: " + synonymhash.size());
+			}
+			//finished processing synonym file
+		}
+		
+		if (buildPreferredIndexes && !buildPreferredRels) {
+			throw new UnsupportedOperationException("Cannot build the preferred indexes without building the preferred relationships.");
+		}
+		
 		try {
 			tx = beginTx();
 			//create the metadata node
@@ -164,7 +225,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 					try {
 						for (int i = 0; i < templines.size(); i++) {
 
-							// duplicate block 1
 							processOTTInputLine(templines.get(i));
 							
 						}
@@ -180,7 +240,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			try {
 				for (int i = 0; i < templines.size(); i++) {
 					
-					// duplicate block 2
 					processOTTInputLine(templines.get(i));
 					
 				}
@@ -202,7 +261,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 					try {
 						for (int i = 0; i < temppar.size(); i++) {
 
-							// duplicate block 1
 							processOTTRels(temppar.get(i));
 							
 						}
@@ -217,7 +275,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			try {
 				for (int i = 0; i < temppar.size(); i++) {
 
-					// duplicate block 2
 					processOTTRels(temppar.get(i));
 					
 				}
@@ -229,23 +286,25 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			ioe.printStackTrace();
 		}
 		
-		//mark all of the barrier nodes with additional metadata
-		System.out.println("setting barrier nodes");
-		BarrierNodes bn = new BarrierNodes(this);
-		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
-		HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
-		TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
-				.relationships( RelType.TAXCHILDOF,Direction.INCOMING );
-		tx = beginTx();
-		try {
-			for (int i = 0; i < barrierNodes.size(); i++) {
-				for (Node currentNode : CHILDREN_TRAVERSAL.traverse(barrierNodes.get(i)).nodes()) {
-					currentNode.setProperty("taxcode", barrierNodesMap.get(barrierNodes.get(i).getProperty("name")));
+		if (addBarrierNodes) {
+			//mark all of the barrier nodes with additional metadata
+			System.out.println("setting barrier nodes");
+			BarrierNodes bn = new BarrierNodes(this);
+			ArrayList<Node> barrierNodes = bn.getBarrierNodes();
+			HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
+			TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
+					.relationships( RelType.TAXCHILDOF,Direction.INCOMING );
+			tx = beginTx();
+			try {
+				for (int i = 0; i < barrierNodes.size(); i++) {
+					for (Node currentNode : CHILDREN_TRAVERSAL.traverse(barrierNodes.get(i)).nodes()) {
+						currentNode.setProperty("taxcode", barrierNodesMap.get(barrierNodes.get(i).getProperty("name")));
+					}
 				}
+				tx.success();
+			} finally {
+				tx.finish();
 			}
-			tx.success();
-		} finally {
-			tx.finish();
 		}
 		
 		//start the mrcas
@@ -270,12 +329,14 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			rel.setProperty("childid", childId);
 			rel.setProperty("parentid", parents.get(childId));
 
-			// don't need to wait to makeottol anymore
-			if (!dubiousNodes.contains(dbnodes.get(childId))) {
-				Relationship prefRel = dbnodes.get(childId).createRelationshipTo(dbnodes.get(parents.get(childId)), RelType.PREFTAXCHILDOF);
-				prefRel.setProperty("source", sourceName);
-				prefRel.setProperty("childid", childId);
-				prefRel.setProperty("parentid", parents.get(childId));
+			if (buildPreferredRels) {
+				// don't need to wait to makeottol anymore
+				if (!dubiousNodes.contains(dbnodes.get(childId))) {
+					Relationship prefRel = dbnodes.get(childId).createRelationshipTo(dbnodes.get(parents.get(childId)), RelType.PREFTAXCHILDOF);
+					prefRel.setProperty("source", sourceName);
+					prefRel.setProperty("childid", childId);
+					prefRel.setProperty("parentid", parents.get(childId));
+				}
 			}
 
 		} catch(java.lang.IllegalArgumentException io) {
@@ -299,11 +360,9 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		String inputSources = tokens[i++];
 		String uniqname = tokens[i++];
 
-//		System.out.println("\nincoming string: " + tokens[i]);
 		
 		// the last token is the flags. don't try parsing them unless they exist
 		String[] flags = tokens[i] != null ? tokens[i].split("\\,") : null;
-//		System.out.println("processed array: " + Arrays.toString(flags));
 		
 		// we determine these bits later based on flags
 		boolean dubious = false;
@@ -327,17 +386,14 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		tnode.setProperty("input_sources",inputSources);
 		tnode.setProperty("uniqname",uniqname);
 
-//		int k=0;
 		if (flags.length > 0) {
 			for (String label : flags) {
 				
-//				System.out.println("iterating: " + label);
-
 				if (!label.equals("")) {
-					// record all flags as node properties, whether we recognize them or not
+
+					// record each flags as a node property, whether we recognize it or not
 					tnode.setProperty(label, true);
 					taxaByFlag.add(tnode, "flag", label);
-//					k++;
 	
 					// if we recognize the flag, check if it implies additional action
 					if (ottFlags.containsKey(label)) {
@@ -359,63 +415,80 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				}
 			}
 		}
-		
-//		System.out.println("Set " + k + " flags on node " + tnode.getId());
-		
+				
 		tnode.setProperty("dubious", dubious);
 		if (dubious) {
 			taxaByFlag.add(tnode, "flag", "dubious");
 		}
 		
 		taxaByName.add(tnode, "name", inputName);
-		taxaByNameOrSynonym.add(tnode, "name", inputName);
 		taxaByRank.add(tnode, "rank", rank);
+
+		if (addSynonyms) {
+			taxaByNameOrSynonym.add(tnode, "name", inputName);
+		}
 		
-		// addl indexing
-		if (!dubious) {
-			prefTaxaByName.add(tnode, "name", inputName);
-			prefTaxaByNameOrSynonym.add(tnode, "name", inputName);
-			prefTaxaByRank.add(tnode, "rank", rank);
-			
-			// add to the rank-specific indexes
-	        if (isSpecific(rank)) {
-	        	prefTaxaByNameSpecies.add(tnode, "name", inputName);
-	        } else if (rank.equals("genus")) {
-	        	prefTaxaByNameGenera.add(tnode, "name", inputName);
-	        	prefTaxaByNameHigher.add(tnode, "name", inputName);
-	        	prefTaxaByNameOrSynonymHigher.add(tnode, "name", inputName);
-	        } else {
-	        	prefTaxaByNameHigher.add(tnode, "name", inputName);
-	        	prefTaxaByNameOrSynonymHigher.add(tnode, "name", inputName);
-	        }
-			
+		if (buildPreferredIndexes) {
+
+			// addl indexing
+			if (!dubious) {
+				prefTaxaByName.add(tnode, "name", inputName);
+				prefTaxaByRank.add(tnode, "rank", rank);
+
+				if (addSynonyms) {
+					prefTaxaByNameOrSynonym.add(tnode, "name", inputName);
+				}
+				
+				// add to the rank-specific indexes
+		        if (isSpecific(rank)) {
+		        	prefTaxaByNameSpecies.add(tnode, "name", inputName);
+
+		        } else if (rank.equals("genus")) {
+		        	prefTaxaByNameGenera.add(tnode, "name", inputName);
+		        	prefTaxaByNameHigher.add(tnode, "name", inputName);
+		        	if (addSynonyms) {
+		        		prefTaxaByNameOrSynonymHigher.add(tnode, "name", inputName);
+		        	}
+
+		        } else {
+		        	prefTaxaByNameHigher.add(tnode, "name", inputName);
+		        	if (addSynonyms) {
+		        		prefTaxaByNameOrSynonymHigher.add(tnode, "name", inputName);
+		        	}
+		        }
+			}
 		}
 		
 		dbnodes.put(inputId, tnode);
-		// synonym processing
-		if (synFileExists) {
-			if (synonymhash.get(inputId) != null) {
-				ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
-				for (int j = 0; j < syns.size(); j++) {
-					String synName = syns.get(j).get(0);
-					String synNameType = syns.get(j).get(1);
-					Node synode = createNode();
-					synode.setProperty("name", synName);
-					synode.setProperty("uid", synode.getId());
-					synode.setProperty("nametype", synNameType);
-					synode.setProperty("source", sourceName);
-					synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
-					taxaBySynonym.add(tnode, "name", synName);
-					taxaByNameOrSynonym.add(tnode, "name", synName);
-
-					// addl indexing
-					if (!dubious) {
-						prefTaxaBySynonym.add(tnode,"name",synName);
-						prefTaxaByNameOrSynonym.add(tnode,"name",synName);
-						
-			            if (!isSpecific(rank)) {
-			            	prefTaxaByNameOrSynonymHigher.add(tnode, "name", synName);
-			            }
+		
+		if (addSynonyms) {
+			// synonym processing
+			if (synFileExists) {
+				if (synonymhash.get(inputId) != null) {
+					ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
+					for (int j = 0; j < syns.size(); j++) {
+						String synName = syns.get(j).get(0);
+						String synNameType = syns.get(j).get(1);
+						Node synode = createNode();
+						synode.setProperty("name", synName);
+						synode.setProperty("uid", synode.getId());
+						synode.setProperty("nametype", synNameType);
+						synode.setProperty("source", sourceName);
+						synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+						taxaBySynonym.add(tnode, "name", synName);
+						taxaByNameOrSynonym.add(tnode, "name", synName);
+	
+						if (buildPreferredIndexes) {
+							// addl indexing
+							if (!dubious) {
+								prefTaxaBySynonym.add(tnode,"name",synName);
+								prefTaxaByNameOrSynonym.add(tnode,"name",synName);
+								
+					            if (!isSpecific(rank)) {
+					            	prefTaxaByNameOrSynonymHigher.add(tnode, "name", synName);
+					            }
+							}
+						}
 					}
 				}
 			}
@@ -445,6 +518,46 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		metadatanode.setProperty("uri", "");
 		metadatanode.setProperty("urlprefix", '"');
 		taxSources.add(metadatanode, "source", sourceName);
+	}
+	
+	/**
+	 * Set up indexes according to the loading options set
+	 */
+	private void setupIndexes() {
+		
+		// always set up
+		taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
+		taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+		taxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_RANK);
+		taxaByFlag = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_FLAG);
+
+		// only for synonyms
+		if (addSynonyms) {
+			taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
+			taxaByNameOrSynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME_OR_SYNONYM);
+		}
+
+		// only for ott id option
+		if (createOTTIdIndexes) {
+			taxaByOTTId = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_OTT_ID);
+		}
+
+		// only for preferred option
+		if (buildPreferredIndexes) {
+			prefTaxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
+			prefTaxaByNameHigher = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_HIGHER);
+
+			prefTaxaByRank = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK);
+			prefTaxaByNameGenera = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_GENERA);
+			prefTaxaByNameSpecies = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_SPECIES);
+
+			// only if also doing synonyms
+			if (addSynonyms) {
+				prefTaxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
+				prefTaxaByNameOrSynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+				prefTaxaByNameOrSynonymHigher = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+			}
+		}
 	}
 	
 /*	HashMap<String, ArrayList<String>> globalchildren = null;

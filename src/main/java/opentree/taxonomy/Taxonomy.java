@@ -5,6 +5,7 @@ import opentree.taxonomy.contexts.ContextNotFoundException;
 import opentree.taxonomy.contexts.TaxonomyContext;
 
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
@@ -33,6 +34,11 @@ public class Taxonomy {
 
 	public Taxonomy(GraphDatabaseAgent gdb) {
 		graphDb = gdb;
+		ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
+	}
+	
+	public Taxonomy(GraphDatabaseService gds) {
+		graphDb = new GraphDatabaseAgent(gds);
 		ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
 	}
 

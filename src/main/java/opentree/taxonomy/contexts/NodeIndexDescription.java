@@ -22,6 +22,9 @@ public enum NodeIndexDescription {
 	/** Records all taxa. Field is "name" and key is taxon name. */
     TAXON_BY_NAME               ("taxNodesByName"),         // all taxon nodes by name
 
+	/** Records all taxa. Field is "uid" and key is ott id. */
+    TAXON_BY_OTT_ID 			("taxNodesByOTTId"),         // all taxon nodes by name
+
 	/** Records all taxa. Field is "name" and key is synonymous name. */
     TAXON_BY_SYNONYM            ("taxNodesBySyn"),          // all taxon nodes by synonym
     
