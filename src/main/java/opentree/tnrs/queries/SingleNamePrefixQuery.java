@@ -37,8 +37,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
-import scala.actors.threadpool.Arrays;
-
 /**
  * Provides access to a tnrs query tailored for autocomplete boxes.
  * 
