@@ -6,7 +6,7 @@ import org.neo4j.graphdb.index.IndexHits;
 
 import opentree.taxonomy.Taxon;
 import opentree.taxonomy.Taxonomy;
-import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyNodeIndex;
 import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.TNRSHit;
@@ -55,7 +55,7 @@ public class SimpleQuery extends AbstractBaseQuery {
     	results = new TNRSResults();
     	IndexHits<Node> hits = null;
     	try {
-    		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query("name", queryString); //.replace(" ", "\\ "));
+    		hits = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query("name", queryString); //.replace(" ", "\\ "));
 
         	 // at least 1 hit; prepare to record matches
         	 TNRSMatchSet matches = new TNRSMatchSet(taxonomy);

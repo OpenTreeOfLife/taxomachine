@@ -11,7 +11,7 @@ import opentree.taxonomy.Taxon;
 import opentree.taxonomy.TaxonSet;
 import opentree.taxonomy.Taxonomy;
 import opentree.taxonomy.contexts.ContextDescription;
-import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyNodeIndex;
 import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatchSet;
@@ -535,13 +535,13 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      */
     private void setIndexes() {
     	if (includeDubious) {
-    		nameIndex = context.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
-    		synonymIndex = context.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
-    		nameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME_OR_SYNONYM);
+    		nameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
+    		synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
+    		nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
     	} else {
-    		nameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
-    		synonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
-    		nameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+    		nameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
+    		synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
+    		nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
     	}
     }
 }

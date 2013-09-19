@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 
-import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
 import org.apache.log4j.Logger;
 import org.neo4j.graphalgo.GraphAlgoFactory;
@@ -23,6 +23,7 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
+import org.opentree.properties.OTVocabulary;
 
 /**
  * 
@@ -83,7 +84,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 	@Deprecated
 	protected Node getNodeForTaxNomStatus(String taxonomicStatus, String nomenclaturalStatus, Transaction pendingTx) {
 		String key = taxonomicStatus + "|" + nomenclaturalStatus;
-		Index<Node> taxStatus = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_STATUS);
+		Index<Node> taxStatus = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAX_STATUS);
 		IndexHits<Node> ih = taxStatus.get("status", key);
 		if (ih.size() == 0) {
 			boolean closeTx = false;
@@ -123,7 +124,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 	 */
 	@Deprecated
 	protected Node getNodeForTaxRank(String taxonomicRank, Transaction pendingTx) {
-        Index<Node> taxRanks = ALLTAXA.getNodeIndex(NodeIndexDescription.TAX_STATUS);
+        Index<Node> taxRanks = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAX_STATUS);
         IndexHits<Node> ih = taxRanks.get("rank", taxonomicRank);
 		if (ih.size() == 0) {
 			boolean closeTx = false;
@@ -214,9 +215,9 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 		HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 		HashMap<String, String> parents = new HashMap<String, String>();
 
-		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
-		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
-		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXONOMY_SOURCES);
+		Index<Node> taxaByName = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
+		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
 
 		// just setting source metadata manually for now
 		String author = "";
@@ -284,7 +285,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 							}
 							tnode.setProperty("name", inputName);
 							//TODO: add the ability to input these from a source if they have already been set
-							tnode.setProperty("uid", tnode.getId());
+							tnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), tnode.getId());
 							tnode.setProperty("sourceid", inputId);
 							tnode.setProperty("sourcepid", inputParentId);
 							tnode.setProperty("source", sourcename);
@@ -299,7 +300,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 										String synNameType = syns.get(j).get(1);
 										Node synode = createNode();
 										synode.setProperty("name", synName);
-										synode.setProperty("uid", synode.getId());
+										synode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), synode.getId());
 										synode.setProperty("nametype", synNameType);
 										synode.setProperty("source", sourcename);
 										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
@@ -342,7 +343,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 					}
 					tnode.setProperty("name", inputName);
 					//TODO: add the ability to input these from a source if they have already been set
-					tnode.setProperty("uid", tnode.getId());
+					tnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), tnode.getId());
 					tnode.setProperty("sourceid", inputId);
 					tnode.setProperty("sourcepid", inputParentId);
 					tnode.setProperty("source", sourcename);
@@ -357,7 +358,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 								String synNameType = syns.get(j).get(1);
 								Node synode = createNode();
 								synode.setProperty("name", synName);
-								synode.setProperty("uid", synode.getId());
+								synode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), synode.getId());
 								synode.setProperty("nametype", synNameType);
 								synode.setProperty("source", sourcename);
 								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
@@ -517,10 +518,10 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 			urlPrefix = "http://ecat-dev.gbif.org/usage/";		    
 		}
 		
-		Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
+		Index<Node> taxSources = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXONOMY_SOURCES);
 		//can plug into these by not saying name but the source itself
-		Index<Node> taxaByName = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
-		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM);
+		Index<Node> taxaByName = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
+		Index<Node> taxaBySynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
 		Node metadatanode = null;
 		try {
 			tx = beginTx();
@@ -572,7 +573,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 							}
 							tnode.setProperty("name", inputName);
 							//TODO: add the ability to input these from a source if they have already been set
-							tnode.setProperty("uid", tnode.getId());
+							tnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), tnode.getId());
 							tnode.setProperty("sourceid", inputId);
 							tnode.setProperty("sourcepid", inputParentId);
 							tnode.setProperty("source", sourcename);
@@ -587,7 +588,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 										String synNameType = syns.get(j).get(1);
 										Node synode = createNode();
 										synode.setProperty("name", synName);
-										synode.setProperty("uid", synode.getId());
+										synode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), synode.getId());
 										synode.setProperty("nametype", synNameType);
 										synode.setProperty("source", sourcename);
 										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
@@ -630,7 +631,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 					}
 					tnode.setProperty("name", inputName);
 					//TODO: add the ability to input these from a source if they have already been set
-					tnode.setProperty("uid", tnode.getId());
+					tnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), tnode.getId());
 					tnode.setProperty("sourceid", inputId);
 					tnode.setProperty("sourcepid", inputParentId);
 					tnode.setProperty("source", sourcename);
@@ -645,7 +646,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 								String synNameType = syns.get(j).get(1);
 								Node synode = createNode();
 								synode.setProperty("name", synName);
-								synode.setProperty("uid", synode.getId());
+								synode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), synode.getId());
 								synode.setProperty("nametype", synNameType);
 								synode.setProperty("source", sourcename);
 								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);

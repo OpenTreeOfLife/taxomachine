@@ -11,7 +11,7 @@ import opentree.taxonomy.Taxon;
 import opentree.taxonomy.TaxonSet;
 import opentree.taxonomy.Taxonomy;
 import opentree.taxonomy.contexts.ContextDescription;
-import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyNodeIndex;
 import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.TNRSHit;
 import opentree.tnrs.TNRSMatch;
@@ -36,6 +36,7 @@ import org.apache.lucene.util.Version;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.opentree.properties.OTVocabulary;
 
 /**
  * Provides access to a tnrs query tailored for autocomplete boxes.
@@ -65,12 +66,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	
     public SingleNamePrefixQuery(Taxonomy taxonomy) {
     	super(taxonomy);
-    	prefSpeciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_SPECIES_BY_GENUS);
+    	prefSpeciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SPECIES_BY_GENUS);
     }
     
     public SingleNamePrefixQuery(Taxonomy taxonomy, TaxonomyContext context) {
     	super(taxonomy, context);
-    	prefSpeciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_SPECIES_BY_GENUS);
+    	prefSpeciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SPECIES_BY_GENUS);
     }
 
     /**
@@ -91,12 +92,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     @Override
     public SingleNamePrefixQuery setContext(TaxonomyContext c) {
     	super.setContext(c);
-        prefTaxNodesByNameHigher = this.context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_HIGHER);
-    	prefTaxNodesByNameOrSynonymHigher = this.context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
-        prefTaxNodesByNameGenera = this.context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_GENERA);
-        prefTaxNodesByNameSpecies = this.context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_SPECIES);
-        prefTaxNodesByNameOrSynonym = this.context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
-        prefTaxNodesBySynonym = this.context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
+        prefTaxNodesByNameHigher = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
+    	prefTaxNodesByNameOrSynonymHigher = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+        prefTaxNodesByNameGenera = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_GENERA);
+        prefTaxNodesByNameSpecies = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_SPECIES);
+        prefTaxNodesByNameOrSynonym = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+        prefTaxNodesBySynonym = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
     	return this;
     }
     
@@ -170,7 +171,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	    				
     					IndexHits<Node> speciesHits = null;
 	    				try {
-	    					speciesHits = prefSpeciesNodesByGenus.get("genus_uid", genusMatch.getMatchedNode().getProperty("uid"));
+	    					speciesHits = prefSpeciesNodesByGenus.get("genus_uid", genusMatch.getMatchedNode().getProperty(OTVocabulary.OT_OTT_ID.propertyName()));
 	    				
 		    				String genusName = String.valueOf(genusMatch.getMatchedNode().getProperty("name"));
 		    				char[] searchEpithet = parts[1].toCharArray();
@@ -413,7 +414,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	} else {
 	    	IndexHits<Node> hits = null;
 	    	try {
-	    		hits = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).
+	    		hits = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME).
 	    				query("name", name);
 		        if (hits.size() > 1) {
 		            isHomonym = true;

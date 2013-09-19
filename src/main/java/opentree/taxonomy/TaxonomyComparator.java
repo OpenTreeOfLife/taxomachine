@@ -20,7 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -33,6 +33,7 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.index.impl.lucene.Hits;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
+import org.opentree.properties.OTVocabulary;
 
 public class TaxonomyComparator {
 	
@@ -54,8 +55,8 @@ public class TaxonomyComparator {
 	public void compareGraftTaxonomyToDominant(GraphDatabaseAgent dinga,String comparisonsource){
 		Taxonomy domtax = new Taxonomy(dinga);		
 
-		Index<Node> taxSources = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
-		Index<Node> taxaByName = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+		Index<Node> taxSources = domtax.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXONOMY_SOURCES);
+		Index<Node> taxaByName = domtax.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
 		
 		//get the root of the comparison taxonomy
 		IndexHits<Node> hits = taxSources.get("source",comparisonsource);
@@ -250,7 +251,7 @@ public class TaxonomyComparator {
 //								System.out.println("making node: "+newnode+" "+tnode.getProperty("name"));
 								newnode.setProperty("name", (String)tnode.getProperty("name"));
 								//TODO: add uid
-								newnode.setProperty("uid", newnode.getId());
+								newnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), newnode.getId());
 								newnode.setProperty("source",(String)tnode.getProperty("source"));
 								if (tnode.hasProperty("rank"))
 									newnode.setProperty("rank",(String)tnode.getProperty("rank"));
@@ -324,8 +325,8 @@ public class TaxonomyComparator {
 	 */
 	public void compareDontAddNamesToOTTOL(String infilename, String outfilename,GraphDatabaseAgent dinga){
 		Taxonomy domtax = new Taxonomy(dinga);		
-		Index<Node> taxSources = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
-		Index<Node> taxaByName = domtax.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+		Index<Node> taxSources = domtax.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXONOMY_SOURCES);
+		Index<Node> taxaByName = domtax.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
 		
 		String str = "";
 		BufferedReader sbr;
@@ -420,7 +421,7 @@ public class TaxonomyComparator {
 						//best match
 						if (test == true){
 							//write the result and break
-							bwMain.write(id+"\t|\t"+ttn.getProperty("uid")+"\t|\t"+ttn.getProperty("name")+"\t|\t\n");
+							bwMain.write(id+"\t|\t"+ttn.getProperty(OTVocabulary.OT_OTT_ID.propertyName())+"\t|\t"+ttn.getProperty("name")+"\t|\t\n");
 							break;
 						}
 					}
@@ -428,7 +429,7 @@ public class TaxonomyComparator {
 					ArrayList<Node> tn = (ArrayList<Node>) domtax.ALLTAXA.findPrefTaxNodesByNameOrSyn(id_name_map.get(id));
 					if(tn.size() == 1){
 						//write the result out
-						bwMain.write(id+"\t|\t"+tn.get(0).getProperty("uid")+"\t|\t"+tn.get(0).getProperty("name")+"\t|\t\n");
+						bwMain.write(id+"\t|\t"+tn.get(0).getProperty(OTVocabulary.OT_OTT_ID.propertyName())+"\t|\t"+tn.get(0).getProperty("name")+"\t|\t\n");
 					}
 					//if(tn.size()<1){
 					//	System.out.println(id+" "+id_name_map.get(id)+" "+tn.size());

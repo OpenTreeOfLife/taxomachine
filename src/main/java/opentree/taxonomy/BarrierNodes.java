@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyNodeIndex;
 import opentree.taxonomy.contexts.Nomenclature;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;
@@ -78,7 +78,7 @@ public final class BarrierNodes {
         for (String itns : barrierNamesMap.keySet()) {
             int bestcount = LARGE;
             Node bestitem = null;
-            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).get("name", itns);
+            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME).get("name", itns);
             try {
                 for (Node node : hits) {
                 	System.out.println(node);
@@ -100,7 +100,7 @@ public final class BarrierNodes {
             		System.out.println("checking some of the other names for: "+itns);
             		for(String tname: barrierNamesSearch.get(itns)){
             			System.out.println("checking: "+tname);
-            			hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).get("name", tname);
+            			hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME).get("name", tname);
                         try {
                             for (Node node : hits) {
                             	System.out.println(node);
@@ -120,7 +120,7 @@ public final class BarrierNodes {
             	}
             	if (bestitem == null){
             		System.out.println("trying to match barriers with the synonyms");
-            		hits = taxonomy.ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_SYNONYM).get("name", itns);
+            		hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM).get("name", itns);
             		bestcount = LARGE;
             		try {
             			for (Node node : hits) {

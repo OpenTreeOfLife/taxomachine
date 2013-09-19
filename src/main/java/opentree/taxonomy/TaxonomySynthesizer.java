@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import opentree.taxonomy.contexts.ContextDescription;
-import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyNodeIndex;
 import opentree.taxonomy.contexts.TaxonomyContext;
 import opentree.tnrs.MultipleHitsException;
 import opentree.tnrs.queries.MultiNameContextQuery;
@@ -30,6 +30,7 @@ import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
+import org.opentree.properties.OTVocabulary;
 
 /**
  * TaxonomySynthesize functions
@@ -50,7 +51,7 @@ public class TaxonomySynthesizer extends Taxonomy {
     private static final TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description().breadthFirst().
             relationships(RelType.TAXCHILDOF, Direction.INCOMING);
     
-	private final Index<Node> prefSpeciesByGenus = ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_SPECIES_BY_GENUS);
+	private final Index<Node> prefSpeciesByGenus = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SPECIES_BY_GENUS);
 
     public TaxonomySynthesizer(GraphDatabaseAgent t) {
         super(t);
@@ -92,7 +93,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         
         String sourceJSON = "\"externalSources\":{";
         // first need to get list of sources, currently including 'nodeid' source
-        Index<Node> taxSources = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES);
+        Index<Node> taxSources = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXONOMY_SOURCES);
         IndexHits<Node> sourceNodes = taxSources.query("source", "*");
         boolean first0 = true;
         for (Node metadataNode : sourceNodes) {
@@ -417,12 +418,12 @@ public class TaxonomySynthesizer extends Taxonomy {
 		IndexHits<Node> hits = null;
 		Node startnode = null;
     	try{
-    		hits = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXONOMY_SOURCES).get("source", domsource);
+    		hits = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXONOMY_SOURCES).get("source", domsource);
     		startnode = hits.getSingle().getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode();//there should only be one source with that name
     	}finally{
     		hits.close();
     	}
-    	Index<Node> taxNames = ALLTAXA.getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+    	Index<Node> taxNames = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
     	
     	for(Node curnode: TAXCHILDOF_TRAVERSAL.traverse(startnode).nodes()){
     		IndexHits<Node> nhits = null;
@@ -454,11 +455,11 @@ public class TaxonomySynthesizer extends Taxonomy {
              outFile = new PrintWriter(new FileWriter(outfile));
              outFile.write("uid\t|\tparent_uid\t|\tname\t|\trank\t|\tsource\t|\tsourceid\t|\tsourcepid\t|\t\n");
              for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
-            	 outFile.write(String.valueOf(n.getProperty("uid"))+"\t|\t");
+            	 outFile.write(String.valueOf(n.getProperty(OTVocabulary.OT_OTT_ID.propertyName()))+"\t|\t");
             	 if(n.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)){
             		 Relationship tr = n.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
             		 Node p = tr.getEndNode();
-            		 outFile.write(String.valueOf(p.getProperty("uid"))+"\t|\t");
+            		 outFile.write(String.valueOf(p.getProperty(OTVocabulary.OT_OTT_ID.propertyName()))+"\t|\t");
             	 }else{
             		 outFile.write("\t|\t");
             	 }
@@ -498,8 +499,8 @@ public class TaxonomySynthesizer extends Taxonomy {
             	 if(n.hasRelationship(Direction.INCOMING, RelType.SYNONYMOF)){
             		 for(Relationship tr: n.getRelationships(Direction.INCOMING, RelType.SYNONYMOF)){
                 		 Node p = tr.getStartNode();//synonym node
-                		 outFile.write(String.valueOf(p.getProperty("uid"))+"\t|\t");
-                		 outFile.write(String.valueOf(n.getProperty("uid"))+"\t|\t");
+                		 outFile.write(String.valueOf(p.getProperty(OTVocabulary.OT_OTT_ID.propertyName()))+"\t|\t");
+                		 outFile.write(String.valueOf(n.getProperty(OTVocabulary.OT_OTT_ID.propertyName()))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("name"))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("nametype"))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("source"))+"\t|\t\n");
@@ -652,9 +653,9 @@ public class TaxonomySynthesizer extends Taxonomy {
 
         Transaction tx = beginTx();
     	try {
-    		for (Node genus : ALLTAXA.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK).get("rank", "genus")) {
+    		for (Node genus : ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_RANK).get("rank", "genus")) {
 //        		System.out.println("starting on genus: " + genus.getProperty("name"));
-	        	String gid = String.valueOf(genus.getProperty("uid"));
+	        	String gid = String.valueOf(genus.getProperty(OTVocabulary.OT_OTT_ID.propertyName()));
 	        	for (Node sp : prefTaxChildOfTraversal.evaluator(new isSpecificEvaluator()).traverse(genus).nodes()) {
 //	        		System.out.println("returned " + sp.getProperty("name"));
 	        		prefSpeciesByGenus.add(sp, "genus_uid", gid);
@@ -713,21 +714,21 @@ public class TaxonomySynthesizer extends Taxonomy {
      */
     public void addToPreferredIndexes(Node node, TaxonomyContext context) {
 
-        Index<Node> nameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
-        Index<Node> synonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
-        Index<Node> nameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+        Index<Node> nameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
+        Index<Node> synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
+        Index<Node> nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
 
-        Index<Node> rankIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_RANK);
+        Index<Node> rankIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_RANK);
         
         // species and subspecific ranks
-        Index<Node> speciesNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_SPECIES);
+        Index<Node> speciesNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_SPECIES);
 
         // genera only
-        Index<Node> genusNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_GENERA);
+        Index<Node> genusNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_GENERA);
 
         // higher taxa
-        Index<Node> higherNameIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_HIGHER);
-        Index<Node> higherNameOrSynonymIndex = context.getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+        Index<Node> higherNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
+        Index<Node> higherNameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
         
         // update the leastcontext property (notion of "least" assumes this is being called by recursive context-building)
         node.setProperty("leastcontext", context.getDescription().toString());

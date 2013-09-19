@@ -1,5 +1,9 @@
 package opentree.taxonomy.contexts;
 
+import org.opentree.graphdb.NodeIndexDescription;
+
+
+
 /**
  * This enum defines all the types of indexes that are accessible from the TaxonomyContext objects. This includes ALL
  * node indexes, including those whose scope is the entire taxonomy, as well as those with more limited scope. Each one of
@@ -15,14 +19,16 @@ package opentree.taxonomy.contexts;
  * @author cody hinchliff
  *
  */
-public enum NodeIndexDescription {
+public enum TaxonomyNodeIndex implements NodeIndexDescription {
+	
+	// TODO: make the keys consistent with the OTVocabulary
 	
 	// all taxon indexes
 	
 	/** Records all taxa. Field is "name" and key is taxon name. */
     TAXON_BY_NAME               ("taxNodesByName"),         // all taxon nodes by name
 
-	/** Records all taxa. Field is "uid" and key is ott id. */
+	/** Records all taxa. Field is "ot:ottolId" and key is ott id. */
     TAXON_BY_OTT_ID 			("taxNodesByOTTId"),         // all taxon nodes by name
 
 	/** Records all taxa. Field is "name" and key is synonymous name. */
@@ -106,7 +112,19 @@ public enum NodeIndexDescription {
 
     public final String namePrefix;
 
-    NodeIndexDescription(String namePrefix) {
+    TaxonomyNodeIndex(String namePrefix) {
         this.namePrefix = namePrefix;
     }
+
+    /**
+     * For simplified use, we can return just the name prefix for these indexes, as this corresponds to the
+     * ALLTAXA case. This facilitates the use of this enum in tools that do not need contexts. For use with
+     * contexts (currently only in taxomachine), we need to use the name prefix as a prefix and access the
+     * index through the Taxonomy class or the ContextDescription class to build the full name of the context-
+     * specific indexes.
+     */
+	@Override
+	public String indexName() {
+		return namePrefix;
+	}
 }

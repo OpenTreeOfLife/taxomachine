@@ -12,6 +12,8 @@ import java.util.Set;
 import org.neo4j.graphdb.Node;
 import org.neo4j.helpers.collection.FirstItemIterable;
 import org.neo4j.helpers.collection.IteratorWrapper;
+import org.opentree.properties.OTProperty;
+import org.opentree.properties.OTVocabulary;
 
 import opentree.taxonomy.OTTFlag;
 import opentree.tnrs.ContextResult;
@@ -30,11 +32,11 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 		super(type);
 	}
 
-	// ////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
 	// methods for converting specific data types below here
 	//
-	// ///////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	/**
 	 * Return a Representation object capable of serializing `result` into a map
@@ -49,18 +51,18 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			protected void serialize(final MappingSerializer serializer) {
 
 				serializer.putString("context_name", result.context.getDescription().name);
-				serializer.putString("content_rootnode_ottol_id", result.context.getRootNode().getProperty("uid").toString());
+				serializer.putNumber("content_rootnode_ottol_id", (Long) result.context.getRootNode().getProperty(OTVocabulary.OT_OTT_ID.propertyName()));
 				serializer.putList("ambiguous_name_ids", OpentreeRepresentationConverter.getListRepresentation(result.nameIdsNotMatched));
 
 			}
 		};
 	}
 
-	// ////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
 	// methods for converting TNRSResults and nested types below here
 	//
-	// ///////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	/**
 	 * Return an Representation object capable of serializing `results` into a complex nested map structure containing all the information returned by the TNRS
@@ -154,7 +156,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				serializer.putString("matched_name", matchedNode.getProperty("name").toString());
 				serializer.putString("unique_name", match.getUniqueName());
 				serializer.putString("rank", match.getRank());
-				serializer.putString("matched_ott_id", matchedNode.getProperty("uid").toString());
+				serializer.putNumber("matched_ott_id", (Long) matchedNode.getProperty(OTVocabulary.OT_OTT_ID.propertyName()));
 				serializer.putString("parent_name", match.getParentNode().getProperty("name").toString());
 				serializer.putString("source_name", match.getSource());
 				serializer.putString("nomenclature_code", match.getNomenCode());
@@ -191,11 +193,11 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 		};
 	}
 	
-	// ////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
 	// these are for the autocomplete box query, and omit unnecessary information
 	//
-	// ///////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	public static ListRepresentation getMatchSetRepresentationForAutocompleteBox(final Iterator<TNRSMatch> matchIter) {
 
@@ -216,7 +218,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				// TODO: transition these to lower case with underscores
 				serializer.putNumber("nodeId", match.getMatchedNode().getId()); // matched node id
-				serializer.putString("ottId", match.getMatchedNode().getProperty("uid").toString()); // matched ottol id
+				serializer.putNumber("ottId", (Long) match.getMatchedNode().getProperty(OTVocabulary.OT_OTT_ID.propertyName())); // matched ottol id
 				serializer.putString("name", match.getUniqueName()); // unique name
 				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
 				serializer.putBoolean("higher", match.getIsHigherTaxon()); // is higher taxon
@@ -225,11 +227,11 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	}
 	
 
-	// ////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
 	// general serialization methods below here, mostly just copied from Neo4j RepresentationConverter classes
 	//
-	// ///////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	@Override
 	String serialize(RepresentationFormat format, URI baseUri, ExtensionInjector extensions) {

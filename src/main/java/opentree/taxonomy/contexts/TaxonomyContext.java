@@ -64,7 +64,7 @@ public class TaxonomyContext {
 	 * @param indexDesc
 	 * @return nodeIndex
 	 */
-	public Index<Node> getNodeIndex(NodeIndexDescription indexDesc) {
+	public Index<Node> getNodeIndex(TaxonomyNodeIndex indexDesc) {
 		String indexName = indexDesc.namePrefix + contextDescription.nameSuffix;
 		return taxonomy.getGraphDb().getNodeIndex(indexName);
 
@@ -86,7 +86,7 @@ public class TaxonomyContext {
 	 */
 	public Node getRootNode() {
 		IndexHits<Node> rootMatches = taxonomy.ALLTAXA.
-				getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME).
+				getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME).
 //				getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).
 				get("name", contextDescription.licaNodeName);
 		Node rn = null;
@@ -117,7 +117,7 @@ public class TaxonomyContext {
 	 * @return
 	 */
 	public List<Node> findTaxNodesByName(String name) {
-		Index<Node> index = (Index<Node>) getNodeIndex(NodeIndexDescription.TAXON_BY_NAME);
+		Index<Node> index = (Index<Node>) getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
 		return findNodes(index, "name", name);
 	}
 
@@ -128,7 +128,7 @@ public class TaxonomyContext {
 	 * @return
 	 */
 	public List<Node> findPrefTaxNodesByName(String name) {
-		Index<Node> index = (Index<Node>) getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME);
+		Index<Node> index = (Index<Node>) getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
 		return findNodes(index, "name", name);
 
 	}
@@ -177,7 +177,7 @@ public class TaxonomyContext {
 	 * @return
 	 */
 	public List<Node> findPrefTaxNodesByNameOrSyn(String name) {
-		Index<Node> index = (Index<Node>) getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+		Index<Node> index = (Index<Node>) getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
 		return findNodes(index, "name", name);
 
 	}

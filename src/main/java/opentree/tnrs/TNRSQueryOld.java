@@ -9,7 +9,7 @@ import opentree.taxonomy.RelType;
 import opentree.taxonomy.Taxon;
 import opentree.taxonomy.TaxonSet;
 import opentree.taxonomy.Taxonomy;
-import opentree.taxonomy.contexts.NodeIndexDescription;
+import opentree.taxonomy.contexts.TaxonomyNodeIndex;
 import opentree.utils.Levenshtein;
 
 import org.apache.lucene.index.Term;
