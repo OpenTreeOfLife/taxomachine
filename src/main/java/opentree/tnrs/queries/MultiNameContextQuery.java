@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.List;
 
 import opentree.taxonomy.RelType;
 import opentree.taxonomy.Taxon;
@@ -27,6 +28,10 @@ import org.apache.lucene.search.TermQuery;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.opentree.graphdb.DatabaseUtils;
+import org.apache.lucene.search.TermRangeQuery;
+
+
 
 /**
  * Provides access to the default TNRS query, which accepts a set of taxonomic names, from which it will attempt to infer

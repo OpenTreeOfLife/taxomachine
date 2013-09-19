@@ -36,7 +36,7 @@ import org.apache.lucene.util.Version;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
-import org.opentree.properties.OTVocabulary;
+import org.opentree.properties.OTVocabularyPredicate;
 
 /**
  * Provides access to a tnrs query tailored for autocomplete boxes.
@@ -171,7 +171,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	    				
     					IndexHits<Node> speciesHits = null;
 	    				try {
-	    					speciesHits = prefSpeciesNodesByGenus.get("genus_uid", genusMatch.getMatchedNode().getProperty(OTVocabulary.OT_OTT_ID.propertyName()));
+	    					speciesHits = prefSpeciesNodesByGenus.get("genus_uid", genusMatch.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 	    				
 		    				String genusName = String.valueOf(genusMatch.getMatchedNode().getProperty("name"));
 		    				char[] searchEpithet = parts[1].toCharArray();

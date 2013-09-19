@@ -30,7 +30,7 @@ import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
-import org.opentree.properties.OTVocabulary;
+import org.opentree.properties.OTVocabularyPredicate;
 
 /**
  * TaxonomySynthesize functions
@@ -455,11 +455,11 @@ public class TaxonomySynthesizer extends Taxonomy {
              outFile = new PrintWriter(new FileWriter(outfile));
              outFile.write("uid\t|\tparent_uid\t|\tname\t|\trank\t|\tsource\t|\tsourceid\t|\tsourcepid\t|\t\n");
              for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
-            	 outFile.write(String.valueOf(n.getProperty(OTVocabulary.OT_OTT_ID.propertyName()))+"\t|\t");
+            	 outFile.write(String.valueOf(n.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
             	 if(n.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)){
             		 Relationship tr = n.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
             		 Node p = tr.getEndNode();
-            		 outFile.write(String.valueOf(p.getProperty(OTVocabulary.OT_OTT_ID.propertyName()))+"\t|\t");
+            		 outFile.write(String.valueOf(p.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
             	 }else{
             		 outFile.write("\t|\t");
             	 }
@@ -499,8 +499,8 @@ public class TaxonomySynthesizer extends Taxonomy {
             	 if(n.hasRelationship(Direction.INCOMING, RelType.SYNONYMOF)){
             		 for(Relationship tr: n.getRelationships(Direction.INCOMING, RelType.SYNONYMOF)){
                 		 Node p = tr.getStartNode();//synonym node
-                		 outFile.write(String.valueOf(p.getProperty(OTVocabulary.OT_OTT_ID.propertyName()))+"\t|\t");
-                		 outFile.write(String.valueOf(n.getProperty(OTVocabulary.OT_OTT_ID.propertyName()))+"\t|\t");
+                		 outFile.write(String.valueOf(p.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
+                		 outFile.write(String.valueOf(n.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("name"))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("nametype"))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("source"))+"\t|\t\n");
@@ -655,7 +655,7 @@ public class TaxonomySynthesizer extends Taxonomy {
     	try {
     		for (Node genus : ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_RANK).get("rank", "genus")) {
 //        		System.out.println("starting on genus: " + genus.getProperty("name"));
-	        	String gid = String.valueOf(genus.getProperty(OTVocabulary.OT_OTT_ID.propertyName()));
+	        	String gid = String.valueOf(genus.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 	        	for (Node sp : prefTaxChildOfTraversal.evaluator(new isSpecificEvaluator()).traverse(genus).nodes()) {
 //	        		System.out.println("returned " + sp.getProperty("name"));
 	        		prefSpeciesByGenus.add(sp, "genus_uid", gid);

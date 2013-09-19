@@ -33,7 +33,7 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.index.impl.lucene.Hits;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
-import org.opentree.properties.OTVocabulary;
+import org.opentree.properties.OTVocabularyPredicate;
 
 public class TaxonomyComparator {
 	
@@ -251,7 +251,7 @@ public class TaxonomyComparator {
 //								System.out.println("making node: "+newnode+" "+tnode.getProperty("name"));
 								newnode.setProperty("name", (String)tnode.getProperty("name"));
 								//TODO: add uid
-								newnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), newnode.getId());
+								newnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), newnode.getId());
 								newnode.setProperty("source",(String)tnode.getProperty("source"));
 								if (tnode.hasProperty("rank"))
 									newnode.setProperty("rank",(String)tnode.getProperty("rank"));
@@ -421,7 +421,7 @@ public class TaxonomyComparator {
 						//best match
 						if (test == true){
 							//write the result and break
-							bwMain.write(id+"\t|\t"+ttn.getProperty(OTVocabulary.OT_OTT_ID.propertyName())+"\t|\t"+ttn.getProperty("name")+"\t|\t\n");
+							bwMain.write(id+"\t|\t"+ttn.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())+"\t|\t"+ttn.getProperty("name")+"\t|\t\n");
 							break;
 						}
 					}
@@ -429,7 +429,7 @@ public class TaxonomyComparator {
 					ArrayList<Node> tn = (ArrayList<Node>) domtax.ALLTAXA.findPrefTaxNodesByNameOrSyn(id_name_map.get(id));
 					if(tn.size() == 1){
 						//write the result out
-						bwMain.write(id+"\t|\t"+tn.get(0).getProperty(OTVocabulary.OT_OTT_ID.propertyName())+"\t|\t"+tn.get(0).getProperty("name")+"\t|\t\n");
+						bwMain.write(id+"\t|\t"+tn.get(0).getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())+"\t|\t"+tn.get(0).getProperty("name")+"\t|\t\n");
 					}
 					//if(tn.size()<1){
 					//	System.out.println(id+" "+id_name_map.get(id)+" "+tn.size());

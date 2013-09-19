@@ -23,7 +23,7 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
-import org.opentree.properties.OTVocabulary;
+import org.opentree.properties.OTVocabularyPredicate;
 
 /**
  * 
@@ -285,7 +285,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 							}
 							tnode.setProperty("name", inputName);
 							//TODO: add the ability to input these from a source if they have already been set
-							tnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), tnode.getId());
+							tnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), tnode.getId());
 							tnode.setProperty("sourceid", inputId);
 							tnode.setProperty("sourcepid", inputParentId);
 							tnode.setProperty("source", sourcename);
@@ -300,7 +300,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 										String synNameType = syns.get(j).get(1);
 										Node synode = createNode();
 										synode.setProperty("name", synName);
-										synode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), synode.getId());
+										synode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), synode.getId());
 										synode.setProperty("nametype", synNameType);
 										synode.setProperty("source", sourcename);
 										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
@@ -343,7 +343,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 					}
 					tnode.setProperty("name", inputName);
 					//TODO: add the ability to input these from a source if they have already been set
-					tnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), tnode.getId());
+					tnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), tnode.getId());
 					tnode.setProperty("sourceid", inputId);
 					tnode.setProperty("sourcepid", inputParentId);
 					tnode.setProperty("source", sourcename);
@@ -358,7 +358,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 								String synNameType = syns.get(j).get(1);
 								Node synode = createNode();
 								synode.setProperty("name", synName);
-								synode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), synode.getId());
+								synode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), synode.getId());
 								synode.setProperty("nametype", synNameType);
 								synode.setProperty("source", sourcename);
 								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
@@ -573,7 +573,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 							}
 							tnode.setProperty("name", inputName);
 							//TODO: add the ability to input these from a source if they have already been set
-							tnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), tnode.getId());
+							tnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), tnode.getId());
 							tnode.setProperty("sourceid", inputId);
 							tnode.setProperty("sourcepid", inputParentId);
 							tnode.setProperty("source", sourcename);
@@ -588,7 +588,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 										String synNameType = syns.get(j).get(1);
 										Node synode = createNode();
 										synode.setProperty("name", synName);
-										synode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), synode.getId());
+										synode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), synode.getId());
 										synode.setProperty("nametype", synNameType);
 										synode.setProperty("source", sourcename);
 										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
@@ -631,7 +631,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 					}
 					tnode.setProperty("name", inputName);
 					//TODO: add the ability to input these from a source if they have already been set
-					tnode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), tnode.getId());
+					tnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), tnode.getId());
 					tnode.setProperty("sourceid", inputId);
 					tnode.setProperty("sourcepid", inputParentId);
 					tnode.setProperty("source", sourcename);
@@ -646,7 +646,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 								String synNameType = syns.get(j).get(1);
 								Node synode = createNode();
 								synode.setProperty("name", synName);
-								synode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), synode.getId());
+								synode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), synode.getId());
 								synode.setProperty("nametype", synNameType);
 								synode.setProperty("source", sourcename);
 								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
