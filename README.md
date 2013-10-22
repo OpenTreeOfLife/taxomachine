@@ -10,16 +10,12 @@ On Ubuntu you can install Maven with:
 
 	sudo apt-get install maven
 
-It is also necessary to install the forester library, which must be installed into a local repo. To install forester, run the script:
-
-	sh mvn_install_forester.sh
-
-This will install forester into a local maven repo inside of the ~/.m2 directory. This only needs to be done once unless you clear out your ~./m2 directory.
-
+You will also need to install the OpenTree base Java packages available at: https://github.com/opentreeoflife/ot-base
+	
 Compiling
 --------------
 
-Once Maven is installed and the local forester repo has been successfully added, you can compile the standalone program with:
+Once Maven is installed and the packages from the ot-base repo have been successfully added to your local maven repository, you can compile the standalone taxomachine program with:
 
 	sh mvn_cmdline.sh
 
