@@ -10,7 +10,13 @@ On Ubuntu you can install Maven with:
 
 	sudo apt-get install maven
 
-You will also need to install the OpenTree base Java packages available at: https://github.com/opentreeoflife/ot-base
+###Installing OpenTree base packages
+
+Taxomachine depends on the OpenTree base Java packages. These must be installed for taxomachine to compile.
+
+You can find installation instructions at: https://github.com/opentreeoflife/ot-base
+
+Note, however, that the taxomachine pom file already includes the dependency definition, so that step may be skipped during installation.
 	
 Compiling
 --------------
