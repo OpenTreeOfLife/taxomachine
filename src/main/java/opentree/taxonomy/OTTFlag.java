@@ -18,6 +18,14 @@ public enum OTTFlag {
 	BARREN ("barren", false),
 	
 	/**
+	 * From Jonathan Rees: Sort of like "all children are incertae sedis". It means it's a GBIF-only taxon some of whose children are classified by
+	 * NCBI as belonging to a disjoint taxon, so the residual children in OTT form only a partial set relative to the taxon concept (whatever it may
+	 * have been).  It's a work in progress; I'm thinking about other ways of handling these taxa. (E.g. Mark had suggested putting the remaining
+	 * children in the taxon that's the MRCA of all the NCBI children.)
+	 */
+	TATTERED ("tattered", false),
+	
+	/**
 	 * Things with the string "environmental" in their name.
 	 */
 	ENVIRONMENTAL ("environmental", false),
