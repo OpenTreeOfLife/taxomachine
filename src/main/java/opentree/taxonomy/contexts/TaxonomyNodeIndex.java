@@ -127,4 +127,10 @@ public enum TaxonomyNodeIndex implements NodeIndexDescription {
 	public String indexName() {
 		return namePrefix;
 	}
+
+	@Override
+	public String[] parameters() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
