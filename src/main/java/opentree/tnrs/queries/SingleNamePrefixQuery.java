@@ -169,12 +169,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     				// retrieve all the species/subspecific taxa in each matched genus (may be homonym)
     				for (TNRSMatch genusMatch : genusMatches) {
 	    				
-    					IndexHits<Node> speciesHits = null;
+    					IndexHits<Node> speciesHits = prefSpeciesNodesByGenus.get("genus_uid", genusMatch.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 	    				try {
-	    					speciesHits = prefSpeciesNodesByGenus.get("genus_uid", genusMatch.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 	    				
 		    				String genusName = String.valueOf(genusMatch.getMatchedNode().getProperty("name"));
-		    				char[] searchEpithet = parts[1].toCharArray();
+		    				char[] searchEpithet = parts[1].trim().toCharArray();
 		    				
 		    				// add any species to the results whose name matches the second search term prefix
 		    				for (Node sp : speciesHits) {
@@ -182,9 +181,16 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 		    					// use substring position to get just the epithet of this species match
 		    					char[] hitName = String.valueOf(sp.getProperty("name")).substring(genusName.length()+1).toCharArray();
 
+		    					// check if the epithet matches
 		    					boolean prefixMatch = true;
 		    					for (int i = 0; i < searchEpithet.length; i++) {
-		    						if (hitName[i] != searchEpithet[i]) {
+		    						
+		    						if (i < hitName.length) {
+			    						if (hitName[i] != searchEpithet[i]) {
+			    							prefixMatch = false;
+			    							break;
+			    						}
+		    						} else { // if the hit name is shorter than the incoming prefix, it isn't a match
 		    							prefixMatch = false;
 		    							break;
 		    						}

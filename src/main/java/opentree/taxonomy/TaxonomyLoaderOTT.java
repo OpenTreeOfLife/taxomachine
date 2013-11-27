@@ -85,7 +85,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	private boolean addBarrierNodes = true;
 	private boolean buildPreferredIndexes = true; // requires that preferred rels are also built.
 	private boolean buildPreferredRels = true;
-	private boolean createOTTIdIndexes = false;
+	private boolean createOTTIdIndexes = true;
 	
 	// ========================================
 	
@@ -116,6 +116,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	}
 
 	public void setbuildPreferredIndexes (boolean buildPreferredIndexes) {
+		this.setbuildPreferredRels(true);
 		this.buildPreferredIndexes = buildPreferredIndexes;
 	}
 
@@ -427,8 +428,11 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		
 		taxaByName.add(tnode, "name", inputName);
 		taxaByRank.add(tnode, "rank", rank);
-		taxaByOTTId.add(tnode, OTVocabularyPredicate.OT_OTT_ID.propertyName(), Long.valueOf(inputId));
-
+		
+		if (createOTTIdIndexes) {
+			taxaByOTTId.add(tnode, OTVocabularyPredicate.OT_OTT_ID.propertyName(), Long.valueOf(inputId));
+		}
+		
 		if (addSynonyms) {
 			taxaByNameOrSynonym.add(tnode, "name", inputName);
 		}

@@ -121,6 +121,9 @@ public class MainRunner {
         } else if (args[0].equals("loadtaxsyn")) { 
             System.out.println("loading taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
             //this will create the ott relationships
+            tlo.setAddSynonyms(true);
+            tlo.setCreateOTTIdIndexes(true);
+            tlo.setbuildPreferredIndexes(true);
             tlo.loadOTTIntoGraph(sourcename, filename, synonymfile);
             System.out.println("verifying taxonomy");
             tlo.verifyLoadedTaxonomy(sourcename);
