@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opentree</groupId>
   <artifactId>opentree-neo4j-plugins</artifactId>
-  <name>opentree-neo4j-plugins</name>
+  <name>taxomachine-neo4j-plugins</name>
   <version>0.0.1-SNAPSHOT</version>
   <description>Server-side restful plugins for the opentree project.</description>
   <build>
