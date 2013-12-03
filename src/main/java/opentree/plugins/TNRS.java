@@ -39,7 +39,7 @@ import org.neo4j.server.rest.repr.TNRSResultsRepresentation;
 
 public class TNRS extends ServerPlugin {
 
-    @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names")
+    @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation getContextForNames(
             @Source GraphDatabaseService graphDb,
@@ -79,7 +79,7 @@ public class TNRS extends ServerPlugin {
     	
     }
     
-    @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names")
+    @Description("Find taxonomic names matching the passed in prefix. Optimized for use with autocomplete boxes on webforms.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation autocompleteBoxQuery(
             @Source GraphDatabaseService graphDb,
