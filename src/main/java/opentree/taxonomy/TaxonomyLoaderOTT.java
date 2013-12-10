@@ -136,7 +136,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	/**
 	 * Reads a taxonomy file with rows formatted as:
-	 *	ott_id\t|\tott_parent_id\t|\tName\t|\trank with spaces allowed\t|\tsources\t|\tunique_name\n TODO: add flags to this description
+	 *	ott_id\tott_parent_id\tName\trank with spaces allowed\tsources\tunique_name\n TODO: add flags to this description
 	 *
 	 *  OTT identifier - these have been kept stable relative to OTToL 1.0
 	 *  OTT identifier for the parent of this taxon, or empty if none
@@ -181,6 +181,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 					BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
 					while ((str = sbr.readLine()) != null) {
 						StringTokenizer st = new StringTokenizer(str, "\t|\t");
+//						StringTokenizer st = new StringTokenizer(str, "\t"); // new format for ott files
 						String name = st.nextToken();
 						String id = st.nextToken();
 						ArrayList<String> tar = new ArrayList<String>();
@@ -352,6 +353,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		
 		// split the input line all the way to the end. we expect trailing empty strings when flags and uniqname are not set
 		String[] tokens = line.split("\t\\|\t",-1);
+//		String[] tokens = line.split("\t",-1); // new format for ott files
 		int i = 0;
 		String inputId = tokens[i++];
 		

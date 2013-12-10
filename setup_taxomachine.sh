@@ -72,7 +72,7 @@ fi
 OTT_SOURCENAME="ott"
 OTT_DOWNLOADDIR=$PREFIX"/data"
 if [ ! -d $OTT_DOWNLOADDIR ]; then
-	mkdir $OTT_DOWNLOADDIR
+	mkdir $
 fi
 
 if [ $DOWNLOAD_OTT ]; then
@@ -87,6 +87,7 @@ if [ $DOWNLOAD_OTT ]; then
 	# download and decompress ott
 	wget "http://files.opentreeoflife.org/ott/$VERSION.tgz"
 	tar -xvf $VERSION.tgz
+#    mv ott $VERSION # might cause problems with older versions of ott
 	
 fi 
 
@@ -97,8 +98,8 @@ if [ ! -d $OTT_SOURCEDIR ]; then
 fi
 printf "\nusing $VERSION taxonomy at: $OTT_SOURCEDIR\n"
 
-OTT_TAXONOMY=$OTT_SOURCEDIR"/taxonomy"
-OTT_SYNONYMS=$OTT_SOURCEDIR"/synonyms"
+OTT_TAXONOMY=$OTT_SOURCEDIR"/taxonomy.tsv"
+OTT_SYNONYMS=$OTT_SOURCEDIR"/synonyms.tsv"
 
 # download taxomachine
 TAXOMACHINE_HOME=$PREFIX"/taxomachine"
