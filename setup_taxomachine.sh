@@ -43,7 +43,7 @@ if [ ! $VERSION ]; then
 fi
 
 if [ ! $PFSET ]; then
-	PREFIX="$HOME/phylo"
+	PREFIX="../"
 	if [ ! $FORCE ]; then
 		printf "\nprefix is not set. the default prefix $PREFIX will be used. continue? y/n:"
 		while [ true ]; do
