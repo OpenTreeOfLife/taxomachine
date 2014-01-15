@@ -38,7 +38,12 @@ public enum OTTFlag {
 	/**
 	 * Low-rank children of high-rank taxa (e.g. genus child of class).
 	 */
-	MAJOR_RANK_CONFLICT ("major_rank_conflict", false),
+	MAJOR_RANK_CONFLICT_DIRECT ("major_rank_conflict_direct", false),
+
+	/**
+	 * Low-rank children of high-rank taxa (e.g. genus child of class).
+	 */
+	MAJOR_RANK_CONFLICT_INHERITED ("major_rank_conflict_inherited", false),
 
 	/**
 	 * Children of unclassified containers.
@@ -75,14 +80,20 @@ public enum OTTFlag {
 	INFRASPECIFIC ("infraspecific", true),
 
 	/**
-	 * Taxa with a sibling which is of a lower (higher?) rank than the taxon.
+	 * Taxon that has a sibling that is of a lower rank than the taxon.
 	 */
 	SIBLING_LOWER ("sibling_lower", true),
 	
 	/**
-	 * Taxa with a sibling which is of a higher (lower?) rank than the taxon.
+	 * Taxon that has a sibling that is of a higher rank than the taxon.
 	 */
 	SIBLING_HIGHER ("sibling_higher", true),
+
+	/**
+	 * Taxon that for which some children in origin taxonomy were
+	 * placed in a different place in the merged taxonomy.
+	 */
+	TATTERED ("tattered", true),
 
 	/**
 	 * Designates that the taxon should not be suppressed even if it has flags designating suppression.
