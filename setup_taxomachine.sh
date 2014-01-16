@@ -22,6 +22,7 @@ while [ $# -gt 0 ]; do
 				2.1) VERSION="ott2.1";;
 				2.2) VERSION="ott2.2";;
                 2.3) VERSION="ott2.3";;
+			    2.4d7) VERSION="ott2.4.draft7";;
 				*) printf "version $1 not recognized.";; 
 			esac;;
 		-prefix) shift; PFSET=true; PREFIX="$1";;
@@ -87,7 +88,7 @@ if [ $DOWNLOAD_OTT ]; then
 	# download and decompress ott
 	wget "http://files.opentreeoflife.org/ott/$VERSION.tgz"
 	tar -xvf $VERSION.tgz
-#    mv ott $VERSION # might cause problems with older versions of ott
+	mv ott $VERSION # might cause problems with older versions of ott
 	
 fi 
 
@@ -132,24 +133,26 @@ if [ ! -f $TAXOMACHINE_INSTALL_LOCATION ]; then
 	mv $TAXOMACHINE_COMPILE_LOCATION $TAXOMACHINE_INSTALL_LOCATION
 fi
 
-TAXOMACHINE_COMMAND="$JAVA $JAVAFLAGS -jar $TAXOMACHINE_INSTALL_LOCATION \"\$@\""
-TAXOMACHINE_START_SCRIPT="/usr/local/bin/taxomachine"
-INSTALL_START_SCRIPT=true
-if [ -f $TAXOMACHINE_START_SCRIPT ]; then
-    if cat $TAXOMACHINE_START_SCRIPT | grep '$TAXOMACHINE_COMMAND' ; then
-        INSTALL_START_SCRIPT=false
-    fi
-fi
+TAXOMACHINE_COMMAND="$JAVA $JAVAFLAGS -jar $TAXOMACHINE_INSTALL_LOCATION "
 
-if [ $INSTALL_START_SCRIPT = true ]; then
-    echo $TAXOMACHINE_COMMAND > $TAXOMACHINE_START_SCRIPT
-    chmod +x $TAXOMACHINE_START_SCRIPT
-fi
+#TAXOMACHINE_COMMAND="$JAVA $JAVAFLAGS -jar $TAXOMACHINE_INSTALL_LOCATION \"\$@\""
+#TAXOMACHINE_START_SCRIPT="~/phylo/bin/taxomachine"
+#INSTALL_START_SCRIPT=true
+#if [ -f $TAXOMACHINE_START_SCRIPT ]; then
+#    if cat $TAXOMACHINE_START_SCRIPT | grep '$TAXOMACHINE_COMMAND' ; then
+#        INSTALL_START_SCRIPT=false
+#    fi
+#fi
 
-if [ ! -f $TAXOMACHINE_START_SCRIPT ]; then
-    printf "\nthe taxomachine start script could not be installed. do you need to sudo? quitting\n"
-    exit
-fi
+#if [ $INSTALL_START_SCRIPT = true ]; then
+#    echo $TAXOMACHINE_COMMAND > $TAXOMACHINE_START_SCRIPT
+#    chmod +x $TAXOMACHINE_START_SCRIPT
+#fi
+
+#if [ ! -f $TAXOMACHINE_START_SCRIPT ]; then
+#    printf "\nthe taxomachine start script could not be installed. do you need to sudo? quitting\n"
+#    exit
+#fi
 
 # prepare for dealing with the neo4j server if necessary
 TAXO_NEO4J_HOME="$PREFIX/neo4j-community-1.9.5-taxomachine"
@@ -179,9 +182,9 @@ if [ $SETUP_DB ]; then
 #    echo "$TAXOMACHINE_START_SCRIPT makecontexts $TAXOMACHINE_DB"
 #	echo "$TAXOMACHINE_START_SCRIPT makegenusindexes $TAXOMACHINE_DB"
 
-	$TAXOMACHINE_START_SCRIPT loadtaxsyn $OTT_SOURCENAME $OTT_TAXONOMY $OTT_SYNONYMS $TAXOMACHINE_DB	
-	$TAXOMACHINE_START_SCRIPT makecontexts $TAXOMACHINE_DB
-	$TAXOMACHINE_START_SCRIPT makegenusindexes $TAXOMACHINE_DB
+	$TAXOMACHINE_COMMAND loadtaxsyn $OTT_SOURCENAME $OTT_TAXONOMY $OTT_SYNONYMS $TAXOMACHINE_DB	
+	$TAXOMACHINE_COMMAND makecontexts $TAXOMACHINE_DB
+	$TAXOMACHINE_COMMAND makegenusindexes $TAXOMACHINE_DB
 fi
 
 # start the server
@@ -220,7 +223,7 @@ fi
 printf "\nusing neo4j instance for taxomachine at: $TAXO_NEO4J_HOME\n"
 
 # install the plugin if necessary
-PLUGIN="opentree-neo4j-plugins-0.0.1-SNAPSHOT.jar"
+PLUGIN="taxomachine-neo4j-plugins-0.0.1-SNAPSHOT.jar"
 PLUGIN_INSTALL_LOCATION="$TAXO_NEO4J_HOME/plugins/"
 
 # just remove the binary if we want recompile

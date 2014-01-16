@@ -27,22 +27,24 @@ public final class BarrierNodes {
 
     private static final int LARGE = 100000000;
     private Taxonomy taxonomy;
+    private HashMap<Node, Nomenclature> barrierNodeToNomenclatureMap = new HashMap<Node, Nomenclature>();
+    private HashMap<Node, String> barrierNodeToBarrierCladeNameMap = new HashMap<Node, String>();
     
     /**
      * Key is node name and value is governing nomenclature.
      */
-    private static final HashMap<String,String> barrierNamesMap = new HashMap<String,String>() {
+    private static final HashMap<String, Nomenclature> barrierCladeNameToNomenclatureMap = new HashMap<String, Nomenclature>() {
         private static final long serialVersionUID = 1L;
         {
-            put("Fungi",Nomenclature.ICBN.code);
-            put("Viridiplantae",Nomenclature.ICBN.code);
-            put("Bacteria",Nomenclature.ICNB.code);
-            put("Metazoa",Nomenclature.ICZN.code);
-            put("Alveolata",Nomenclature.ICBN.code);
-            put("Rhodophyta",Nomenclature.ICBN.code);
-            put("Glaucocystophyceae",Nomenclature.ICBN.code);
-            put("Haptophyceae",Nomenclature.ICBN.code);
-            put("Choanoflagellida",Nomenclature.ICZN.code);
+            put("Fungi",Nomenclature.ICBN);
+            put("Viridiplantae",Nomenclature.ICBN);
+            put("Bacteria",Nomenclature.ICNB);
+            put("Metazoa",Nomenclature.ICZN);
+            put("Alveolata",Nomenclature.ICBN);
+            put("Rhodophyta",Nomenclature.ICBN);
+            put("Glaucocystophyceae",Nomenclature.ICBN);
+            put("Haptophyceae",Nomenclature.ICBN);
+            put("Choanoflagellida",Nomenclature.ICZN);
             //maybe add Protostomia, see Heterochaeta in ncbi
         }
     };
@@ -67,15 +69,15 @@ public final class BarrierNodes {
      * 
      * @return barrierNodes
      */
-    public ArrayList<Node> getBarrierNodes() {
+    public void initializeBarrierNodes() {
 
         Node lifen = taxonomy.getLifeNode();
 
         // traverse from each barrier node to life and pick the closest one
         PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelType.TAXCHILDOF, Direction.OUTGOING), 10000);
-        ArrayList<Node> barnodes = new ArrayList<Node>();
+//        ArrayList<Node> barnodes = new ArrayList<Node>();
 
-        for (String itns : barrierNamesMap.keySet()) {
+        for (String itns : barrierCladeNameToNomenclatureMap.keySet()) {
             int bestcount = LARGE;
             Node bestitem = null;
             IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME).get("name", itns);
@@ -139,23 +141,37 @@ public final class BarrierNodes {
             		}
             	}
             }
-            try{
-            	System.out.println("Found barrier: " + itns + " " + bestitem.getId());
-            	barnodes.add(bestitem);
-            }catch(Exception e){
-            	System.out.println("Didn't find barrier: "+ itns);
-            }
+
+//            try{
+            
+        	System.out.println("Found barrier: " + itns + " " + bestitem.getId());
+        	if (barrierNodeToNomenclatureMap.containsKey(bestitem)) {
+        		throw new UnsupportedOperationException("The barrier clade \"" + itns + "\" is mapped to the same node as the barrier clade \"" + 
+        				barrierNodeToBarrierCladeNameMap.get(bestitem) + ". This is disallowed.");
+        	} else {
+            	barrierNodeToNomenclatureMap.put(bestitem, barrierCladeNameToNomenclatureMap.get(itns));
+            	barrierNodeToBarrierCladeNameMap.put(bestitem, itns);
+        	}
+            	
+//            } catch(Exception e) {
+//            	System.out.println("Didn't find barrier: "+ itns);
+//            }
+
         }
         
-        return barnodes;
+//        return barnodes;
     }
 
+    public Map<Node, Nomenclature> getBarrierNodeToNomenclatureMap() {
+    	return barrierNodeToNomenclatureMap;
+    }
+    
     /**
      * Just returns the set of barrier node names.
      * @return barrierNames
      */
-    public Set<String> getBarrierNodeNames() {
-        Set<String> bn = barrierNamesMap.keySet();
+    public Set<String> getBarrierCladeNames() {
+        Set<String> bn = barrierCladeNameToNomenclatureMap.keySet();
         HashSet<String> barrierNames = new HashSet<String>();
         for (String name : bn) {
             barrierNames.add(name);
@@ -166,23 +182,23 @@ public final class BarrierNodes {
     /**
      * Returns the set of names that might stand for the barrier node (synonyms)
      */
-    public HashMap<String,HashSet<String>> getBarrierNodesSearchMap(){
+    public HashMap<String,HashSet<String>> getBarrierCladeNamesSearchMap(){
     	return barrierNamesSearch;
     }
 
-    /**
+    /*
      * Returns the mapping of barrier node names (keys) to their governing nomenclature (values).
      * @return barrierNodeMap
      */
-    public Map<String,String> getBarrierNodeMap() {
-        return barrierNamesMap;
-    }
+//    public Map<String,String> getBarrierNodeMap() {
+//        return barrierNamesMap;
+//    }
     
     /**
      * Checks whether the passed argument `name` is a perfect match to a barrier node name.
      * @return isMatch
      */
     public boolean containsName(String name) {
-        return barrierNamesMap.keySet().contains(name);
+        return barrierNodeToNomenclatureMap.keySet().contains(name);
     }
 }

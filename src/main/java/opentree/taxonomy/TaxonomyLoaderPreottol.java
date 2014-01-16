@@ -418,10 +418,14 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 				tx.finish();
 			}
 		} catch(IOException ioe) {}
+
+		/*
+		 * Deprecating incompatible code from this unused class to avoid compile errors
+		 * 
 		//mark all of the barrier nodes with additional metadata
 		System.out.println("setting barrier nodes");
 		BarrierNodes bn = new BarrierNodes(this);
-		ArrayList<Node> barrierNodes = bn.getBarrierNodes();
+		ArrayList<Node> barrierNodes = bn.initializeBarrierNodes();
 		HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
 		TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
 				.relationships( RelType.TAXCHILDOF,Direction.INCOMING );
@@ -436,6 +440,9 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 		} finally {
 			tx.finish();
 		}
+		
+		*/
+		tx = beginTx();
 		
 		//start the mrcas
 		System.out.println("calculating mrcas");
