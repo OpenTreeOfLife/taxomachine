@@ -52,7 +52,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				serializer.putString("context_name", result.context.getDescription().name);
 				serializer.putNumber("content_rootnode_ottol_id", (Long) result.context.getRootNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
-				serializer.putList("ambiguous_name_ids", OpentreeRepresentationConverter.getListRepresentation(result.nameIdsNotMatched));
+				serializer.putList("ambiguous_names", OpentreeRepresentationConverter.getListRepresentation(result.namesNotMatched));
 
 			}
 		};

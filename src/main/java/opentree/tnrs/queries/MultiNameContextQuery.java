@@ -258,22 +258,16 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * @param searchStrings
      * @return the initiating NameslistStandardQuery object
      */
-//    public Set<String> inferContextAndReturnAmbiguousNames() {
-//    public Map<String, String> inferContextAndReturnAmbiguousNames() {
     public Map<Object, String> inferContextAndReturnAmbiguousNames() {
+//    public Node inferContextAndReturnAmbiguousNames() {
 
     	setIndexes();
     	
     	// we will return the names without exact matches
-//    	HashSet<String> namesUnmatchableAgainstAllTaxaContext = new HashSet<String>();
-//    	Map<String, String> namesUnmatchableAgainstAllTaxaContext = new HashMap<String, String>();
     	Map<Object, String> namesUnmatchableAgainstAllTaxaContext = new HashMap<Object, String>();
   	
-//    	for (String thisName : queriedNames) {
-//    	for (Entry<String, String> nameEntry : queriedNames.entrySet()) {
     	for (Entry<Object, String> nameEntry : queriedNames.entrySet()) {
 
-//    		String thisId = nameEntry.getKey();
     		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
     		
@@ -319,6 +313,11 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         // update the LICA for the unambiguous (non-homonym) hits. Will set the LICA to the root of the graph if there are no unambiguous hits
         updateLICA();
 
+//        return bestGuessLICAForNames.getNode();
+        
+    	// =====================
+
+        
         // now set the context closest to the LICA. If the LICA is the root, this will set the context to ALLTAXA
         setContext(bestGuessLICAForNames.getLeastInclusiveContext());
         

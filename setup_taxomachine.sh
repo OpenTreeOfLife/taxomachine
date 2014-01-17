@@ -15,16 +15,7 @@ while [ $# -gt 0 ]; do
 		--update-from-git) UPDATE=true;;
 		--recompile-standalone) RECOMPILE=true;;
 		--recompile-plugin) RECOMPILE_PLUGIN=true;;
-		-ott-version)
-			shift
-			case "$1" in
-				2.0) VERSION="ott2.0";;
-				2.1) VERSION="ott2.1";;
-				2.2) VERSION="ott2.2";;
-                2.3) VERSION="ott2.3";;
-			    2.4d7) VERSION="ott2.4.draft7";;
-				*) printf "version $1 not recognized.";; 
-			esac;;
+		-ott-version) shift; VERSION="ott$1";;
 		-prefix) shift; PFSET=true; PREFIX="$1";;
 		--help) printf "$HELPTEXT"; exit 0;;
 		*) printf "\nunrecognized argument: $1.\n"; printf "$HELPTEXT"; exit 1;
@@ -39,7 +30,7 @@ JAVA=java
 #fi
 
 if [ ! $VERSION ]; then
-	VERSION="ott2.2"
+	VERSION="ott2.4"
 	printf "\nwill attempt to use $VERSION\n"
 fi
 

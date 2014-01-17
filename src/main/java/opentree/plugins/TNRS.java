@@ -43,38 +43,36 @@ public class TNRS extends ServerPlugin {
     @PluginTarget(GraphDatabaseService.class)
     public Representation getContextForNames(
             @Source GraphDatabaseService graphDb,
-/*            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db")
-            	// TODO: convert this to accept a JSON array
-            	@Parameter(name = "queryString", optional = false) String queryString) { */
             @Description("An array of taxon names to be queried.")
     			@Parameter(name="names", optional = false) String[] names) {
 
-    	Map<Object, String> idNameMap = new HashMap<Object, String>();
-    	
-    	// TODO: convert this to accept an array
-//        String[] searchStrings = queryString.split("\\s*\\,\\s*");
+    	// initialize objects
+        GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
+        Taxonomy taxonomy = new Taxonomy(gdb);
+        MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
 
+        // format input for the TNRS query object
+    	Map<Object, String> idNameMap = new HashMap<Object, String>();
 		for (String name : names) {
 			idNameMap.put(name, name);
 		}
-    	
-        GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
-        Taxonomy taxonomy = new Taxonomy(gdb);
 
-        MultiNameContextQuery tnrs = new MultiNameContextQuery(taxonomy);
+//        return OpentreeRepresentationConverter.convert(tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().getId());
+		
+		// call TNRS query, remembering names that could not be matched
+        Collection<String> namesNotMatched = tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().values();
+
+//        if (nameIdsNotMatched.isEmpty()) {
+//        	nameIdsNotMatched = (Collection<Object>) new HashSet<Object>();
+//        }
         
-        Collection<Object> nameIdsNotMatched = tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().keySet();
-        if (nameIdsNotMatched.isEmpty()) {
-        	nameIdsNotMatched = (Collection<Object>) new HashSet<Object>();
-        }
+        // get the inferred context
         TaxonomyContext inferredContext = tnrs.getContext();
 
-        // create a container to hold the results
-        ContextResult contextResult = new ContextResult(inferredContext, nameIdsNotMatched);
-        
+        // format results and finish
+        ContextResult contextResult = new ContextResult(inferredContext, namesNotMatched);
         gdb.shutdownDb();
-        
-        // convert the results to JSON and return them
+
         return OpentreeRepresentationConverter.convert(contextResult);
     	
     }

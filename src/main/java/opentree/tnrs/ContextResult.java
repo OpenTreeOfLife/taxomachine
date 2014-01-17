@@ -8,14 +8,14 @@ import opentree.taxonomy.contexts.TaxonomyContext;
 
 public class ContextResult {
 	public TaxonomyContext context;
-//	public LinkedList<String> namesNotMatched;
-	public List<Object> nameIdsNotMatched;
+	public LinkedList<String> namesNotMatched;
+//	public List<Object> nameIdsNotMatched;
 	
-	public ContextResult(TaxonomyContext context, Collection<Object> namesNotMatched) {
+	public ContextResult(TaxonomyContext context, Collection<String> namesNotMatched) {
 		this.context = context;
-		this.nameIdsNotMatched = new LinkedList<Object>();
-		for (Object name : nameIdsNotMatched) {
-			nameIdsNotMatched.add(name);
+		this.namesNotMatched = new LinkedList<String>();
+		for (String name : namesNotMatched) {
+			this.namesNotMatched.add(name);
 		}
 	}
 }
