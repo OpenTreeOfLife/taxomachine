@@ -3,11 +3,6 @@ package org.neo4j.server.rest.repr;
 import java.util.Iterator;
 import java.util.Map;
 
-import opentree.tnrs.ContextResult;
-import opentree.tnrs.TNRSMatchSet;
-import opentree.tnrs.TNRSNameResult;
-import opentree.tnrs.TNRSResults;
-
 import org.neo4j.helpers.collection.FirstItemIterable;
 import org.neo4j.helpers.collection.IterableWrapper;
 import org.neo4j.helpers.collection.IteratorWrapper;
@@ -16,6 +11,10 @@ import org.neo4j.server.rest.repr.MappingRepresentation;
 import org.neo4j.server.rest.repr.Representation;
 import org.neo4j.server.rest.repr.RepresentationType;
 import org.neo4j.server.rest.repr.ValueRepresentation;
+import org.opentree.tnrs.ContextResult;
+import org.opentree.tnrs.TNRSMatchSet;
+import org.opentree.tnrs.TNRSNameResult;
+import org.opentree.tnrs.TNRSResults;
 
 public class OpentreeRepresentationConverter {
 

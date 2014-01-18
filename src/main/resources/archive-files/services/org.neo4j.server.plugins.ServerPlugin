@@ -1,2 +1,2 @@
-opentree.plugins.TNRS
-opentree.plugins.GetJsons
+org.opentree.taxonomy.plugins.TNRS
+org.opentree.taxonomy.plugins.GetJsons

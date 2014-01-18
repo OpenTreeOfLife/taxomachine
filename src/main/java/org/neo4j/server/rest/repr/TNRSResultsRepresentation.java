@@ -14,13 +14,12 @@ import org.neo4j.helpers.collection.FirstItemIterable;
 import org.neo4j.helpers.collection.IteratorWrapper;
 import org.opentree.properties.OTPropertyPredicate;
 import org.opentree.properties.OTVocabularyPredicate;
-
-import opentree.taxonomy.OTTFlag;
-import opentree.tnrs.ContextResult;
-import opentree.tnrs.TNRSMatch;
-import opentree.tnrs.TNRSMatchSet;
-import opentree.tnrs.TNRSNameResult;
-import opentree.tnrs.TNRSResults;
+import org.opentree.taxonomy.OTTFlag;
+import org.opentree.tnrs.ContextResult;
+import org.opentree.tnrs.TNRSMatch;
+import org.opentree.tnrs.TNRSMatchSet;
+import org.opentree.tnrs.TNRSNameResult;
+import org.opentree.tnrs.TNRSResults;
 
 public class TNRSResultsRepresentation extends MappingRepresentation {
 
