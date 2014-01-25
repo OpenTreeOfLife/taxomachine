@@ -106,8 +106,6 @@ public class TNRS extends ServerPlugin {
 	    	}
 	    	results.put("synonyms", synonyms);
     	
-    	} else {
-    		results.put(null);
     	}
 
     	return OTRepresentationConverter.convert(results);
