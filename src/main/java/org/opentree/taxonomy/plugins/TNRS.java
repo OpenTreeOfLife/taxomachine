@@ -93,22 +93,23 @@ public class TNRS extends ServerPlugin {
     	Taxon match = t.getTaxonForOTTId(ottId);
     	
     	if (match != null) {
-    		addPropertyFromNode(match.getNode(), "name", results);
+		addPropertyFromNode(match.getNode(), "name", results);
     		addPropertyFromNode(match.getNode(), "rank", results);
     		addPropertyFromNode(match.getNode(), "source", results);
     		addPropertyFromNode(match.getNode(), "uniqname", results);
     		addPropertyFromNode(match.getNode(), OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
     		results.put("node_id", match.getNode().getId());
-    	}
     	
-    	HashSet<String> synonyms = new HashSet<String>();
-    	if (match.getSynonymNodes() != null) {
+    		HashSet<String> synonyms = new HashSet<String>();
 	    	for (Node n : match.getSynonymNodes()) {
 	    		synonyms.add((String) n.getProperty("name"));
 	    	}
+	    	results.put("synonyms", synonyms);
+    	
+    	} else {
+    		results.put(null);
     	}
 
-    	results.put("synonyms", synonyms);
     	return OTRepresentationConverter.convert(results);
     }
     
