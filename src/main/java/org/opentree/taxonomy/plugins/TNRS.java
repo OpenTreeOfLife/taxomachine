@@ -102,7 +102,7 @@ public class TNRS extends ServerPlugin {
     	}
     	
     	HashSet<String> synonyms = new HashSet<String>();
-    	if (synonyms.size() > 0) {
+    	if (match.getSynonymNodes() != null) {
 	    	for (Node n : match.getSynonymNodes()) {
 	    		synonyms.add((String) n.getProperty("name"));
 	    	}
