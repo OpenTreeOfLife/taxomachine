@@ -580,6 +580,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         
         // weight scores by distance outside of inferred lica (this may need to go away if it is a speed bottleneck)
         double scoreModifier = 1;
+        
         if (bestGuessLICAForNames != null) {
 	        if (matchedTaxon.isPreferredTaxChildOf(bestGuessLICAForNames) == false) {
 	            int d = taxonomy.getInternodalDistThroughMRCA(hit, bestGuessLICAForNames.getNode(), RelType.PREFTAXCHILDOF);
