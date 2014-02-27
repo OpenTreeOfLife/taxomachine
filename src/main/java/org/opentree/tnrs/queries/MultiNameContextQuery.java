@@ -44,7 +44,6 @@ import org.apache.lucene.search.TermRangeQuery;
  */
 public class MultiNameContextQuery extends AbstractBaseQuery {
     
-//    private HashSet<String> queriedNames;
 	private Map<Object, String> queriedNames;
     private Taxon bestGuessLICAForNames; // used for the inferred context
     private HashSet<Taxon> taxaWithExactMatches; // To store taxa/names for which we can/cannot find direct (exact, n=1) matches
@@ -60,12 +59,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     private Index<Node> nameOrSynonymIndex;
     
     // special-purpose containers used during search
-//    private HashSet<String> namesUnmatchableAgainstAllTaxaContext;
-//    private HashSet<String> namesWithoutExactNameMatches;
-//    private HashSet<String> namesWithoutExactSynonymMatches;
-//    private HashSet<String> namesWithoutApproxTaxnameOrSynonymMatches;
-
-//    private Map<Object, String> namesUnmatchableAgainstAllTaxaContext;
     private Map<Object, String> namesWithoutExactNameMatches;
     private Map<Object, String> namesWithoutExactSynonymMatches;
     private Map<Object, String> namesWithoutApproxTaxnameOrSynonymMatches;
@@ -77,34 +70,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     public MultiNameContextQuery(Taxonomy taxonomy, TaxonomyContext context) {
     	super(taxonomy, context);
     }
-    
-    /*
-     * Initialize the query object with a set of names. Returns self on success. The result will be returned
-     * with the original search strings as the ids.
-     * @param searchStrings
-     * @param predefContext
-     *
-    public MultiNameContextQuery setSearchStrings(Set<String> searchStrings) {
-        clear();
-        for (String s : searchStrings) {
-        	queriedNames.put(s, QueryParser.escape(s).toLowerCase());
-        }
-        return this;
-    } 
-
-    /**
-     * Initialize the query object with a map containing ids and names. Returns self on success. The result will
-     * be returned with the values used for ids in the map.
-     * @param searchStrings
-     * @param predefContext
-     *
-    public MultiNameContextQuery setSearchStrings(Map<Object, String> idToNameMap) {
-        clear();
-        for (Entry<Object, String> entry : idToNameMap.entrySet()) {
-        	queriedNames.put(entry.getKey(), QueryParser.escape(entry.getValue()).toLowerCase());
-        }
-        return this;
-    }*/
 
     /**
      * Initialize the query object with a set of names. Returns self on success. The result will be returned
@@ -585,7 +550,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	        if (matchedTaxon.isPreferredTaxChildOf(bestGuessLICAForNames) == false) {
 	            int d = taxonomy.getInternodalDistThroughMRCA(hit, bestGuessLICAForNames.getNode(), RelType.PREFTAXCHILDOF);
 	            scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
-	//            System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
 	        }
         }
         
