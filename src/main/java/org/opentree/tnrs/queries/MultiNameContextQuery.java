@@ -52,6 +52,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     // set during construction by setDefaults()
     private boolean contextAutoInferenceIsOn;
     private boolean includeDubious;
+    private boolean matchSpTaxaToGenera;
     
     // different indexes may be used depending on preferences (such as whether to include dubious taxa)
     private Index<Node> nameIndex;
@@ -143,6 +144,16 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	}
 	
 	/**
+	 * Set the behavior for whether or not to match names of the form 'Genus sp.' to nodes with the name 'Genus'
+	 * @param match
+	 * @return
+	 */
+	public MultiNameContextQuery setMatchSpTaxaToGenera(Boolean match) {
+		matchSpTaxaToGenera = match;
+		return this;
+	}
+	
+	/**
 	 * Set the behavior for including dubious names in the results.
 	 * @param includeDubious
 	 * @return
@@ -157,21 +168,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      */
     @Override
     public MultiNameContextQuery clear() {
-//        queriedNames = new HashSet<String>();
-//    	queriedNames = new HashMap<String, String>();
     	queriedNames = new HashMap<Object, String>();
     	taxaWithExactMatches = new HashSet<Taxon>();
         bestGuessLICAForNames = null;
         results = new TNRSResults();
-        
-        // special-purpose containers used during search procedure
-//        namesWithoutExactNameMatches = new HashSet<String>();
-//        namesWithoutExactSynonymMatches = new HashSet<String>();
-//    	namesWithoutApproxTaxnameOrSynonymMatches = new HashSet<String>();
-
-//        namesWithoutExactNameMatches = new HashMap<String, String>();
-//        namesWithoutExactSynonymMatches = new HashMap<String, String>();
-//        namesWithoutApproxTaxnameOrSynonymMatches = new HashMap<String, String>();
 
         namesWithoutExactNameMatches = new HashMap<Object, String>();
         namesWithoutExactSynonymMatches = new HashMap<Object, String>();
@@ -187,6 +187,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     public MultiNameContextQuery setDefaults() {
         contextAutoInferenceIsOn = true;
         includeDubious = false;
+        matchSpTaxaToGenera = true;
     	return this;
     }
     
@@ -201,13 +202,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	
     	setIndexes();
         
-        // infer context if we are allowed to, and determine names to be matched against it
-//        HashSet<String> namesToMatchAgainstContext = new HashSet<String>();
-//    	Map<String, String> namesToMatchAgainstContext =  new HashMap<String, String>();
     	Map<Object, String> namesToMatchAgainstContext =  new HashMap<Object, String>();
-       if (contextAutoInferenceIsOn) {
-//        	namesToMatchAgainstContext = (HashSet<String>) inferContextAndReturnAmbiguousNames();
-//        	namesToMatchAgainstContext = (HashMap<String, String>) inferContextAndReturnAmbiguousNames();
+    	if (contextAutoInferenceIsOn) {
         	namesToMatchAgainstContext = (HashMap<Object, String>) inferContextAndReturnAmbiguousNames();
         } else {
             namesToMatchAgainstContext = queriedNames;
@@ -228,8 +224,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         // TODO: last-ditch effort to match yet-unmatched names: try truncating names in case there are accession-id modifiers?
 
         // record unmatchable names to results
-//        for (String name : namesWithoutApproxTaxnameOrSynonymMatches)
-//        for (Entry<String, String> nameEntry : namesWithoutApproxTaxnameOrSynonymMatches.entrySet()) {
         for (Entry<Object, String> nameEntry : namesWithoutApproxTaxnameOrSynonymMatches.entrySet()) {
         	results.addUnmatchedName(nameEntry.getKey(), nameEntry.getValue());
         }
@@ -258,7 +252,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * @return the initiating NameslistStandardQuery object
      */
     public Map<Object, String> inferContextAndReturnAmbiguousNames() {
-//    public Node inferContextAndReturnAmbiguousNames() {
 
     	setIndexes();
     	
@@ -342,16 +335,71 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     		        	
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term("name", thisName));
+            
+            TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
+            
             try {
             	hits = nameIndex.query(exactQuery);
 	            if (hits.size() < 1) {
+	            	
+	            	if (matchSpTaxaToGenera) { // attempt to match names of the form 'Genus sp.' to nodes with the name 'Genus'
+	            		String[] parts = thisName.split("\\s+");
+	            		if (parts[parts.length -1].toLowerCase().equals("sp.")) {
+
+	            			String inferredGenusName = thisName.substring(0,thisName.length()-3).trim();
+	                        TermQuery exactGenusNameQuery = new TermQuery(new Term("name", inferredGenusName));
+	                        
+	                        IndexHits<Node> inferredGenericNameHits = null;
+	                        try {
+	                        	inferredGenericNameHits = nameIndex.query(exactGenusNameQuery);
+		                        if (inferredGenericNameHits.size() > 0) {
+		        	                
+		        	                // at least 1 hit; prepare to record matches
+		        	
+		        	                // determine within-context homonym status
+		        	                boolean isHomonym = false;
+		        	                if (inferredGenericNameHits.size() > 1) {
+		        	                    isHomonym = true;
+		        	                }
+		        	
+		        	                for (Node hit : inferredGenericNameHits) {
+		        	                    // add this match to the match set
+		        	                    Taxon matchedTaxon = taxonomy.getTaxon(hit);
+		        	                    matches.addMatch(new TNRSHit().
+		        	                            setMatchedTaxon(matchedTaxon).
+		        	                            setSearchString(inferredGenusName).
+		        	                            setIsPerfectMatch(false).
+		        	                            setIsApprox(false).
+		        	                            setIsHomonym(isHomonym).
+		        	                            setNomenCode(matchedTaxon.getNomenCode()).
+		        	                            setSourceName(DEFAULT_TAXONOMY_NAME).
+		        	                            setScore(getScore(inferredGenusName, matchedTaxon, hit)));
+			        	                }
+
+		        	                // add matches to the TNRS results
+		        	                results.addNameResult(new TNRSNameResult(thisId, matches));
+
+		    	            		continue; // do not add this name to the namesWithoutExactMatches, or it will end up in synonym/fuzzy matching as well
+
+		                        } else {
+		                        	// no hits found so do nothing; this name will be added to the namesWithoutExactMatches and will end up in synonym/fuzzy matching
+		                        }
+
+	                        } finally {
+	                        	if (inferredGenericNameHits != null) {
+	                        		inferredGenericNameHits.close();
+	                        	}
+	                        }
+	            		}
+	            	}
+	            	
 	                // no direct matches, move on to next name
 	                namesWithoutExactNameMatches.put(thisId, thisName);
 	                continue;
 	
 	            } else {
 	                // at least 1 hit; prepare to record matches
-	                TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
+//	                TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
 	
 	                // determine within-context homonym status
 	                boolean isHomonym = false;
@@ -480,21 +528,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                    
 	                    Taxon matchedTaxon = taxonomy.getTaxon(hit);
 	
-	                    // use edit distance to calculate base score for fuzzy matches
-	                    double l = Levenshtein.distance(thisName, matchedTaxon.getName());
-	                    double s = Math.min(matchedTaxon.getName().length(), thisName.length());
-	                    double baseScore = (s - l) / s;
-	                    
-	                    // weight scores by distance outside of inferred lica (this may need to go away if it is a speed bottleneck)
-	                    double scoreModifier = 1;
-	                    if (matchedTaxon.isPreferredTaxChildOf(bestGuessLICAForNames) == false) {
-	                        int d = taxonomy.getInternodalDistThroughMRCA(hit, bestGuessLICAForNames.getNode(), RelType.PREFTAXCHILDOF);
-	                        scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
-	                        System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
-	                    }
-	                    
 	                    // add the match if it scores high enough
-	                    double score = baseScore * scoreModifier;
+	                    double score = getScore(thisName, matchedTaxon, hit);
 	                    if (score >= minScore) {
 	                        matches.addMatch(new TNRSHit().
 	                                setMatchedTaxon(matchedTaxon).
@@ -520,6 +555,34 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         }
     }
 
+    /**
+     * Calculate scores for non-exact matches
+     * 
+     * @param thisName
+     * @param matchedTaxon
+     * @param hit
+     * @return
+     */
+    private double getScore(String thisName, Taxon matchedTaxon, Node hit) {
+    	
+        // use edit distance to calculate base score for fuzzy matches
+        double l = Levenshtein.distance(thisName, matchedTaxon.getName());
+        double s = Math.min(matchedTaxon.getName().length(), thisName.length());
+        double baseScore = (s - l) / s;
+        
+        // weight scores by distance outside of inferred lica (this may need to go away if it is a speed bottleneck)
+        double scoreModifier = 1;
+        if (matchedTaxon.isPreferredTaxChildOf(bestGuessLICAForNames) == false) {
+            int d = taxonomy.getInternodalDistThroughMRCA(hit, bestGuessLICAForNames.getNode(), RelType.PREFTAXCHILDOF);
+            scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
+//            System.out.println("scoreModifier = " + String.valueOf(scoreModifier));
+        }
+        
+        // return the score
+        return baseScore * scoreModifier;
+    	
+    }
+    
     /**
      * Update the inferred LICA of the known direct matches. If taxaWithDirectMatches is empty, then
      * the LICA is set to the root of the graph.

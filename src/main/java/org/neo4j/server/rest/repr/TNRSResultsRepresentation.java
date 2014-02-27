@@ -50,7 +50,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			protected void serialize(final MappingSerializer serializer) {
 
 				serializer.putString("context_name", result.context.getDescription().name);
-				serializer.putNumber("content_rootnode_ottol_id", (Long) result.context.getRootNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
+				serializer.putNumber("content_rootnode_ott_id", (Long) result.context.getRootNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 				serializer.putList("ambiguous_names", OpentreeRepresentationConverter.getListRepresentation(result.namesNotMatched));
 
 			}
@@ -217,7 +217,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				// TODO: transition these to lower case with underscores
 				serializer.putNumber("nodeId", match.getMatchedNode().getId()); // matched node id
-				serializer.putNumber("ottId", (Long) match.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ottol id
+				serializer.putNumber("ottId", (Long) match.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
 				serializer.putString("name", match.getUniqueName()); // unique name
 				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
 				serializer.putBoolean("higher", match.getIsHigherTaxon()); // is higher taxon

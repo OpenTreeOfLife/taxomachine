@@ -405,7 +405,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				
 				if (!label.equals("")) {
 
-					// record each flags as a node property, whether we recognize it or not
+					// record each flag as a node property, whether we recognize it or not
 					tnode.setProperty(label, true);
 					taxaByFlag.add(tnode, "flag", label);
 	
@@ -425,6 +425,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 							dubious = true;
 							dubiousNodes.add(tnode);
 						}
+					} else {
+						System.out.println("\n\nFound unrecognized flag: " + label + "\n\n");
 					}
 				}
 			}

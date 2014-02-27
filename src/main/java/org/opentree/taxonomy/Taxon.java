@@ -309,7 +309,7 @@ public class Taxon {
         boolean taxonomy = true;
         RelationshipType defaultchildtype = RelType.TAXCHILDOF;
         RelationshipType defaultsourcetype = RelType.TAXCHILDOF;
-        String sourcename = "ottol";
+        String sourcename = "ott";
         if (domsource != null) {
             sourcename = domsource;
         }

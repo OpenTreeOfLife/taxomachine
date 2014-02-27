@@ -59,6 +59,7 @@ public class TaxonomySynthesizer extends Taxonomy {
     /**
      * Dump all the name data in a format consistent with Phylotastic treestore requirements
      */
+    @Deprecated
     public void OTTOLNameDump(Node rootNode, String outFileName) {
         
         // create file access variables
@@ -232,6 +233,7 @@ public class TaxonomySynthesizer extends Taxonomy {
      * Right now this walks from the life node through the entire graph. When there are conflicts, this will create a preferred
      * relationship parallel to an existing NCBI relationship if there is one. If there ar no conflicts, it just passes over.
      */
+    @Deprecated
     public void makePreferredOTTOLRelationshipsConflicts() {
 
 //        TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description()
@@ -312,6 +314,7 @@ public class TaxonomySynthesizer extends Taxonomy {
      * preferred rels already identified by `makePreferredOTTOLRelationshipsConflicts()` and will create new preferred relationships
      * where there are no conflicts.
      */
+    @Deprecated
     public void makePreferredOTTOLRelationshipsNOConflicts() {
 
 //        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
@@ -406,13 +409,14 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
     }
     
-    /*
+    /**
      * New: This is meant to examine whether we can create equivalent statements about named nodes in the full graph
      * The procedure is meant to look at the node and the descentdents of that node and ask whether they are an equivalent
      * name. If so eventually you would want to add the taxa from the one taxonomy that are not in the new one to the new
      * one in the ottol relationships 
      */
     
+    @Deprecated
     public void findEquivalentNamedNodes(String domsource){
 		IndexHits<Node> hits = null;
 		Node startnode = null;

@@ -20,7 +20,7 @@ public abstract class AbstractBaseQuery implements TNRSQuery {
     protected static final int SHORT_NAME_LENGTH = 9;
     protected static final int MEDIUM_NAME_LENGTH = 14;
     protected static final int LONG_NAME_LENGTH = 19;
-    protected static final String DEFAULT_TAXONOMY_NAME = "ottol";
+    protected static final String DEFAULT_TAXONOMY_NAME = "ott";
     protected double minScore;
 	
     // essential container variables and objects
