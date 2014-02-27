@@ -269,11 +269,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         
         // update the LICA for the unambiguous (non-homonym) hits. Will set the LICA to the root of the graph if there are no unambiguous hits
         updateLICA();
-
-//        return bestGuessLICAForNames.getNode();
-        
-    	// =====================
-
         
         // now set the context closest to the LICA. If the LICA is the root, this will set the context to ALLTAXA
         setContext(bestGuessLICAForNames.getLeastInclusiveContext());
