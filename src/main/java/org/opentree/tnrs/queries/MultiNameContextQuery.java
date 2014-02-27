@@ -344,9 +344,17 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	            	
 	            	if (matchSpTaxaToGenera) { // attempt to match names of the form 'Genus sp.' to nodes with the name 'Genus'
 	            		String[] parts = thisName.split("\\s+");
-	            		if (parts[parts.length -1].toLowerCase().equals("sp.")) {
+	            		String lastPart = parts[parts.length -1].toLowerCase();
+	            		
+	            		String inferredGenusName = null;
 
-	            			String inferredGenusName = thisName.substring(0,thisName.length()-3).trim();
+	            		if (lastPart.equals("sp.")) {
+	            			inferredGenusName = thisName.substring(0,thisName.length()-3).trim();
+	            		} else if (lastPart.equals("sp")) {
+	            			inferredGenusName = thisName.substring(0,thisName.length()-2).trim();
+	            		}
+	            		
+	            		if (inferredGenusName != null) {
 	                        TermQuery exactGenusNameQuery = new TermQuery(new Term("name", inferredGenusName));
 	                        
 	                        IndexHits<Node> inferredGenericNameHits = null;

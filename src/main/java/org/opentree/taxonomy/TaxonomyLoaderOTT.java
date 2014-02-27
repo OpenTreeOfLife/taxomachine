@@ -140,7 +140,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	 * Reads a taxonomy file with rows formatted as:
 	 *	ott_id\tott_parent_id\tName\trank with spaces allowed\tsources\tunique_name\n TODO: add flags to this description
 	 *
-	 *  OTT identifier - these have been kept stable relative to OTToL 1.0
+	 *  OTT identifier - these have been kept stable relative to OTT 1.0
 	 *  OTT identifier for the parent of this taxon, or empty if none
 	 *  Name (e.g. "Rana palustris")
 	 *  Rank ("genus" etc.)
