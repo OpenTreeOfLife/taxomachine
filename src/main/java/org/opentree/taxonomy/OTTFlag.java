@@ -55,11 +55,16 @@ public enum OTTFlag {
 	// TODO: add flag for force suppressed
 	
 	// ===== flags not designating suppression
+
+	/**
+	 * Taxa that have been manually edited.
+	 */
+	EDITED ("edited", true),
 	
 	/**
 	 * Children of incertae sedis containers.
 	 */
-	INCERTAE_SEDIS ("incertae_sedis", true),
+	INCERTAE_SEDIS ("incertae_sedis_inherited", true),
 	
 	/**
 	 * Taxa with the string "incertae sedis" in their name, but which have no children and thus are (hopefully) not a container.
@@ -91,6 +96,11 @@ public enum OTTFlag {
 	 * children in the taxon that's the MRCA of all the NCBI children.)
 	 */
 	TATTERED ("tattered", true),
+
+	/**
+	 * Taxa with the string "incertae sedis" in their name, but which have no children and thus are (hopefully) not a container.
+	 */
+	TATTERED_INHERITED("tattered_inherited", true),
 
 	/**
 	 * Designates that the taxon should not be suppressed even if it has flags designating suppression.
