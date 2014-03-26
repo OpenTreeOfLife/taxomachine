@@ -140,8 +140,11 @@ public abstract class TaxonomyLoaderBase extends Taxonomy {
 	 * Validity is based on where there are nodes that have multiple parents
 	 * within a source. Will ignore the source property if sourcename == null
 	 * 
+	 * This method is deprecated. Left over frome early days of taxomachine where it was doing what smasher does now.
+	 * 
 	 * @param sourcename this is the source that we are checking the validity of
 	 */
+	@Deprecated
 	public void verifyLoadedTaxonomy(String sourcename) {
 		//get life node
 		//traverse starting at life, checking to see if any of the nodes have multiple parents if looking at the source from sourcename

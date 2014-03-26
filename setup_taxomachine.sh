@@ -30,7 +30,7 @@ JAVA=java
 #fi
 
 if [ ! $VERSION ]; then
-	VERSION="ott2.4.draft19"
+	VERSION="ott2.4.draft21"
 	printf "\nwill attempt to use $VERSION\n"
 fi
 
@@ -83,7 +83,7 @@ if [ $DOWNLOAD_OTT ]; then
 	
 fi 
 
-OTT_SOURCEDIR="$OTT_DOWNLOADDIR/$VERSION.db"
+OTT_SOURCEDIR="$OTT_DOWNLOADDIR/$VERSION"
 if [ ! -d $OTT_SOURCEDIR ]; then
 	printf "\ncan\'t find $OTT_SOURCEDIR. use --download-ott to download a copy\n"
 	exit

@@ -208,15 +208,17 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			throw new UnsupportedOperationException("Cannot build the preferred indexes without building the preferred relationships.");
 		}
 		
+		//create the metadata node
+		tx = beginTx();
 		try {
-			tx = beginTx();
-			//create the metadata node
-			try {
-				createMetadataNode();
-				tx.success();
-			} finally {
-				tx.finish();
-			}
+			createMetadataNode();
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+
+		// process the incoming lines in batches
+		try {
 			BufferedReader br = new BufferedReader(new FileReader(filename));
 			while ((str = br.readLine()) != null) {
 				count += 1;
@@ -227,9 +229,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 					tx = beginTx();
 					try {
 						for (int i = 0; i < templines.size(); i++) {
-
 							processOTTInputLine(templines.get(i));
-							
 						}
 						tx.success();
 					} finally {
@@ -239,55 +239,57 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				}
 			}
 			br.close();
-			tx = beginTx();
-			try {
-				for (int i = 0; i < templines.size(); i++) {
-					
-					processOTTInputLine(templines.get(i));
-					
-				}
-				tx.success();
-			} finally {
-				tx.finish();
-			}
-			templines.clear();
-
-			//add the relationships
-			ArrayList<String> temppar = new ArrayList<String>();
-			count = 0;
-			for (String key: dbnodes.keySet()) {
-				count += 1;
-				temppar.add(key);
-				if (count % transaction_iter == 0) {
-					System.out.println(count);
-					tx = beginTx();
-					try {
-						for (int i = 0; i < temppar.size(); i++) {
-
-							processOTTRels(temppar.get(i));
-							
-						}
-						tx.success();
-					} finally {
-						tx.finish();
-					}
-					temppar.clear();
-				}
-			}
-			tx = beginTx();
-			try {
-				for (int i = 0; i < temppar.size(); i++) {
-
-					processOTTRels(temppar.get(i));
-					
-				}
-				tx.success();
-			} finally {
-				tx.finish();
-			}
-		} catch(IOException ioe) {
-			ioe.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
+		
+		// process any remaining lines from the last batch
+		tx = beginTx();
+		try {
+			for (int i = 0; i < templines.size(); i++) {
+				processOTTInputLine(templines.get(i));
+			}
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+		templines.clear();
+
+		//add the relationships
+		ArrayList<String> temppar = new ArrayList<String>();
+		count = 0;
+		for (String key: dbnodes.keySet()) {
+			count += 1;
+			temppar.add(key);
+			if (count % transaction_iter == 0) {
+				System.out.println(count);
+				tx = beginTx();
+				try {
+					for (int i = 0; i < temppar.size(); i++) {
+
+						processOTTRels(temppar.get(i));
+						
+					}
+					tx.success();
+				} finally {
+					tx.finish();
+				}
+				temppar.clear();
+			}
+		}
+		
+		tx = beginTx();
+		try {
+			for (int i = 0; i < temppar.size(); i++) {
+
+				processOTTRels(temppar.get(i));
+				
+			}
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+
 		
 		if (addBarrierNodes) {
 			//mark all of the barrier nodes with additional metadata
@@ -329,8 +331,18 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	 * @param childId
 	 */
 	private void processOTTRels(String childId) {
-		try {
-			Relationship rel = dbnodes.get(childId).createRelationshipTo(dbnodes.get(parents.get(childId)), RelType.TAXCHILDOF);
+		
+		Node parentNode = dbnodes.get(parents.get(childId));
+		if (parentNode == null) {
+
+			Node graphRootNode = dbnodes.get(childId);
+			
+			// special case for the life node--the graph root
+			metadatanode.createRelationshipTo(graphRootNode, RelType.METADATAFOR);
+			System.out.println("linked metadata node to " + graphRootNode);
+			
+		} else {
+			Relationship rel = dbnodes.get(childId).createRelationshipTo(parentNode, RelType.TAXCHILDOF);
 			rel.setProperty("source", sourceName);
 			rel.setProperty("childid", childId);
 			rel.setProperty("parentid", parents.get(childId));
@@ -344,9 +356,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 					prefRel.setProperty("parentid", parents.get(childId));
 				}
 			}
-
-		} catch(java.lang.IllegalArgumentException io) {
-			io.printStackTrace();
 		}
 	}
 	
@@ -381,15 +390,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		boolean forceVisible = false;
 		
 		Node tnode = createNode();
+		parents.put(inputId, inputParentId);
 
-		// special case for the life node--the graph root
-		if (inputName.equals("life")) {
-			System.out.println("created root node and metadata link");
-			metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
-		} else {
-			parents.put(inputId, inputParentId);
-		}
-		
 		// TODO: fix these to use OTPropertyPredicate model
 		tnode.setProperty("name", inputName);
 		tnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), Long.valueOf(inputId));
