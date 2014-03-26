@@ -128,8 +128,8 @@ public class MainRunner {
             tlo.setCreateOTTIdIndexes(true);
             tlo.setbuildPreferredIndexes(true);
             tlo.loadOTTIntoGraph(sourcename, filename, synonymfile);
-            System.out.println("verifying taxonomy");
-            tlo.verifyLoadedTaxonomy(sourcename);
+//            System.out.println("verifying taxonomy");
+//            tlo.verifyLoadedTaxonomy(sourcename);
 
         
         // ================= other
