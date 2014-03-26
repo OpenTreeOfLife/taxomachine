@@ -197,6 +197,13 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
 		@Override
 		public String getUniqueName() {
+			String uniqueName = (String) getMatchedNode().getProperty("uniqname");
+			if (uniqueName.length() > 0) {
+				return uniqueName;
+			} else {
+				return (String) getMatchedNode().getProperty("name");
+			}
+			/*
         	String uniqueName = getMatchedNode().getProperty("name").toString();
         	if (isHomonym) {
 	    		if (getMatchedNode().hasProperty("leastcontext")) {
@@ -209,7 +216,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 	    		}
         	}
 
-			return uniqueName;
+			return uniqueName; */
         }
         
         /**
