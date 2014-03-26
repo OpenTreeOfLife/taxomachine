@@ -119,6 +119,7 @@ public final class BarrierNodes {
                         }
             		}
             	}
+            	
             	if (bestitem == null){
             		System.out.println("trying to match barriers with the synonyms");
             		hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM).get("name", itns);
@@ -141,7 +142,10 @@ public final class BarrierNodes {
             	}
             }
 
-//            try{
+            if (bestitem == null) {
+            	System.out.println("Could not find barrier: " + itns);
+            	continue;
+            }
             
         	System.out.println("Found barrier: " + itns + " " + bestitem.getId());
         	if (barrierNodeToNomenclatureMap.containsKey(bestitem)) {
@@ -151,14 +155,7 @@ public final class BarrierNodes {
             	barrierNodeToNomenclatureMap.put(bestitem, barrierCladeNameToNomenclatureMap.get(itns));
             	barrierNodeToBarrierCladeNameMap.put(bestitem, itns);
         	}
-            	
-//            } catch(Exception e) {
-//            	System.out.println("Didn't find barrier: "+ itns);
-//            }
-
         }
-        
-//        return barnodes;
     }
 
     public Map<Node, Nomenclature> getBarrierNodeToNomenclatureMap() {
