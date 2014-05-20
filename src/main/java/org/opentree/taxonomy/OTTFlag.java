@@ -23,6 +23,12 @@ public enum OTTFlag {
 	ENVIRONMENTAL ("environmental", false),
 	
 	/**
+	 * Descendants of ENVIRONMENTAL taxa.
+     * New 2014-04-26
+	 */
+	ENVIRONMENTAL_INHERITED ("environmental_inherited", false),
+	
+	/**
 	 * Taxa of known hybrid origin.
 	 */
 	HYBRID ("hybrid", false),
@@ -33,19 +39,29 @@ public enum OTTFlag {
 	MAJOR_RANK_CONFLICT_DIRECT ("major_rank_conflict_direct", false),
 
 	/**
-	 * Low-rank children of high-rank taxa (e.g. genus child of class).
+	 * Descendants of low-rank children of high-rank taxa (e.g. genus child of class).
 	 */
 	MAJOR_RANK_CONFLICT_INHERITED ("major_rank_conflict_inherited", false),
 
 	/**
-	 * Children of unclassified containers.
+	 * Taxa that are or were children of "unclassified" containers
+     * (pseudo-taxa in NCBI with the string "unclassified" in their name).
+     * New 2014-04-26 
 	 */
-	UNCLASSIFIED_INHERITED ("unclassified_inherited", false),
+	UNCLASSIFIED ("unclassified", false),
 	
 	/**
-	 * Taxa with the string "unclassified" in their name, but which have no children and thus are (hopefully) not a container.
+	 * Taxa with the string "unclassified" in their name, but which
+	 * have no children and thus are (hopefully) no longer a
+	 * container.
+     * 2014-04-26 DEPRECATED, these are now just labeled "not_otu".
 	 */
 	UNCLASSIFIED_DIRECT ("unclassified_direct", false),
+	
+	/**
+	 * Descendants of UNCLASSIFIED taxa.
+	 */
+	UNCLASSIFIED_INHERITED ("unclassified_inherited", false),
 	
 	/**
 	 * Viruses.
@@ -62,12 +78,18 @@ public enum OTTFlag {
 	EDITED ("edited", true),
 	
 	/**
-	 * Children of incertae sedis containers.
+	 * Children of incertae sedis containers, and others flagged as incertae sedis in their parent.
 	 */
-	INCERTAE_SEDIS ("incertae_sedis_inherited", true),
+	INCERTAE_SEDIS ("incertae_sedis", true),
+	
+	/**
+	 * Descendants of INCERTAE_SEDIS taxa.
+	 */
+	INCERTAE_SEDIS_INHERITED ("incertae_sedis_inherited", true),
 	
 	/**
 	 * Taxa with the string "incertae sedis" in their name, but which have no children and thus are (hopefully) not a container.
+     * 2014-04-26 DEPRECATED, these are now only flagged "not_otu".
 	 */
 	INCERTAE_SEDIS_DIRECT ("incertae_sedis_direct", true),
 
@@ -87,8 +109,9 @@ public enum OTTFlag {
 	SIBLING_HIGHER ("sibling_higher", true),
 
 	/**
-	 * Taxon that for which some children in origin taxonomy were
-	 * placed in a different place in the merged taxonomy.
+	 * Taxon for which some children in origin taxonomy were
+	 * placed in a different place in the merged taxonomy;
+     * casualties from a conflict between two taxonomies.
 	 * 
 	 * From Jonathan Rees: Sort of like "all children are incertae sedis". It means it's a GBIF-only taxon some of whose children are classified by
 	 * NCBI as belonging to a disjoint taxon, so the residual children in OTT form only a partial set relative to the taxon concept (whatever it may
@@ -98,7 +121,7 @@ public enum OTTFlag {
 	TATTERED ("tattered", true),
 
 	/**
-	 * Taxa with the string "incertae sedis" in their name, but which have no children and thus are (hopefully) not a container.
+	 * Taxa that are descendants of a TATTERED taxon.
 	 */
 	TATTERED_INHERITED("tattered_inherited", true),
 
