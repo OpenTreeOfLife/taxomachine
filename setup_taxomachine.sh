@@ -30,7 +30,7 @@ JAVA=java
 #fi
 
 if [ ! $VERSION ]; then
-	VERSION="ott2.4.draft21"
+	VERSION="ott2.8.draft21"
 	printf "\nwill attempt to use $VERSION\n"
 fi
 
@@ -146,7 +146,7 @@ TAXOMACHINE_COMMAND="$JAVA $JAVAFLAGS -jar $TAXOMACHINE_INSTALL_LOCATION "
 #fi
 
 # prepare for dealing with the neo4j server if necessary
-TAXO_NEO4J_HOME="$PREFIX/neo4j-community-1.9.5-taxomachine"
+TAXO_NEO4J_HOME="$PREFIX/neo4j-taxomachine"
 TAXO_NEO4J_DAEMON="$TAXO_NEO4J_HOME/bin/neo4j"
 
 # clean the db if necessary
