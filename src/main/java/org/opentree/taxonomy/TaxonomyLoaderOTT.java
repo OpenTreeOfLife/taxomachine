@@ -428,7 +428,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 							dubiousNodes.add(tnode);
 						}
 					} else {
-						System.out.println("\n\nFound unrecognized flag: " + label + "\n\n");
+						System.out.println("WARNING: found unrecognized flag: " + label);
 					}
 				}
 			}
