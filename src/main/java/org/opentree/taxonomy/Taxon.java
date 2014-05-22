@@ -94,7 +94,7 @@ public class Taxon {
     	HashSet<Node> synonyms = new HashSet<Node>();
     	
         TraversalDescription synonymTraversal = Traversal.description()
-                .relationships(RelType.SYNONYMOF, Direction.INCOMING);
+                .relationships(TaxonomyRelType.SYNONYMOF, Direction.INCOMING);
         
         for (Node n : synonymTraversal.traverse(taxNode).nodes()) {
         	synonyms.add(n);
@@ -107,7 +107,7 @@ public class Taxon {
     
         TraversalDescription hierarchy = Traversal.description()
                 .depthFirst()
-                .relationships( RelType.PREFTAXCHILDOF, Direction.OUTGOING );
+                .relationships( TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING );
         
         Long pid = parent.getNode().getId();
         
@@ -139,8 +139,8 @@ public class Taxon {
 //            int count = 0;
 
             for (Node nd : Traversal.description()
-                .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING).breadthFirst().traverse(taxNode).nodes()) {
-                for (Relationship rel : nd.getRelationships(RelType.TAXCHILDOF, Direction.INCOMING)) {
+                .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING).breadthFirst().traverse(taxNode).nodes()) {
+                for (Relationship rel : nd.getRelationships(TaxonomyRelType.TAXCHILDOF, Direction.INCOMING)) {
 //                    count += 1;
                     Node startNode = rel.getStartNode();
                     String sName = ((String) startNode.getProperty("name"));
@@ -183,7 +183,7 @@ public class Taxon {
     public void buildTaxonomyTree() {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-                .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
+                .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
         System.out.println(taxNode.getProperty("name"));
         JadeNode root = new JadeNode();
         root.setName(((String) taxNode.getProperty("name")).replace(" ", "_"));
@@ -227,7 +227,7 @@ public class Taxon {
     public void buildTreemachineTaxonList() {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-                .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
+                .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
         System.out.println(taxNode.getProperty("name"));
 
         PrintWriter outFile = null;
@@ -263,7 +263,7 @@ public class Taxon {
 
         System.out.println(taxNode.getProperty("name"));
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-                .relationships(RelType.TAXCHILDOF, Direction.INCOMING);
+                .relationships(TaxonomyRelType.TAXCHILDOF, Direction.INCOMING);
         HashMap<Node, Integer> nodenumbers = new HashMap<Node, Integer>();
         HashMap<Integer, Node> numbernodes = new HashMap<Integer, Node>();
         int count = 0;
@@ -307,8 +307,8 @@ public class Taxon {
         se.setStartNode(taxNode);
         int maxdepth = 3;
         boolean taxonomy = true;
-        RelationshipType defaultchildtype = RelType.TAXCHILDOF;
-        RelationshipType defaultsourcetype = RelType.TAXCHILDOF;
+        RelationshipType defaultchildtype = TaxonomyRelType.TAXCHILDOF;
+        RelationshipType defaultsourcetype = TaxonomyRelType.TAXCHILDOF;
         String sourcename = "ott";
         if (domsource != null) {
             sourcename = domsource;

@@ -9,7 +9,7 @@ import org.neo4j.server.rest.repr.MappingRepresentation;
 import org.neo4j.server.rest.repr.MappingSerializer;
 import org.opentree.taxonomy.GraphDatabaseAgent;
 import org.opentree.taxonomy.OTTFlag;
-import org.opentree.taxonomy.RelType;
+import org.opentree.taxonomy.TaxonomyRelType;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.contexts.ContextDescription;
@@ -120,7 +120,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 		@Override
 		public Node getParentNode() {
             TraversalDescription prefTaxTD = Traversal.description().breadthFirst().
-                    relationships(RelType.PREFTAXCHILDOF, Direction.OUTGOING).evaluator(Evaluators.toDepth(1));
+                    relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING).evaluator(Evaluators.toDepth(1));
             
             Node p = null;
             for (Node n : prefTaxTD.traverse(matchedNode).nodes()) {

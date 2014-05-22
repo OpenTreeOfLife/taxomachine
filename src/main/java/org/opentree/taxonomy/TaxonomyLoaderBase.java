@@ -37,7 +37,7 @@ public abstract class TaxonomyLoaderBase extends Taxonomy {
 	 */
 	public void removeMRCAs(Node dbnode) {
 		TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description()
-		        .relationships( RelType.TAXCHILDOF,Direction.INCOMING );
+		        .relationships( TaxonomyRelType.TAXCHILDOF,Direction.INCOMING );
 		Transaction tx = graphDb.beginTx();
 		int count = 0;
 		try {
@@ -67,11 +67,11 @@ public abstract class TaxonomyLoaderBase extends Taxonomy {
 		try {
 			//root should be the taxonomy startnode
 			TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-			        .relationships( RelType.TAXCHILDOF,Direction.INCOMING );
+			        .relationships( TaxonomyRelType.TAXCHILDOF,Direction.INCOMING );
 			for (Node friendnode : CHILDOF_TRAVERSAL.traverse(startnode).nodes()) {
-				Node taxparent = getAdjNodeFromFirstRelationship(friendnode, RelType.TAXCHILDOF, Direction.OUTGOING);
+				Node taxparent = getAdjNodeFromFirstRelationship(friendnode, TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING);
 				if (taxparent != null) {
-					Node firstchild = getAdjNodeFromFirstRelationship(friendnode, RelType.TAXCHILDOF, Direction.INCOMING);
+					Node firstchild = getAdjNodeFromFirstRelationship(friendnode, TaxonomyRelType.TAXCHILDOF, Direction.INCOMING);
 					if (firstchild == null) {//leaf
 						long [] tmrcas = {friendnode.getId()};
 						friendnode.setProperty("mrca", tmrcas);
@@ -150,10 +150,10 @@ public abstract class TaxonomyLoaderBase extends Taxonomy {
 		//traverse starting at life, checking to see if any of the nodes have multiple parents if looking at the source from sourcename
 		Node startnode = getLifeNode();
 		TraversalDescription MRCACHILDOF_TRAVERSAL = Traversal.description()
-		        .relationships( RelType.TAXCHILDOF,Direction.INCOMING );
+		        .relationships( TaxonomyRelType.TAXCHILDOF,Direction.INCOMING );
 		for (Node friendnode : MRCACHILDOF_TRAVERSAL.traverse(startnode).nodes()) {
 			int count = 0;
-			for (Relationship rel: friendnode.getRelationships(Direction.OUTGOING, RelType.TAXCHILDOF)) {
+			for (Relationship rel: friendnode.getRelationships(Direction.OUTGOING, TaxonomyRelType.TAXCHILDOF)) {
 				if (sourcename == null) {
 					count += 1;
 				} else if (((String)rel.getProperty("source")).compareTo(sourcename) == 0) {
@@ -180,7 +180,7 @@ public abstract class TaxonomyLoaderBase extends Taxonomy {
 	 */
 	private void postorderAddMRCAsTax(Node dbnode) {
 		//traversal incoming and record all the names
-		for (Relationship rel : dbnode.getRelationships(Direction.INCOMING,RelType.TAXCHILDOF)) {
+		for (Relationship rel : dbnode.getRelationships(Direction.INCOMING,TaxonomyRelType.TAXCHILDOF)) {
 			Node tnode = rel.getStartNode();
 			postorderAddMRCAsTax(tnode);
 		}
@@ -188,7 +188,7 @@ public abstract class TaxonomyLoaderBase extends Taxonomy {
 		ArrayList<Long> mrcas = new ArrayList<Long> ();
 		ArrayList<Long> nested_mrcas = new ArrayList<Long>();
 		if (dbnode.hasProperty("mrca") == false) {
-			for (Relationship rel: dbnode.getRelationships(Direction.INCOMING,RelType.TAXCHILDOF)) {
+			for (Relationship rel: dbnode.getRelationships(Direction.INCOMING,TaxonomyRelType.TAXCHILDOF)) {
 				Node tnode = rel.getStartNode();
 				long[] tmrcas = (long[])tnode.getProperty("mrca");
 				for (int j = 0; j < tmrcas.length; j++) {
@@ -209,7 +209,7 @@ public abstract class TaxonomyLoaderBase extends Taxonomy {
 				System.out.println(dbnode);
 				System.out.println(ret.length);
 				System.out.println(mrcas.size());
-				for (Relationship rel: dbnode.getRelationships(Direction.INCOMING,RelType.TAXCHILDOF)) {
+				for (Relationship rel: dbnode.getRelationships(Direction.INCOMING,TaxonomyRelType.TAXCHILDOF)) {
 					Node tnode = rel.getStartNode();
 					long[] tmrcas = (long[])tnode.getProperty("mrca");
 					System.out.println("tmrcas: " + tmrcas.length + " " + rel);

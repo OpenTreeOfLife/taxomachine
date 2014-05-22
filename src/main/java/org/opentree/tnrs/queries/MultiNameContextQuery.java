@@ -16,7 +16,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.opentree.graphdb.DatabaseUtils;
-import org.opentree.taxonomy.RelType;
+import org.opentree.taxonomy.TaxonomyRelType;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.TaxonSet;
 import org.opentree.taxonomy.Taxonomy;
@@ -543,7 +543,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         
         if (bestGuessLICAForNames != null) {
 	        if (matchedTaxon.isPreferredTaxChildOf(bestGuessLICAForNames) == false) {
-	            int d = taxonomy.getInternodalDistThroughMRCA(hit, bestGuessLICAForNames.getNode(), RelType.PREFTAXCHILDOF);
+	            int d = taxonomy.getInternodalDistThroughMRCA(hit, bestGuessLICAForNames.getNode(), TaxonomyRelType.PREFTAXCHILDOF);
 	            scoreModifier *= (1/Math.log(d)); // down-weight fuzzy matches outside of mrca scope by abs distance to mrca
 	        }
         }

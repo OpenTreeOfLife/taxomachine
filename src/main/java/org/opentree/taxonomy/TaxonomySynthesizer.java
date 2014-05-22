@@ -45,10 +45,10 @@ public class TaxonomySynthesizer extends Taxonomy {
     public static int transaction_iter = 10000;
 
     private static final TraversalDescription PREFTAXCHILDOF_TRAVERSAL = Traversal.description().breadthFirst().
-            relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
+            relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
 
     private static final TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description().breadthFirst().
-            relationships(RelType.TAXCHILDOF, Direction.INCOMING);
+            relationships(TaxonomyRelType.TAXCHILDOF, Direction.INCOMING);
     
 	private final Index<Node> prefSpeciesByGenus = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SPECIES_BY_GENUS);
 
@@ -133,7 +133,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             // source name : source UID
             HashMap<String, String> sourceIdMap = new HashMap<String, String>();
             
-            for (Relationship l : n.getRelationships(Direction.OUTGOING, RelType.TAXCHILDOF)) {
+            for (Relationship l : n.getRelationships(Direction.OUTGOING, TaxonomyRelType.TAXCHILDOF)) {
 //                System.out.println("start node: " + String.valueOf(l.getStartNode().getId()) + "; end node: " + String.valueOf(l.getEndNode().getId()));
 
                 String sourceName = "";
@@ -255,7 +255,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                 Relationship ncbirel = null;
                 Relationship fungirel = null;
 
-                for (Relationship rel : friendnode.getRelationships(Direction.OUTGOING, RelType.TAXCHILDOF)) {
+                for (Relationship rel : friendnode.getRelationships(Direction.OUTGOING, TaxonomyRelType.TAXCHILDOF)) {
                     if (rel.getEndNode() == rel.getStartNode()) {
                         System.out.println("\n\n\n!!!!!!!!!!!!!!!!!!!CYCLE! Node " + rel.getEndNode() + " points to itself along relationship: " + rel + "\n\n\n");
                         continue;
@@ -280,8 +280,8 @@ public class TaxonomySynthesizer extends Taxonomy {
                     // System.out.println("would make one from "+ncbirel.getStartNode().getProperty("name")+" "+ncbirel.getEndNode().getProperty("name"));
                     if (ncbirel != null){
                     	if (ncbirel.getStartNode().getId() != ncbirel.getEndNode().getId()) {
-                    		ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelType.PREFTAXCHILDOF);
-                    		Relationship newrel2 = ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), RelType.TAXCHILDOF);
+                    		ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), TaxonomyRelType.PREFTAXCHILDOF);
+                    		Relationship newrel2 = ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), TaxonomyRelType.TAXCHILDOF);
                     		newrel2.setProperty("source", "ottol");
                     	} else {
                     		System.out.println("would make cycle from " + ncbirel.getEndNode().getProperty("name"));
@@ -289,8 +289,8 @@ public class TaxonomySynthesizer extends Taxonomy {
                     	}
                     }else if(fungirel != null){
                     	if (fungirel.getStartNode().getId() != fungirel.getEndNode().getId()) {
-                    		fungirel.getStartNode().createRelationshipTo(fungirel.getEndNode(), RelType.PREFTAXCHILDOF);
-                            Relationship newrel2 = fungirel.getStartNode().createRelationshipTo(fungirel.getEndNode(), RelType.TAXCHILDOF);
+                    		fungirel.getStartNode().createRelationshipTo(fungirel.getEndNode(), TaxonomyRelType.PREFTAXCHILDOF);
+                            Relationship newrel2 = fungirel.getStartNode().createRelationshipTo(fungirel.getEndNode(), TaxonomyRelType.TAXCHILDOF);
                             newrel2.setProperty("source", "ottol");
                         } else {
                             System.out.println("would make cycle from " + fungirel.getEndNode().getProperty("name"));
@@ -331,11 +331,11 @@ public class TaxonomySynthesizer extends Taxonomy {
         try {
             // walk out to the tips from the base of the tree
             for (Node n : TAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
-                if (n.hasRelationship(Direction.INCOMING, RelType.TAXCHILDOF) == false) {
+                if (n.hasRelationship(Direction.INCOMING, TaxonomyRelType.TAXCHILDOF) == false) {
 
                     // when we hit a tip, start walking back
                     Node curNode = n;
-                    while (curNode.hasRelationship(Direction.OUTGOING, RelType.TAXCHILDOF)) {
+                    while (curNode.hasRelationship(Direction.OUTGOING, TaxonomyRelType.TAXCHILDOF)) {
                         Node startNode = curNode;
                         if (traveled.contains((Long)startNode.getId())){
                         	break;
@@ -345,8 +345,8 @@ public class TaxonomySynthesizer extends Taxonomy {
                         Node endNode = null;
 
                         // if the current node already has a preferred relationship, we will just follow it
-                        if (startNode.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)) {
-                            Relationship prefRel = startNode.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
+                        if (startNode.hasRelationship(Direction.OUTGOING, TaxonomyRelType.PREFTAXCHILDOF)) {
+                            Relationship prefRel = startNode.getSingleRelationship(TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING);
 
                             // make sure we don't get stuck in an infinite loop (should not happen, could do weird things to the graph)
                             if (prefRel.getStartNode().getId() == prefRel.getEndNode().getId()) {
@@ -360,7 +360,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                         } else {
 
                             // if there is no preferred rel then they all point to the same end node; just follow the first non-looping relationship
-                            for (Relationship rel : curNode.getRelationships(RelType.TAXCHILDOF, Direction.OUTGOING)) {
+                            for (Relationship rel : curNode.getRelationships(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING)) {
                                 if (rel.getStartNode().getId() == rel.getEndNode().getId()) {
                                     System.out.println("pointing to itself " + rel + " " + rel.getStartNode().getId() + " " + rel.getEndNode().getId());
                                     break;
@@ -378,8 +378,8 @@ public class TaxonomySynthesizer extends Taxonomy {
                             }
                             
                             // create preferred relationships
-                            curNode.createRelationshipTo(endNode, RelType.PREFTAXCHILDOF);
-                            curNode.createRelationshipTo(endNode, RelType.TAXCHILDOF).setProperty("source", "ottol");
+                            curNode.createRelationshipTo(endNode, TaxonomyRelType.PREFTAXCHILDOF);
+                            curNode.createRelationshipTo(endNode, TaxonomyRelType.TAXCHILDOF).setProperty("source", "ottol");
                             nNewRels += 1;
                         }
 
@@ -422,7 +422,7 @@ public class TaxonomySynthesizer extends Taxonomy {
 		Node startnode = null;
     	try{
     		hits = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXONOMY_SOURCES).get("source", domsource);
-    		startnode = hits.getSingle().getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode();//there should only be one source with that name
+    		startnode = hits.getSingle().getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.OUTGOING).getEndNode();//there should only be one source with that name
     	}finally{
     		hits.close();
     	}
@@ -459,8 +459,8 @@ public class TaxonomySynthesizer extends Taxonomy {
              outFile.write("uid\t|\tparent_uid\t|\tname\t|\trank\t|\tsource\t|\tsourceid\t|\tsourcepid\t|\t\n");
              for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
             	 outFile.write(String.valueOf(n.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
-            	 if(n.hasRelationship(Direction.OUTGOING, RelType.PREFTAXCHILDOF)){
-            		 Relationship tr = n.getSingleRelationship(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
+            	 if(n.hasRelationship(Direction.OUTGOING, TaxonomyRelType.PREFTAXCHILDOF)){
+            		 Relationship tr = n.getSingleRelationship(TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING);
             		 Node p = tr.getEndNode();
             		 outFile.write(String.valueOf(p.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
             	 }else{
@@ -499,8 +499,8 @@ public class TaxonomySynthesizer extends Taxonomy {
              outFile = new PrintWriter(new FileWriter(outfile));
              outFile.write("uid\t|\tacceptednode_uid\t|\tsynonymname\t|\tnametype\t|\tsource\t|\t\n");
              for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
-            	 if(n.hasRelationship(Direction.INCOMING, RelType.SYNONYMOF)){
-            		 for(Relationship tr: n.getRelationships(Direction.INCOMING, RelType.SYNONYMOF)){
+            	 if(n.hasRelationship(Direction.INCOMING, TaxonomyRelType.SYNONYMOF)){
+            		 for(Relationship tr: n.getRelationships(Direction.INCOMING, TaxonomyRelType.SYNONYMOF)){
                 		 Node p = tr.getStartNode();//synonym node
                 		 outFile.write(String.valueOf(p.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
                 		 outFile.write(String.valueOf(n.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
@@ -584,7 +584,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
 
         TraversalDescription prefTaxParentOfTraversal = Traversal.description().depthFirst().
-                relationships(RelType.PREFTAXCHILDOF, Direction.OUTGOING);
+                relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING);
         
         // for each ContextTreeNode (i.e. each context)
         for (Entry<String, ContextTreeNode> entry: contextNodesByRootName.entrySet()) {
@@ -652,7 +652,7 @@ public class TaxonomySynthesizer extends Taxonomy {
     	int genReportFreq = 100000;
 
         TraversalDescription prefTaxChildOfTraversal = Traversal.description().
-                relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
+                relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
 
         Transaction tx = beginTx();
     	try {
@@ -761,7 +761,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         // add the taxon node under all its synonym names
         for (Node sn : Traversal.description()
                 .breadthFirst()
-                .relationships(RelType.SYNONYMOF,Direction.INCOMING )
+                .relationships(TaxonomyRelType.SYNONYMOF,Direction.INCOMING )
                 .traverse(node).nodes()) {
             synonymIndex.add(node, "name", sn.getProperty("name"));
             nameOrSynonymIndex.add(node, "name", sn.getProperty("name"));

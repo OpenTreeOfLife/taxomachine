@@ -37,10 +37,10 @@ import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 public class TaxonomyComparator {
 	
 	final TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-			.relationships( RelType.TAXCHILDOF,Direction.OUTGOING );
+			.relationships( TaxonomyRelType.TAXCHILDOF,Direction.OUTGOING );
 	
 	final TraversalDescription CHILDOFIN_TRAVERSAL = Traversal.description()
-			.relationships(RelType.TAXCHILDOF, Direction.INCOMING);
+			.relationships(TaxonomyRelType.TAXCHILDOF, Direction.INCOMING);
 	
 	public TaxonomyComparator(){}
 
@@ -59,7 +59,7 @@ public class TaxonomyComparator {
 		
 		//get the root of the comparison taxonomy
 		IndexHits<Node> hits = taxSources.get("source",comparisonsource);
-		Node comproot = hits.getSingle().getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode();
+		Node comproot = hits.getSingle().getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.OUTGOING).getEndNode();
 		hits.close();
 
 		HashMap<Long,String> domnames = new HashMap<Long,String>();
@@ -83,7 +83,7 @@ public class TaxonomyComparator {
 		int totalcount = 0;
 		//traverse the dominant taxonomy looking for names that would match
 		for (Node tnode: CHILDOFIN_TRAVERSAL.depthFirst().traverse(domtax.getLifeNode()).nodes()){
-			if (tnode.hasRelationship(Direction.INCOMING,RelType.TAXCHILDOF) == false){
+			if (tnode.hasRelationship(Direction.INCOMING,TaxonomyRelType.TAXCHILDOF) == false){
 				continue;
 			}else{
 				totalcount+= 1;
@@ -130,7 +130,7 @@ public class TaxonomyComparator {
 					ArrayList<Node> tn = (ArrayList<Node>) domtax.ALLTAXA.findNodes(taxaByName, comparisonsource, ts);
 //					System.out.println(tn.size());
 					for(Node ttn : tn){
-						if(ttn.hasRelationship(RelType.TAXCHILDOF, Direction.INCOMING)==false)
+						if(ttn.hasRelationship(TaxonomyRelType.TAXCHILDOF, Direction.INCOMING)==false)
 							continue;
 						HashSet<String> cset = new HashSet<String>();
 						HashSet<Long> csetn = new HashSet<Long>();
@@ -219,11 +219,11 @@ public class TaxonomyComparator {
 	private void postorderAddTaxa(Node innode, Node lifenode,HashMap<Long,Long> matchedDomCompNodes
 			,HashMap<Long,HashSet<Long>> matchedNodeNodesToAdd,String compsource,GraphDatabaseAgent domgraph
 			,Index<Node> taxaByName){
-		for(Relationship rel: innode.getRelationships(Direction.INCOMING, RelType.TAXCHILDOF)){
+		for(Relationship rel: innode.getRelationships(Direction.INCOMING, TaxonomyRelType.TAXCHILDOF)){
 			postorderAddTaxa(rel.getStartNode(),lifenode,matchedDomCompNodes
 					,matchedNodeNodesToAdd,compsource,domgraph,taxaByName);
 		}
-		if(innode.hasRelationship(Direction.INCOMING, RelType.TAXCHILDOF)){
+		if(innode.hasRelationship(Direction.INCOMING, TaxonomyRelType.TAXCHILDOF)){
 			//skipping lifenode because it just accumulates junk
 			if(matchedNodeNodesToAdd.containsKey(innode.getId()) && innode.getId() != lifenode.getId()){
 //				System.out.println("postorder: "+innode.getProperty("name"));
@@ -264,30 +264,30 @@ public class TaxonomyComparator {
 								oldids_newnodes.put(tnode.getId(), newnode);
 								newids_oldnodes.put(newnode.getId(),tnode);
 							}
-							tnode = tnode.getSingleRelationship(RelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
+							tnode = tnode.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
 						}else{
 							break;
 						}
 					}
 				}
 				for(Long tl:addednodes){
-					Node parent = newids_oldnodes.get(tl).getSingleRelationship(RelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
+					Node parent = newids_oldnodes.get(tl).getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
 					while(oldids_newnodes.containsKey(parent.getId())==false && (parent.getId() != finishnodeid) ){
-						parent = parent.getSingleRelationship(RelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
+						parent = parent.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
 					}
 					while(addednodes.contains(oldids_newnodes.get(parent.getId()).getId())==false &&
 							(parent.getId() != finishnodeid)){
-						parent = parent.getSingleRelationship(RelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
+						parent = parent.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
 						while(oldids_newnodes.containsKey(parent.getId())==false && (parent.getId() != finishnodeid) ){
-							parent = parent.getSingleRelationship(RelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
+							parent = parent.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
 						}
 					}
 					//create relationship
 					Relationship rel = oldids_newnodes.get(newids_oldnodes.get(tl).getId()).
-							createRelationshipTo(oldids_newnodes.get(parent.getId()),RelType.TAXCHILDOF);
+							createRelationshipTo(oldids_newnodes.get(parent.getId()),TaxonomyRelType.TAXCHILDOF);
 //					System.out.println("making rel: "+rel+" "+oldids_newnodes.get(newids_oldnodes.get(tl).getId()).getId()+ " -> "+oldids_newnodes.get(parent.getId()));
 					//TODO: add information on rel
-					Relationship oldrel = newids_oldnodes.get(tl).getSingleRelationship(RelType.TAXCHILDOF, Direction.OUTGOING);
+					Relationship oldrel = newids_oldnodes.get(tl).getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING);
 					String childid = (String)oldrel.getProperty("childid");
 					String parentid = (String)oldrel.getProperty("parentid");
 					rel.setProperty("source", compsource);
@@ -302,7 +302,7 @@ public class TaxonomyComparator {
 					if(matchedNodeNodesToAdd.containsKey(curnode.getId())){
 						matchedNodeNodesToAdd.get(curnode.getId()).removeAll(csetcopy);
 					}
-					curnode = curnode.getSingleRelationship(RelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
+					curnode = curnode.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
 				}
 				matchedNodeNodesToAdd.get(lifenode.getId()).removeAll(csetcopy);
 			}

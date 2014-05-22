@@ -62,7 +62,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 	
 	// basic traversal method
 	final TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-			.relationships( RelType.TAXCHILDOF,Direction.OUTGOING );
+			.relationships( TaxonomyRelType.TAXCHILDOF,Direction.OUTGOING );
 	
 	@Deprecated
 	TaxonomyLoaderPreottol(GraphDatabaseAgent t) {
@@ -280,7 +280,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 							} else {//root
 								inputName = nexttok;
 								System.out.println("created root node and metadata link");
-								metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
+								metadatanode.createRelationshipTo(tnode, TaxonomyRelType.METADATAFOR);
 							}
 							tnode.setProperty("name", inputName);
 							//TODO: add the ability to input these from a source if they have already been set
@@ -302,7 +302,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 										synode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), synode.getId());
 										synode.setProperty("nametype", synNameType);
 										synode.setProperty("source", sourcename);
-										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+										synode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
 										taxaBySynonym.add(tnode, "name", synName);
 									}
 								}
@@ -338,7 +338,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 					} else {//root
 						inputName = nexttok;
 						System.out.println("created root node and metadata link");
-						metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
+						metadatanode.createRelationshipTo(tnode, TaxonomyRelType.METADATAFOR);
 					}
 					tnode.setProperty("name", inputName);
 					//TODO: add the ability to input these from a source if they have already been set
@@ -360,7 +360,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 								synode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), synode.getId());
 								synode.setProperty("nametype", synNameType);
 								synode.setProperty("source", sourcename);
-								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+								synode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
 								taxaBySynonym.add(tnode, "name", synName);
 							}
 						}
@@ -383,7 +383,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 					try {
 						for (int i = 0; i < temppar.size(); i++) {
 							try {
-								Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
+								Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), TaxonomyRelType.TAXCHILDOF);
 								rel.setProperty("source", sourcename);
 								rel.setProperty("childid", temppar.get(i));
 								rel.setProperty("parentid", parents.get(temppar.get(i)));
@@ -403,7 +403,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 			try {
 				for (int i = 0; i < temppar.size(); i++) {
 					try {
-						Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
+						Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), TaxonomyRelType.TAXCHILDOF);
 						rel.setProperty("source", sourcename);
 						rel.setProperty("childid", temppar.get(i));
 						rel.setProperty("parentid", parents.get(temppar.get(i)));
@@ -447,7 +447,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 		System.out.println("calculating mrcas");
 		try {
 			tx = graphDb.beginTx();
-			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
+			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.OUTGOING).getEndNode());
 			tx.success();
 		} finally {
 			tx.finish();
@@ -575,7 +575,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 							} else {//root
 								inputName = nexttok;
 								System.out.println("created root node and metadata link");
-								metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
+								metadatanode.createRelationshipTo(tnode, TaxonomyRelType.METADATAFOR);
 							}
 							tnode.setProperty("name", inputName);
 							//TODO: add the ability to input these from a source if they have already been set
@@ -597,7 +597,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 										synode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), synode.getId());
 										synode.setProperty("nametype", synNameType);
 										synode.setProperty("source", sourcename);
-										synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+										synode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
 										taxaBySynonym.add(tnode, sourcename, synName);
 									}
 								}
@@ -633,7 +633,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 					} else {//root
 						inputName = nexttok;
 						System.out.println("created root node and metadata link");
-						metadatanode.createRelationshipTo(tnode, RelType.METADATAFOR);
+						metadatanode.createRelationshipTo(tnode, TaxonomyRelType.METADATAFOR);
 					}
 					tnode.setProperty("name", inputName);
 					//TODO: add the ability to input these from a source if they have already been set
@@ -655,7 +655,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 								synode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), synode.getId());
 								synode.setProperty("nametype", synNameType);
 								synode.setProperty("source", sourcename);
-								synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+								synode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
 								taxaBySynonym.add(tnode, sourcename, synName);
 							}
 						}
@@ -678,7 +678,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 					try {
 						for (int i = 0; i < temppar.size(); i++) {
 							try {
-								Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
+								Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), TaxonomyRelType.TAXCHILDOF);
 								rel.setProperty("source", sourcename);
 								rel.setProperty("childid", temppar.get(i));
 								rel.setProperty("parentid", parents.get(temppar.get(i)));
@@ -698,7 +698,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 			try {
 				for (int i = 0; i < temppar.size(); i++) {
 					try {
-						Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), RelType.TAXCHILDOF);
+						Relationship rel = dbnodes.get(temppar.get(i)).createRelationshipTo(dbnodes.get(parents.get(temppar.get(i))), TaxonomyRelType.TAXCHILDOF);
 						rel.setProperty("source", sourcename);
 						rel.setProperty("childid", temppar.get(i));
 						rel.setProperty("parentid", parents.get(temppar.get(i)));
@@ -717,7 +717,7 @@ public class TaxonomyLoaderPreottol extends TaxonomyLoaderBase {
 		System.out.println("calculating mrcas");
 		try {
 			tx = graphDb.beginTx();
-			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
+			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.OUTGOING).getEndNode());
 			tx.success();
 		} finally {
 			tx.finish();

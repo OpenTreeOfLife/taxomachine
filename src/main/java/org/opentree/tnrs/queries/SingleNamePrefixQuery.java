@@ -23,7 +23,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.opentree.properties.OTVocabularyPredicate;
-import org.opentree.taxonomy.RelType;
+import org.opentree.taxonomy.TaxonomyRelType;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.TaxonSet;
 import org.opentree.taxonomy.Taxonomy;

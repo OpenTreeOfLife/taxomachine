@@ -57,11 +57,11 @@ public class TaxonSet implements Iterable<Taxon> {
     
     public Taxon getLICA(boolean usePreferredRels) {
        
-        RelType relType;
+        TaxonomyRelType relType;
         if (usePreferredRels)
-            relType = RelType.PREFTAXCHILDOF;
+            relType = TaxonomyRelType.PREFTAXCHILDOF;
         else
-            relType = RelType.TAXCHILDOF;
+            relType = TaxonomyRelType.TAXCHILDOF;
         
         if (hasLICA())
             return lica;
@@ -114,7 +114,7 @@ public class TaxonSet implements Iterable<Taxon> {
 
         TraversalDescription prefChildTraversal = Traversal.description()
                 .breadthFirst()
-                .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING).evaluator(Evaluators.toDepth(1));
+                .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING).evaluator(Evaluators.toDepth(1));
         
         // this will hold immediate children of taxNode that contain taxa from this taxon set
         HashSet<Node> heavyChildren = new HashSet<Node>();

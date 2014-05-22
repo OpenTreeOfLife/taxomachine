@@ -93,7 +93,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	// basic traversal method
 	final TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-			.relationships( RelType.TAXCHILDOF,Direction.OUTGOING );
+			.relationships( TaxonomyRelType.TAXCHILDOF,Direction.OUTGOING );
 	
 	public TaxonomyLoaderOTT(GraphDatabaseAgent gdb) {
 		super(gdb);
@@ -299,7 +299,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			Map<Node, Nomenclature> bnMap = bn.getBarrierNodeToNomenclatureMap();
 //			HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
 			TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
-					.relationships( RelType.TAXCHILDOF,Direction.INCOMING );
+					.relationships( TaxonomyRelType.TAXCHILDOF,Direction.INCOMING );
 			tx = beginTx();
 			try {
 //				for (int i = 0; i < barrierNodes.size(); i++) {
@@ -319,7 +319,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		System.out.println("calculating mrcas");
 		try {
 			tx = graphDb.beginTx();
-			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(RelType.METADATAFOR, Direction.OUTGOING).getEndNode());
+			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.OUTGOING).getEndNode());
 			tx.success();
 		} finally {
 			tx.finish();
@@ -338,11 +338,11 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			Node graphRootNode = dbnodes.get(childId);
 			
 			// special case for the life node--the graph root
-			metadatanode.createRelationshipTo(graphRootNode, RelType.METADATAFOR);
+			metadatanode.createRelationshipTo(graphRootNode, TaxonomyRelType.METADATAFOR);
 			System.out.println("linked metadata node to " + graphRootNode);
 			
 		} else {
-			Relationship rel = dbnodes.get(childId).createRelationshipTo(parentNode, RelType.TAXCHILDOF);
+			Relationship rel = dbnodes.get(childId).createRelationshipTo(parentNode, TaxonomyRelType.TAXCHILDOF);
 			rel.setProperty("source", sourceName);
 			rel.setProperty("childid", childId);
 			rel.setProperty("parentid", parents.get(childId));
@@ -350,7 +350,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			if (buildPreferredRels) {
 				// don't need to wait to makeottol anymore
 				if (!dubiousNodes.contains(dbnodes.get(childId))) {
-					Relationship prefRel = dbnodes.get(childId).createRelationshipTo(dbnodes.get(parents.get(childId)), RelType.PREFTAXCHILDOF);
+					Relationship prefRel = dbnodes.get(childId).createRelationshipTo(dbnodes.get(parents.get(childId)), TaxonomyRelType.PREFTAXCHILDOF);
 					prefRel.setProperty("source", sourceName);
 					prefRel.setProperty("childid", childId);
 					prefRel.setProperty("parentid", parents.get(childId));
@@ -499,7 +499,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 
 						synode.setProperty("nametype", synNameType);
 						synode.setProperty("source", sourceName);
-						synode.createRelationshipTo(tnode, RelType.SYNONYMOF);
+						synode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
 						taxaBySynonym.add(tnode, "name", synName);
 						taxaByNameOrSynonym.add(tnode, "name", synName);
 	

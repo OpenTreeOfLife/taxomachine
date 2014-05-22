@@ -165,7 +165,7 @@ public class Taxonomy {
 	@Deprecated
 	public Node getTaxNodeForSynNode(Node synonymNode) {
 
-		TraversalDescription synonymTraversal = Traversal.description().relationships(RelType.SYNONYMOF, Direction.OUTGOING);
+		TraversalDescription synonymTraversal = Traversal.description().relationships(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING);
 
 		Node taxNode = null;
 		for (Node tn : synonymTraversal.traverse(synonymNode).nodes())

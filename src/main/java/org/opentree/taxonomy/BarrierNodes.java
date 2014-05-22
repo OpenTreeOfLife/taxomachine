@@ -73,7 +73,7 @@ public final class BarrierNodes {
         Node lifen = taxonomy.getLifeNode();
 
         // traverse from each barrier node to life and pick the closest one
-        PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelType.TAXCHILDOF, Direction.OUTGOING), 10000);
+        PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING), 10000);
 //        ArrayList<Node> barnodes = new ArrayList<Node>();
 
         for (String itns : barrierCladeNameToNomenclatureMap.keySet()) {

@@ -43,6 +43,8 @@ import org.opentree.tnrs.queries.SingleNamePrefixQuery;
 
 public class TNRS extends ServerPlugin {
 
+	public static int MAX_QUERY_STRINGS = 1000;
+	
     @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation getContextForNames(
@@ -273,6 +275,14 @@ public class TNRS extends ServerPlugin {
     		}
     	}
         
+    	if (idNameMap.keySet().size() > MAX_QUERY_STRINGS) {
+    		HashMap<String, Object> results = new HashMap<String, Object>();
+    		results.put("status", "error");
+    		results.put("message", "Queries containing more than "+MAX_QUERY_STRINGS+" strings are not supported. You may submit multiple"
+    				+ "smaller queries to avoid this limit.");
+            return OpentreeRepresentationConverter.convert(results);
+    	}
+    	
         // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
         boolean useAutoInference = true;
