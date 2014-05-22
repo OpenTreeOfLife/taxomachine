@@ -27,11 +27,16 @@ public enum OTTFlag {
      * New 2014-04-26
 	 */
 	ENVIRONMENTAL_INHERITED ("environmental_inherited", false),
-	
+
 	/**
-	 * Taxa of known hybrid origin.
+	 * Extinct taxa?
 	 */
-	HYBRID ("hybrid", false),
+	EXTINCT_DIRECT ("extinct_direct", true), // TODO: should these be hidden?
+
+	/**
+	 * Extinct taxa?
+	 */
+	EXTINCT_INHERITED ("extinct_inherited", true), // TODO: should these be hidden?
 
 	/**
 	 * Low-rank children of high-rank taxa (e.g. genus child of class).
@@ -80,6 +85,11 @@ public enum OTTFlag {
 	 */
 	EDITED ("edited", true),
 	
+	/**
+	 * Taxa of known hybrid origin.
+	 */
+	HYBRID ("hybrid", true),
+	
 	// TODO: these incertae sedis designations are confusing...
 	
 	/**
@@ -90,12 +100,13 @@ public enum OTTFlag {
 	/**
 	 * Descendants of INCERTAE_SEDIS taxa.
 	 */
-	INCERTAE_SEDIS_INHERITED ("incertae_sedis_inherited", true),
+	INCERTAE_SEDIS_INHERITED ("incertae_sedis_inherited", true), // TODO: is this deprecated/superseded by the "incertae_sedis" flag?
 	
 	/**
 	 * Taxa with the string "incertae sedis" in their name, but which have no children and thus are (hopefully) not a container.
      * 2014-04-26 DEPRECATED, these are now only flagged "not_otu".
 	 */
+	@Deprecated
 	INCERTAE_SEDIS_DIRECT ("incertae_sedis_direct", true),
 
 	/**
