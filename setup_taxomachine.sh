@@ -1,7 +1,7 @@
 # TODO: record output to log file
 
 JAVAFLAGS="-Xms4G -Xmx30G"
-HELPTEXT="usage:\nsetup_taxomachine.sh <options>\n\t[--clean-db]\n\t[--setup-db]\n\t[--download-ott]\n\t[--setup-neo4j]\n\t[--restart-neo4j]\n\t[--force]\n\t[--update-from-git]\n\t[--recompile-standalone]\n\t[--recompile-plugin]\n\t[-ott-version <2.0|2.1|2.2|2.3>]\n\t[-prefix <path>]\n\n"
+HELPTEXT="usage:\nsetup_taxomachine.sh <options>\n\t[--clean-db]\n\t[--setup-db]\n\t[--download-ott]\n\t[--setup-neo4j]\n\t[--restart-neo4j]\n\t[--force]\n\t[--update-from-git]\n\t[--recompile-standalone]\n\t[--recompile-plugin]\n\t[-ott-version <2.8draft3>]\n\t[-prefix <path>]\n\n"
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -30,7 +30,7 @@ JAVA=java
 #fi
 
 if [ ! $VERSION ]; then
-	VERSION="ott2.8.draft21"
+	VERSION="ott2.8.draft3"
 	printf "\nwill attempt to use $VERSION\n"
 fi
 

@@ -68,7 +68,10 @@ public enum OTTFlag {
 	 */
 	VIRAL ("viral", false),
 	
-	// TODO: add flag for force suppressed
+	/**
+	 * Taxa that have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
+	 */
+	HIDDEN ("hidden", false),
 	
 	// ===== flags not designating suppression
 
@@ -76,6 +79,8 @@ public enum OTTFlag {
 	 * Taxa that have been manually edited.
 	 */
 	EDITED ("edited", true),
+	
+	// TODO: these incertae sedis designations are confusing...
 	
 	/**
 	 * Children of incertae sedis containers, and others flagged as incertae sedis in their parent.
