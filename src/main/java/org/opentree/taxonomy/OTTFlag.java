@@ -79,7 +79,7 @@ public enum OTTFlag {
 	HIDDEN ("hidden", false),
 
 	/**
-	 * Taxa that contained within taxa have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
+	 * Taxa contained within taxa have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
 	 */
 	HIDDEN_INHERITED ("hidden_inherited", false),
 
