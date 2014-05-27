@@ -143,17 +143,13 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     		
     		String[] parts = queryString.split("\\s+",2);
 
-//    		throw new IllegalArgumentException("test: the name contains " + parts.length + " parts");
-    		
-//    		if (parts.length > 1) { // If the search string contains two words: // see below, seems to be unnecessary
-
 			// Hit it against the species index.
-			getExactMatches(escapedQuery, prefTaxNodesByNameSpecies);
+			getExactMatches(escapedQuery, prefTaxNodesByNameSpecies, true);
 			
 			if (matches.size() < 1) { // no exact hit against the species index
 				
     			// Hit the first word against the genus name index
-    			getExactMatches(QueryParser.escape(parts[0]), prefTaxNodesByNameGenera);
+    			getExactMatches(QueryParser.escape(parts[0]), prefTaxNodesByNameGenera, true);
 
     			if (matches.size() > 0) { // the first word was an exact match against the genus index
     				
@@ -210,8 +206,8 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     			} else { // no exact hit for first word against the genus index
 
     				// Hit it against the synonym index and the higher taxon index
-	    			getExactMatches(escapedQuery, prefTaxNodesBySynonym);
-	    			getExactMatches(escapedQuery, prefTaxNodesByNameHigher);
+	    			getExactMatches(escapedQuery, prefTaxNodesBySynonym, false);
+	    			getExactMatches(escapedQuery, prefTaxNodesByNameHigher, true);
 	    			
     				if (matches.size() < 1) {
     					
@@ -225,36 +221,10 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	    				}
     				}
     			}
-			}
-			
-    			
-/*    		// this block may actually not be necessary, this case is already handled by above code
-    		} else { // only contains one word
-    			
-    			// Hit the first word against the genus index
-    			getExactMatches(QueryParser.escape(queryString.trim()), prefTaxNodesByNameGenera);
-	    		
-    			if (matches.size() > 0) {
-    				
-    				// add all the species for this genus (need index)
-
-    				
-    				throw new IllegalArgumentException("test: this is an exact match to the genus " + matches.iterator().next().getUniqueName() + ". its species list will be returned");
-
-    			}
-
-				getPrefixMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher);
-
-				if (matches.size() < 1) {
-					// If there are no results, do a fuzzy search against the higher taxon index
-    				getApproxMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher);
-				}
-    		} */
-
-    			
+			}	
     	} else { // does not contain a space at all
 
-    		getExactMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher);
+    		getExactMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher, true);
 
     		if (matches.size() < 1) {
 
@@ -291,7 +261,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     		throw new IllegalArgumentException("cannot perform query on less than " + minLengthForQuery + " characters");
     	}
     	
-    	getExactMatches(queryString, prefTaxNodesByNameOrSynonym);
+    	getExactMatches(queryString, prefTaxNodesByNameOrSynonym, true);
     
     	if (queryString.length() >= minLengthForPrefixQuery) {
         	getPrefixMatches(queryString, prefTaxNodesByNameOrSynonym);
@@ -314,13 +284,13 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	results.addNameResult(new TNRSNameResult(queryString, matches));
         return results;
     }
-   
+    
     /**
      * Search for exact taxon name or synonym matches to names in `searchStrings` using the provided index.
      * 
      * @param searchStrings
      */
-    private void getExactMatches(String query, Index<Node> index) {
+    private void getExactMatches(String query, Index<Node> index, boolean labelExactMatches) {
 
     	TermQuery exactQuery = new TermQuery(new Term("name", query));
     	IndexHits<Node> hits = null;
@@ -336,7 +306,8 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	                matches.addMatch(new TNRSHit().
 	                        setMatchedTaxon(matchedTaxon).
 	                        setRank(matchedTaxon.getRank()).
-	                        setIsHomonym(isHomonym));
+	                        setIsHomonym(isHomonym).
+	                        setIsPerfectMatch(labelExactMatches));
             	}
             }
     	} finally {
