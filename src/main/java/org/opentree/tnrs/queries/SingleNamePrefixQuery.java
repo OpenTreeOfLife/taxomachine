@@ -27,6 +27,7 @@ import org.opentree.taxonomy.TaxonomyRelType;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.TaxonSet;
 import org.opentree.taxonomy.Taxonomy;
+import org.opentree.taxonomy.constants.TaxonomyProperty;
 import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
@@ -49,13 +50,24 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     private TNRSMatchSet matches;
     private HashMap<String, Boolean> homonyms;
     private HashSet<Node> matchedNodes;
+    private boolean includeDubious;
     
     private int minLengthForPrefixQuery;
     private final int minLengthForQuery = 2;
     
     private final int DEFAULT_MIN_LENGTH_FOR_PREFIX_QUERY = 3;
 
+    private Index<Node> speciesNodesByGenus;
+    private Index<Node> taxNodesByName;
+    private Index<Node> taxNodesByNameHigher;
+	private Index<Node> taxNodesByNameOrSynonymHigher;
+    private Index<Node> taxNodesByNameGenera;
+    private Index<Node> taxNodesByNameSpecies;
+    private Index<Node> taxNodesByNameOrSynonym;
+	private Index<Node> taxNodesBySynonym;
+    
     private Index<Node> prefSpeciesNodesByGenus;
+    private Index<Node> prefTaxNodesByName;
     private Index<Node> prefTaxNodesByNameHigher;
 	private Index<Node> prefTaxNodesByNameOrSynonymHigher;
     private Index<Node> prefTaxNodesByNameGenera;
@@ -65,11 +77,13 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	
     public SingleNamePrefixQuery(Taxonomy taxonomy) {
     	super(taxonomy);
+    	speciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.SPECIES_BY_GENUS);
     	prefSpeciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SPECIES_BY_GENUS);
     }
     
     public SingleNamePrefixQuery(Taxonomy taxonomy, TaxonomyContext context) {
     	super(taxonomy, context);
+    	speciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.SPECIES_BY_GENUS);
     	prefSpeciesNodesByGenus = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SPECIES_BY_GENUS);
     }
 
@@ -84,6 +98,15 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	this.queryString = queryString.toLowerCase();
     	return this;
     }
+    
+    /**
+     * Set the behavior whether or not to include suppressed taxa.
+     * @param includeDubious
+     */
+	public SingleNamePrefixQuery setIncludeDubiousTaxa(boolean includeDubious) {
+		this.includeDubious = includeDubious;
+		return this;
+	}
 
     /**
      * Set the context to be used by this query.
@@ -91,7 +114,17 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     @Override
     public SingleNamePrefixQuery setContext(TaxonomyContext c) {
     	super.setContext(c);
-        prefTaxNodesByNameHigher = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
+        
+    	taxNodesByName = this.context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
+    	taxNodesByNameHigher = this.context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_HIGHER);
+    	taxNodesByNameOrSynonymHigher = this.context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+        taxNodesByNameGenera = this.context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_GENERA);
+        taxNodesByNameSpecies = this.context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_SPECIES);
+        taxNodesByNameOrSynonym = this.context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
+        taxNodesBySynonym = this.context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
+        
+    	prefTaxNodesByName = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
+    	prefTaxNodesByNameHigher = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
     	prefTaxNodesByNameOrSynonymHigher = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
         prefTaxNodesByNameGenera = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_GENERA);
         prefTaxNodesByNameSpecies = this.context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_SPECIES);
@@ -144,12 +177,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     		String[] parts = queryString.split("\\s+",2);
 
 			// Hit it against the species index.
-			getExactMatches(escapedQuery, prefTaxNodesByNameSpecies, true);
+			getExactMatches(escapedQuery, includeDubious ? taxNodesByNameSpecies : prefTaxNodesByNameSpecies, true);
 			
 			if (matches.size() < 1) { // no exact hit against the species index
 				
     			// Hit the first word against the genus name index
-    			getExactMatches(QueryParser.escape(parts[0]), prefTaxNodesByNameGenera, true);
+    			getExactMatches(QueryParser.escape(parts[0]), includeDubious ? taxNodesByNameGenera : prefTaxNodesByNameGenera, true);
 
     			if (matches.size() > 0) { // the first word was an exact match against the genus index
     				
@@ -163,18 +196,20 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     				
     				// retrieve all the species/subspecific taxa in each matched genus (may be homonym)
     				for (TNRSMatch genusMatch : genusMatches) {
-	    				
-    					IndexHits<Node> speciesHits = prefSpeciesNodesByGenus.get("genus_uid", genusMatch.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
+
+    					Index<Node> nodeByGenusIndex = includeDubious ? speciesNodesByGenus : prefSpeciesNodesByGenus;
+    					IndexHits<Node> speciesHits = nodeByGenusIndex.get(TaxonomyProperty.PARENT_GENUS_OTT_ID.propertyName(), genusMatch.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
+
 	    				try {
 	    				
-		    				String genusName = String.valueOf(genusMatch.getMatchedNode().getProperty("name"));
+		    				String genusName = String.valueOf(genusMatch.getMatchedNode().getProperty(TaxonomyProperty.NAME.propertyName()));
 		    				char[] searchEpithet = parts[1].trim().toCharArray();
 		    				
 		    				// add any species to the results whose name matches the second search term prefix
 		    				for (Node sp : speciesHits) {
 		    					
 		    					// use substring position to get just the epithet of this species match
-		    					char[] hitName = String.valueOf(sp.getProperty("name")).substring(genusName.length()+1).toCharArray();
+		    					char[] hitName = String.valueOf(sp.getProperty(TaxonomyProperty.NAME.propertyName())).substring(genusName.length()+1).toCharArray();
 
 		    					// check if the epithet matches
 		    					boolean prefixMatch = true;
@@ -191,10 +226,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 		    						}
 		    					}
 		    					if (prefixMatch) {
-		    						matches.addMatch(new TNRSHit().
-		    								setMatchedTaxon(new Taxon(sp, taxonomy)).
-		    								setIsHomonym(isHomonym(String.valueOf(sp.getProperty("name")))).
-		    								setRank(String.valueOf(sp.getProperty("rank"))));
+		    						matches.addMatch(new TNRSHit()
+		    								.setMatchedTaxon(new Taxon(sp, taxonomy))
+		    								.setIsHomonym(isHomonym(String.valueOf(sp.getProperty(TaxonomyProperty.NAME.propertyName()))))
+		    								.setRank(String.valueOf(sp.getProperty(TaxonomyProperty.RANK.propertyName())))
+		    								.setIsDubious((Boolean) sp.getProperty(TaxonomyProperty.DUBIOUS.propertyName())))
+		    								;
 		    					}
 		    				}
 	    				} finally {
@@ -206,38 +243,38 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     			} else { // no exact hit for first word against the genus index
 
     				// Hit it against the synonym index and the higher taxon index
-	    			getExactMatches(escapedQuery, prefTaxNodesBySynonym, false);
-	    			getExactMatches(escapedQuery, prefTaxNodesByNameHigher, true);
+	    			getExactMatches(escapedQuery, includeDubious ? taxNodesBySynonym : prefTaxNodesBySynonym, false);
+	    			getExactMatches(escapedQuery, includeDubious ? taxNodesByNameHigher : prefTaxNodesByNameHigher, true);
 	    			
     				if (matches.size() < 1) {
     					
     					// Prefix query against the higher taxon index
-    					getPrefixMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher);
+    					getPrefixMatches(escapedQuery, includeDubious ? taxNodesByNameOrSynonymHigher : prefTaxNodesByNameOrSynonymHigher);
 
 	    				if (matches.size() < 1) {
 
 	    					// last resort: fuzzy match against entire index
-		    				getApproxMatches(escapedQuery, prefTaxNodesByNameOrSynonym);
+		    				getApproxMatches(escapedQuery, includeDubious ? taxNodesByNameOrSynonym : prefTaxNodesByNameOrSynonym);
 	    				}
     				}
     			}
 			}	
     	} else { // does not contain a space at all
 
-    		getExactMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher, true);
+    		getExactMatches(escapedQuery, includeDubious ? taxNodesByNameOrSynonymHigher : prefTaxNodesByNameOrSynonymHigher, true);
 
     		if (matches.size() < 1) {
 
     			// Do a prefix query against the higher taxon index
-    			getPrefixMatches(escapedQuery, prefTaxNodesByNameHigher);
+    			getPrefixMatches(escapedQuery, includeDubious ? taxNodesByNameHigher : prefTaxNodesByNameHigher);
 
     			if (matches.size() < 1) {
 
     				// Do a prefix query against the all taxa synonym index
-    				getPrefixMatches(escapedQuery, prefTaxNodesBySynonym);
+    				getPrefixMatches(escapedQuery, includeDubious ? taxNodesBySynonym : prefTaxNodesBySynonym);
     				
     				if (matches.size() < 1) {
-    					getApproxMatches(escapedQuery, prefTaxNodesByNameOrSynonymHigher);
+    					getApproxMatches(escapedQuery, includeDubious ? taxNodesByNameOrSynonymHigher : prefTaxNodesByNameOrSynonymHigher);
     				}
     			}
     		}
@@ -261,16 +298,16 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     		throw new IllegalArgumentException("cannot perform query on less than " + minLengthForQuery + " characters");
     	}
     	
-    	getExactMatches(queryString, prefTaxNodesByNameOrSynonym, true);
+    	getExactMatches(queryString, includeDubious ? taxNodesByNameOrSynonym : prefTaxNodesByNameOrSynonym, true);
     
     	if (queryString.length() >= minLengthForPrefixQuery) {
-        	getPrefixMatches(queryString, prefTaxNodesByNameOrSynonym);
+        	getPrefixMatches(queryString, includeDubious ? taxNodesByNameOrSynonym : prefTaxNodesByNameOrSynonym);
     	}
 
     	// only do fuzzy queries if we haven't matched anything: they are slow!
 		if (matches.size() < 1) {
     		// attempt fuzzy query
-    		getApproxMatches(queryString, prefTaxNodesByNameOrSynonym);
+    		getApproxMatches(queryString, includeDubious ? taxNodesByNameOrSynonym : prefTaxNodesByNameOrSynonym);
 		}
     	
     	return this;
@@ -303,11 +340,12 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
             	if (matchedNodes.contains(hit) == false) {
 	            	matchedNodes.add(hit);
 	                Taxon matchedTaxon = taxonomy.getTaxon(hit);
-	                matches.addMatch(new TNRSHit().
-	                        setMatchedTaxon(matchedTaxon).
-	                        setRank(matchedTaxon.getRank()).
-	                        setIsHomonym(isHomonym).
-	                        setIsPerfectMatch(labelExactMatches));
+	                matches.addMatch(new TNRSHit()
+	                        .setMatchedTaxon(matchedTaxon)
+	                        .setRank(matchedTaxon.getRank())
+	                        .setIsHomonym(isHomonym)
+	                        .setIsPerfectMatch(labelExactMatches)
+	                        .setIsDubious((Boolean) matchedTaxon.getNode().hasProperty(TaxonomyProperty.DUBIOUS.propertyName())));
             	}
             }
     	} finally {
@@ -335,10 +373,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
             	if (matchedNodes.contains(hit) == false) {
 	            	matchedNodes.add(hit);
 	                Taxon matchedTaxon = taxonomy.getTaxon(hit);
-	                matches.addMatch(new TNRSHit().
-	                        setMatchedTaxon(matchedTaxon).
-	                        setRank(matchedTaxon.getRank()).
-	                        setIsHomonym(isHomonym(matchedTaxon.getName())));
+	                matches.addMatch(new TNRSHit()
+	                        .setMatchedTaxon(matchedTaxon)
+	                        .setRank(matchedTaxon.getRank())
+	                        .setIsHomonym(isHomonym(matchedTaxon.getName()))
+	                        .setIsDubious((Boolean) matchedTaxon.getNode().hasProperty(TaxonomyProperty.DUBIOUS.propertyName())));
             	}
             }
     	} finally {
@@ -363,10 +402,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
             	if (matchedNodes.contains(hit) == false) {
 	            	matchedNodes.add(hit);
 	                Taxon matchedTaxon = taxonomy.getTaxon(hit);
-	                matches.addMatch(new TNRSHit().
-	                        setMatchedTaxon(matchedTaxon).
-	                        setRank(matchedTaxon.getRank()).
-	                        setIsHomonym(isHomonym(matchedTaxon.getName())));
+	                matches.addMatch(new TNRSHit()
+	                        .setMatchedTaxon(matchedTaxon)
+	                        .setRank(matchedTaxon.getRank())
+	                        .setIsHomonym(isHomonym(matchedTaxon.getName()))
+	                        .setIsDubious((Boolean) matchedTaxon.getNode().hasProperty(TaxonomyProperty.DUBIOUS.propertyName())));
             	}
             }
         } finally {
@@ -390,8 +430,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	} else {
 	    	IndexHits<Node> hits = null;
 	    	try {
-	    		hits = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME).
-	    				query("name", name);
+	    		hits = (includeDubious ? taxNodesByName : prefTaxNodesByName).query("name", name);
 		        if (hits.size() > 1) {
 		            isHomonym = true;
 		        }

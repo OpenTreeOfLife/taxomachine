@@ -119,10 +119,12 @@ public class Taxonomy {
 	public static boolean isSpecific(String rank) {
 		
 		boolean isSpecific = false;
-		for (String specificRank : SPECIFIC_RANKS) {
-			if (rank.equals(specificRank)) {
-				isSpecific = true;
-				break;
+		if (rank != null) {
+			for (String specificRank : SPECIFIC_RANKS) {
+				if (rank.equals(specificRank)) {
+					isSpecific = true;
+					break;
+				}
 			}
 		}
 		

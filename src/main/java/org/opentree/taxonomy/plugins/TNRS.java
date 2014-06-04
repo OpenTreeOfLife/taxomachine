@@ -116,14 +116,26 @@ public class TNRS extends ServerPlugin {
     private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
 		map.put(property, node.getProperty(property));
     }
-    
-    @Description("Find taxonomic names matching the passed in prefix. Optimized for use with autocomplete boxes on webforms.")
+
+    @Description("DEPRECATED. An alias to service \"autocompleteQuery\". Please transition your applications to that service; this one will eventually be removed.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation autocompleteBoxQuery(
             @Source GraphDatabaseService graphDb,
             @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
     		@Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException, ParseException {
+    	return(autocompleteQuery(graphDb, queryString, contextName, false));
+	}
 
+    @Description("Find taxonomic names matching the passed in prefix. Optimized for use with autocomplete boxes on webforms.")
+    @PluginTarget(GraphDatabaseService.class)
+    public Representation autocompleteQuery(
+            @Source GraphDatabaseService graphDb,
+            @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
+    		@Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName,
+    		@Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false.") @Parameter(name="includeDubious", optional = true) Boolean includeDubious) throws ContextNotFoundException, ParseException {
+
+    	includeDubious = includeDubious == null ? false : true;
+    	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
         
@@ -134,6 +146,7 @@ public class TNRS extends ServerPlugin {
         }
 
         SingleNamePrefixQuery query = new SingleNamePrefixQuery(taxonomy, context);
+        query.setIncludeDubiousTaxa(includeDubious);
         TNRSResults results = query.setQueryString(queryString).runQuery().getResults();
 
         // return results if they exist, 

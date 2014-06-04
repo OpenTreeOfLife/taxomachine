@@ -26,29 +26,44 @@ public enum TaxonomyNodeIndex implements NodeIndexDescription {
 	// all taxon indexes
 	
 	/** Records all taxa. Field is "name" and key is taxon name. */
-    TAXON_BY_NAME               ("taxNodesByName"),         // all taxon nodes by name
+    TAXON_BY_NAME               ("taxNodesByName"),
+
+    /** Records all taxa of species or equivalent (incl. lower) rank. Field is "name" and key is taxon name. */
+    TAXON_BY_NAME_SPECIES		("taxNodesByNameSpecies"),
+    
+    /** Records all taxa of generic rank. Field is "name" and key is taxon name. */
+    TAXON_BY_NAME_GENERA		("taxNodesByNameGenera"),
+
+    /** Records all taxa of rank higher than species. Field is "name" and key is taxon name. */
+    TAXON_BY_NAME_HIGHER		("taxNodesByNameHigher"),
 
 	/** Records all taxa. Field is "ot:ottolId" and key is ott id. */
-    TAXON_BY_OTT_ID 			("taxNodesByOTTId"),         // all taxon nodes by name
+    TAXON_BY_OTT_ID 			("taxNodesByOTTId"),
 
 	/** Records all taxa. Field is "name" and key is synonymous name. */
-    TAXON_BY_SYNONYM            ("taxNodesBySyn"),          // all taxon nodes by synonym
+    TAXON_BY_SYNONYM            ("taxNodesBySyn"),
     
     /** Records all taxa. Field is "name", key is taxon name or synonymous name. */
-    TAXON_BY_NAME_OR_SYNONYM            ("taxNodesByNameOrSyn"),          // all taxon nodes by name or synonym
+    TAXON_BY_NAME_OR_SYNONYM            ("taxNodesByNameOrSyn"),
+
+    /** Records all taxa of rank higher than species. Field is "name", key is taxon name or synonymous name. */
+    TAXON_BY_NAME_OR_SYNONYM_HIGHER            ("taxNodesByNameOrSynHigher"),
 
     /** Records all taxa. Field is "rank" and key is taxon rank. */
     TAXON_BY_RANK					 ("taxNodesByRank"),
 
+    /** Records species and infraspecific ranks. Field is TaxonomyProperty.PARENT_GENUS_OTT_ID and key is the ott id of the enclosing genus. */
+    SPECIES_BY_GENUS		("speciesNodesByGenus"),
+    
     /** Records all taxa. Field is "flag" and key is flag name. */
-    TAXON_BY_FLAG					("taxNodesByFlag"),
-
+    TAXON_BY_FLAG					("taxNodesByFlag"),    
+    
     // preferred taxon indexes
     
     /** Records preferred taxa. Field is "rank" and key is taxon rank. */
     PREFERRED_TAXON_BY_RANK			 ("prexTaxNodesByRank"),
-    
-    /** Records species and infraspecific ranks. Field is "genus_uid" and key is the ott id of the enclosing genus. */
+
+    /** Records species and infraspecific ranks. Field is TaxonomyProperty.PARENT_GENUS_OTT_ID and key is the ott id of the enclosing genus. */
     PREFERRED_SPECIES_BY_GENUS		("prefSpeciesNodesByGenus"),
     
     // all ranks
@@ -108,7 +123,9 @@ public enum TaxonomyNodeIndex implements NodeIndexDescription {
     
     /** Not used. Not clear what this is for. If this becomes used, please document what it is for. */
     @Deprecated
-    TAXON_UNIQID				("taxUniqId");
+    TAXON_UNIQID				("taxUniqId"),
+    
+    ;
 
     public final String namePrefix;
 

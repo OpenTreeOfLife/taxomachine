@@ -24,6 +24,7 @@ public class TNRSHit {
     boolean isPerfectMatch;
     boolean isApprox;
     boolean isSynonym;
+    boolean isDubious;
     String rank;
     boolean nameStatusIsKnown;
     HashMap<String,String> otherData;
@@ -38,6 +39,7 @@ public class TNRSHit {
         isPerfectMatch = false;
         isApprox = false;
         isSynonym = false;
+        isDubious = false;
         rank = "";
         nameStatusIsKnown = true;
         otherData = null;
@@ -66,6 +68,11 @@ public class TNRSHit {
     
     public TNRSHit setIsHomonym(boolean isHomonym) {
         this.isHomonym = isHomonym;
+        return this;
+    }
+    
+    public TNRSHit setIsDubious(boolean isDubious) {
+        this.isDubious = isDubious;
         return this;
     }
     

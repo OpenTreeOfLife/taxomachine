@@ -587,7 +587,7 @@ public class MainRunner {
     public static void main(String[] args) {
 
         PropertyConfigurator.configure(System.getProperties());
-        System.out.println("\ntaxomachine version alpha.alpha.prealpha");
+        System.out.println("\ntaxomachine version 0.0.0.0.0.0.1 pre-alpha");
         // read the max # of database transactions to be buffered from a system property
         String numTransactionsProperty = System.getProperty("opentree.taxomachine.num.transactions");
         if (numTransactionsProperty != null) {
