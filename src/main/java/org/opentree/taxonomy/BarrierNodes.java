@@ -35,14 +35,14 @@ public final class BarrierNodes {
     private static final HashMap<String, Nomenclature> barrierCladeNameToNomenclatureMap = new HashMap<String, Nomenclature>() {
         private static final long serialVersionUID = 1L;
         {
-            put("Fungi",Nomenclature.ICBN);
-            put("Viridiplantae",Nomenclature.ICBN);
+            put("Fungi",Nomenclature.ICN);
+            put("Viridiplantae",Nomenclature.ICN);
             put("Bacteria",Nomenclature.ICNP);
             put("Metazoa",Nomenclature.ICZN);
-            put("Alveolata",Nomenclature.ICBN);
-            put("Rhodophyta",Nomenclature.ICBN);
-            put("Glaucocystophyceae",Nomenclature.ICBN);
-            put("Haptophyceae",Nomenclature.ICBN);
+            put("Alveolata",Nomenclature.ICN);
+            put("Rhodophyta",Nomenclature.ICN);
+            put("Glaucocystophyceae",Nomenclature.ICN);
+            put("Haptophyceae",Nomenclature.ICN);
             put("Choanoflagellida",Nomenclature.ICZN);
             //maybe add Protostomia, see Heterochaeta in ncbi
         }

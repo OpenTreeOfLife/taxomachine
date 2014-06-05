@@ -31,7 +31,7 @@ public enum ContextDescription {
     CENTROHELIDA		("Centrohelida",	ContextGroup.MICROBES,	"Centrohelida",		"Centrohelida",		Nomenclature.ICZN),
     HAPTOPHYTA			("Haptophyta",		ContextGroup.MICROBES,	"Haptophyta",		"Haptophyta",		Nomenclature.Undefined),
     APUSOZOA			("Apusozoa",		ContextGroup.MICROBES,	"Apusozoa",			"Apusozoa",			Nomenclature.ICZN),
-    DIATOMS				("Diatoms",			ContextGroup.MICROBES,	"Diatoms",			"Bacillariophyta",	Nomenclature.ICBN),
+    DIATOMS				("Diatoms",			ContextGroup.MICROBES,	"Diatoms",			"Bacillariophyta",	Nomenclature.ICN),
     CILIATES			("Ciliates",		ContextGroup.MICROBES,	"Ciliates",			"Ciliophora",		Nomenclature.Undefined),
     FORAMS				("Forams",			ContextGroup.MICROBES,	"Forams",			"Foraminifera",		Nomenclature.ICZN),
 
@@ -53,23 +53,23 @@ public enum ContextDescription {
     INSECTS             ("Insects",         ContextGroup.ANIMALS,   "Insects",          "Insecta",          Nomenclature.ICZN),
 
     // FUNGI group
-    FUNGI               ("Fungi",           ContextGroup.FUNGI,     "Fungi",            "Fungi",            Nomenclature.ICBN),
+    FUNGI               ("Fungi",           ContextGroup.FUNGI,     "Fungi",            "Fungi",            Nomenclature.ICN),
     
     // PLANTS group
-    LAND_PLANTS         ("Land plants",     ContextGroup.PLANTS,    "Plants",           "Embryophyta",      Nomenclature.ICBN),
-    HORNWORTS           ("Hornworts",       ContextGroup.PLANTS,    "Anthocerotophyta", "Anthocerotophyta", Nomenclature.ICBN),
-    MOSSES              ("Mosses",          ContextGroup.PLANTS,    "Bryophyta",        "Bryophyta",        Nomenclature.ICBN),
-    LIVERWORTS          ("Liverworts",      ContextGroup.PLANTS,    "Marchantiophyta",  "Marchantiophyta",  Nomenclature.ICBN),
-    VASCULAR_PLANTS     ("Vascular plants", ContextGroup.PLANTS,    "Tracheophyta",     "Tracheophyta",     Nomenclature.ICBN),
-    LYCOPHYTES          ("Club mosses",     ContextGroup.PLANTS,    "Lycopodiophyta",   "Lycopodiophyta",   Nomenclature.ICBN),
-    FERNS               ("Ferns",           ContextGroup.PLANTS,    "Moniliformopses",  "Moniliformopses",  Nomenclature.ICBN),
-    SEED_PLANTS         ("Seed plants",     ContextGroup.PLANTS,    "Spermatophyta",    "Spermatophyta",    Nomenclature.ICBN),
-    FLOWERING_PLANTS    ("Flowering plants",ContextGroup.PLANTS,    "Magnoliophyta",    "Magnoliophyta",    Nomenclature.ICBN),
+    LAND_PLANTS         ("Land plants",     ContextGroup.PLANTS,    "Plants",           "Embryophyta",      Nomenclature.ICN),
+    HORNWORTS           ("Hornworts",       ContextGroup.PLANTS,    "Anthocerotophyta", "Anthocerotophyta", Nomenclature.ICN),
+    MOSSES              ("Mosses",          ContextGroup.PLANTS,    "Bryophyta",        "Bryophyta",        Nomenclature.ICN),
+    LIVERWORTS          ("Liverworts",      ContextGroup.PLANTS,    "Marchantiophyta",  "Marchantiophyta",  Nomenclature.ICN),
+    VASCULAR_PLANTS     ("Vascular plants", ContextGroup.PLANTS,    "Tracheophyta",     "Tracheophyta",     Nomenclature.ICN),
+    LYCOPHYTES          ("Club mosses",     ContextGroup.PLANTS,    "Lycopodiophyta",   "Lycopodiophyta",   Nomenclature.ICN),
+    FERNS               ("Ferns",           ContextGroup.PLANTS,    "Moniliformopses",  "Moniliformopses",  Nomenclature.ICN),
+    SEED_PLANTS         ("Seed plants",     ContextGroup.PLANTS,    "Spermatophyta",    "Spermatophyta",    Nomenclature.ICN),
+    FLOWERING_PLANTS    ("Flowering plants",ContextGroup.PLANTS,    "Magnoliophyta",    "Magnoliophyta",    Nomenclature.ICN),
 //    MAGNOLIIDS          ("Magnoliids",      ContextGroup.PLANTS,    "Magnoliids",       "magnoliids",       Nomenclature.ICBN), // apparently the name 'magnoliids' no longer exists
-    MONOCOTS            ("Monocots",        ContextGroup.PLANTS,    "Monocots",         "Liliopsida",       Nomenclature.ICBN),
-    EUDICOTS            ("Eudicots",        ContextGroup.PLANTS,    "Eudicots",         "eudicotyledons",   Nomenclature.ICBN),
-    ASTERIDS            ("Asterids",        ContextGroup.PLANTS,    "Asterids",         "asterids",         Nomenclature.ICBN),
-    ROSIDS              ("Rosids",          ContextGroup.PLANTS,    "Rosids",           "rosids",           Nomenclature.ICBN);
+    MONOCOTS            ("Monocots",        ContextGroup.PLANTS,    "Monocots",         "Liliopsida",       Nomenclature.ICN),
+    EUDICOTS            ("Eudicots",        ContextGroup.PLANTS,    "Eudicots",         "eudicotyledons",   Nomenclature.ICN),
+    ASTERIDS            ("Asterids",        ContextGroup.PLANTS,    "Asterids",         "asterids",         Nomenclature.ICN),
+    ROSIDS              ("Rosids",          ContextGroup.PLANTS,    "Rosids",           "rosids",           Nomenclature.ICN);
     
     public final String name;
     public final ContextGroup group;

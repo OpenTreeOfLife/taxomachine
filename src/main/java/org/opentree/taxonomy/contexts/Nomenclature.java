@@ -2,8 +2,8 @@ package org.opentree.taxonomy.contexts;
 
 public enum Nomenclature {
 //  Name         code       description    
-    ICBN        ("ICBN",    "plants, fungi, and some protists?"),
-    ICNP        ("ICNB",    "bacteria"),
+    ICN        ("ICN",    "plants, fungi, and some protists?"),
+    ICNP        ("ICNP",    "bacteria"),
     ICZN        ("ICZN",    "animals"),
     Undefined   ("undefined",        "governing code unclear, nonexistent, or multiple codes");
     
