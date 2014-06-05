@@ -24,16 +24,16 @@ public enum ContextDescription {
 
     // MICROBES group
     BACTERIA            ("Bacteria",        ContextGroup.MICROBES,  "Bacteria",         "Bacteria",         Nomenclature.ICNB),
-    SAR					("SAR group"
-    Archaea				()
-    Excavata			()
-    Amoebozoa			("Amoebozoans")
-    Centrohelida		()
-    Haptophyta			()
-    Apusozoa			()
-    Bacillariophyta		("Diatoms")
-    Ciliophora			("Ciliates",		ContextGroup.MICROBES,	"Ciliates",			"Cilioophora",			Nomenclature.Undefined),
-    Foraminifera		("Foraminifera",	ContextGroup.MICROBES,	"Forams",			"Foraminifera")
+    SAR					("SAR group",		ContextGroup.MICROBES,	"SAR",				"SAR",				Nomenclature.Undefined),
+//  ARCHAEA				("Archaea",			ContextGroup.MICROBES,	"Archaea",			"Archaea",			Nomenclature.Undefined), // I don't think this name is unique
+    EXCAVATA			("Excavata",		ContextGroup.MICROBES,	"Excavata",			"Excavata",			Nomenclature.Undefined),
+    AMOEBAE				("Amoebae",			ContextGroup.MICROBES,	"Amoebae",			"Amoebozoa",		Nomenclature.Undefined),
+    CENTROHELIDA		("Centrohelida",	ContextGroup.MICROBES,	"Centrohelida",		"Centrohelida",		Nomenclature.Undefined),
+    HAPTOPHYTA			("Haptophyta",		ContextGroup.MICROBES,	"Haptophyta",		"Haptophyta",		Nomenclature.Undefined),
+    APUSOZOA			("Apusozoa",		ContextGroup.MICROBES,	"Apusozoa",			"Apusozoa",			Nomenclature.Undefined),
+    DIATOMS				("Diatoms",			ContextGroup.MICROBES,	"Diatoms",			"Bacillariophyta",	Nomenclature.Undefined),
+    CILIATES			("Ciliates",		ContextGroup.MICROBES,	"Ciliates",			"Ciliophora",		Nomenclature.Undefined),
+    FORAMS				("Forams",			ContextGroup.MICROBES,	"Forams",			"Foraminifera",		Nomenclature.Undefined),
 
     // ANIMALS group
     METAZOA             ("Animals",         ContextGroup.ANIMALS,   "Animals",          "Metazoa",          Nomenclature.ICZN),
