@@ -26,6 +26,16 @@ public enum TaxonomyProperty implements OTPropertyPredicate {
 	 */
 	PARENT_GENUS_OTT_ID ("parent_genus_ott_id", Long.class),
 	
+	/**
+	 * For deprecated taxa; the reason for deprecation (or generally, could be used for any other purpose).
+	 */
+	REASON ("reason", String.class),
+
+	/**
+	 * The original source information for this taxon.
+	 */
+	SOURCE_INFO ("source_info", String.class),
+
 	;
 
 	private String propertyName;

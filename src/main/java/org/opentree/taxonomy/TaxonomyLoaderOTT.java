@@ -25,6 +25,7 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.OTTFlag;
+import org.opentree.taxonomy.constants.TaxonomyProperty;
 import org.opentree.taxonomy.contexts.Nomenclature;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
@@ -71,6 +72,9 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	Index<Node> prefTaxaByRank;	
 	Index<Node> prefTaxaByNameGenera;
 	Index<Node> prefTaxaByNameSpecies;
+	
+	// deprecated taxa
+	Index<Node> deprecatedTaxa = graphDb.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA.indexName());
 	
 	HashMap<String, Node> dbnodes = new HashMap<String, Node>();
 	HashMap<String, String> parents = new HashMap<String, String>();
@@ -132,6 +136,47 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		this.buildPreferredRels = buildPreferredRels;
 	}
 
+	public void loadDeprecatedTaxa(String deprectatedFile) {
+		
+		Transaction tx = graphDb.beginTx();
+
+		Node deprecatedContainerNode = graphDb.createNode();
+		deprecatedContainerNode.setProperty("name", "deprecated taxa");
+
+		int n = 0;
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(deprectatedFile));
+			String curStr;
+			while ((curStr = reader.readLine()) != null) {
+				StringTokenizer tokenizer = new StringTokenizer(curStr, "\t");
+				Long id = Long.valueOf(tokenizer.nextToken());
+				String name = tokenizer.nextToken();
+				String reason = tokenizer.nextToken();
+				String sourceInfo = tokenizer.nextToken();
+				
+				Node d = graphDb.createNode();
+				d.createRelationshipTo(deprecatedContainerNode, TaxonomyRelType.CONTAINEDBY);
+				d.setProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+				d.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), id);
+				d.setProperty(TaxonomyProperty.REASON.propertyName(), reason);
+				d.setProperty(TaxonomyProperty.SOURCE_INFO.propertyName(), sourceInfo);
+				
+				deprecatedTaxa.add(deprecatedContainerNode, TaxonomyProperty.NAME.propertyName(), name);
+				deprecatedTaxa.add(deprecatedContainerNode, OTVocabularyPredicate.OT_OTT_ID.propertyName(), id);
+
+				n++;
+			}
+			reader.close();
+			tx.success();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		tx.finish();
+		System.out.println("added " + n + " deprecated ids to the database.");
+	}
+	
 	/**
 	 * Just a wrapper for the no synonyms case. See javadoc for this method with the synonyms option for full description.
 	 * @param sourcename

@@ -83,40 +83,6 @@ public class TNRS extends ServerPlugin {
     	
     }
     
-    @Description("Get information about a recognized taxon.")
-    @PluginTarget(GraphDatabaseService.class)
-    public Representation getTaxonInfo(
-    		@Source GraphDatabaseService graphDb,
-    		@Description("The OTT id of the taxon of interest.") @Parameter(name="ottId", optional=false) Long ottId) {
-    	
-    	HashMap<String, Object> results = new HashMap<String, Object>();
-    	
-    	Taxonomy t = new Taxonomy(graphDb);
-    	Taxon match = t.getTaxonForOTTId(ottId);
-    	
-    	if (match != null) {
-		addPropertyFromNode(match.getNode(), "name", results);
-    		addPropertyFromNode(match.getNode(), "rank", results);
-    		addPropertyFromNode(match.getNode(), "source", results);
-    		addPropertyFromNode(match.getNode(), "uniqname", results);
-    		addPropertyFromNode(match.getNode(), OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
-    		results.put("node_id", match.getNode().getId());
-    	
-    		HashSet<String> synonyms = new HashSet<String>();
-	    	for (Node n : match.getSynonymNodes()) {
-	    		synonyms.add((String) n.getProperty("name"));
-	    	}
-	    	results.put("synonyms", synonyms);
-    	
-    	}
-
-    	return OTRepresentationConverter.convert(results);
-    }
-    
-    private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
-		map.put(property, node.getProperty(property));
-    }
-
     @Description("DEPRECATED. An alias to service \"autocompleteQuery\". Please transition your applications to that service; this one will eventually be removed.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation autocompleteBoxQuery(
@@ -305,6 +271,7 @@ public class TNRS extends ServerPlugin {
         }
 
         // parse the include dubious. we use a string because we can't do a null comparison on a boolean
+        // TODO: fix this, update so it actually works with the new indexes
         boolean includeDubious = false;
         if (includeDubiousStr != null) {
         	if (includeDubiousStr.equalsIgnoreCase("true")) {
@@ -317,7 +284,6 @@ public class TNRS extends ServerPlugin {
         }
 
         MultiNameContextQuery mncq = new MultiNameContextQuery(taxonomy);
-//        HashSet<String> namesSet = Utils.stringArrayToHashset(searchStrings);
         TNRSResults results = mncq.
         		setSearchStrings(idNameMap).
         		setContext(context).

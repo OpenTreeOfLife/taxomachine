@@ -125,6 +125,8 @@ public enum TaxonomyNodeIndex implements NodeIndexDescription {
     @Deprecated
     TAXON_UNIQID				("taxUniqId"),
     
+    DEPRECATED_TAXA				("deprecatedTaxa"),
+    
     ;
 
     public final String namePrefix;

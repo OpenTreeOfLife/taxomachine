@@ -46,13 +46,25 @@ public class MainRunner {
     public void taxonomyLoadParser(String[] args) throws FileNotFoundException, IOException {
 
         String graphname = "";
+        String sourcename = "";
+        String filename = "";
         String synonymfile = "";
-        if (args[0].equals("inittax") || args[0].equals("addtax")) {
-            if (args.length != 4) {
+        if (args[0].equals("adddeprecated")) {
+            if (args.length != 3) {
                 System.out
-                        .println("arguments should be: sourcename filename graphdbfolder\n or (for the inittax command only) you can also use:\n source-properties-file filename graphdbfolder");
+                        .println("arguments should be: filename graphdbfolder\n");
                 return;
             } else {
+                filename = args[1];
+                graphname = args[2];
+            }
+        } else if (args[0].equals("inittax") || args[0].equals("addtax")) {
+            if (args.length != 4) {
+                System.out.println("arguments should be: sourcename filename graphdbfolder\n or (for the inittax command only) you can also use:\n source-properties-file filename graphdbfolder");
+                return;
+            } else {
+                sourcename = args[1];
+                filename = args[2];
                 graphname = args[3];
             }
         } else if (args[0].equals("inittaxsyn") || args[0].equals("addtaxsyn") || args[0].equals("loadtaxsyn")) {
@@ -60,12 +72,12 @@ public class MainRunner {
                 System.out.println("arguments should be: sourcename filename synonymfile graphdbfolder");
                 return;
             } else {
+                sourcename = args[1];
+                filename = args[2];
                 synonymfile = args[3];
                 graphname = args[4];
             }
         }
-        String sourcename = args[1];
-        String filename = args[2];
 
         taxdb = new GraphDatabaseAgent(graphname);
         TaxonomyLoaderPreottol tld = new TaxonomyLoaderPreottol(taxdb);
@@ -119,7 +131,7 @@ public class MainRunner {
             tld.verifyLoadedTaxonomy(sourcename);
             
 
-        // ===================================== current method using ott taxonomy from smasher
+        // ===================================== current methods using ott taxonomy from smasher
             
         } else if (args[0].equals("loadtaxsyn")) { 
             System.out.println("loading taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
@@ -128,9 +140,10 @@ public class MainRunner {
             tlo.setCreateOTTIdIndexes(true);
             tlo.setbuildPreferredIndexes(true);
             tlo.loadOTTIntoGraph(sourcename, filename, synonymfile);
-//            System.out.println("verifying taxonomy");
-//            tlo.verifyLoadedTaxonomy(sourcename);
 
+        } else if (args[0].equals("adddeprecated")) { 
+            System.out.println("adding deprecated taxa from " + filename + " to " + graphname);
+            tlo.loadDeprecatedTaxa(filename);
         
         // ================= other
             
@@ -551,6 +564,7 @@ public class MainRunner {
         System.out.println("---taxonomy---");
         System.out.println("\tinittax <sourcename> <filename> <graphdbfolder> (initializes the tax graph with a tax list)");
         System.out.println("\taddtax <sourcename> <filename> <graphdbfolder> (adds a tax list into the tax graph)");
+        System.out.println("\tadddeprecated <filename> <graphdbfolder> (adds the deprecated taxa in the file to the graph)");
         System.out.println("\tinittaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (initializes the tax graph with a list and synonym file)");
         System.out.println("\tloadtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (load ott from the files created in opentree)");
         System.out.println("\taddtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (adds a tax list and synonym file)");
@@ -623,6 +637,7 @@ public class MainRunner {
 
                 if (args[0].equals("inittax")
                         || args[0].equals("addtax")
+                        || args[0].equals("adddeprecated")
                         || args[0].equals("inittaxsyn")
                         || args[0].equals("addtaxsyn")
                         || args[0].equals("loadtaxsyn")) {
