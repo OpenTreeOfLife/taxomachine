@@ -17,23 +17,23 @@ import org.opentree.taxonomy.contexts.ContextGroup;
  */
 public enum ContextDescription {
 
-    /* *** NOTE: names must be unique! */
+    /* *** NOTE: names must be unique!  TODO: use ott ids instead of names, to avoid this... */
 
     // Enum name         Name ***           Group                   Index suffix        Node name string    Nomenclature
     ALLTAXA             ("All life",        ContextGroup.LIFE,      "",                 "life",             Nomenclature.Undefined),
 
     // MICROBES group
-    BACTERIA            ("Bacteria",        ContextGroup.MICROBES,  "Bacteria",         "Bacteria",         Nomenclature.ICNB),
+    BACTERIA            ("Bacteria",        ContextGroup.MICROBES,  "Bacteria",         "Bacteria",         Nomenclature.ICNP),
     SAR					("SAR group",		ContextGroup.MICROBES,	"SAR",				"SAR",				Nomenclature.Undefined),
-//  ARCHAEA				("Archaea",			ContextGroup.MICROBES,	"Archaea",			"Archaea",			Nomenclature.Undefined), // I don't think this name is unique
+//  ARCHAEA				("Archaea",			ContextGroup.MICROBES,	"Archaea",			"Archaea",			Nomenclature.ICNP), // I don't think this name is unique
     EXCAVATA			("Excavata",		ContextGroup.MICROBES,	"Excavata",			"Excavata",			Nomenclature.Undefined),
-    AMOEBAE				("Amoebae",			ContextGroup.MICROBES,	"Amoebae",			"Amoebozoa",		Nomenclature.Undefined),
-    CENTROHELIDA		("Centrohelida",	ContextGroup.MICROBES,	"Centrohelida",		"Centrohelida",		Nomenclature.Undefined),
+    AMOEBAE				("Amoebae",			ContextGroup.MICROBES,	"Amoebae",			"Amoebozoa",		Nomenclature.ICZN),
+    CENTROHELIDA		("Centrohelida",	ContextGroup.MICROBES,	"Centrohelida",		"Centrohelida",		Nomenclature.ICZN),
     HAPTOPHYTA			("Haptophyta",		ContextGroup.MICROBES,	"Haptophyta",		"Haptophyta",		Nomenclature.Undefined),
-    APUSOZOA			("Apusozoa",		ContextGroup.MICROBES,	"Apusozoa",			"Apusozoa",			Nomenclature.Undefined),
-    DIATOMS				("Diatoms",			ContextGroup.MICROBES,	"Diatoms",			"Bacillariophyta",	Nomenclature.Undefined),
+    APUSOZOA			("Apusozoa",		ContextGroup.MICROBES,	"Apusozoa",			"Apusozoa",			Nomenclature.ICZN),
+    DIATOMS				("Diatoms",			ContextGroup.MICROBES,	"Diatoms",			"Bacillariophyta",	Nomenclature.ICBN),
     CILIATES			("Ciliates",		ContextGroup.MICROBES,	"Ciliates",			"Ciliophora",		Nomenclature.Undefined),
-    FORAMS				("Forams",			ContextGroup.MICROBES,	"Forams",			"Foraminifera",		Nomenclature.Undefined),
+    FORAMS				("Forams",			ContextGroup.MICROBES,	"Forams",			"Foraminifera",		Nomenclature.ICZN),
 
     // ANIMALS group
     METAZOA             ("Animals",         ContextGroup.ANIMALS,   "Animals",          "Metazoa",          Nomenclature.ICZN),
