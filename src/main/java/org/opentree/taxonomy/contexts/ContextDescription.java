@@ -22,8 +22,18 @@ public enum ContextDescription {
     // Enum name         Name ***           Group                   Index suffix        Node name string    Nomenclature
     ALLTAXA             ("All life",        ContextGroup.LIFE,      "",                 "life",             Nomenclature.Undefined),
 
-    // BACTERIA group
-    BACTERIA            ("Bacteria",        ContextGroup.BACTERIA,  "Bacteria",         "Bacteria",         Nomenclature.ICNB),
+    // MICROBES group
+    BACTERIA            ("Bacteria",        ContextGroup.MICROBES,  "Bacteria",         "Bacteria",         Nomenclature.ICNB),
+    SAR					("SAR group"
+    Archaea				()
+    Excavata			()
+    Amoebozoa			("Amoebozoans")
+    Centrohelida		()
+    Haptophyta			()
+    Apusozoa			()
+    Bacillariophyta		("Diatoms")
+    Ciliophora			("Ciliates",		ContextGroup.MICROBES,	"Ciliates",			"Cilioophora",			Nomenclature.Undefined),
+    Foraminifera		("Foraminifera",	ContextGroup.MICROBES,	"Forams",			"Foraminifera")
 
     // ANIMALS group
     METAZOA             ("Animals",         ContextGroup.ANIMALS,   "Animals",          "Metazoa",          Nomenclature.ICZN),
