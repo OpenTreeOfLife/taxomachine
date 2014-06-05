@@ -136,16 +136,21 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		this.buildPreferredRels = buildPreferredRels;
 	}
 
-	public void loadDeprecatedTaxa(String deprectatedFile) {
+	public void loadDeprecatedTaxa(String deprecatedFile) {
 		
 		Transaction tx = graphDb.beginTx();
-
+		
 		Node deprecatedContainerNode = graphDb.createNode();
 		deprecatedContainerNode.setProperty("name", "deprecated taxa");
+		
+		Node lifeNode = getLifeNode();
+		if (lifeNode != null) {
+			deprecatedContainerNode.createRelationshipTo(lifeNode, TaxonomyRelType.CONTAINEDBY);
+		}
 
 		int n = 0;
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(deprectatedFile));
+			BufferedReader reader = new BufferedReader(new FileReader(deprecatedFile));
 			String curStr;
 			while ((curStr = reader.readLine()) != null) {
 				StringTokenizer tokenizer = new StringTokenizer(curStr, "\t");
