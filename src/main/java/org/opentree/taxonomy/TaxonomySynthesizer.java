@@ -447,7 +447,7 @@ public class TaxonomySynthesizer extends Taxonomy {
      * 
      * @param outfile the outfile that will have the dumped ottol information as id\tparentid\tname
      */
-    public void dumpPreferredOTTOLRelationships(String outfile) {
+    public void dumpPreferredOTTRelationships(String outfile) {
 //    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 //                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
          // get the start point
@@ -488,7 +488,7 @@ public class TaxonomySynthesizer extends Taxonomy {
      * 
      * @param outfile the outfile that will have the dumped ottol information as id\tparentid\tname
      */
-    public void dumpPreferredOTTOLSynonymRelationships(String outfile) {
+    public void dumpPreferredOTTSynonymRelationships(String outfile) {
 //    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 //                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
          // get the start point
@@ -497,14 +497,15 @@ public class TaxonomySynthesizer extends Taxonomy {
          PrintWriter outFile;
  		 try {
              outFile = new PrintWriter(new FileWriter(outfile));
-             outFile.write("uid\t|\tacceptednode_uid\t|\tsynonymname\t|\tnametype\t|\tsource\t|\t\n");
+             outFile.write("synonymname\t|\tacceptednode_uid\t|\tnametype\t|\tsource\t|\t\n");
              for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
             	 if(n.hasRelationship(Direction.INCOMING, TaxonomyRelType.SYNONYMOF)){
             		 for(Relationship tr: n.getRelationships(Direction.INCOMING, TaxonomyRelType.SYNONYMOF)){
                 		 Node p = tr.getStartNode();//synonym node
-                		 outFile.write(String.valueOf(p.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
-                		 outFile.write(String.valueOf(n.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
+            //    		 outFile.write(String.valueOf(p.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
+                		 
                 		 outFile.write(String.valueOf(p.getProperty("name"))+"\t|\t");
+                		 outFile.write(String.valueOf(n.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("nametype"))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("source"))+"\t|\t\n");
             		 }
