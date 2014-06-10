@@ -527,22 +527,6 @@ public class MainRunner {
         taxdb.shutdownDb(); 
     }
 
-    /*
-     * // temporary (obviously) public void testSrcub (String args[]) { // uses forester // read in the treefile final File treefile = new File(args[1]);
-     * PhylogenyParser parser = null;
-     * 
-     * try { parser = ParserUtils.createParserDependingOnFileType(treefile, true); } catch (final IOException e) { e.printStackTrace(); } Phylogeny[] phys =
-     * null; try { phys = PhylogenyMethods.readPhylogenies(parser, treefile); } catch (final IOException e) { e.printStackTrace(); }
-     * 
-     * String[] tipNames = phys[0].getAllExternalNodeNames(); TNRSNameScrubber nameScrub = new TNRSNameScrubber(tipNames);
-     * 
-     * nameScrub.review(); // print old and cleaned names
-     * 
-     * String [] cleaned = nameScrub.cleanedNames();
-     * 
-     * System.out.println("\ntSucessfully cleaned names.\n"); }
-     */
-
     public static void printHelp() {
         System.out.println("==========================");
         System.out.println("usage: taxomachine command options");
