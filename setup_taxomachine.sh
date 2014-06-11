@@ -1,6 +1,6 @@
 # TODO: record output to log file
 
-JAVAFLAGS="-Xms4G -Xmx30G"
+JAVAFLAGS="-Xms4G -Xmx16G"
 HELPTEXT="usage:\nsetup_taxomachine.sh <options>\n\t[--clean-db]\n\t[--setup-db]\n\t[--download-ott]\n\t[--setup-neo4j]\n\t[--restart-neo4j]\n\t[--force]\n\t[--update-from-git]\n\t[--recompile-standalone]\n\t[--recompile-plugin]\n\t[-ott-version <2.8draft3>]\n\t[-prefix <path>]\n\n"
 
 while [ $# -gt 0 ]; do
@@ -168,10 +168,6 @@ if [ $SETUP_DB ]; then
 		printf "\ndatabase at $TAXOMACHINE_DB already exists. to rebuild it, use --clean-db --setup-db\n"
 		exit
 	fi
-
-#	echo "$TAXOMACHINE_START_SCRIPT loadtaxsyn $OTT_SOURCENAME $OTT_TAXONOMY $OTT_SYNONYMS $TAXOMACHINE_DB"
-#    echo "$TAXOMACHINE_START_SCRIPT makecontexts $TAXOMACHINE_DB"
-#	echo "$TAXOMACHINE_START_SCRIPT makegenusindexes $TAXOMACHINE_DB"
 
 	$TAXOMACHINE_COMMAND loadtaxsyn $OTT_SOURCENAME $OTT_TAXONOMY $OTT_SYNONYMS $TAXOMACHINE_DB	
 	$TAXOMACHINE_COMMAND makecontexts $TAXOMACHINE_DB

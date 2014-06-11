@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.server.plugins.Description;
 import org.neo4j.server.plugins.Parameter;
@@ -17,7 +18,7 @@ import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
-import org.opentree.taxonomy.GraphDatabaseAgent;
+import org.opentree.graphdb.GraphDatabaseAgent;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.Taxonomy;
@@ -28,29 +29,28 @@ public class OTTServices extends ServerPlugin {
 
     @Description("Get information about a recognized taxon.")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation getDeprecatedTaxa (
-    		@Source GraphDatabaseService graphDb,
-    		@Description("The OTT id of the taxon of interest.") @Parameter(name="ottId", optional=false) Long ottId) {
+    public Representation getDeprecatedTaxa (@Source GraphDatabaseService graphDb) {
 
     	List<HashMap<String,Object>> deprecatedTaxa = new LinkedList<HashMap<String, Object>>();
     	
-    	IndexHits<Node> dTax = new GraphDatabaseAgent(graphDb)
-    			.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA.indexName())
+    	IndexHits<Node> dTaxNodes = new Taxonomy(new GraphDatabaseAgent(graphDb)).ALLTAXA
+    			.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA)
     			.query(new MatchAllDocsQuery());
     	
-    	for (Node d : dTax) {
+    	for (Node d : dTaxNodes) {
     		HashMap<String, Object> dMap = new HashMap<String, Object>();
-    		dMap.put(OTVocabularyPredicate.OT_OTT_ID.propertyName(), d.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
-    		dMap.put(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), d.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
-    		dMap.put(TaxonomyProperty.REASON.propertyName(), d.getProperty(TaxonomyProperty.REASON.propertyName()));
-    		dMap.put(TaxonomyProperty.SOURCE_INFO.propertyName(), d.getProperty(TaxonomyProperty.SOURCE_INFO.propertyName()));
+    		
+    		addPropertyFromNode(d, OTVocabularyPredicate.OT_OTT_ID.propertyName(), dMap);
+    		addPropertyFromNode(d, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), dMap);
+    		addPropertyFromNode(d, TaxonomyProperty.REASON.propertyName(), dMap);
+    		addPropertyFromNode(d, TaxonomyProperty.SOURCE_INFO.propertyName(), dMap);
     		deprecatedTaxa.add(dMap);
     	}
     	
     	return OTRepresentationConverter.convert(deprecatedTaxa);
     }
     
-    @Description("Get information about a recognized taxon.")
+    @Description("Get information about a known taxon.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation getTaxonInfo (
     		@Source GraphDatabaseService graphDb,
@@ -62,16 +62,19 @@ public class OTTServices extends ServerPlugin {
     	Taxon match = t.getTaxonForOTTId(ottId);
     	
     	if (match != null) {
-		addPropertyFromNode(match.getNode(), "name", results);
-    		addPropertyFromNode(match.getNode(), "rank", results);
-    		addPropertyFromNode(match.getNode(), "source", results);
-    		addPropertyFromNode(match.getNode(), "uniqname", results);
-    		addPropertyFromNode(match.getNode(), OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
+    		
+    		Node n = match.getNode();
+    		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
+    		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
+    		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
+    		addPropertyFromNode(n, TaxonomyProperty.SOURCE.propertyName(), results);
+    		addPropertyFromNode(n, TaxonomyProperty.UNIQUE_NAME.propertyName(), results);
+    		
     		results.put("node_id", match.getNode().getId());
     	
     		HashSet<String> synonyms = new HashSet<String>();
-	    	for (Node n : match.getSynonymNodes()) {
-	    		synonyms.add((String) n.getProperty("name"));
+	    	for (Node m : match.getSynonymNodes()) {
+	    		synonyms.add((String) m.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 	    	}
 	    	results.put("synonyms", synonyms);
     	

@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.opentree.exceptions.MultipleHitsException;
+
 public class TNRSResults implements Iterable<TNRSNameResult> {
 	private Map<Object, TNRSNameResult> results;
 	private Map<Object, String> unambiguousNames;

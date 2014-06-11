@@ -16,9 +16,8 @@ import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
-import org.neo4j.server.rest.repr.OpentreeRepresentationConverter;
+import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
-import org.opentree.taxonomy.GraphDatabaseAgent;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.TaxonSet;
 import org.opentree.taxonomy.Taxonomy;
@@ -31,6 +30,7 @@ import org.z3950.zing.cql.CQLNode;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.CQLParser;
 import org.z3950.zing.cql.CQLTermNode;
+import org.opentree.graphdb.GraphDatabaseAgent;
 
 public class GetJsons extends ServerPlugin {
 
@@ -116,7 +116,7 @@ public class GetJsons extends ServerPlugin {
 
         // return a newick tree
         TreePrinter tp = new TreePrinter();
-        return OpentreeRepresentationConverter.convert(tp.printNH(subTree));
+        return OTRepresentationConverter.convert(tp.printNH(subTree));
 
     }
 
@@ -227,6 +227,6 @@ public class GetJsons extends ServerPlugin {
         if (results.size() < 1)
             results.put("error", "Could not find any taxon by that name");
 
-        return OpentreeRepresentationConverter.convert(results);
+        return OTRepresentationConverter.convert(results);
     }
 }

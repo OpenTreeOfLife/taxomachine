@@ -1,4 +1,4 @@
-package org.opentree.taxonomy;
+package org.opentree.taxonomy.constants;
 
 import org.neo4j.graphdb.RelationshipType;
 

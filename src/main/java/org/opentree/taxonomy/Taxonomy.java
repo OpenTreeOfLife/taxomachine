@@ -13,10 +13,12 @@ import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.ContextNotFoundException;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
+import org.opentree.graphdb.GraphDatabaseAgent;
 
 /**
  * This class provides access to methods specific to the taxonomic database itself. Initialization requires a GraphDatabaseAgent object,
@@ -188,7 +190,7 @@ public class Taxonomy {
 	 */
 	public int getInternodalDistThroughMRCA(Node n1, Node n2, RelationshipType relType) {
 
-		System.out.println("Node 1: " + n1.getProperty("name") + " " + n1.getId() + ", Node 2: " + n2.getProperty("name") + " " + n2.getId());
+		System.out.println("Node 1: " + n1.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + " " + n1.getId() + ", Node 2: " + n2.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + " " + n2.getId());
 
 		TraversalDescription hierarchy = Traversal.description().depthFirst().relationships(relType, Direction.OUTGOING);
 

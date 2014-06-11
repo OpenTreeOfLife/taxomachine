@@ -23,11 +23,11 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.opentree.properties.OTVocabularyPredicate;
-import org.opentree.taxonomy.TaxonomyRelType;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.TaxonSet;
 import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.constants.TaxonomyProperty;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
@@ -103,7 +103,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      * Set the behavior whether or not to include suppressed taxa.
      * @param includeDubious
      */
-	public SingleNamePrefixQuery setIncludeDubiousTaxa(boolean includeDubious) {
+	public SingleNamePrefixQuery setIncludeDubious(boolean includeDubious) {
 		this.includeDubious = includeDubious;
 		return this;
 	}
@@ -202,14 +202,14 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 
 	    				try {
 	    				
-		    				String genusName = String.valueOf(genusMatch.getMatchedNode().getProperty(TaxonomyProperty.NAME.propertyName()));
+		    				String genusName = String.valueOf(genusMatch.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 		    				char[] searchEpithet = parts[1].trim().toCharArray();
 		    				
 		    				// add any species to the results whose name matches the second search term prefix
 		    				for (Node sp : speciesHits) {
 		    					
 		    					// use substring position to get just the epithet of this species match
-		    					char[] hitName = String.valueOf(sp.getProperty(TaxonomyProperty.NAME.propertyName())).substring(genusName.length()+1).toCharArray();
+		    					char[] hitName = String.valueOf(sp.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).substring(genusName.length()+1).toCharArray();
 
 		    					// check if the epithet matches
 		    					boolean prefixMatch = true;
@@ -228,10 +228,9 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 		    					if (prefixMatch) {
 		    						matches.addMatch(new TNRSHit()
 		    								.setMatchedTaxon(new Taxon(sp, taxonomy))
-		    								.setIsHomonym(isHomonym(String.valueOf(sp.getProperty(TaxonomyProperty.NAME.propertyName()))))
+		    								.setIsHomonym(isHomonym(String.valueOf(sp.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()))))
 		    								.setRank(String.valueOf(sp.getProperty(TaxonomyProperty.RANK.propertyName())))
-		    								.setIsDubious((Boolean) sp.getProperty(TaxonomyProperty.DUBIOUS.propertyName())))
-		    								;
+		    								.setIsDubious((Boolean) sp.getProperty(TaxonomyProperty.DUBIOUS.propertyName())));
 		    					}
 		    				}
 	    				} finally {
@@ -329,7 +328,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
      */
     private void getExactMatches(String query, Index<Node> index, boolean labelExactMatches) {
 
-    	TermQuery exactQuery = new TermQuery(new Term("name", query));
+    	TermQuery exactQuery = new TermQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), query));
     	IndexHits<Node> hits = null;
     	try {
     		hits = index.query(exactQuery);
@@ -363,7 +362,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     		return;
     	}
     	
-    	PrefixQuery prefixQuery = new PrefixQuery(new Term("name", query));
+    	PrefixQuery prefixQuery = new PrefixQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), query));
 
     	IndexHits<Node> hits = null;
     	try {
@@ -393,7 +392,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	float minIdentity = getMinIdentity(query);
 
     	// fuzzy match names against ALL within-context taxa and synonyms
-    	FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term("name", query), minIdentity);
+    	FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), query), minIdentity);
         IndexHits<Node> hits = null;
         try {
         	hits = index.query(fuzzyQuery);
@@ -430,7 +429,7 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     	} else {
 	    	IndexHits<Node> hits = null;
 	    	try {
-	    		hits = (includeDubious ? taxNodesByName : prefTaxNodesByName).query("name", name);
+	    		hits = (includeDubious ? taxNodesByName : prefTaxNodesByName).query(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 		        if (hits.size() > 1) {
 		            isHomonym = true;
 		        }

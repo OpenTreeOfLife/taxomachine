@@ -6,6 +6,7 @@ import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 
 /**
  * A Neo4j Traversal Evaluator which include:
@@ -18,11 +19,9 @@ public class SpeciesEvaluator implements Evaluator{
 		startNode = n;
 	}
 	public Evaluation evaluate(Path arg0) {
-		//TODO: take in whether this is a taxonomy tree or not
 		boolean parent_startnode = false;
 		
 		for(Relationship rel: arg0.endNode().getRelationships(Direction.OUTGOING, TaxonomyRelType.TAXCHILDOF)){
-			//System.out.println(startNode.getProperty("name") +"  "+rel.getEndNode().getProperty("name")+ "  "+ rel.getStartNode().getProperty("name"));
 			if (rel.getEndNode().getId()==startNode.getId()){
 				parent_startnode = true;
 				break;

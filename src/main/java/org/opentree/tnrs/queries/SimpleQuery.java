@@ -3,15 +3,16 @@ package org.opentree.tnrs.queries;
 import org.apache.lucene.queryParser.QueryParser;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.IndexHits;
+import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
-import org.opentree.tnrs.MultipleHitsException;
 import org.opentree.tnrs.TNRSHit;
 import org.opentree.tnrs.TNRSMatchSet;
 import org.opentree.tnrs.TNRSNameResult;
 import org.opentree.tnrs.TNRSResults;
+import org.opentree.exceptions.MultipleHitsException;
 
 public class SimpleQuery extends AbstractBaseQuery {
 
@@ -54,7 +55,7 @@ public class SimpleQuery extends AbstractBaseQuery {
     	results = new TNRSResults();
     	IndexHits<Node> hits = null;
     	try {
-    		hits = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query("name", queryString); //.replace(" ", "\\ "));
+    		hits = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM).query(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), queryString); //.replace(" ", "\\ "));
 
         	 // at least 1 hit; prepare to record matches
         	 TNRSMatchSet matches = new TNRSMatchSet(taxonomy);

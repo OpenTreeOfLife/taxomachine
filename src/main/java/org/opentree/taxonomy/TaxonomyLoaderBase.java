@@ -11,7 +11,9 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
-
+import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
+import org.opentree.graphdb.GraphDatabaseAgent;
 /**
  * General functionality for taxonomy loading. Abstract class inherited by actual taxonomy loading classes.
  * @author sas, ceh
@@ -19,7 +21,7 @@ import org.neo4j.kernel.Traversal;
  */
 public abstract class TaxonomyLoaderBase extends Taxonomy {
 
-	static Logger _LOG = Logger.getLogger(TaxonomyLoaderPreottol.class);
+//	static Logger _LOG = Logger.getLogger(TaxonomyLoaderPreottol.class);
 	public static int transaction_iter = 100000;
 	int LARGE = 100000000;
 
@@ -86,7 +88,7 @@ public abstract class TaxonomyLoaderBase extends Taxonomy {
 						System.out.println("cur transaction: " + cur_tran_iter);
 					}
 				} else {
-					System.out.println(friendnode+"\t" + friendnode.getProperty("name"));
+					System.out.println(friendnode+"\t" + friendnode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 				}
 			}
 			general_tx.success();

@@ -25,6 +25,7 @@ public class TNRSHit {
     boolean isApprox;
     boolean isSynonym;
     boolean isDubious;
+    boolean isDeprecated;
     String rank;
     boolean nameStatusIsKnown;
     HashMap<String,String> otherData;
@@ -40,6 +41,7 @@ public class TNRSHit {
         isApprox = false;
         isSynonym = false;
         isDubious = false;
+        isDeprecated = true;
         rank = "";
         nameStatusIsKnown = true;
         otherData = null;

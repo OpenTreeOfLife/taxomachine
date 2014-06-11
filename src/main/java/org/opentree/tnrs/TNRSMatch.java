@@ -23,6 +23,7 @@ public abstract class TNRSMatch {
     public abstract boolean getIsApproximate();
     public abstract boolean getIsSynonym();
     public abstract boolean getIsHomonym();
+    public abstract boolean getIsDeprecated();
 //    public abstract boolean getIsDubiousName();
 //    public abstract List<OTTFlag> getFlags();
     public abstract String getRank();

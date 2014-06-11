@@ -5,20 +5,13 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
-import org.neo4j.server.rest.repr.MappingRepresentation;
-import org.neo4j.server.rest.repr.MappingSerializer;
-import org.opentree.taxonomy.GraphDatabaseAgent;
-import org.opentree.taxonomy.OTTFlag;
-import org.opentree.taxonomy.TaxonomyRelType;
-import org.opentree.taxonomy.Taxon;
+import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.Taxonomy;
-import org.opentree.taxonomy.contexts.ContextDescription;
-import org.opentree.taxonomy.contexts.TaxonomyContext;
-
+import org.opentree.taxonomy.constants.TaxonomyProperty;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -50,7 +43,8 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
     /**
      * @return an iterator of TNRSMatch objects containing all the matches in this set
      */
-    public Iterator<TNRSMatch> iterator() {
+    @Override
+	public Iterator<TNRSMatch> iterator() {
         return matches.iterator();
     }
 
@@ -119,7 +113,11 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
 		@Override
 		public Node getParentNode() {
-            TraversalDescription prefTaxTD = Traversal.description().breadthFirst().
+			if (matchedNode == null) {
+				return null;
+			}
+
+			TraversalDescription prefTaxTD = Traversal.description().breadthFirst().
                     relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING).evaluator(Evaluators.toDepth(1));
             
             Node p = null;
@@ -127,15 +125,25 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
                 p = n;
             }
 
-            if (p.equals(matchedNode) == false)
+            if (p.equals(matchedNode) == false) {
                 return p;
-            else
+            } else {
                 throw new java.lang.IllegalStateException("Node " + matchedNode + " doesn't seem to have a preferred parent!");
+            }
         }
 
 		@Override
 		public boolean getIsPerfectMatch() {
             return isPerfectMatch;
+        }
+
+		@Override
+		public boolean getIsDeprecated() {
+			if (matchedNode.hasProperty(TaxonomyProperty.DEPRECATED.propertyName())) {
+				return (Boolean) matchedNode.getProperty(TaxonomyProperty.DEPRECATED.propertyName());
+			} else {
+				return false;
+			}
         }
 
 		@Override
@@ -201,22 +209,8 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 			if (uniqueName.length() > 0) {
 				return uniqueName;
 			} else {
-				return (String) getMatchedNode().getProperty("name");
+				return (String) getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 			}
-			/*
-        	String uniqueName = getMatchedNode().getProperty("name").toString();
-        	if (isHomonym) {
-	    		if (getMatchedNode().hasProperty("leastcontext")) {
-	    			String leastContext = String.valueOf(getMatchedNode().getProperty("leastcontext"));
-	    			for (ContextDescription cd : ContextDescription.values()) {
-	    				if (cd.toString().equals(leastContext)) {
-	    					uniqueName = uniqueName.concat(" (").concat(cd.name).concat(")");
-	    				}
-	    			}
-	    		}
-        	}
-
-			return uniqueName; */
         }
         
         /**
@@ -259,7 +253,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
         @Override
         public String toString() {
-            return "Query '" + searchString + "' matched by " + sourceName + " to " + matchedNode.getProperty("name") + " (id=" +
+          return "Query '" + searchString + "' matched by " + sourceName + " to " + matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + " (id=" +
                     matchedNode.getId() + "), score " + String.valueOf(score) + "; (" + getMatchType() + ")";
         }
     }

@@ -6,6 +6,7 @@ import java.util.List;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.contexts.ContextDescription;
 import org.apache.lucene.queryParser.QueryParser;
@@ -65,7 +66,7 @@ public class TaxonomyContext {
 	 */
 	public Index<Node> getNodeIndex(TaxonomyNodeIndex indexDesc) {
 		String indexName = indexDesc.namePrefix + contextDescription.nameSuffix;
-		return taxonomy.getGraphDb().getNodeIndex(indexName);
+		return taxonomy.getGraphDb().getNodeIndex(indexName, "type", "exact", "to_lower_case", "true");
 
 	}
 
@@ -84,51 +85,40 @@ public class TaxonomyContext {
 	 * @return rootNode
 	 */
 	public Node getRootNode() {
-		IndexHits<Node> rootMatches = taxonomy.ALLTAXA.
-				getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME).
-//				getNodeIndex(NodeIndexDescription.TAXON_BY_NAME).
-				get("name", contextDescription.licaNodeName);
-		Node rn = null;
-		for (Node n : rootMatches) {
-			if (n.getProperty("name").equals(taxonomy.getLifeNode().getProperty("name"))) {
-				// if we find the life node, just return it
-				rn = n;
-				break;
-			} else if (n.getProperty("taxcode").equals(contextDescription.nomenclature.code)) {
-				// otherwise check the taxcode to validate that this is the correct root, in case there are valid homonyms in other nomenclatures
-				rn = n;
-				break;
+		IndexHits<Node> rootMatches = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_OTT_ID)
+				.get(OTVocabularyPredicate.OT_OTT_ID.propertyName(), contextDescription.ottId);
+		try {
+			try {
+				return rootMatches.getSingle();
+			} catch (Exception ex) {
+				throw new java.lang.IllegalStateException("There was a problem getting the root node: " + contextDescription.licaNodeName + " for context "
+						+ contextDescription.name);
 			}
-		}
-		rootMatches.close();
-		if (rn != null) {
-			return rn;
-		} else {
-			throw new java.lang.IllegalStateException("Could not find the root node: " + contextDescription.licaNodeName + " in nomenclature + "
-					+ contextDescription.nomenclature.code);
+		} finally {
+			rootMatches.close();
 		}
 	}
 
 	/**
-	 * a convenience wrapper for the taxNodes index .query("name", `name`) method
+	 * a convenience wrapper
 	 * 
 	 * @param name
 	 * @return
 	 */
 	public List<Node> findTaxNodesByName(String name) {
 		Index<Node> index = (Index<Node>) getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
-		return findNodes(index, "name", name);
+		return findNodes(index, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 	}
 
 	/**
-	 * a convenience wrapper for the prefTaxNodes index .query("name", `name`) method
+	 * a convenience wrapper
 	 * 
 	 * @param name
 	 * @return
 	 */
 	public List<Node> findPrefTaxNodesByName(String name) {
 		Index<Node> index = (Index<Node>) getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
-		return findNodes(index, "name", name);
+		return findNodes(index, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 
 	}
 
@@ -156,28 +146,9 @@ public class TaxonomyContext {
 		return foundNodes;
 	}
 
-	/*
-	 * IF THESE show common enough usage, it could be useful to provide them as well /** a convenience wrapper for the prefSynNodes index .get("name", `name`)
-	 * method
-	 * 
-	 * @param name
-	 * 
-	 * @return
-	 * 
-	 * public List<Node> findPrefTaxNodesBySyn(String name) { Index<Node> index = (Index<Node>) getNodeIndex(NodeIndexDescription.PREFERRED_TAXON_BY_SYNONYM);
-	 * return findNodes(index, "name", name);
-	 * 
-	 * }
-	 * 
-	 * /** a convenience wrapper for the prefTaxSynNodes index .get("name", `name`) method
-	 * 
-	 * @param name
-	 * 
-	 * @return
-	 */
 	public List<Node> findPrefTaxNodesByNameOrSyn(String name) {
 		Index<Node> index = (Index<Node>) getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
-		return findNodes(index, "name", name);
+		return findNodes(index, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 
 	}
 

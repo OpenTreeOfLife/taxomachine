@@ -16,10 +16,11 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.opentree.graphdb.DatabaseUtils;
-import org.opentree.taxonomy.TaxonomyRelType;
+import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.TaxonSet;
 import org.opentree.taxonomy.Taxonomy;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
@@ -51,12 +52,14 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     // set during construction by setDefaults()
     private boolean contextAutoInferenceIsOn;
     private boolean includeDubious;
+    private boolean includeDeprecated = false;
     private boolean matchSpTaxaToGenera;
     
     // different indexes may be used depending on preferences (such as whether to include dubious taxa)
     private Index<Node> nameIndex;
     private Index<Node> synonymIndex;
     private Index<Node> nameOrSynonymIndex;
+    private Index<Node> deprecatedIndex;
     
     // special-purpose containers used during search
     private Map<Object, String> namesWithoutExactNameMatches;
@@ -125,6 +128,17 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	 */
 	public MultiNameContextQuery setIncludeDubious(boolean includeDubious) {
 		this.includeDubious = includeDubious;
+		setIndexes();
+		return this;
+	}
+	
+	/**
+	 * Set the behavior for including dubious names in the results.
+	 * @param includeDubious
+	 * @return
+	 */
+	public MultiNameContextQuery setIncludeDeprecated(boolean includeDeprecated) {
+		this.includeDeprecated = includeDeprecated;
 		return this;
 	}
     
@@ -230,7 +244,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     		
             // Attempt to find exact matches against *ALL* preferred taxa
             IndexHits<Node> hits = null;
-            TermQuery exactQuery = new TermQuery(new Term("name", thisName));
+            TermQuery exactQuery = new TermQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), thisName));
             try {
             	hits = nameIndex.query(exactQuery);
 
@@ -294,7 +308,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     		String thisName = nameEntry.getValue();
     		        	
             IndexHits<Node> hits = null;
-            TermQuery exactQuery = new TermQuery(new Term("name", thisName));
+            TermQuery exactQuery = new TermQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), thisName));
             
             TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
             
@@ -315,7 +329,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	            		}
 	            		
 	            		if (inferredGenusName != null) {
-	                        TermQuery exactGenusNameQuery = new TermQuery(new Term("name", inferredGenusName));
+	                        TermQuery exactGenusNameQuery = new TermQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inferredGenusName));
 	                        
 	                        IndexHits<Node> inferredGenericNameHits = null;
 	                        try {
@@ -425,7 +439,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     		String thisName = nameEntry.getValue();
     		
             IndexHits<Node> hits = null;
-            TermQuery exactQuery = new TermQuery(new Term("name", thisName));
+            TermQuery exactQuery = new TermQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), thisName));
             try {
             	hits = synonymIndex.query(exactQuery);
 	            if (hits.size() < 1) {
@@ -479,18 +493,15 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             // fuzzy match names against ALL within-context taxa and synonyms
             float minIdentity = getMinIdentity(thisName);
             IndexHits<Node> hits = null;
-            FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term("name", thisName), minIdentity);
+            IndexHits<Node> hitsDeprecated = null;
+            TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
+            FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), thisName), minIdentity);
 
             try {
+
             	hits = nameOrSynonymIndex.query(fuzzyQuery);
-	            if (hits.size() < 1) {
-	                // no direct matches, move on to next name
-	                namesWithoutApproxTaxnameOrSynonymMatches.put(thisId, thisName);
-	                continue;
-	
-	            } else {
+            	if (hits.size() > 0) {
 	                // at least 1 hit; prepare to record matches
-	                TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
 	                
 	                for (Node hit : hits) {
 	                    
@@ -510,15 +521,48 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                                setScore(score));
 	                    }
 	                }
-	
-	                // add the matches (if any) to the TNRS results
-	                if (matches.size() > 0)
-		                results.addNameResult(new TNRSNameResult(thisId, matches));
-	                else
-	                    namesWithoutApproxTaxnameOrSynonymMatches.put(thisId, thisName);
-	            }
+            	}
+            	
+            	if (includeDeprecated) {
+        			// do the deprecated search, add results.
+
+            		if (hits != null) {
+            			hits.close();
+            		}
+            		hits = deprecatedIndex.query(fuzzyQuery);
+            		if (hits.size() > 0) {
+    	                for (Node hit : hits) {
+    	                    
+    	                    Taxon matchedTaxon = taxonomy.getTaxon(hit);
+    	
+    	                    // add the match if it scores high enough
+    	                    double score = getScore(thisName, (String) hit.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+    	                    if (score >= minScore) {
+    	                        matches.addMatch(new TNRSHit().
+    	                                setMatchedTaxon(matchedTaxon).
+    	                                setSearchString(thisName).
+    	                                setIsPerfectMatch(false).
+    	                                setIsApprox(true).
+    	                                setNameStatusIsKnown(false).
+//    	                                setNomenCode(matchedTaxon.getNomenCode()).
+    	                                setSourceName(DEFAULT_TAXONOMY_NAME).
+    	                                setScore(score));
+    	                    }
+    	                }
+            		}
+            	}
+            	
+                // add the matches (if any) to the TNRS results
+                if (matches.size() > 0) {
+	                results.addNameResult(new TNRSNameResult(thisId, matches));
+                } else {
+                    namesWithoutApproxTaxnameOrSynonymMatches.put(thisId, thisName);
+                }
+
             } finally {
-            	hits.close();
+            	if (hits != null) {
+            		hits.close();
+            	}
             }
         }
     }
@@ -532,13 +576,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * @return
      */
     private double getScore(String thisName, Taxon matchedTaxon, Node hit) {
-    	
-        // use edit distance to calculate base score for fuzzy matches
-        double l = Levenshtein.distance(thisName, matchedTaxon.getName());
-        double s = Math.min(matchedTaxon.getName().length(), thisName.length());
-        double baseScore = (s - l) / s;
-        
-        // weight scores by distance outside of inferred lica (this may need to go away if it is a speed bottleneck)
+    	        
+    	double baseScore = getScore(thisName, matchedTaxon.getName());
+
+    	// weight scores by distance outside of inferred lica (this may need to go away if it is a speed bottleneck)
         double scoreModifier = 1;
         
         if (bestGuessLICAForNames != null) {
@@ -551,6 +592,13 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         // return the score
         return baseScore * scoreModifier;
     	
+    }
+    
+    private double getScore(String searchName, String hitName) {
+        // use edit distance to calculate base score for fuzzy matches
+        double l = Levenshtein.distance(searchName, hitName);
+        double s = Math.min(hitName.length(), searchName.length());
+        return (s - l) / s;
     }
     
     /**
@@ -570,6 +618,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * Sets the index to be used for queries.
      */
     private void setIndexes() {
+		deprecatedIndex = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
     	if (includeDubious) {
     		nameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
     		synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);

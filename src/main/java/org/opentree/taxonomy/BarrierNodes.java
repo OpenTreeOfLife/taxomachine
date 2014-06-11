@@ -13,6 +13,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.kernel.Traversal;
+import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.Nomenclature;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
@@ -79,7 +81,7 @@ public final class BarrierNodes {
         for (String itns : barrierCladeNameToNomenclatureMap.keySet()) {
             int bestcount = LARGE;
             Node bestitem = null;
-            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME).get("name", itns);
+            IndexHits<Node> hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME).get(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), itns);
             try {
                 for (Node node : hits) {
                 	System.out.println(node);
@@ -101,7 +103,7 @@ public final class BarrierNodes {
             		System.out.println("checking some of the other names for: "+itns);
             		for(String tname: barrierNamesSearch.get(itns)){
             			System.out.println("checking: "+tname);
-            			hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME).get("name", tname);
+            			hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME).get(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), tname);
                         try {
                             for (Node node : hits) {
                             	System.out.println(node);
@@ -122,7 +124,7 @@ public final class BarrierNodes {
             	
             	if (bestitem == null){
             		System.out.println("trying to match barriers with the synonyms");
-            		hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM).get("name", itns);
+            		hits = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM).get(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), itns);
             		bestcount = LARGE;
             		try {
             			for (Node node : hits) {

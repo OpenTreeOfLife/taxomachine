@@ -26,8 +26,10 @@ import org.neo4j.kernel.Traversal;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.OTTFlag;
 import org.opentree.taxonomy.constants.TaxonomyProperty;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.Nomenclature;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
+import org.opentree.graphdb.GraphDatabaseAgent;
 
 import java.util.Map;
 
@@ -74,10 +76,12 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	Index<Node> prefTaxaByNameSpecies;
 	
 	// deprecated taxa
-	Index<Node> deprecatedTaxa = graphDb.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA.indexName());
+	Index<Node> deprecatedTaxa;
 	
-	HashMap<String, Node> dbnodes = new HashMap<String, Node>();
-	HashMap<String, String> parents = new HashMap<String, String>();
+//	HashMap<String, Node> dbnodes = new HashMap<String, Node>();
+//	HashMap<String, String> parents = new HashMap<String, String>();
+	HashMap<Long, Node> dbNodeForOTTIdMap = new HashMap<Long, Node>();
+	HashMap<Long, Long> parentOTTIdByChildOTTIdMap = new HashMap<Long, Long>();
 	HashMap<String, OTTFlag> ottFlags;
 	
 	HashSet<Node> dubiousNodes = new HashSet<Node>();
@@ -141,7 +145,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		Transaction tx = graphDb.beginTx();
 		
 		Node deprecatedContainerNode = graphDb.createNode();
-		deprecatedContainerNode.setProperty("name", "deprecated taxa");
+		deprecatedContainerNode.setProperty("description", "container node to which deprecated taxon nodes are attached");
 		
 		Node lifeNode = getLifeNode();
 		if (lifeNode != null) {
@@ -149,11 +153,23 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		}
 
 		int n = 0;
+		boolean observedHeaderLine = false;
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(deprecatedFile));
 			String curStr;
 			while ((curStr = reader.readLine()) != null) {
+				
 				StringTokenizer tokenizer = new StringTokenizer(curStr, "\t");
+
+				// skip the header line if we see it
+				if (!observedHeaderLine) {
+					String firstToken = tokenizer.nextToken();
+					if (firstToken.equals("id")) {
+						observedHeaderLine = true;
+						continue;
+					}
+				}
+				
 				Long id = Long.valueOf(tokenizer.nextToken());
 				String name = tokenizer.nextToken();
 				String reason = tokenizer.nextToken();
@@ -165,9 +181,10 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				d.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), id);
 				d.setProperty(TaxonomyProperty.REASON.propertyName(), reason);
 				d.setProperty(TaxonomyProperty.SOURCE_INFO.propertyName(), sourceInfo);
+				d.setProperty(TaxonomyProperty.DEPRECATED.propertyName(), true);
 				
-				deprecatedTaxa.add(deprecatedContainerNode, TaxonomyProperty.NAME.propertyName(), name);
-				deprecatedTaxa.add(deprecatedContainerNode, OTVocabularyPredicate.OT_OTT_ID.propertyName(), id);
+				deprecatedTaxa.add(d, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+				deprecatedTaxa.add(d, OTVocabularyPredicate.OT_OTT_ID.propertyName(), id);
 
 				n++;
 			}
@@ -205,9 +222,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	 *
 	 *
 	 * Creates nodes and TAXCHILDOF relationships for each line.
-	 * Nodes get a "name" property. Relationships get "source", "childid", "parentid" properties.
-	 * 
-	 * Nodes are indexed in taxNames "name" key and id value.
+	 * Nodes get a OTVocabularyPredicate.OT_OTT_TAXON_NAME property. Relationships get "source", "childid", "parentid" properties.
 	 * 
 	 * A metadata node is created to point to the root
 	 * 
@@ -272,6 +287,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			tx.finish();
 		}
 
+		System.out.println("\nProcessing input files and adding nodes");
+		
 		// process the incoming lines in batches
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filename));
@@ -310,10 +327,14 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		}
 		templines.clear();
 
+		System.out.println("\nAdding relationships");
+
 		//add the relationships
-		ArrayList<String> temppar = new ArrayList<String>();
+//		ArrayList<String> temppar = new ArrayList<String>();
+		LinkedList<Long> temppar = new LinkedList<Long>();
 		count = 0;
-		for (String key: dbnodes.keySet()) {
+//		for (String key: dbnodes.keySet()) {
+		for (Long key: dbNodeForOTTIdMap.keySet()) {
 			count += 1;
 			temppar.add(key);
 			if (count % transaction_iter == 0) {
@@ -344,11 +365,10 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		} finally {
 			tx.finish();
 		}
-
 		
 		if (addBarrierNodes) {
 			// mark all of the barrier nodes with additional metadata
-			System.out.println("setting barrier nodes");
+			System.out.println("\nSetting barrier nodes");
 			BarrierNodes bn = new BarrierNodes(this);
 			bn.initializeBarrierNodes();
 			Map<Node, Nomenclature> bnMap = bn.getBarrierNodeToNomenclatureMap();
@@ -369,7 +389,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		}
 		
 		// start the mrcas
-		System.out.println("calculating mrcas");
+		System.out.println("\nCalculating mrca sets");
 		try {
 			tx = graphDb.beginTx();
 			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.OUTGOING).getEndNode());
@@ -383,30 +403,30 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	 * add relationships for a processed taxon
 	 * @param childId
 	 */
-	private void processOTTRels(String childId) {
+	private void processOTTRels(Long childId) {
 		
-		Node parentNode = dbnodes.get(parents.get(childId));
+		Node parentNode = dbNodeForOTTIdMap.get(parentOTTIdByChildOTTIdMap.get(childId));
 		if (parentNode == null) {
 
-			Node graphRootNode = dbnodes.get(childId);
+			Node graphRootNode = dbNodeForOTTIdMap.get(childId);
 			
 			// special case for the taxonomy root - the 'life' node in non-subsetted taxonomies, in other cases name could be anything
 			metadatanode.createRelationshipTo(graphRootNode, TaxonomyRelType.METADATAFOR);
 			System.out.println("linked metadata node to " + graphRootNode);
 			
 		} else {
-			Relationship rel = dbnodes.get(childId).createRelationshipTo(parentNode, TaxonomyRelType.TAXCHILDOF);
+			Relationship rel = dbNodeForOTTIdMap.get(childId).createRelationshipTo(parentNode, TaxonomyRelType.TAXCHILDOF);
 			rel.setProperty("source", sourceName);
 			rel.setProperty("childid", childId);
-			rel.setProperty("parentid", parents.get(childId));
+			rel.setProperty("parentid", parentOTTIdByChildOTTIdMap.get(childId));
 
 			if (buildPreferredRels) {
 				// don't need to wait to makeottol anymore
-				if (!dubiousNodes.contains(dbnodes.get(childId))) {
-					Relationship prefRel = dbnodes.get(childId).createRelationshipTo(dbnodes.get(parents.get(childId)), TaxonomyRelType.PREFTAXCHILDOF);
+				if (!dubiousNodes.contains(dbNodeForOTTIdMap.get(childId))) {
+					Relationship prefRel = dbNodeForOTTIdMap.get(childId).createRelationshipTo(dbNodeForOTTIdMap.get(parentOTTIdByChildOTTIdMap.get(childId)), TaxonomyRelType.PREFTAXCHILDOF);
 					prefRel.setProperty("source", sourceName);
 					prefRel.setProperty("childid", childId);
-					prefRel.setProperty("parentid", parents.get(childId));
+					prefRel.setProperty("parentid", parentOTTIdByChildOTTIdMap.get(childId));
 				}
 			}
 		}
@@ -421,14 +441,19 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		// split the input line all the way to the end. we expect trailing empty strings when flags and uniqname are not set
 		String[] tokens = line.split("\t\\|\t",-1);
 		int i = 0;
-		String inputId = tokens[i++];
+		String inputIdStr = tokens[i++];
 		
 		// skip the header line if it exists
-		if (inputId.equals("uid")) {
+		if (inputIdStr.equals("uid")) {
 			return;
 		}
 		
-		String inputParentId = tokens[i++];
+//		System.out.println(line);
+		
+		Long inputId = Long.valueOf(inputIdStr);
+
+		String inputParentIdStr = tokens[i++];
+		Long inputParentId = inputParentIdStr.trim().equals("") ? null : Long.valueOf(inputParentIdStr);
 		String inputName = tokens[i++];
 		String rank = tokens[i++];
 		String inputSources = tokens[i++];
@@ -442,17 +467,18 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		boolean forceVisible = false;
 		
 		Node tnode = createNode();
-		parents.put(inputId, inputParentId);
+		parentOTTIdByChildOTTIdMap.put(inputId, inputParentId);
 
-		// TODO: fix these to use OTPropertyPredicate model
-		tnode.setProperty("name", inputName);
-		tnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), Long.valueOf(inputId));
-		tnode.setProperty("sourceid", inputId);
-		tnode.setProperty("sourcepid", inputParentId);
-		tnode.setProperty("source", sourceName);
-		tnode.setProperty("rank", rank);
-		tnode.setProperty("input_sources", inputSources);
-		tnode.setProperty("uniqname", uniqname);
+		tnode.setProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+		tnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), inputId);
+		tnode.setProperty(TaxonomyProperty.RANK.propertyName(), rank);
+		tnode.setProperty(TaxonomyProperty.INPUT_SOURCES.propertyName(), inputSources);
+		tnode.setProperty(TaxonomyProperty.UNIQUE_NAME.propertyName(), uniqname);
+
+		// irrelevant for ott, individual sources are dealt with by smasher
+//		tnode.setProperty("sourceid", inputId);
+//		tnode.setProperty("sourcepid", inputParentId);
+//		tnode.setProperty("source", sourceName);
 
 		if (flags.length > 0) {
 			for (String label : flags) {
@@ -488,70 +514,78 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			}
 		}
 				
-		tnode.setProperty("dubious", dubious);
+		tnode.setProperty(TaxonomyProperty.DUBIOUS.propertyName(), dubious);
 		if (dubious) {
-			taxaByFlag.add(tnode, "flag", "dubious");
+			taxaByFlag.add(tnode, "flag", TaxonomyProperty.DUBIOUS.propertyName());
 		}
 		
-		taxaByName.add(tnode, "name", inputName);
-		taxaByRank.add(tnode, "rank", rank);
+		taxaByName.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+		taxaByRank.add(tnode, TaxonomyProperty.RANK.propertyName(), rank);
 		
 		if (createOTTIdIndexes) {
 			taxaByOTTId.add(tnode, OTVocabularyPredicate.OT_OTT_ID.propertyName(), Long.valueOf(inputId));
 		}
 		
 		if (addSynonyms) {
-			taxaByNameOrSynonym.add(tnode, "name", inputName);
+			// TODO: figure out what to do about indexing synonyms.. should we use "name" or "ot:ottTaxonName" as the property?
+			taxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+//			taxaByNameOrSynonym.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
 		}
 		
 		// add to the rank-specific indexes
         if (isSpecific(rank)) {
-        	taxaByNameSpecies.add(tnode, "name", inputName);
+        	taxaByNameSpecies.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 
         } else if (rank.equals("genus")) {
-        	taxaByNameGenera.add(tnode, "name", inputName);
-        	taxaByNameHigher.add(tnode, "name", inputName);
+        	taxaByNameGenera.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+        	taxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
         	if (addSynonyms) {
-        		taxaByNameOrSynonymHigher.add(tnode, "name", inputName);
+    			// TODO: figure out what to do about indexing synonyms.. should we use "name" or "ot:ottTaxonName" as the property?
+        		taxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+//        		taxaByNameOrSynonymHigher.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
         	}
 
         } else {
-        	taxaByNameHigher.add(tnode, "name", inputName);
+        	taxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
         	if (addSynonyms) {
-        		taxaByNameOrSynonymHigher.add(tnode, "name", inputName);
+        		taxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
         	}
         }
 		
         // create preferred indexes... this is a bit redundant but allows faster searches
         // when the goal is only to search non-hidden taxa (smaller indexes == faster searches)
 		if (buildPreferredIndexes && !dubious) {
-			prefTaxaByName.add(tnode, "name", inputName);
-			prefTaxaByRank.add(tnode, "rank", rank);
+			prefTaxaByName.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+			prefTaxaByRank.add(tnode, TaxonomyProperty.RANK.propertyName(), rank);
 
 			if (addSynonyms) {
-				prefTaxaByNameOrSynonym.add(tnode, "name", inputName);
+    			// TODO: figure out what to do about indexing synonyms.. should we use "name" or "ot:ottTaxonName" as the property?
+//				prefTaxaByNameOrSynonym.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
+				prefTaxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 			}
 			
 			// add to the rank-specific indexes
 	        if (isSpecific(rank)) {
-	        	prefTaxaByNameSpecies.add(tnode, "name", inputName);
+	        	prefTaxaByNameSpecies.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 
 	        } else if (rank.equals("genus")) {
-	        	prefTaxaByNameGenera.add(tnode, "name", inputName);
-	        	prefTaxaByNameHigher.add(tnode, "name", inputName);
+	        	prefTaxaByNameGenera.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+	        	prefTaxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 	        	if (addSynonyms) {
-	        		prefTaxaByNameOrSynonymHigher.add(tnode, "name", inputName);
+	        		prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+//	        		prefTaxaByNameOrSynonymHigher.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
 	        	}
 
 	        } else {
-	        	prefTaxaByNameHigher.add(tnode, "name", inputName);
+        		prefTaxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 	        	if (addSynonyms) {
-	        		prefTaxaByNameOrSynonymHigher.add(tnode, "name", inputName);
+	        		prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+//	        		prefTaxaByNameOrSynonymHigher.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
 	        	}
 	        }
 		}
 		
-		dbnodes.put(inputId, tnode);
+		dbNodeForOTTIdMap.put(inputId, tnode);
 		
 		if (addSynonyms) {
 			// synonym processing
@@ -562,25 +596,25 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 						String synName = syns.get(j).get(0);
 						String synNameType = syns.get(j).get(1);
 						Node synode = createNode();
-						synode.setProperty("name", synName);
+						synode.setProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 						
 						synode.setProperty("nametype", synNameType);
 						synode.setProperty("source", sourceName);
 						synode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
 						
 						// indexing
-						taxaBySynonym.add(tnode, "name", synName);
-						taxaByNameOrSynonym.add(tnode, "name", synName);
+						taxaBySynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+						taxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 			            if (!isSpecific(rank)) {
-			            	taxaByNameOrSynonymHigher.add(tnode, "name", synName);
+			            	taxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 			            }
 	
 			            // additional indexing (smaller indexes) for non-hidden taxa
 						if (buildPreferredIndexes && !dubious) {
-							prefTaxaBySynonym.add(tnode,"name",synName);
-							prefTaxaByNameOrSynonym.add(tnode,"name",synName);
+							prefTaxaBySynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
+							prefTaxaByNameOrSynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
 				            if (!isSpecific(rank)) {
-				            	prefTaxaByNameOrSynonymHigher.add(tnode, "name", synName);
+				            	prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 				            }
 						}
 					}
@@ -628,6 +662,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		taxaByNameSpecies = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_SPECIES);
 		taxaByNameGenera = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_GENERA);
 		taxaByNameHigher = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_HIGHER);
+		
+		deprecatedTaxa = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
 
 		// only for synonyms
 		if (addSynonyms) {

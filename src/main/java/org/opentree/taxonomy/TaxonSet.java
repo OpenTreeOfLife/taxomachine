@@ -16,6 +16,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
+import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 
 public class TaxonSet implements Iterable<Taxon> {
 
@@ -134,13 +136,10 @@ public class TaxonSet implements Iterable<Taxon> {
             long[] dInternalIds = (long[]) childNode.getProperty("nested_mrca");
             for (int i = 0; i < dInternalIds.length; i++) descendantIds.add(dInternalIds[i]);
 
-//            System.out.println("Found " + String.valueOf(descendantIds.size()) + " ids in " + childNode.getProperty("name"));          
-
             findDescendants:
             for (long aid : descendantIds) {
                 for (long tid : taxonIds) {
                     if (tid == aid) {
-//                        System.out.println("found child " + String.valueOf(tid) + " in " + childNode.getProperty("name"));
                         heavyChildren.add(childNode);
                         break findDescendants;
                     }
@@ -148,8 +147,6 @@ public class TaxonSet implements Iterable<Taxon> {
             }            
         }
 
-//        System.out.println(heavyChildren.size());
-        
         if (heavyChildren.size() > 1) {
 
             // this node represents a branching event, i.e. an internal node; make the node and add its children
@@ -159,12 +156,9 @@ public class TaxonSet implements Iterable<Taxon> {
                 treeNode.addChild(makeSubtree(new Taxon(heavyChild, taxonomy)));
             }
 
-//            System.out.println("Adding internal node: " + treeNode.getName());
             return treeNode;
 
         } else if (heavyChildren.size() == 1) {
-
-//            System.out.println("Skipping knuckle: " + knuckle.getName());
 
             // this is a "knuckle" on a lineage containing downstream nodes; continue tracing this lineage
             return makeSubtree(new Taxon(heavyChildren.iterator().next(), taxonomy));
@@ -173,8 +167,6 @@ public class TaxonSet implements Iterable<Taxon> {
             
             // this should be a tip node
             JadeNode tipNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
-
-//            System.out.println("Adding tip node: " + tipNode.getName());
             return tipNode;
         }
     }
