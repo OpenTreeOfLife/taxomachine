@@ -200,21 +200,17 @@ if [ $SETUP_NEO4J ]; then
         mv "$SERVER_PROPERTIES" "$ORIG_SERVER_PROPERTIES"
         printf "$COMMENT\n$TAXOMACHINE_DB_ASSIGNMENT\n\n" > "$SERVER_PROPERTIES"
         grep -v "org.neo4j.server.database.location" "$ORIG_SERVER_PROPERTIES" >> "$SERVER_PROPERTIES"
-
     fi
-
-    #### TODO: switch the port to 7476. This is going to require neo4j enterprise
-
 fi
 
 printf "\nusing neo4j instance for taxomachine at: $TAXO_NEO4J_HOME\n"
 
 # install the plugin if necessary
 PLUGIN="taxomachine-neo4j-plugins-0.0.1-SNAPSHOT.jar"
-PLUGIN_INSTALL_LOCATION="$TAXO_NEO4J_HOME/plugins/"
+PLUGIN_INSTALL_LOCATION="$TAXO_NEO4J_HOME/plugins/"$PLUGIN
 
 # just remove the binary if we want recompile
-if [ $RECOMPILE_PLUGIN ]; then    
+if [ $RECOMPILE_PLUGIN ]; then
     rm -f $PLUGIN_INSTALL_LOCATION
 fi
 
