@@ -227,13 +227,16 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
 
-				// TODO: transition these to lower case with underscores
+				// TODO: THESE ARE DEPRECATED, REMOVE AT NEXT VERSION OF API
 				serializer.putNumber("nodeId", match.getMatchedNode().getId()); // matched node id
-				serializer.putNumber("ottId", (Long) match.getMatchedNode().getProperty(
-						OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
+				serializer.putNumber("ottId", (Long) match.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
+
+				serializer.putNumber("node_id", match.getMatchedNode().getId()); // matched node id
+				serializer.putNumber("ott_id", (Long) match.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
 				serializer.putString("name", match.getUniqueName()); // unique name
 				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
 				serializer.putBoolean("higher", match.getIsHigherTaxon()); // is higher taxon
+				serializer.putBoolean("dubious", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
 			}
 		};
 	}
