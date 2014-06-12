@@ -12,13 +12,12 @@ import org.opentree.taxonomy.Taxon;
  * should not be used for other purposes.
  * 
  * @author Cody Hinchliff
- *
  */
 public class TNRSHit {
 
     Node matchedNode;
     String searchString;
-    String sourceName;
+//    String sourceName;
     String nomenCode;
     boolean isHomonym;
     boolean isPerfectMatch;
@@ -28,13 +27,13 @@ public class TNRSHit {
     boolean isDeprecated;
     String rank;
     boolean nameStatusIsKnown;
-    HashMap<String,String> otherData;
+//    HashMap<String,String> otherData;
     double score;
 
     public TNRSHit() {
         matchedNode = null;
         searchString = "";
-        sourceName = "";
+//        sourceName = "";
         nomenCode = "undetermined";
         isHomonym = false;
         isPerfectMatch = false;
@@ -44,7 +43,7 @@ public class TNRSHit {
         isDeprecated = true;
         rank = "";
         nameStatusIsKnown = true;
-        otherData = null;
+//        otherData = null;
         score = -1;
     }
     
@@ -58,10 +57,11 @@ public class TNRSHit {
         return this;
     }
 
+    /*
     public TNRSHit setSourceName(String sourceName) {
         this.sourceName = sourceName;
         return this;
-    }
+    } */
 
     public TNRSHit setNomenCode(String nomenCode) {
         this.nomenCode = nomenCode;
@@ -113,10 +113,11 @@ public class TNRSHit {
         return this;
     }
 
+    /*
     public TNRSHit setOtherData(Map<String,String> otherData) {
         this.otherData = (HashMap<String, String>)otherData;
         return this;
-    }
+    } */
 
     public TNRSHit setScore(double score) {
         this.score = score;
@@ -142,11 +143,12 @@ public class TNRSHit {
     public String getRank() {
     	return rank;
     }
-        
+     
+    /*
     public String getSourceName() {
         // the name of the source where the match was found
         return sourceName;
-    }
+    } */
 
     public boolean getIsPerfectMatch() {
         // is this an exact direct match to a graph node?
@@ -172,9 +174,10 @@ public class TNRSHit {
         return score;
     }
 
+    /*
     public Map<String, String> getOtherData() {
         // any other data
         return otherData;
-    }
+    }*/
 
 }

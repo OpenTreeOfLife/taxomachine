@@ -273,19 +273,6 @@ public class TNRS extends ServerPlugin {
         	useAutoInference = false;
         }
 
-        // parse the include dubious. we use a string because we can't do a null comparison on a boolean
-        // TODO: fix this, update so it actually works with the new indexes
-//        boolean includeDubious = false;
-/*        if (includeDubiousStr != null) {
-        	if (includeDubiousStr.equalsIgnoreCase("true")) {
-        		includeDubious = true;
-        	} else if (includeDubiousStr.equalsIgnoreCase("false")) {
-        		includeDubious = false;
-        	} else {
-        		throw new IllegalArgumentException("The includeDubious parameter may only be set to 'true' or 'false'.");
-        	}
-        } */
-
         MultiNameContextQuery mncq = new MultiNameContextQuery(taxonomy);
         TNRSResults results = mncq
         		.setSearchStrings(idNameMap)

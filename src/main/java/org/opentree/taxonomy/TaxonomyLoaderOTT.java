@@ -90,7 +90,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	Transaction tx;
 	
-	String sourceName = "";
+	String sourceName = "ott";
 	
 	HashMap<String, ArrayList<ArrayList<String>>> synonymhash = null;
 	boolean synFileExists = false;
@@ -141,6 +141,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	}
 
 	public void loadDeprecatedTaxa(String deprecatedFile) {
+		
+		setupIndexes();
 		
 		Transaction tx = graphDb.beginTx();
 		
@@ -643,8 +645,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		metadatanode.setProperty("source", sourceName);
 		metadatanode.setProperty("author", "open tree of life project");
 		metadatanode.setProperty("weburl", "https://github.com/OpenTreeOfLife/opentree/wiki/Open-Tree-Taxonomy");
-		metadatanode.setProperty("uri", "");
-		metadatanode.setProperty("urlprefix", '"');
 		taxSources.add(metadatanode, "source", sourceName);
 	}
 	

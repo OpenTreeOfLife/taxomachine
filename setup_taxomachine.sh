@@ -61,7 +61,7 @@ if [ ! -d $JARSDIR ]; then
     mkdir $JARSDIR
 fi
 
-OTT_SOURCENAME="ott"
+OTT_SOURCENAME=$VERSION
 OTT_DOWNLOADDIR=$PREFIX"/data"
 if [ ! -d $OTT_DOWNLOADDIR ]; then
 	mkdir $
@@ -92,6 +92,7 @@ printf "\nusing $VERSION taxonomy at: $OTT_SOURCEDIR\n"
 
 OTT_TAXONOMY=$OTT_SOURCEDIR"/taxonomy.tsv"
 OTT_SYNONYMS=$OTT_SOURCEDIR"/synonyms.tsv"
+OTT_DEPRECATED=$OTT_SOURCEDIR"/deprecated.tsv"
 
 # download taxomachine
 TAXOMACHINE_HOME=$PREFIX"/taxomachine"
@@ -170,6 +171,7 @@ if [ $SETUP_DB ]; then
 	fi
 
 	$TAXOMACHINE_COMMAND loadtaxsyn $OTT_SOURCENAME $OTT_TAXONOMY $OTT_SYNONYMS $TAXOMACHINE_DB	
+	$TAXOMACHINE_COMMAND adddeprecated $OTT_TAXONOMY $OTT_DEPRECATED	
 	$TAXOMACHINE_COMMAND makecontexts $TAXOMACHINE_DB
 	$TAXOMACHINE_COMMAND makegenusindexes $TAXOMACHINE_DB
 fi

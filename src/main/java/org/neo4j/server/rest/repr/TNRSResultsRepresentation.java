@@ -2,6 +2,7 @@ package org.neo4j.server.rest.repr;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -79,28 +80,18 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
-
-				HashMap<String, Object> tnrsResultsMap = new HashMap<String, Object>();
-
-				tnrsResultsMap.put("governing_code", results.getGoverningCode());
-				tnrsResultsMap.put("unambiguous_name_ids", results.getNameIdsWithDirectMatches()); // was
-																									// "unambiguous_names"
-				tnrsResultsMap.put("unmatched_name_ids", results.getUnmatchedNameIds()); // was "unmatched_names"
-				tnrsResultsMap.put("matched_name_ids", results.getMatchedNameIds()); // was "matched_names"
-				tnrsResultsMap.put("context", results.getContextName());
-
-				for (Map.Entry<String, Object> pair : tnrsResultsMap.entrySet()) {
-					String key = pair.getKey();
-					Object value = pair.getValue();
-
-					if (value instanceof String) {
-						serializer.putString(key, (String) value);
-
-					} else if (value instanceof Set) {
-						serializer.putList(key, OTRepresentationConverter.getListRepresentation((Set) value));
-					}
-				}
-
+				serializer.putString("governing_code", results.getGoverningCode());
+				serializer.putList("unambiguous_name_ids",
+						OTRepresentationConverter.getListRepresentation(results.getNameIdsWithDirectMatches()));
+				serializer.putList("unmatched_name_ids", 
+						OTRepresentationConverter.getListRepresentation(results.getUnmatchedNameIds()));
+				serializer.putList("matched_name_ids",
+						OTRepresentationConverter.getListRepresentation(results.getMatchedNameIds()));
+				serializer.putString("context", results.getContextName());
+				serializer.putBoolean("includes_deprecated_ids", results.getIncludesDeprecated());
+				serializer.putBoolean("includes_dubious_names", results.getIncludesDubious());
+				serializer.putMapping("taxonomy",
+						OTRepresentationConverter.getMapRepresentation(results.getTaxonomyMetdata()));
 				serializer.putList("results", getResultsListRepresentation(results));
 			}
 		};
@@ -131,8 +122,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 					} else if (value instanceof Double) {
 						serializer.putNumber(key, (Long) value);
 					} else {
-						throw new UnsupportedOperationException("unrecognized type for value: " + value + " of key "
-								+ key);
+						throw new UnsupportedOperationException("unrecognized type for value: " + value + " of key " + key);
 					}
 				}
 			}
@@ -159,45 +149,58 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				Node matchedNode = match.getMatchedNode();
 
+				// add these properties for all taxa
+				serializer.putBoolean("is_perfect_match", match.getIsPerfectMatch());
+				serializer.putBoolean("is_approximate_match", match.getIsApproximate());
 				serializer.putNumber("matched_node_id", matchedNode.getId());
-				serializer.putString("matched_name", matchedNode.getProperty(
-						OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()).toString());
-				serializer.putString("unique_name", match.getUniqueName());
-				serializer.putString("rank", match.getRank());
+				serializer.putString("matched_name", (String) matchedNode.getProperty(
+						OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 				serializer.putNumber("matched_ott_id", (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID
 						.propertyName()));
-				serializer.putString("parent_name", match.getParentNode().getProperty(
-						OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()).toString());
-				serializer.putString("source_name", match.getSource());
-				serializer.putString("nomenclature_code", match.getNomenCode());
-				serializer.putBoolean("is_perfect_match", match.getIsPerfectMatch());
-				serializer.putBoolean("is_deprecated", match.getIsDeprecated());
-				serializer.putBoolean("is_approximate_match", match.getIsApproximate());
 				serializer.putString("search_string", match.getSearchString());
 				serializer.putNumber("score", match.getScore());
 
-				// check dubiousness
-				boolean isDubious = false;
-				if (matchedNode.hasProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
-					isDubious = (Boolean) matchedNode.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
-				}
-				serializer.putBoolean("dubious_name", isDubious);
+				// check if taxon is deprecated
+				boolean isDeprecated = match.getIsDeprecated();
+				serializer.putBoolean("is_deprecated", isDeprecated);
 
-				// get all flags
-				List<OTTFlag> flags = new LinkedList<OTTFlag>();
-				for (OTTFlag flag : OTTFlag.values()) {
-					if (matchedNode.hasProperty(flag.label)) {
-						flags.add(flag);
-					}
-				}
-				serializer.putList("flags", OTRepresentationConverter.getListRepresentation(flags));
+				if (isDeprecated) {
+					serializer.putList("flags", OTRepresentationConverter.getListRepresentation(Arrays.asList(new String[] {"DEPRECATED",})));
 
-				if (match.getNameStatusIsKnown()) {
-					serializer.putString("synonym_or_homonym_status", "known");
-					serializer.putBoolean("is_synonym", match.getIsSynonym());
-					serializer.putBoolean("is_homonym", match.getIsHomonym());
 				} else {
-					serializer.putString("synonym_or_homonym_status", "uncertain");
+					// only add these properties for non-deprecated taxa
+					serializer.putString("unique_name", match.getUniqueName());
+					serializer.putString("rank", match.getRank());
+					serializer.putString("nomenclature_code", match.getNomenCode());
+					Node pNode = match.getParentNode();
+					if (pNode != null) {
+						serializer.putString("parent_name", (String) match.getParentNode().getProperty(
+								OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+					}
+					
+					// check dubiousness
+					boolean isDubious = false;
+					if (matchedNode.hasProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
+						isDubious = (Boolean) matchedNode.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
+					}
+					serializer.putBoolean("dubious_name", isDubious);
+	
+					// get all flags
+					List<OTTFlag> flags = new LinkedList<OTTFlag>();
+					for (OTTFlag flag : OTTFlag.values()) {
+						if (matchedNode.hasProperty(flag.label)) {
+							flags.add(flag);
+						}
+					}
+					serializer.putList("flags", OTRepresentationConverter.getListRepresentation(flags));
+					
+					if (match.getNameStatusIsKnown()) {
+						serializer.putString("synonym_or_homonym_status", "known");
+						serializer.putBoolean("is_synonym", match.getIsSynonym());
+						serializer.putBoolean("is_homonym", match.getIsHomonym());
+					} else {
+						serializer.putString("synonym_or_homonym_status", "uncertain");
+					}
 				}
 			}
 		};
