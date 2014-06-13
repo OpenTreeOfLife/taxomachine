@@ -27,7 +27,13 @@ import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
 public class OTTServices extends ServerPlugin {
 
-    @Description("Get information about a recognized taxon.")
+    @Description("Get information about the taxonomy itself.")
+    @PluginTarget(GraphDatabaseService.class)
+    public Representation getTaxonomyInfo (@Source GraphDatabaseService graphDb) {
+    	return OTRepresentationConverter.convert(new Taxonomy(graphDb).getMetadataMap());
+    }
+	
+    @Description("Get a list of deprecated ott ids and the names to which they correspond.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation getDeprecatedTaxa (@Source GraphDatabaseService graphDb) {
 
@@ -82,7 +88,6 @@ public class OTTServices extends ServerPlugin {
 
     	return OTRepresentationConverter.convert(results);
     }
-    
     
     private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
 		map.put(property, node.getProperty(property));
