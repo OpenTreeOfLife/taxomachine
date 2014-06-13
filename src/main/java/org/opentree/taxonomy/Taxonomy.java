@@ -42,6 +42,7 @@ public class Taxonomy {
 	public final static String LIFE_NODE_NAME = "life";
 	public TaxonomyContext ALLTAXA;
 	Index<Node> taxaByOTTId;
+	Index<Node> deprecatedTaxa;
 
 	public static final String[] SPECIFIC_RANKS = {"species", "subspecies", "variety", "varietas", "forma", "form"};
 
@@ -58,6 +59,7 @@ public class Taxonomy {
 	private void initIndexes() {
 		ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
 		taxaByOTTId = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_OTT_ID);
+		deprecatedTaxa = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
 	}
 	
 	public Node getLifeNode() {
@@ -146,20 +148,38 @@ public class Taxonomy {
 	 * @throws MultipleHitsException
 	 */
     public Taxon getTaxonForOTTId(final Long ottId) {
-        IndexHits<Node> hits = taxaByOTTId.get(OTVocabularyPredicate.OT_OTT_ID.propertyName(), ottId);
+        IndexHits<Node> hits = null;
         Node match = null;
+        
         try {
-        	match = hits.getSingle();
-        } catch (NoSuchElementException ex) {
-        	throw new MultipleHitsException(ottId);
+        	// first check the standard index
+        	hits = taxaByOTTId.get(OTVocabularyPredicate.OT_OTT_ID.propertyName(), ottId);
+	        if (hits.size() == 1) {
+	        	match = hits.getSingle();
+	        } else if (hits.size() > 1) {
+	        	throw new MultipleHitsException(ottId);
+	        }
+	        
+	        if (match == null) {
+	        	// if we didn't find a taxon, check the deprecated ids
+	        	
+	        	if (hits != null) {
+	        		hits.close();
+	        	}
+	        	hits = deprecatedTaxa.get(OTVocabularyPredicate.OT_OTT_ID.propertyName(), ottId);
+		        if (hits.size() == 1) {
+		        	match = hits.getSingle();
+		        } else if (hits.size() > 1) {
+		        	throw new MultipleHitsException(ottId);
+		        }
+	        }
         } finally {
-        	hits.close();
+        	if (hits != null) {
+        		hits.close();
+        	}
         }
-        if (match != null)
-        	return new Taxon(match, this);
-        else {
-        	return null;
-        }
+        
+        return match != null ? new Taxon(match, this) : null;
 	}
 	
 	/**

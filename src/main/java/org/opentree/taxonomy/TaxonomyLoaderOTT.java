@@ -174,8 +174,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				
 				Long id = Long.valueOf(tokenizer.nextToken());
 				String name = tokenizer.nextToken();
-				String reason = tokenizer.nextToken();
 				String sourceInfo = tokenizer.nextToken();
+				String reason = tokenizer.nextToken();
 				
 				Node d = graphDb.createNode();
 				d.createRelationshipTo(deprecatedContainerNode, TaxonomyRelType.CONTAINEDBY);

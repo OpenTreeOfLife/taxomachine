@@ -1,5 +1,6 @@
 package org.opentree.taxonomy.plugins;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -20,6 +21,7 @@ import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
 import org.opentree.graphdb.GraphDatabaseAgent;
 import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.OTTFlag;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.constants.TaxonomyProperty;
@@ -72,18 +74,33 @@ public class OTTServices extends ServerPlugin {
     		Node n = match.getNode();
     		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
     		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
-    		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
-    		addPropertyFromNode(n, TaxonomyProperty.SOURCE.propertyName(), results);
-    		addPropertyFromNode(n, TaxonomyProperty.UNIQUE_NAME.propertyName(), results);
-    		
     		results.put("node_id", match.getNode().getId());
-    	
-    		HashSet<String> synonyms = new HashSet<String>();
-	    	for (Node m : match.getSynonymNodes()) {
-	    		synonyms.add((String) m.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
-	    	}
-	    	results.put("synonyms", synonyms);
-    	
+
+    		if (match.isDeprecated()) {
+    			// for deprecated ids, add appropriate properties
+    			addPropertyFromNode(n, TaxonomyProperty.REASON.propertyName(), results);
+    			results.put("flags", Arrays.asList(new String[] {TaxonomyProperty.DEPRECATED.toString()}));
+    			
+    		} else {
+    			// not deprecated, add regular info
+    			addPropertyFromNode(n, TaxonomyProperty.SOURCE.propertyName(), results);
+	    		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
+	    		addPropertyFromNode(n, TaxonomyProperty.UNIQUE_NAME.propertyName(), results);
+
+	    		HashSet<String> flags = new HashSet<String>();
+	    		for (OTTFlag flag : OTTFlag.values()) {
+	    			if (n.hasProperty(flag.label)) {
+	    				flags.add(flag.toString());
+	    			}
+	    		}
+	    		results.put("flags", flags);
+	    		
+	    		HashSet<String> synonyms = new HashSet<String>();
+	    		for (Node m : match.getSynonymNodes()) {
+	    			synonyms.add((String) m.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+	    		}
+	    		results.put("synonyms", synonyms);
+    		}
     	}
 
     	return OTRepresentationConverter.convert(results);

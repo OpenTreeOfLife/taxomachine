@@ -59,6 +59,22 @@ public class Taxon {
             return null;
     }
     
+	public boolean isDeprecated() {
+		if (taxNode.hasProperty(TaxonomyProperty.DEPRECATED.propertyName())) {
+			return (Boolean) taxNode.getProperty(TaxonomyProperty.DEPRECATED.propertyName());
+		} else {
+			return false;
+		}
+    }
+	
+	public boolean isDubious() {
+		if (taxNode.hasProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
+			return (Boolean) taxNode.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
+		} else {
+			return false;
+		}
+	}
+	
     public String getName() {
         return String.valueOf(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
     }
