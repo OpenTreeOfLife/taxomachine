@@ -79,6 +79,7 @@ public class OTTServices extends ServerPlugin {
     		if (match.isDeprecated()) {
     			// for deprecated ids, add appropriate properties
     			addPropertyFromNode(n, TaxonomyProperty.REASON.propertyName(), results);
+    			addPropertyFromNode(n, TaxonomyProperty.SOURCE_INFO.propertyName(), results);
     			results.put("flags", Arrays.asList(new String[] {TaxonomyProperty.DEPRECATED.toString()}));
     			
     		} else {
