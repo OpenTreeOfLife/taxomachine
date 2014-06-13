@@ -118,7 +118,7 @@ public class TNRS extends ServerPlugin {
 
         	List<TNRSMatch> matches = results.iterator().next().getMatches().getMatchList();
         	
-            if (!matches.isEmpty()) {
+            if (! matches.isEmpty()) {
 
             	Collections.sort(matches, new MatchComparator());
 

@@ -216,7 +216,10 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 		public String getUniqueName() {
 			String name = (String) getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 			if (matchedNode.hasProperty(TaxonomyProperty.UNIQUE_NAME.propertyName())) {
-				name = (String) getMatchedNode().getProperty(TaxonomyProperty.UNIQUE_NAME.propertyName());
+				String uniqueName = (String) getMatchedNode().getProperty(TaxonomyProperty.UNIQUE_NAME.propertyName());
+				if (! uniqueName.equals("")) {
+					name = uniqueName;
+				}
 			}
 			return name;
 		}
