@@ -41,12 +41,12 @@ public enum OTTFlag {
 	/**
 	 * Low-rank children of high-rank taxa (e.g. genus child of class).
 	 */
-	MAJOR_RANK_CONFLICT_DIRECT ("major_rank_conflict_direct", false),
+	MAJOR_RANK_CONFLICT_DIRECT ("major_rank_conflict_direct", true),
 
 	/**
 	 * Descendants of low-rank children of high-rank taxa (e.g. genus child of class).
 	 */
-	MAJOR_RANK_CONFLICT_INHERITED ("major_rank_conflict_inherited", false),
+	MAJOR_RANK_CONFLICT_INHERITED ("major_rank_conflict_inherited", true),
 
 	/**
 	 * Taxa that are or were children of "unclassified" containers
