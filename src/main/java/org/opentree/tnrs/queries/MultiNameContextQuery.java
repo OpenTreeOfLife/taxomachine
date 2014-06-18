@@ -3,25 +3,20 @@ package org.opentree.tnrs.queries;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.MultiFieldQueryParser;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.TermQuery;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
-import org.opentree.graphdb.DatabaseUtils;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.TaxonSet;
 import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.constants.TaxonomyRelType;
-import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 import org.opentree.tnrs.TNRSHit;
@@ -29,9 +24,6 @@ import org.opentree.tnrs.TNRSMatchSet;
 import org.opentree.tnrs.TNRSNameResult;
 import org.opentree.tnrs.TNRSResults;
 import org.opentree.utils.Levenshtein;
-import org.apache.lucene.search.TermRangeQuery;
-
-
 
 /**
  * Provides access to the default TNRS query, which accepts a set of taxonomic names, from which it will attempt to infer
@@ -47,7 +39,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     
 	private Map<Object, String> queriedNames;
     private Taxon bestGuessLICAForNames; // used for the inferred context
-    private HashSet<Taxon> validTaxaWithExactMatches; // To store taxa/names for which we can/cannot find direct (exact, n=1) matches
+    private HashSet<Taxon> validTaxaWithExactMatches; // To store taxa/names for which we find direct (exact, n=1) matches
 
     // set during construction by setDefaults()
     private boolean contextAutoInferenceIsOn;
@@ -55,16 +47,15 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     private boolean includeDeprecated = false;
     private boolean matchSpTaxaToGenera;
     
-    // different indexes may be used depending on preferences (such as whether to include dubious taxa)
     private Index<Node> nameIndex;
     private Index<Node> synonymIndex;
     private Index<Node> nameOrSynonymIndex;
     private Index<Node> deprecatedIndex;
     
     // special-purpose containers used during search
-    private Map<Object, String> namesWithoutExactNameMatches;
-    private Map<Object, String> namesWithoutExactSynonymMatches;
-    private Map<Object, String> namesWithoutApproxTaxnameOrSynonymMatches;
+//    private Map<Object, String> namesWithoutExactNameMatches;
+    private Map<Object, String> namesWithoutExactMatches;
+    private Map<Object, String> namesWithoutApproxMatches;
     
     public MultiNameContextQuery(Taxonomy taxonomy) {
     	super(taxonomy);
@@ -152,9 +143,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         bestGuessLICAForNames = null;
         results = new TNRSResults();
 
-        namesWithoutExactNameMatches = new HashMap<Object, String>();
-        namesWithoutExactSynonymMatches = new HashMap<Object, String>();
-        namesWithoutApproxTaxnameOrSynonymMatches = new HashMap<Object, String>();
+//        namesWithoutExactNameMatches = new HashMap<Object, String>();
+        namesWithoutExactMatches = new HashMap<Object, String>();
+        namesWithoutApproxMatches = new HashMap<Object, String>();
 
         return this;
     }
@@ -182,29 +173,25 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	
     	setIndexes();
         
-    	Map<Object, String> namesToMatchAgainstContext =  new HashMap<Object, String>();
+    	Map<Object, String> namesToMatchToTaxa =  new HashMap<Object, String>();
     	if (contextAutoInferenceIsOn) {
-        	namesToMatchAgainstContext = (HashMap<Object, String>) inferContextAndReturnAmbiguousNames();
+        	namesToMatchToTaxa = (HashMap<Object, String>) inferContextAndReturnAmbiguousNames();
         } else {
-            namesToMatchAgainstContext = queriedNames;
+            namesToMatchToTaxa = queriedNames;
         }
         
         // direct match unmatched names within context
-        getExactNameMatches(namesToMatchAgainstContext);
+        getExactNameMatches(namesToMatchToTaxa);
         
-        // direct match unmatched names against synonyms
-        getExactSynonymMatches(namesWithoutExactNameMatches);
+        // direct match *all* names against synonyms
+//        getExactSynonymMatches(namesWithoutExactNameMatches);
+        getExactSynonymMatches(queriedNames);
         
-        // TODO: external concept resolution for still-unmatched names? (direct match returned concepts against context)
-        // this will need an external concept-resolution service, which as yet does not seem to exist...
-
         // do fuzzy matching for any names we couldn't match
-        getApproxTaxnameOrSynonymMatches(namesWithoutExactSynonymMatches);
+        getApproxTaxnameOrSynonymMatches(namesWithoutExactMatches);
         
-        // TODO: last-ditch effort to match yet-unmatched names: try truncating names in case there are accession-id modifiers?
-
         // record unmatchable names to results
-        for (Entry<Object, String> nameEntry : namesWithoutApproxTaxnameOrSynonymMatches.entrySet()) {
+        for (Entry<Object, String> nameEntry : namesWithoutApproxMatches.entrySet()) {
         	results.addUnmatchedName(nameEntry.getKey(), nameEntry.getValue());
         }
         
@@ -371,58 +358,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
                         }
             		}
             	}
-	                        /*
-	                        try {
-	                        	inferredGenericNameHits = nameIndex.query(exactGenusNameQuery);
-		                        if (inferredGenericNameHits.size() > 0) {
-		        	                
-		        	                // at least 1 hit; prepare to record matches
-		        	
-		        	                // determine within-context homonym status
-		        	                boolean isHomonym = false;
-		        	                if (inferredGenericNameHits.size() > 1) {
-		        	                    isHomonym = true;
-		        	                }
-		        	
-		        	                for (Node hit : inferredGenericNameHits) {
-		        	                    // add this match to the match set
-		        	                    Taxon matchedTaxon = taxonomy.getTaxon(hit);
-		        	                    matches.addMatch(new TNRSHit().
-		        	                            setMatchedTaxon(matchedTaxon).
-		        	                            setSearchString(inferredGenusName).
-		        	                            setIsPerfectMatch(false).
-		        	                            setIsApprox(false).
-		        	                            setIsHomonym(isHomonym).
-		        	                            setNomenCode(matchedTaxon.getNomenCode()).
-		        	                            setScore(getScore(inferredGenusName, matchedTaxon, hit)));
-			        	                }
-
-		        	                // add matches to the TNRS results
-		        	                results.addNameResult(new TNRSNameResult(thisId, matches));
-
-		    	            		continue; // do not add this name to the namesWithoutExactMatches, or it will end up in synonym/fuzzy matching as well
-
-		                        } else {
-		                        	// no hits found so do nothing; this name will be added to the namesWithoutExactMatches and will end up in synonym/fuzzy matching
-		                        }
-
-	                        } finally {
-	                        	if (inferredGenericNameHits != null) {
-	                        		inferredGenericNameHits.close();
-	                        	}
-	                        }
-	            		}
-	            	} 
-	            	
-	                // no direct matches, move on to next name
-	                namesWithoutExactNameMatches.put(thisId, thisName);
-	                continue;
-*/
-	
-//	            } else {
+            	
 	            if (hits.size() > 0) {
 	                // at least 1 hit; prepare to record matches
-//	                TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
 	
 	                // determine within-context homonym status
 	                boolean isHomonym = hits.size() > 1 ? true : false;
@@ -461,7 +399,6 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	                            .setSearchString(thisName)
     	                            .setIsPerfectMatch(!usingGenericSpMatching) // it it's not a "Genus sp." match to "Genus"
     	                            .setIsApprox(false)
-//    	                            .setNomenCode(matchedTaxon.getNomenCode())
     	                            .setScore(PERFECT_SCORE));
     	                    
     	                    if (!usingGenericSpMatching) {
@@ -475,7 +412,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	            if (matches.size() > 0) {
 	                results.addNameResult(new TNRSNameResult(thisId, matches));
 	            } else {
-	                namesWithoutExactNameMatches.put(thisId, thisName);
+	                namesWithoutExactMatches.put(thisId, thisName);
 	            }
 
             } finally {
@@ -530,14 +467,15 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	            }
 	            
 	            // sort of awkward disjointed conditionals here, but this allows
-	            // more flexibility for adding additional searches in the future
-	            // to do so, add those additional searches right here.
+	            // more flexibility for adding additional searches in the future.
+	            // (add those additional searches right here.)
 	
                 // add matches (if any) to the TNRS results
 	            if (matches.size() > 0) {
 	                results.addNameResult(new TNRSNameResult(thisId, matches));
-	            } else {
-	                namesWithoutExactSynonymMatches.put(thisId, thisName);
+	                
+	                // in case we managed to find a synonym match for a name that was not matched to a taxon...
+	                namesWithoutExactMatches.remove(thisId);
 	            }
 
             } finally {
@@ -622,7 +560,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
                 if (matches.size() > 0) {
 	                results.addNameResult(new TNRSNameResult(thisId, matches));
                 } else {
-                    namesWithoutApproxTaxnameOrSynonymMatches.put(thisId, thisName);
+                    namesWithoutApproxMatches.put(thisId, thisName);
                 }
 
             } finally {
