@@ -440,8 +440,15 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 
     		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
-    		
-            TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
+    		TNRSMatchSet matches = null;
+
+    		// use a preexisting nameresult for this name id if there is one, so we don't lose earlier matches
+            if (results.containsResultWithId(thisId)) {
+            	matches = results.getNameResult(thisId).getMatches();
+        	} else {
+                matches = new TNRSMatchSet(taxonomy);
+        	}
+            
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), thisName));
 
@@ -465,16 +472,16 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                            .setScore(PERFECT_SCORE));
 	                }
 	            }
-	            
-	            // sort of awkward disjointed conditionals here, but this allows
-	            // more flexibility for adding additional searches in the future.
-	            // (add those additional searches right here.)
-	
+	            	
                 // add matches (if any) to the TNRS results
 	            if (matches.size() > 0) {
-	                results.addNameResult(new TNRSNameResult(thisId, matches));
-	                
-	                // in case we managed to find a synonym match for a name that was not matched to a taxon...
+	            	
+	            	// add the new name result if there wasn't one already there (if there was then we're already using it, see above)
+	            	if (!results.containsResultWithId(thisId)) {
+	            		results.addNameResult(new TNRSNameResult(thisId, matches));
+	            	}	            		          
+
+	            	// in case we managed to find a synonym match for a name that was not matched to a taxon...
 	                namesWithoutExactMatches.remove(thisId);
 	            }
 

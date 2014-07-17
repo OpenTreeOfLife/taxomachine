@@ -133,4 +133,12 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 	public void setMinimumScore(double s) {
 		minimumScore = s;
 	}
+
+	public boolean containsResultWithId(Object thisId) {
+		return results.containsKey(thisId);
+	}
+
+	public TNRSNameResult getNameResult(Object thisId) {
+		return results.get(thisId);
+	}
 }
