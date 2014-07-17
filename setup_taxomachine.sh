@@ -82,7 +82,7 @@ if [ $DOWNLOAD_OTT ]; then
 	
 fi 
 
-OTT_SOURCEDIR="$OTT_DOWNLOADDIR/$VERSION.db"
+OTT_SOURCEDIR="$OTT_DOWNLOADDIR/$VERSION"
 if [ ! -d $OTT_SOURCEDIR ]; then
 	printf "\ncan\'t find $OTT_SOURCEDIR. use --download-ott to download a copy\n"
 	exit
@@ -164,9 +164,9 @@ if [ $SETUP_DB ]; then
 	fi
 
 	$TAXOMACHINE_COMMAND loadtaxsyn $OTT_SOURCENAME $OTT_TAXONOMY $OTT_SYNONYMS $TAXOMACHINE_DB	
-	$TAXOMACHINE_COMMAND makecontexts $TAXOMACHINE_DB
-	$TAXOMACHINE_COMMAND makegenusindexes $TAXOMACHINE_DB
-	$TAXOMACHINE_COMMAND adddeprecated $OTT_TAXONOMY $OTT_DEPRECATED
+#	$TAXOMACHINE_COMMAND makecontexts $TAXOMACHINE_DB
+#	$TAXOMACHINE_COMMAND makegenusindexes $TAXOMACHINE_DB
+#	$TAXOMACHINE_COMMAND adddeprecated $OTT_DEPRECATED $TAXOMACHINE_DB
 fi
 
 # start the server
@@ -210,7 +210,7 @@ if [ $RECOMPILE_PLUGIN ]; then
 fi
 
 # recompile if the plugin is not there    
-if [ ! -f $PLUGIN_INSTALL_LOCATION ]; then
+if [[ -d $TAXO_NEO4J_HOME && ! -f $PLUGIN_INSTALL_LOCATION ]]; then
     cd $TAXOMACHINE_HOME	
     sh mvn_serverplugins.sh
     PLUGIN_COMPILE_LOCATION="$TAXOMACHINE_HOME/target/$PLUGIN"
