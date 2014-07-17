@@ -117,7 +117,7 @@ public class OTTServices extends ServerPlugin {
     	results.put("node_id", n.getId());
 		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
 		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
-		addPropertyFromNode(n, TaxonomyProperty.SOURCE.propertyName(), results);
+//		addPropertyFromNode(n, TaxonomyProperty.SOURCE.propertyName(), results);
 		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
 		addPropertyFromNode(n, TaxonomyProperty.UNIQUE_NAME.propertyName(), results);
 
