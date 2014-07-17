@@ -12,7 +12,6 @@ while [ $# -gt 0 ]; do
 		--restart-neo4j) RESTART_NEO4J=true;;
 #		--test) TEST=true;;
 		--force) FORCE=true;;
-		--update-from-git) UPDATE=true;;
 		--recompile-standalone) RECOMPILE=true;;
 		--recompile-plugin) RECOMPILE_PLUGIN=true;;
 		-ott-version) shift; VERSION="$1";;
@@ -106,12 +105,6 @@ printf "\nusing taxomachine at: $TAXOMACHINE_HOME\n"
 TAXOMACHINE_JAR="taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar"
 TAXOMACHINE_COMPILE_LOCATION="$TAXOMACHINE_HOME/target/$TAXOMACHINE_JAR"
 TAXOMACHINE_INSTALL_LOCATION="$JARSDIR/$TAXOMACHINE_JAR"
-
-if [ $UPDATE ]; then
-	cd $TAXOMACHINE_HOME
-	git pull origin master
-	rm -f $TAXOMACHINE_INSTALL_LOCATION
-fi
 
 # just remove the binary if we want recompile
 if [ $RECOMPILE ]; then
