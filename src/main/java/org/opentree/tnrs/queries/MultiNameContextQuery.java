@@ -469,7 +469,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                            .setIsHomonym(false)
 	                            .setIsSynonym(true)
 	                            .setNomenCode(matchedTaxon.getNomenCode())
-	                            .setScore(PERFECT_SCORE));
+	                            .setScore(0.111122223333));
 	                }
 	            }
 	            	
