@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lucene.search.MatchAllDocsQuery;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -25,6 +26,7 @@ import org.opentree.taxonomy.OTTFlag;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.constants.TaxonomyProperty;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
 public class OTTServices extends ServerPlugin {
@@ -58,11 +60,13 @@ public class OTTServices extends ServerPlugin {
     	return OTRepresentationConverter.convert(deprecatedTaxa);
     }
     
-    @Description("Get information about a known taxon.")
+    @Description("Get information about a known taxon. If the option to include info about the lineage is used, the information will be provided " +
+    			 "in an ordered array, with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
     @PluginTarget(GraphDatabaseService.class)
     public Representation getTaxonInfo (
     		@Source GraphDatabaseService graphDb,
-    		@Description("The OTT id of the taxon of interest.") @Parameter(name="ottId", optional=false) Long ottId) {
+    		@Description("The OTT id of the taxon of interest.") @Parameter(name="ottId", optional=false) Long ottId,
+    		@Description("Whether or not to include information about all the higher level taxa that include this one.") @Parameter(name="includeLineage", optional=true) Boolean includeLineage) {
     	
     	HashMap<String, Object> results = new HashMap<String, Object>();
     	
@@ -72,41 +76,60 @@ public class OTTServices extends ServerPlugin {
     	if (match != null) {
     		
     		Node n = match.getNode();
-    		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
-    		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
-    		results.put("node_id", match.getNode().getId());
 
     		if (match.isDeprecated()) {
-    			// for deprecated ids, add appropriate properties
+    			// for deprecated ids, add only appropriate properties
+    	    	results.put("node_id", n.getId());
+    			addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
+    			addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
     			addPropertyFromNode(n, TaxonomyProperty.REASON.propertyName(), results);
     			addPropertyFromNode(n, TaxonomyProperty.SOURCE_INFO.propertyName(), results);
     			results.put("flags", Arrays.asList(new String[] {TaxonomyProperty.DEPRECATED.toString()}));
     			
     		} else {
     			// not deprecated, add regular info
-    			addPropertyFromNode(n, TaxonomyProperty.SOURCE.propertyName(), results);
-	    		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
-	    		addPropertyFromNode(n, TaxonomyProperty.UNIQUE_NAME.propertyName(), results);
-
-	    		HashSet<String> flags = new HashSet<String>();
-	    		for (OTTFlag flag : OTTFlag.values()) {
-	    			if (n.hasProperty(flag.label)) {
-	    				flags.add(flag.toString());
-	    			}
-	    		}
-	    		results.put("flags", flags);
+    			addTaxonInfo(n, results);
 	    		
 	    		HashSet<String> synonyms = new HashSet<String>();
 	    		for (Node m : match.getSynonymNodes()) {
 	    			synonyms.add((String) m.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 	    		}
 	    		results.put("synonyms", synonyms);
+	    		
+	    		if (includeLineage != null && includeLineage == true) {
+	    			Node p = n;
+	    			LinkedList<HashMap<String,Object>> lineage = new LinkedList<HashMap<String, Object>>();
+	    			while (p.hasRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING)) {
+	    				HashMap<String,Object> info = new HashMap<String, Object>();
+	    				addTaxonInfo(p, info);
+	    				lineage.add(info);
+	    			}
+	    			results.put("taxonomic_lineage", lineage);
+	    		}
     		}
     	}
 
     	return OTRepresentationConverter.convert(results);
     }
     
+    private void addTaxonInfo(Node n, HashMap<String, Object> results) {
+
+    	results.put("node_id", n.getId());
+		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
+		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
+//		addPropertyFromNode(n, TaxonomyProperty.SOURCE.propertyName(), results);
+		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
+		addPropertyFromNode(n, TaxonomyProperty.UNIQUE_NAME.propertyName(), results);
+
+		HashSet<String> flags = new HashSet<String>();
+		for (OTTFlag flag : OTTFlag.values()) {
+			if (n.hasProperty(flag.label)) {
+				flags.add(flag.toString());
+			}
+		}
+		results.put("flags", flags);
+    }
+
     private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
 		map.put(property, node.getProperty(property));
     }
