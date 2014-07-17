@@ -92,7 +92,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	String sourceName = "ott";
 	
-	HashMap<String, ArrayList<ArrayList<String>>> synonymhash = null;
+//	HashMap<String, ArrayList<ArrayList<String>>> ottIdToSynonymNameMap = null;
+	HashMap<Long, ArrayList<String>> ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
 	boolean synFileExists = false;
 	
 	// ===== install options
@@ -251,27 +252,43 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			// preprocess the synonym file
 			// key is the id from the taxonomy, the array has the synonym and the type of synonym
 			if (synFileExists) {
-				synonymhash = new HashMap<String, ArrayList<ArrayList<String>>>();
+				System.out.println("getting synonyms");
+//				synonymhash = new HashMap<String, ArrayList<ArrayList<String>>>();
+				ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
 				try {
 					BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
 					while ((str = sbr.readLine()) != null) {
+						
 						StringTokenizer st = new StringTokenizer(str, "\t|\t");
 						String name = st.nextToken();
-						String id = st.nextToken();
-						ArrayList<String> tar = new ArrayList<String>();
-						tar.add(name);tar.add("from OTT");
-						if (synonymhash.get(id) == null) {
-							ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
-							synonymhash.put(id, ttar);
+						String idStr = st.nextToken();
+
+						Long id = null;
+						if (idStr != null && idStr.length() > 0 && !idStr.equals("uid")) {
+							id = Long.valueOf(idStr);
 						}
-						synonymhash.get(id).add(tar);
+
+						if (id == null && !idStr.equals("uid")) {
+							System.out.println("During synonym import, could not interpret id: " + idStr + " for synonym name " + name);
+							continue;
+						}
+						
+//						ArrayList<String> synonymEntry = new ArrayList<String>();
+//						synonymEntry.add(name);
+//						synonymEntry.add("from OTT");
+						
+						if (ottIdToSynonymNamesMap.get(id) == null) {
+							ottIdToSynonymNamesMap.put(id, new ArrayList<String>());
+						}
+
+						ottIdToSynonymNamesMap.get(id).add(name);
 					}
 					sbr.close();
 				} catch (Exception e) {
 					e.printStackTrace();
 					System.exit(0);
 				}
-				System.out.println("synonyms: " + synonymhash.size());
+				System.out.println("found " + ottIdToSynonymNamesMap.size() + " synonyms");
 			}
 			//finished processing synonym file
 		}
@@ -589,37 +606,38 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		
 		dbNodeForOTTIdMap.put(inputId, tnode);
 		
-		if (addSynonyms) {
-			// synonym processing
-			if (synFileExists) {
-				if (synonymhash.get(inputId) != null) {
-					ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
-					for (int j = 0; j < syns.size(); j++) {
-						String synName = syns.get(j).get(0);
-						String synNameType = syns.get(j).get(1);
-						Node synode = createNode();
-						synode.setProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
-						
-						synode.setProperty("nametype", synNameType);
-						synode.setProperty("source", sourceName);
-						synode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
-						
-						// indexing
-						taxaBySynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
-						taxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
-			            if (!isSpecific(rank)) {
-			            	taxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
-			            }
-	
-			            // additional indexing (smaller indexes) for non-hidden taxa
-						if (buildPreferredIndexes && !dubious) {
-							prefTaxaBySynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
-							prefTaxaByNameOrSynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
-				            if (!isSpecific(rank)) {
-				            	prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
-				            }
-						}
-					}
+		// if there are no synonyms this map will be empty and will always return null
+		ArrayList<String> synNames = ottIdToSynonymNamesMap.get(inputId);
+		if (synNames != null) {
+			
+			for (String synName : synNames) {
+				
+//				System.out.println("Adding synonym '" + synName + "' for ott id '" + String.valueOf(inputId));
+				
+//			for (int j = 0; j < synNames.size(); j++) {
+//				String synName = synNames.get(j).get(0);
+//				String synNameType = synNames.get(j).get(1);
+				Node synNode = createNode();
+				synNode.setProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+				
+//				synode.setProperty("nametype", synNameType);
+				synNode.setProperty("source", sourceName);
+				synNode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
+				
+				// indexing
+				taxaBySynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+				taxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            if (!isSpecific(rank)) {
+	            	taxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            }
+
+	            // additional indexing (smaller indexes) for non-hidden taxa
+				if (buildPreferredIndexes && !dubious) {
+					prefTaxaBySynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
+					prefTaxaByNameOrSynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
+		            if (!isSpecific(rank)) {
+		            	prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+		            }
 				}
 			}
 		}
