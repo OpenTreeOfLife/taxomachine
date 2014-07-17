@@ -100,6 +100,7 @@ public class OTTServices extends ServerPlugin {
 	    			Node p = n;
 	    			LinkedList<HashMap<String,Object>> lineage = new LinkedList<HashMap<String, Object>>();
 	    			while (p.hasRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING)) {
+	    				p = p.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
 	    				HashMap<String,Object> info = new HashMap<String, Object>();
 	    				addTaxonInfo(p, info);
 	    				lineage.add(info);
