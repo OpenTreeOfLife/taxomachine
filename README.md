@@ -69,4 +69,3 @@ Using:
 in your invocation of taxomachine will sets the maximum # of transactions that will be buffered to 1000.
 The default # of transactions is 10000. Higher numbers lead to faster importing of a new taxonomy, 
 but using lower numbers will mean that taxomachine will require less memory.
-
