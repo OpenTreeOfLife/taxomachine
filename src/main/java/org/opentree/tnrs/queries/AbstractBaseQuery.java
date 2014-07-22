@@ -6,6 +6,7 @@ import java.util.Set;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.TaxonSet;
 import org.opentree.taxonomy.Taxonomy;
@@ -83,7 +84,7 @@ public abstract class AbstractBaseQuery implements TNRSQuery {
     	for (String thisName : names) {
 
     		// attempt to find exact matches within the ALLTAXA context
-            IndexHits<Node> hits = prefTaxNodesByName.query("name", thisName.replace(" ", "\\ "));
+            IndexHits<Node> hits = prefTaxNodesByName.query(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), thisName.replace(" ", "\\ "));
             try {
 	            if (hits.size() == 1) { // an exact match
 	                Taxon matchedTaxon = taxonomy.getTaxon(hits.getSingle());

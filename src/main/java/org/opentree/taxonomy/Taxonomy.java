@@ -1,11 +1,14 @@
 package org.opentree.taxonomy;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.opentree.exceptions.MultipleHitsException;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.NotInTransactionException;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
@@ -13,10 +16,12 @@ import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.ContextNotFoundException;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
+import org.opentree.graphdb.GraphDatabaseAgent;
 
 /**
  * This class provides access to methods specific to the taxonomic database itself. Initialization requires a GraphDatabaseAgent object,
@@ -37,6 +42,7 @@ public class Taxonomy {
 	public final static String LIFE_NODE_NAME = "life";
 	public TaxonomyContext ALLTAXA;
 	Index<Node> taxaByOTTId;
+	Index<Node> deprecatedTaxa;
 
 	public static final String[] SPECIFIC_RANKS = {"species", "subspecies", "variety", "varietas", "forma", "form"};
 
@@ -53,6 +59,7 @@ public class Taxonomy {
 	private void initIndexes() {
 		ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
 		taxaByOTTId = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_OTT_ID);
+		deprecatedTaxa = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
 	}
 	
 	public Node getLifeNode() {
@@ -119,10 +126,12 @@ public class Taxonomy {
 	public static boolean isSpecific(String rank) {
 		
 		boolean isSpecific = false;
-		for (String specificRank : SPECIFIC_RANKS) {
-			if (rank.equals(specificRank)) {
-				isSpecific = true;
-				break;
+		if (rank != null) {
+			for (String specificRank : SPECIFIC_RANKS) {
+				if (rank.equals(specificRank)) {
+					isSpecific = true;
+					break;
+				}
 			}
 		}
 		
@@ -139,20 +148,38 @@ public class Taxonomy {
 	 * @throws MultipleHitsException
 	 */
     public Taxon getTaxonForOTTId(final Long ottId) {
-        IndexHits<Node> hits = taxaByOTTId.get(OTVocabularyPredicate.OT_OTT_ID.propertyName(), ottId);
+        IndexHits<Node> hits = null;
         Node match = null;
+        
         try {
-        	match = hits.getSingle();
-        } catch (NoSuchElementException ex) {
-        	throw new MultipleHitsException(ottId);
+        	// first check the standard index
+        	hits = taxaByOTTId.get(OTVocabularyPredicate.OT_OTT_ID.propertyName(), ottId);
+	        if (hits.size() == 1) {
+	        	match = hits.getSingle();
+	        } else if (hits.size() > 1) {
+	        	throw new MultipleHitsException(ottId);
+	        }
+	        
+	        if (match == null) {
+	        	// if we didn't find a taxon, check the deprecated ids
+	        	
+	        	if (hits != null) {
+	        		hits.close();
+	        	}
+	        	hits = deprecatedTaxa.get(OTVocabularyPredicate.OT_OTT_ID.propertyName(), ottId);
+		        if (hits.size() == 1) {
+		        	match = hits.getSingle();
+		        } else if (hits.size() > 1) {
+		        	throw new MultipleHitsException(ottId);
+		        }
+	        }
         } finally {
-        	hits.close();
+        	if (hits != null) {
+        		hits.close();
+        	}
         }
-        if (match != null)
-        	return new Taxon(match, this);
-        else {
-        	return null;
-        }
+        
+        return match != null ? new Taxon(match, this) : null;
 	}
 	
 	/**
@@ -186,7 +213,7 @@ public class Taxonomy {
 	 */
 	public int getInternodalDistThroughMRCA(Node n1, Node n2, RelationshipType relType) {
 
-		System.out.println("Node 1: " + n1.getProperty("name") + " " + n1.getId() + ", Node 2: " + n2.getProperty("name") + " " + n2.getId());
+		System.out.println("Node 1: " + n1.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + " " + n1.getId() + ", Node 2: " + n2.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + " " + n2.getId());
 
 		TraversalDescription hierarchy = Traversal.description().depthFirst().relationships(relType, Direction.OUTGOING);
 
@@ -213,6 +240,33 @@ public class Taxonomy {
 		}
 
 		return i;
+	}
+
+	/**
+	 * provide information about the taxonomy stored in the db
+	 * @return
+	 */
+	public Map<String, Object> getMetadataMap() {
+		Node metaNode = this.getLifeNode().getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.INCOMING).getStartNode();
+		Map<String, Object> metadata = new HashMap<String, Object>();
+		for (String key : metaNode.getPropertyKeys()) {
+			metadata.put(key, metaNode.getProperty(key));
+		}
+		return metadata;
+	}
+
+	/**
+	 * Add a metadata entry to this taxonomy. Must be called after the life node has been created, and from within a transaction.
+	 * @return
+	 */
+	public void addMetadataEntry(String key, Object value) {
+		Node metaNode;
+		try {
+			metaNode = this.getLifeNode().getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.INCOMING).getStartNode();
+		} catch (Exception ex) {
+			throw new RuntimeException("There was a problem finding the taxonomy root or the metadata node. Is the taxonomy fully installed?");
+		}
+		metaNode.setProperty(key, value);
 	}
 
 	/**

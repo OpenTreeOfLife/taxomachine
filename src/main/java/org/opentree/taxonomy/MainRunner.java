@@ -28,16 +28,18 @@ import org.apache.log4j.PropertyConfigurator;
 //import org.forester.phylogeny.PhylogenyMethods;
 //import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.opentree.properties.OTVocabularyPredicate;
 //import org.neo4j.graphdb.Transaction;
 //import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.opentree.taxonomy.contexts.ContextNotFoundException;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
-import org.opentree.tnrs.MultipleHitsException;
+import org.opentree.exceptions.MultipleHitsException;
 import org.opentree.tnrs.TNRSMatch;
 import org.opentree.tnrs.TNRSNameResult;
 import org.opentree.tnrs.TNRSResults;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.tnrs.queries.SimpleQuery;
+import org.opentree.graphdb.GraphDatabaseAgent;
 
 public class MainRunner {
 
@@ -46,43 +48,57 @@ public class MainRunner {
     public void taxonomyLoadParser(String[] args) throws FileNotFoundException, IOException {
 
         String graphname = "";
+        String sourcename = "";
+        String filename = "";
         String synonymfile = "";
-        if (args[0].equals("inittax") || args[0].equals("addtax")) {
-            if (args.length != 4) {
+        if (args[0].equals("adddeprecated")) {
+            if (args.length != 3) {
                 System.out
-                        .println("arguments should be: sourcename filename graphdbfolder\n or (for the inittax command only) you can also use:\n source-properties-file filename graphdbfolder");
+                        .println("arguments should be: filename graphdbfolder\n");
                 return;
             } else {
-                graphname = args[3];
+                filename = args[1];
+                graphname = args[2];
             }
+/*        } else if (args[0].equals("inittax") || args[0].equals("addtax")) {
+            if (args.length != 4) {
+                System.out.println("arguments should be: sourcename filename graphdbfolder\n or (for the inittax command only) you can also use:\n source-properties-file filename graphdbfolder");
+                return;
+            } else {
+                sourcename = args[1];
+                filename = args[2];
+                graphname = args[3];
+            } */
         } else if (args[0].equals("inittaxsyn") || args[0].equals("addtaxsyn") || args[0].equals("loadtaxsyn")) {
             if (args.length != 5) {
                 System.out.println("arguments should be: sourcename filename synonymfile graphdbfolder");
                 return;
             } else {
+                sourcename = args[1];
+                filename = args[2];
                 synonymfile = args[3];
                 graphname = args[4];
             }
         }
-        String sourcename = args[1];
-        String filename = args[2];
 
         taxdb = new GraphDatabaseAgent(graphname);
+        
+        /*
+        // ===================================== deprecated methods from days of preottol
+        
         TaxonomyLoaderPreottol tld = new TaxonomyLoaderPreottol(taxdb);
-        TaxonomyLoaderOTT tlo = new TaxonomyLoaderOTT(taxdb);
-
+        
         // currently we are assuming that we always want to add taxonomies to the root of the taxonomy
         // (i.e. the life node), but this will have to be changed to add taxonomies that are more
         // specific, such as Hibbett's fungal stuff
+        TaxonomyLoaderOTT tld = new TaxonomyLoaderOTT(taxdb);
         Node lifeNode = tld.getLifeNode();
         System.out.println("life node: " + lifeNode);
         String incomingRootNodeId = null;
-        if (lifeNode != null)
-            incomingRootNodeId = String.valueOf(lifeNode.getId());
+        if (lifeNode != null) {
+        	incomingRootNodeId = String.valueOf(lifeNode.getId());
+        }
 
-        
-        // ===================================== deprecated methods from days of preottol
-        
         if (args[0].equals("inittax")) {
             System.out.println("initializing taxonomy from " + filename + " to " + graphname);
             if (new File(sourcename).exists()) {
@@ -117,20 +133,28 @@ public class MainRunner {
             tld.addDisconnectedTaxonomyToGraph(sourcename, filename, synonymfile);
             System.out.println("verifying taxonomy");
             tld.verifyLoadedTaxonomy(sourcename);
+           */
             
 
-        // ===================================== current method using ott taxonomy from smasher
+        // ===================================== current methods using ott taxonomy from smasher
             
-        } else if (args[0].equals("loadtaxsyn")) { 
+//        } else
+        
+        TaxonomyLoaderOTT tlo = new TaxonomyLoaderOTT(taxdb);
+        Node lifeNode = tlo.getLifeNode();
+        System.out.println("life node: " + lifeNode);
+
+        if (args[0].equals("loadtaxsyn")) { 
             System.out.println("loading taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
             //this will create the ott relationships
             tlo.setAddSynonyms(true);
             tlo.setCreateOTTIdIndexes(true);
             tlo.setbuildPreferredIndexes(true);
             tlo.loadOTTIntoGraph(sourcename, filename, synonymfile);
-//            System.out.println("verifying taxonomy");
-//            tlo.verifyLoadedTaxonomy(sourcename);
 
+        } else if (args[0].equals("adddeprecated")) { 
+            System.out.println("adding deprecated taxa from " + filename + " to " + graphname);
+            tlo.loadDeprecatedTaxa(filename);
         
         // ================= other
             
@@ -155,7 +179,7 @@ public class MainRunner {
                 System.out.println("arguments should be: treefile focalgroup graphdbfolder");
                 return;
             }
-        } else if (args[0].equals("comptaxgraph")) {
+/*        } else if (args[0].equals("comptaxgraph")) {
             if (args.length != 4) {
                 System.out.println("arguments should be: comptaxgraph query graphdbfolder outfile");
                 return;
@@ -179,7 +203,7 @@ public class MainRunner {
             if (args.length != 3) {
                 System.out.println("arguments should be: graphdbfolder outfile");
                 return;
-            }
+            } */
         } else if (args[0].equals("makecontexts")) {
             if (args.length != 2) {
                 System.out.println("arguments should be: graphdbfolder");
@@ -213,7 +237,7 @@ public class MainRunner {
             for (String taxName : names) {
                 System.out.println("Searching for " + taxName);
                 for (Node n : taxonomy.ALLTAXA.findTaxNodesByName(taxName)) {
-                    System.out.println("adding " + n.getProperty("name") + " to taxon set");
+                    System.out.println("adding " + n.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + " to taxon set");
                     tNodes.add(n);
                 }
             }
@@ -224,7 +248,7 @@ public class MainRunner {
             TreePrinter tp = new TreePrinter();
             System.out.println(tp.printNH(subTree));
 
-        } else if (args[0].equals("comptaxtree")) {
+/*        } else if (args[0].equals("comptaxtree")) {
 
             String query = args[1];
             String graphname = args[2];
@@ -299,7 +323,7 @@ public class MainRunner {
              * System.out.println("checking the names of " + query + " against the taxonomy graph"); te.checkNamesInTree(query,focalgroup);
              */
 
-        } else if (args[0].equals("makeottol")) {
+/*        } else if (args[0].equals("makeottol")) {
             String graphname = args[1];
             taxdb = new GraphDatabaseAgent(graphname);
             te = new TaxonomySynthesizer(taxdb);
@@ -340,28 +364,28 @@ public class MainRunner {
             te = new TaxonomySynthesizer(taxdb);
             System.out.println("making species indexes by genus");
             te.makeGenericIndexes();
-
-            
-        } else if (args[0].equals("checknames")) {
+/*        } else if (args[0].equals("checknames")) {
             String sourcename = args[1];
             String graphname = args[2];
             taxdb = new GraphDatabaseAgent(graphname);
             te = new TaxonomySynthesizer(taxdb);
             System.out.println("checking names from source: " + sourcename);
-            te.findEquivalentNamedNodes(sourcename);
+            te.findEquivalentNamedNodes(sourcename); */
         } else {
             System.err.println("\nERROR: not a known command\n");
             printHelp();
             System.exit(1);
-        }
+        } 
         taxdb.shutdownDb();
     }
 
+    /* ===================== deprecated methods from the days of preottol
+     * 
     /**
      * Intends to be used to compare names that are in a file with the format id parentid name to the ottol names and will output the mappings
      * 
      * @param args
-     */
+     *
     public void compareNames(String args[]) {
         if (args.length != 4) {
             System.out.println("arguments should be: infile outfile graphdbfolder");
@@ -391,7 +415,7 @@ public class MainRunner {
         System.out.println("comparing source: " + sourcename);
         tc.compareGraftTaxonomyToDominant(inga, sourcename);
     }
-
+*/
     public void recalculateMRCAS(String args[]) {
         if (args.length != 2) {
             System.out.println("arguments should be: graphdbfolder");
@@ -401,14 +425,14 @@ public class MainRunner {
         String graphdbname = args[1];
         GraphDatabaseAgent inga = new GraphDatabaseAgent(graphdbname);
         System.out.println("setting database: " + graphdbname);
-        TaxonomyLoaderPreottol tld = new TaxonomyLoaderPreottol(inga);
-        Node dbnode = tld.getLifeNode();
+        TaxonomyLoaderOTT tlo = new TaxonomyLoaderOTT(inga);
+        Node dbnode = tlo.getLifeNode();
         System.out.println("removing mrcas");
-        tld.removeMRCAs(dbnode);
+        tlo.removeMRCAs(dbnode);
         System.out.println("adding mrcas");
-        tld.initMrcaForTipsAndPO(dbnode);
+        tlo.initMrcaForTipsAndPO(dbnode);
         System.out.println("verifying taxonomy");
-        tld.verifyMainTaxonomy();
+        tlo.verifyMainTaxonomy();
     }
 
     public void parseTNRSRequest(String args[]) {
@@ -533,16 +557,17 @@ public class MainRunner {
         System.out.println("");
         System.out.println("commands");
         System.out.println("---taxonomy---");
-        System.out.println("\tinittax <sourcename> <filename> <graphdbfolder> (initializes the tax graph with a tax list)");
-        System.out.println("\taddtax <sourcename> <filename> <graphdbfolder> (adds a tax list into the tax graph)");
-        System.out.println("\tinittaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (initializes the tax graph with a list and synonym file)");
-        System.out.println("\tloadtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (load ott from the files created in opentree)");
-        System.out.println("\taddtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (adds a tax list and synonym file)");
-        System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
-        System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
-        System.out.println("\tdumpott <graphdbfolder> <filename> (just dumps the ottol branches to a file to be ingested elsewhere)");
-        System.out.println("\tmakeottolnamedump <graphdbfolder> <filename> (dumps the recognized ottol names in a format consistent with phylotastic treestores)");
-        System.out.println("\tgraftbycomp <graphdbfolder_dom> <sourcename> (graphs an addedtaxonomy into main using the comparator)");
+//        System.out.println("\tinittax <sourcename> <filename> <graphdbfolder> (initializes the tax graph with a tax list)");
+//        System.out.println("\taddtax <sourcename> <filename> <graphdbfolder> (adds a tax list into the tax graph)");
+        System.out.println("\tadddeprecated <filename> <graphdbfolder> (adds the deprecated taxa in the file to the graph)");
+//        System.out.println("\tinittaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (initializes the tax graph with a list and synonym file)");
+        System.out.println("\tloadtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (load ott from smasher taxonomy files)");
+//        System.out.println("\taddtaxsyn <sourcename> <filename> <synonymfile> <graphdbfolder> (adds a tax list and synonym file)");
+//        System.out.println("\tupdatetax <filename> <sourcename> <graphdbfolder> (updates a specific source taxonomy)");
+//        System.out.println("\tmakeottol <graphdbfolder> (creates the preferred ottol branches)");
+//        System.out.println("\tdumpottol <graphdbfolder> <filename> (just dumps the ottol branches to a file to be ingested elsewhere)");
+//        System.out.println("\tmakeottolnamedump <graphdbfolder> <filename> (dumps the recognized ottol names in a format consistent with phylotastic treestores)");
+//        System.out.println("\tgraftbycomp <graphdbfolder_dom> <sourcename> (graphs an addedtaxonomy into main using the comparator)");
         System.out.println("\trecalculatemrcas <graphdbfolder> (deletes the mrca and nested mrcas and recalculates them)");
         System.out.println("\tmakecontexts <graphdbfolder> (build context-specific indexes; requires that makeottol has already been run)");
         System.out.println("\tmakegenusindexes <graphdbfolder> (build indexes of species for each genus; requires that makeottol has already been run)");
@@ -551,7 +576,7 @@ public class MainRunner {
         
         System.out.println("\n---taxquery---");
         System.out.println("\tcomptaxtree <name> <graphdbfolder> (construct a comprehensive tax newick)");
-        System.out.println("\tcomptaxlist <name> <graphdbfolder> (construct a comprehensive tax list in the input format expected by treemachine/taxomachine)");
+//        System.out.println("\tcomptaxlist <name> <graphdbfolder> (construct a comprehensive tax list in the input format expected by treemachine/taxomachine)");
         System.out.println("\tcomptaxgraph <name> <graphdbfolder> <outdotfile> (construct a comprehensive taxonomy in dot)");
         System.out.println("\tjsgraph <name> <graphdbfolder> (constructs a json file from tax graph)");
         System.out.println("\tchecktree <filename> <focalgroup> <graphdbfolder> (checks names in tree against tax graph)");
@@ -571,7 +596,7 @@ public class MainRunner {
     public static void main(String[] args) {
 
         PropertyConfigurator.configure(System.getProperties());
-        System.out.println("\ntaxomachine version alpha.alpha.prealpha");
+        System.out.println("\ntaxomachine version 0.0.0.0.0.0.1 pre-alpha");
         // read the max # of database transactions to be buffered from a system property
         String numTransactionsProperty = System.getProperty("opentree.taxomachine.num.transactions");
         if (numTransactionsProperty != null) {
@@ -607,6 +632,7 @@ public class MainRunner {
 
                 if (args[0].equals("inittax")
                         || args[0].equals("addtax")
+                        || args[0].equals("adddeprecated")
                         || args[0].equals("inittaxsyn")
                         || args[0].equals("addtaxsyn")
                         || args[0].equals("loadtaxsyn")) {
@@ -627,18 +653,13 @@ public class MainRunner {
                     mr.taxonomyQueryParser(args);
                 } else if (args[0].equals("recalculatemrcas")) {
                     mr.recalculateMRCAS(args);
-                } else if (args[0].equals("graftbycomp")) {
-                    mr.parseGraftByComp(args);
+/*                } else if (args[0].equals("graftbycomp")) {
+                    mr.parseGraftByComp(args); */
                 } else if (args[0].matches("tnrsbasic|tnrstree")) {
                     mr.parseTNRSRequest(args);
                     // TEMP
-                } else if (args[0].equals("addlifenode")) {
-                    TaxonomySynthesizer ts = new TaxonomySynthesizer(new GraphDatabaseAgent(args[1]));
-                    Node lifeNode = ts.getLifeNode();
-                    System.out.println("lifenode: " + lifeNode.toString() + " " + lifeNode.getProperty("name"));
-                    ts.addToPreferredIndexesAtomicTX(lifeNode, ts.ALLTAXA);
-                } else if (args[0].equals("comparenames")) {
-                    mr.compareNames(args);
+/*                } else if (args[0].equals("comparenames")) {
+                    mr.compareNames(args); */
                 } else {
                     System.err.println("Unrecognized command \"" + args[0] + "\"");
                     printHelp();

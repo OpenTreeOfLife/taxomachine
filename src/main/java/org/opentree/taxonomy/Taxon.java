@@ -20,11 +20,14 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
+import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.constants.TaxonomyProperty;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
-import org.opentree.tnrs.MultipleHitsException;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.tnrs.queries.SimpleQuery;
+import org.opentree.exceptions.MultipleHitsException;
 
 
 public class Taxon {
@@ -56,12 +59,28 @@ public class Taxon {
             return null;
     }
     
+	public boolean isDeprecated() {
+		if (taxNode.hasProperty(TaxonomyProperty.DEPRECATED.propertyName())) {
+			return (Boolean) taxNode.getProperty(TaxonomyProperty.DEPRECATED.propertyName());
+		} else {
+			return false;
+		}
+    }
+	
+	public boolean isDubious() {
+		if (taxNode.hasProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
+			return (Boolean) taxNode.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
+		} else {
+			return false;
+		}
+	}
+	
     public String getName() {
-        return taxNode.getProperty("name").toString();
+        return String.valueOf(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
     }
     
     public String getRank() {
-    	return taxNode.getProperty("rank").toString();
+    	return String.valueOf(taxNode.getProperty(TaxonomyProperty.RANK.propertyName()));
     }
     
     /**
@@ -143,7 +162,7 @@ public class Taxon {
                 for (Relationship rel : nd.getRelationships(TaxonomyRelType.TAXCHILDOF, Direction.INCOMING)) {
 //                    count += 1;
                     Node startNode = rel.getStartNode();
-                    String sName = ((String) startNode.getProperty("name"));
+                    String sName = ((String) startNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
                     String sDotName = nodeToNameMap.get(startNode);
                     if (sDotName == null) {
                         sDotName = "n" + (1 + nodeToNameMap.size());
@@ -151,7 +170,7 @@ public class Taxon {
                         outFile.write("\t" + sDotName + " [label=\"" + sName + "\"] ;\n");
                     }
                     Node endNode = rel.getEndNode();
-                    String eName = ((String) endNode.getProperty("name"));
+                    String eName = ((String) endNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
                     String eDotName = nodeToNameMap.get(endNode);
                     if (eDotName == null) {
                         eDotName = "n" + (1 + nodeToNameMap.size());
@@ -184,9 +203,9 @@ public class Taxon {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
-        System.out.println(taxNode.getProperty("name"));
+        System.out.println(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
         JadeNode root = new JadeNode();
-        root.setName(((String) taxNode.getProperty("name")).replace(" ", "_"));
+        root.setName(((String) taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_"));
         HashMap<Node, JadeNode> nodes = new HashMap<Node, JadeNode>();
         nodes.put(taxNode, root);
         
@@ -195,13 +214,13 @@ public class Taxon {
             count += 1;
             if (nodes.containsKey(rel.getStartNode()) == false) {
                 JadeNode node = new JadeNode();
-                node.setName(((String) rel.getStartNode().getProperty("name")).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
+                node.setName(((String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
                         .replace(":", "_"));
                 nodes.put(rel.getStartNode(), node);
             }
             if (nodes.containsKey(rel.getEndNode()) == false) {
                 JadeNode node = new JadeNode();
-                node.setName(((String) rel.getEndNode().getProperty("name")).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
+                node.setName(((String) rel.getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
                         .replace(":", "_"));
                 nodes.put(rel.getEndNode(), node);
             }
@@ -228,7 +247,7 @@ public class Taxon {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
-        System.out.println(taxNode.getProperty("name"));
+        System.out.println(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 
         PrintWriter outFile = null;
         try {
@@ -239,13 +258,13 @@ public class Taxon {
 
         String sep = "\t|\t";
         outFile.write("1" + sep + "0" + sep + "life" + sep + "\n");
-        outFile.write(String.valueOf(taxNode.getId()) + sep + "1" + sep + taxNode.getProperty("name") + sep + "\n");
+        outFile.write(String.valueOf(taxNode.getId()) + sep + "1" + sep + taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + sep + "\n");
 
         String badchars = " \t.,():;'";
         
         for (Relationship rel : CHILDOF_TRAVERSAL.traverse(taxNode).relationships()) {
 
-            String name = (String) rel.getStartNode().getProperty("name");
+            String name = (String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
             String cid = String.valueOf(rel.getStartNode().getId());
             String pid = String.valueOf(rel.getEndNode().getId());
 
@@ -261,7 +280,7 @@ public class Taxon {
     
     public void constructJSONGraph() {
 
-        System.out.println(taxNode.getProperty("name"));
+        System.out.println(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(TaxonomyRelType.TAXCHILDOF, Direction.INCOMING);
         HashMap<Node, Integer> nodenumbers = new HashMap<Node, Integer>();
@@ -280,7 +299,7 @@ public class Taxon {
             outFile.write("{\"nodes\":[");
             for (int i = 0; i < count; i++) {
                 Node tnode = numbernodes.get(i);
-                outFile.write("{\"name\":\"" + tnode.getProperty("name") + "");
+                outFile.write("{\"name\":\"" + tnode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + "");
                 outFile.write("\",\"group\":" + nodenumbers.get(tnode) + "");
                 outFile.write("},");
             }
@@ -317,9 +336,9 @@ public class Taxon {
         PathFinder<Path> pf = GraphAlgoFactory.shortestPath(Traversal.pathExpanderForTypes(defaultchildtype, Direction.OUTGOING), 100);
         JadeNode root = new JadeNode();
         if (taxonomy == false)
-            root.setName((String) taxNode.getProperty("name"));
+            root.setName((String) taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
         else
-            root.setName((String) taxNode.getProperty("name"));
+            root.setName((String) taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(defaultchildtype, Direction.INCOMING);
         ArrayList<Node> visited = new ArrayList<Node>();
@@ -335,7 +354,6 @@ public class Taxon {
         td = td.evaluator(Evaluators.toDepth(maxdepth));
         
         for (Node friendnode : td.traverse(taxNode).nodes()) {
-            // System.out.println("visiting: "+friendnode.getProperty("name"));
             if (friendnode == taxNode)
                 continue;
             Relationship keep = null;
@@ -370,12 +388,12 @@ public class Taxon {
             }
             JadeNode newnode = new JadeNode();
             if (taxonomy == false) {
-                if (friendnode.hasProperty("name")) {
-                    newnode.setName((String) friendnode.getProperty("name"));
+                if (friendnode.hasProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())) {
+                    newnode.setName((String) friendnode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
                     newnode.setName(newnode.getName().replace("(", "_").replace(")", "_").replace(" ", "_").replace(":", "_"));
                 }
             } else {
-                newnode.setName(((String) friendnode.getProperty("name")).replace("(", "_").replace(")", "_").replace(" ", "_").replace(":", "_"));
+                newnode.setName(((String) friendnode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace("(", "_").replace(")", "_").replace(" ", "_").replace(":", "_"));
             }
 
             newnode.assocObject("nodeid", friendnode.getId());
@@ -408,10 +426,10 @@ public class Taxon {
                     for (int i = 0; i < cr.size(); i++) {
                         String namestr = "";
                         if (taxonomy == false) {
-                            if (cr.get(i).getEndNode().hasProperty("name"))
-                                namestr = (String) cr.get(i).getEndNode().getProperty("name");
+                            if (cr.get(i).getEndNode().hasProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()))
+                                namestr = (String) cr.get(i).getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
                         } else {
-                            namestr = (String) cr.get(i).getEndNode().getProperty("name");
+                            namestr = (String) cr.get(i).getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
                         }
                         confstr += "{\"parentname\": \"" + namestr + "\",\"parentid\":\"" + cr.get(i).getEndNode().getId() + "\",\"altrelid\":\""
                                 + cr.get(i).getId() + "\",\"source\":\"" + cr.get(i).getProperty("source") + "\"}";
@@ -443,10 +461,10 @@ public class Taxon {
         if (parFirstNode != null) {
             String namestr = "";
             if (taxonomy == false) {
-                if (parFirstNode.hasProperty("name"))
-                    namestr = (String) parFirstNode.getProperty("name");
+                if (parFirstNode.hasProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()))
+                    namestr = (String) parFirstNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
             } else {
-                namestr = (String) parFirstNode.getProperty("name");
+                namestr = (String) parFirstNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
             }
             beforeroot.assocObject("nodeid", parFirstNode.getId());
             beforeroot.setName(namestr);

@@ -4,7 +4,7 @@ import java.util.EnumSet;
 
 public enum ContextGroup {
     LIFE,
-    BACTERIA,
+    MICROBES,
     ANIMALS,
     PLANTS,
     FUNGI;

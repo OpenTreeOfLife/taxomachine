@@ -25,8 +25,11 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.OTTFlag;
+import org.opentree.taxonomy.constants.TaxonomyProperty;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.Nomenclature;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
+import org.opentree.graphdb.GraphDatabaseAgent;
 
 import java.util.Map;
 
@@ -48,11 +51,17 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	Index<Node> taxaByName;
 	Index<Node> taxaBySynonym;
 	Index<Node> taxaByNameOrSynonym;
+	Index<Node> taxaByNameHigher;
+	Index<Node> taxaByNameOrSynonymHigher;
 
 	// all taxa by other info
 	Index<Node> taxaByOTTId;
-	Index<Node> taxaByRank;
 	Index<Node> taxaByFlag;
+
+	// all taxa rank-based
+	Index<Node> taxaByRank;
+	Index<Node> taxaByNameGenera;
+	Index<Node> taxaByNameSpecies;
 
 	// preferred names
 	Index<Node> prefTaxaByName;
@@ -66,8 +75,13 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	Index<Node> prefTaxaByNameGenera;
 	Index<Node> prefTaxaByNameSpecies;
 	
-	HashMap<String, Node> dbnodes = new HashMap<String, Node>();
-	HashMap<String, String> parents = new HashMap<String, String>();
+	// deprecated taxa
+	Index<Node> deprecatedTaxa;
+	
+//	HashMap<String, Node> dbnodes = new HashMap<String, Node>();
+//	HashMap<String, String> parents = new HashMap<String, String>();
+	HashMap<Long, Node> dbNodeForOTTIdMap = new HashMap<Long, Node>();
+	HashMap<Long, Long> parentOTTIdByChildOTTIdMap = new HashMap<Long, Long>();
 	HashMap<String, OTTFlag> ottFlags;
 	
 	HashSet<Node> dubiousNodes = new HashSet<Node>();
@@ -76,9 +90,10 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	Transaction tx;
 	
-	String sourceName = "";
+	String sourceName = "ott";
 	
-	HashMap<String, ArrayList<ArrayList<String>>> synonymhash = null;
+//	HashMap<String, ArrayList<ArrayList<String>>> ottIdToSynonymNameMap = null;
+	HashMap<Long, ArrayList<String>> ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
 	boolean synFileExists = false;
 	
 	// ===== install options
@@ -93,7 +108,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	// basic traversal method
 	final TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
-			.relationships( TaxonomyRelType.TAXCHILDOF,Direction.OUTGOING );
+			.relationships(TaxonomyRelType.TAXCHILDOF,Direction.OUTGOING);
 	
 	public TaxonomyLoaderOTT(GraphDatabaseAgent gdb) {
 		super(gdb);
@@ -126,6 +141,67 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		this.buildPreferredRels = buildPreferredRels;
 	}
 
+	public void loadDeprecatedTaxa(String deprecatedFile) {
+		
+		setupIndexes();
+		
+		Transaction tx = graphDb.beginTx();
+		
+		Node deprecatedContainerNode = graphDb.createNode();
+		deprecatedContainerNode.setProperty("description", "container node to which deprecated taxon nodes are attached");
+		
+		Node lifeNode = getLifeNode();
+		if (lifeNode != null) {
+			deprecatedContainerNode.createRelationshipTo(lifeNode, TaxonomyRelType.CONTAINEDBY);
+		}
+
+		int n = 0;
+		boolean observedHeaderLine = false;
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(deprecatedFile));
+			String curStr;
+			while ((curStr = reader.readLine()) != null) {
+				
+				StringTokenizer tokenizer = new StringTokenizer(curStr, "\t");
+
+				// skip the header line if we see it
+				if (!observedHeaderLine) {
+					String firstToken = tokenizer.nextToken();
+					if (firstToken.equals("id")) {
+						observedHeaderLine = true;
+						continue;
+					}
+				}
+				
+				Long id = Long.valueOf(tokenizer.nextToken());
+				String name = tokenizer.nextToken();
+				String sourceInfo = tokenizer.nextToken();
+				String reason = tokenizer.nextToken();
+				
+				Node d = graphDb.createNode();
+				d.createRelationshipTo(deprecatedContainerNode, TaxonomyRelType.CONTAINEDBY);
+				d.setProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+				d.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), id);
+				d.setProperty(TaxonomyProperty.REASON.propertyName(), reason);
+				d.setProperty(TaxonomyProperty.SOURCE_INFO.propertyName(), sourceInfo);
+				d.setProperty(TaxonomyProperty.DEPRECATED.propertyName(), true);
+				
+				deprecatedTaxa.add(d, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+				deprecatedTaxa.add(d, OTVocabularyPredicate.OT_OTT_ID.propertyName(), id);
+
+				n++;
+			}
+			reader.close();
+			tx.success();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		tx.finish();
+		System.out.println("added " + n + " deprecated ids to the database.");
+	}
+	
 	/**
 	 * Just a wrapper for the no synonyms case. See javadoc for this method with the synonyms option for full description.
 	 * @param sourcename
@@ -149,9 +225,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	 *
 	 *
 	 * Creates nodes and TAXCHILDOF relationships for each line.
-	 * Nodes get a "name" property. Relationships get "source", "childid", "parentid" properties.
-	 * 
-	 * Nodes are indexed in taxNames "name" key and id value.
+	 * Nodes get a OTVocabularyPredicate.OT_OTT_TAXON_NAME property. Relationships get "source", "childid", "parentid" properties.
 	 * 
 	 * A metadata node is created to point to the root
 	 * 
@@ -178,28 +252,43 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			// preprocess the synonym file
 			// key is the id from the taxonomy, the array has the synonym and the type of synonym
 			if (synFileExists) {
-				synonymhash = new HashMap<String, ArrayList<ArrayList<String>>>();
+				System.out.println("getting synonyms");
+//				synonymhash = new HashMap<String, ArrayList<ArrayList<String>>>();
+				ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
 				try {
 					BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
 					while ((str = sbr.readLine()) != null) {
+						
 						StringTokenizer st = new StringTokenizer(str, "\t|\t");
-//						StringTokenizer st = new StringTokenizer(str, "\t"); // new format for ott files
 						String name = st.nextToken();
-						String id = st.nextToken();
-						ArrayList<String> tar = new ArrayList<String>();
-						tar.add(name);tar.add("from OTT");
-						if (synonymhash.get(id) == null) {
-							ArrayList<ArrayList<String> > ttar = new ArrayList<ArrayList<String> >();
-							synonymhash.put(id, ttar);
+						String idStr = st.nextToken();
+
+						Long id = null;
+						if (idStr != null && idStr.length() > 0 && !idStr.equals("uid")) {
+							id = Long.valueOf(idStr);
 						}
-						synonymhash.get(id).add(tar);
+
+						if (id == null && !idStr.equals("uid")) {
+							System.out.println("During synonym import, could not interpret id: " + idStr + " for synonym name " + name);
+							continue;
+						}
+						
+//						ArrayList<String> synonymEntry = new ArrayList<String>();
+//						synonymEntry.add(name);
+//						synonymEntry.add("from OTT");
+						
+						if (ottIdToSynonymNamesMap.get(id) == null) {
+							ottIdToSynonymNamesMap.put(id, new ArrayList<String>());
+						}
+
+						ottIdToSynonymNamesMap.get(id).add(name);
 					}
 					sbr.close();
 				} catch (Exception e) {
 					e.printStackTrace();
 					System.exit(0);
 				}
-				System.out.println("synonyms: " + synonymhash.size());
+				System.out.println("found " + ottIdToSynonymNamesMap.size() + " synonyms");
 			}
 			//finished processing synonym file
 		}
@@ -217,6 +306,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			tx.finish();
 		}
 
+		System.out.println("\nProcessing input files and adding nodes");
+		
 		// process the incoming lines in batches
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filename));
@@ -255,10 +346,14 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		}
 		templines.clear();
 
+		System.out.println("\nAdding relationships");
+
 		//add the relationships
-		ArrayList<String> temppar = new ArrayList<String>();
+//		ArrayList<String> temppar = new ArrayList<String>();
+		LinkedList<Long> temppar = new LinkedList<Long>();
 		count = 0;
-		for (String key: dbnodes.keySet()) {
+//		for (String key: dbnodes.keySet()) {
+		for (Long key: dbNodeForOTTIdMap.keySet()) {
 			count += 1;
 			temppar.add(key);
 			if (count % transaction_iter == 0) {
@@ -289,20 +384,17 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		} finally {
 			tx.finish();
 		}
-
 		
 		if (addBarrierNodes) {
-			//mark all of the barrier nodes with additional metadata
-			System.out.println("setting barrier nodes");
+			// mark all of the barrier nodes with additional metadata
+			System.out.println("\nSetting barrier nodes");
 			BarrierNodes bn = new BarrierNodes(this);
 			bn.initializeBarrierNodes();
 			Map<Node, Nomenclature> bnMap = bn.getBarrierNodeToNomenclatureMap();
-//			HashMap<String,String> barrierNodesMap = (HashMap<String,String>)bn.getBarrierNodeMap();
 			TraversalDescription CHILDREN_TRAVERSAL = Traversal.description()
 					.relationships( TaxonomyRelType.TAXCHILDOF,Direction.INCOMING );
 			tx = beginTx();
 			try {
-//				for (int i = 0; i < barrierNodes.size(); i++) {
 				for (Node bNode : bnMap.keySet()) {
 					System.out.println("setting tax code for barrier node " + bNode + " to " + bnMap.get(bNode).code);
 					for (Node currentNode : CHILDREN_TRAVERSAL.traverse(bNode).nodes()) {
@@ -315,8 +407,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			}
 		}
 		
-		//start the mrcas
-		System.out.println("calculating mrcas");
+		// start the mrcas
+		System.out.println("\nCalculating mrca sets");
 		try {
 			tx = graphDb.beginTx();
 			initMrcaForTipsAndPO(metadatanode.getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.OUTGOING).getEndNode());
@@ -330,30 +422,30 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	 * add relationships for a processed taxon
 	 * @param childId
 	 */
-	private void processOTTRels(String childId) {
+	private void processOTTRels(Long childId) {
 		
-		Node parentNode = dbnodes.get(parents.get(childId));
+		Node parentNode = dbNodeForOTTIdMap.get(parentOTTIdByChildOTTIdMap.get(childId));
 		if (parentNode == null) {
 
-			Node graphRootNode = dbnodes.get(childId);
+			Node graphRootNode = dbNodeForOTTIdMap.get(childId);
 			
-			// special case for the life node--the graph root
+			// special case for the taxonomy root - the 'life' node in non-subsetted taxonomies, in other cases name could be anything
 			metadatanode.createRelationshipTo(graphRootNode, TaxonomyRelType.METADATAFOR);
 			System.out.println("linked metadata node to " + graphRootNode);
 			
 		} else {
-			Relationship rel = dbnodes.get(childId).createRelationshipTo(parentNode, TaxonomyRelType.TAXCHILDOF);
+			Relationship rel = dbNodeForOTTIdMap.get(childId).createRelationshipTo(parentNode, TaxonomyRelType.TAXCHILDOF);
 			rel.setProperty("source", sourceName);
 			rel.setProperty("childid", childId);
-			rel.setProperty("parentid", parents.get(childId));
+			rel.setProperty("parentid", parentOTTIdByChildOTTIdMap.get(childId));
 
 			if (buildPreferredRels) {
 				// don't need to wait to makeottol anymore
-				if (!dubiousNodes.contains(dbnodes.get(childId))) {
-					Relationship prefRel = dbnodes.get(childId).createRelationshipTo(dbnodes.get(parents.get(childId)), TaxonomyRelType.PREFTAXCHILDOF);
+				if (!dubiousNodes.contains(dbNodeForOTTIdMap.get(childId))) {
+					Relationship prefRel = dbNodeForOTTIdMap.get(childId).createRelationshipTo(dbNodeForOTTIdMap.get(parentOTTIdByChildOTTIdMap.get(childId)), TaxonomyRelType.PREFTAXCHILDOF);
 					prefRel.setProperty("source", sourceName);
 					prefRel.setProperty("childid", childId);
-					prefRel.setProperty("parentid", parents.get(childId));
+					prefRel.setProperty("parentid", parentOTTIdByChildOTTIdMap.get(childId));
 				}
 			}
 		}
@@ -367,16 +459,20 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		
 		// split the input line all the way to the end. we expect trailing empty strings when flags and uniqname are not set
 		String[] tokens = line.split("\t\\|\t",-1);
-//		String[] tokens = line.split("\t",-1); // new format for ott files
 		int i = 0;
-		String inputId = tokens[i++];
+		String inputIdStr = tokens[i++];
 		
 		// skip the header line if it exists
-		if (inputId.equals("uid")) {
+		if (inputIdStr.equals("uid")) {
 			return;
 		}
 		
-		String inputParentId = tokens[i++];
+//		System.out.println(line);
+		
+		Long inputId = Long.valueOf(inputIdStr);
+
+		String inputParentIdStr = tokens[i++];
+		Long inputParentId = inputParentIdStr.trim().equals("") ? null : Long.valueOf(inputParentIdStr);
 		String inputName = tokens[i++];
 		String rank = tokens[i++];
 		String inputSources = tokens[i++];
@@ -390,17 +486,18 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		boolean forceVisible = false;
 		
 		Node tnode = createNode();
-		parents.put(inputId, inputParentId);
+		parentOTTIdByChildOTTIdMap.put(inputId, inputParentId);
 
-		// TODO: fix these to use OTPropertyPredicate model
-		tnode.setProperty("name", inputName);
-		tnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), Long.valueOf(inputId));
-		tnode.setProperty("sourceid", inputId);
-		tnode.setProperty("sourcepid", inputParentId);
-		tnode.setProperty("source", sourceName);
-		tnode.setProperty("rank", rank);
-		tnode.setProperty("input_sources", inputSources);
-		tnode.setProperty("uniqname", uniqname);
+		tnode.setProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+		tnode.setProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName(), inputId);
+		tnode.setProperty(TaxonomyProperty.RANK.propertyName(), rank);
+		tnode.setProperty(TaxonomyProperty.INPUT_SOURCES.propertyName(), inputSources);
+		tnode.setProperty(TaxonomyProperty.UNIQUE_NAME.propertyName(), uniqname);
+
+		// irrelevant for ott, individual sources are dealt with by smasher
+//		tnode.setProperty("sourceid", inputId);
+//		tnode.setProperty("sourcepid", inputParentId);
+//		tnode.setProperty("source", sourceName);
 
 		if (flags.length > 0) {
 			for (String label : flags) {
@@ -415,6 +512,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 					if (ottFlags.containsKey(label)) {
 						OTTFlag flag = ottFlags.get(label);
 	
+						// if forced visible, override any previous dubious setting
 						if (flag == OTTFlag.FORCE_VISIBLE) {
 							forceVisible = true;
 							if (dubiousNodes.contains(tnode)) {
@@ -423,6 +521,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 							}
 						}
 					
+						// if this flag indicates suppression and taxon has not already been flagged force visible, mark as dubious
 						if (!flag.includeInPrefIndexes && !forceVisible) {
 							dubious = true;
 							dubiousNodes.add(tnode);
@@ -434,88 +533,111 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			}
 		}
 				
-		tnode.setProperty("dubious", dubious);
+		tnode.setProperty(TaxonomyProperty.DUBIOUS.propertyName(), dubious);
 		if (dubious) {
-			taxaByFlag.add(tnode, "flag", "dubious");
+			taxaByFlag.add(tnode, "flag", TaxonomyProperty.DUBIOUS.propertyName());
 		}
 		
-		taxaByName.add(tnode, "name", inputName);
-		taxaByRank.add(tnode, "rank", rank);
+		taxaByName.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+		taxaByRank.add(tnode, TaxonomyProperty.RANK.propertyName(), rank);
 		
 		if (createOTTIdIndexes) {
 			taxaByOTTId.add(tnode, OTVocabularyPredicate.OT_OTT_ID.propertyName(), Long.valueOf(inputId));
 		}
 		
 		if (addSynonyms) {
-			taxaByNameOrSynonym.add(tnode, "name", inputName);
+			// TODO: figure out what to do about indexing synonyms.. should we use "name" or "ot:ottTaxonName" as the property?
+			taxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+//			taxaByNameOrSynonym.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
 		}
 		
-		if (buildPreferredIndexes) {
+		// add to the rank-specific indexes
+        if (isSpecific(rank)) {
+        	taxaByNameSpecies.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 
-			// addl indexing
-			if (!dubious) {
-				prefTaxaByName.add(tnode, "name", inputName);
-				prefTaxaByRank.add(tnode, "rank", rank);
+        } else if (rank.equals("genus")) {
+        	taxaByNameGenera.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+        	taxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+        	if (addSynonyms) {
+    			// TODO: figure out what to do about indexing synonyms.. should we use "name" or "ot:ottTaxonName" as the property?
+        		taxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+//        		taxaByNameOrSynonymHigher.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
+        	}
 
-				if (addSynonyms) {
-					prefTaxaByNameOrSynonym.add(tnode, "name", inputName);
-				}
-				
-				// add to the rank-specific indexes
-		        if (isSpecific(rank)) {
-		        	prefTaxaByNameSpecies.add(tnode, "name", inputName);
+        } else {
+        	taxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+        	if (addSynonyms) {
+        		taxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+        	}
+        }
+		
+        // create preferred indexes... this is a bit redundant but allows faster searches
+        // when the goal is only to search non-hidden taxa (smaller indexes == faster searches)
+		if (buildPreferredIndexes && !dubious) {
+			prefTaxaByName.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+			prefTaxaByRank.add(tnode, TaxonomyProperty.RANK.propertyName(), rank);
 
-		        } else if (rank.equals("genus")) {
-		        	prefTaxaByNameGenera.add(tnode, "name", inputName);
-		        	prefTaxaByNameHigher.add(tnode, "name", inputName);
-		        	if (addSynonyms) {
-		        		prefTaxaByNameOrSynonymHigher.add(tnode, "name", inputName);
-		        	}
-
-		        } else {
-		        	prefTaxaByNameHigher.add(tnode, "name", inputName);
-		        	if (addSynonyms) {
-		        		prefTaxaByNameOrSynonymHigher.add(tnode, "name", inputName);
-		        	}
-		        }
+			if (addSynonyms) {
+    			// TODO: figure out what to do about indexing synonyms.. should we use "name" or "ot:ottTaxonName" as the property?
+//				prefTaxaByNameOrSynonym.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
+				prefTaxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 			}
+			
+			// add to the rank-specific indexes
+	        if (isSpecific(rank)) {
+	        	prefTaxaByNameSpecies.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+
+	        } else if (rank.equals("genus")) {
+	        	prefTaxaByNameGenera.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+	        	prefTaxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+	        	if (addSynonyms) {
+	        		prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+//	        		prefTaxaByNameOrSynonymHigher.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
+	        	}
+
+	        } else {
+        		prefTaxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+	        	if (addSynonyms) {
+	        		prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
+//	        		prefTaxaByNameOrSynonymHigher.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
+	        	}
+	        }
 		}
 		
-		dbnodes.put(inputId, tnode);
+		dbNodeForOTTIdMap.put(inputId, tnode);
 		
-		if (addSynonyms) {
-			// synonym processing
-			if (synFileExists) {
-				if (synonymhash.get(inputId) != null) {
-					ArrayList<ArrayList<String>> syns = synonymhash.get(inputId);
-					for (int j = 0; j < syns.size(); j++) {
-						String synName = syns.get(j).get(0);
-						String synNameType = syns.get(j).get(1);
-						Node synode = createNode();
-						synode.setProperty("name", synName);
-						
-						// TODO: for taxon nodes, uid is the ott id (i.e. consistent). but this is the node id (i.e. not consistent). why?
-//						synode.setProperty(OTVocabulary.OT_OTT_ID.propertyName(), synode.getId());
+		// if there are no synonyms this map will be empty and will always return null
+		ArrayList<String> synNames = ottIdToSynonymNamesMap.get(inputId);
+		if (synNames != null) {
+			
+			for (String synName : synNames) {
+				
+//				System.out.println("Adding synonym '" + synName + "' for ott id '" + String.valueOf(inputId));
+				
+//			for (int j = 0; j < synNames.size(); j++) {
+//				String synName = synNames.get(j).get(0);
+//				String synNameType = synNames.get(j).get(1);
+				Node synNode = createNode();
+				synNode.setProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+				
+//				synode.setProperty("nametype", synNameType);
+				synNode.setProperty("source", sourceName);
+				synNode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
+				
+				// indexing
+				taxaBySynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+				taxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            if (!isSpecific(rank)) {
+	            	taxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            }
 
-						synode.setProperty("nametype", synNameType);
-						synode.setProperty("source", sourceName);
-						synode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
-						taxaBySynonym.add(tnode, "name", synName);
-						taxaByNameOrSynonym.add(tnode, "name", synName);
-	
-						if (buildPreferredIndexes) {
-
-							// addl indexing
-							if (!dubious) {
-								prefTaxaBySynonym.add(tnode,"name",synName);
-								prefTaxaByNameOrSynonym.add(tnode,"name",synName);
-								
-					            if (!isSpecific(rank)) {
-					            	prefTaxaByNameOrSynonymHigher.add(tnode, "name", synName);
-					            }
-							}
-						}
-					}
+	            // additional indexing (smaller indexes) for non-hidden taxa
+				if (buildPreferredIndexes && !dubious) {
+					prefTaxaBySynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
+					prefTaxaByNameOrSynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
+		            if (!isSpecific(rank)) {
+		            	prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+		            }
 				}
 			}
 		}
@@ -541,8 +663,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		metadatanode.setProperty("source", sourceName);
 		metadatanode.setProperty("author", "open tree of life project");
 		metadatanode.setProperty("weburl", "https://github.com/OpenTreeOfLife/opentree/wiki/Open-Tree-Taxonomy");
-		metadatanode.setProperty("uri", "");
-		metadatanode.setProperty("urlprefix", '"');
 		taxSources.add(metadatanode, "source", sourceName);
 	}
 	
@@ -557,10 +677,17 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		taxaByRank = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_RANK);
 		taxaByFlag = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_FLAG);
 
+		taxaByNameSpecies = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_SPECIES);
+		taxaByNameGenera = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_GENERA);
+		taxaByNameHigher = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_HIGHER);
+		
+		deprecatedTaxa = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
+
 		// only for synonyms
 		if (addSynonyms) {
 			taxaBySynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
 			taxaByNameOrSynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
+			taxaByNameOrSynonymHigher = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM_HIGHER);
 		}
 
 		// only for ott id option
@@ -571,11 +698,10 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		// only for preferred option
 		if (buildPreferredIndexes) {
 			prefTaxaByName = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
-			prefTaxaByNameHigher = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
-
 			prefTaxaByRank = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_RANK);
-			prefTaxaByNameGenera = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_GENERA);
 			prefTaxaByNameSpecies = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_SPECIES);
+			prefTaxaByNameGenera = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_GENERA);
+			prefTaxaByNameHigher = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
 
 			// only if also doing synonyms
 			if (addSynonyms) {
@@ -585,11 +711,5 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			}
 		}
 	}
-	
-/*	HashMap<String, ArrayList<String>> globalchildren = null;
-	HashMap<String,String> globalidnamemap = null;
-	PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(RelType.TAXCHILDOF, Direction.OUTGOING), 10000);
-	HashMap<Node,Node> lastexistingmatchparents = new HashMap<Node,Node>(); */
-
 }
 

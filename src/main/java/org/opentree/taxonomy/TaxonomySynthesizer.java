@@ -25,11 +25,14 @@ import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.constants.TaxonomyProperty;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
-import org.opentree.tnrs.MultipleHitsException;
+import org.opentree.exceptions.MultipleHitsException;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
+import org.opentree.graphdb.GraphDatabaseAgent;
 
 /**
  * TaxonomySynthesize functions
@@ -51,6 +54,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             relationships(TaxonomyRelType.TAXCHILDOF, Direction.INCOMING);
     
 	private final Index<Node> prefSpeciesByGenus = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SPECIES_BY_GENUS);
+	private final Index<Node> speciesByGenus = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.SPECIES_BY_GENUS);
 
     public TaxonomySynthesizer(GraphDatabaseAgent t) {
         super(t);
@@ -85,7 +89,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             bwMain = new BufferedWriter(fwMain);
             bwMetadata = new BufferedWriter(fwMetadata);
 
-            System.out.println("Test: writing names from " + rootNode.getProperty("name") + " to " + outFileName + ", " + outFileName + ".metadata");
+            System.out.println("Test: writing names from " + rootNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + " to " + outFileName + ", " + outFileName + ".metadata");
  
         } catch (IOException e) {
             e.printStackTrace();
@@ -123,18 +127,15 @@ public class TaxonomySynthesizer extends Taxonomy {
             e.printStackTrace();
         }
         
-
         // will contain data for all taxon nodes with their sources
         HashMap<Node, HashMap<String, String>> nodeSourceMap = new HashMap<Node, HashMap<String, String>>();
         
         for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(rootNode).nodes()) {
-//            System.out.println("name: " + n.getProperty("name") + "; id: " + String.valueOf(n.getId()));
             
             // source name : source UID
             HashMap<String, String> sourceIdMap = new HashMap<String, String>();
             
             for (Relationship l : n.getRelationships(Direction.OUTGOING, TaxonomyRelType.TAXCHILDOF)) {
-//                System.out.println("start node: " + String.valueOf(l.getStartNode().getId()) + "; end node: " + String.valueOf(l.getEndNode().getId()));
 
                 String sourceName = "";
                 if (l.hasProperty("source")) {
@@ -159,14 +160,13 @@ public class TaxonomySynthesizer extends Taxonomy {
         try {
             bwMain.write(",\"names\":[");
         } catch (IOException e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
         
         boolean first = true;
         for (Entry<Node, HashMap<String, String>> nameData : nodeSourceMap.entrySet()) {
             Node taxNode = nameData.getKey();
-            String taxName = String.valueOf(taxNode.getProperty("name"));
+            String taxName = String.valueOf(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
             HashMap<String, String> nameIds = nameData.getValue();
             
             String treestoreId = "";
@@ -214,21 +214,6 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
     }
     
-
-    /*
-     * TODO: THIS SHOULD BE REPLACED BY TNRS CHECK TREE FUNCTION public void checkNamesInTree(String treefilename,String focalgroup){ PathFinder <Path> pf =
-     * GraphAlgoFactory.shortestPath(Traversal.pathExpanderForTypes(RelTypes.TAXCHILDOF, Direction.OUTGOING), 100); IndexHits<Node> foundNodes =
-     * findTaxNodeByName(focalgroup); Node focalnode = null; if (foundNodes.size() < 1){ System.out.println("name '" + focalgroup + "' not found. quitting.");
-     * return; } else if (foundNodes.size() > 1) { System.out.println("more than one node found for name '" + focalgroup +
-     * "'not sure how to deal with this. quitting"); } else { for (Node n : foundNodes) focalnode = n; } String ts = ""; try{ BufferedReader br = new
-     * BufferedReader(new FileReader(treefilename)); ts = br.readLine(); br.close(); }catch(IOException ioe){ System.out.println("problem reading tree"); }
-     * TreeReader tr = new TreeReader(); JadeTree jt = tr.readTree(ts); System.out.println("tree read"); for(int i=0;i<jt.getExternalNodeCount();i++){
-     * IndexHits<Node> hits = taxNodeIndex.get("name", jt.getExternalNode(i).getName().replace("_"," ")); int numh = hits.size(); if (numh == 0)
-     * System.out.println(jt.getExternalNode(i).getName()+" gets NO hits"); if (numh > 1){
-     * System.out.println(jt.getExternalNode(i).getName()+" gets "+numh+" hits"); for(Node tnode : hits){ Path tpath = pf.findSinglePath(tnode, focalnode); } }
-     * hits.close(); } }
-     */
-
     /**
      * Right now this walks from the life node through the entire graph. When there are conflicts, this will create a preferred
      * relationship parallel to an existing NCBI relationship if there is one. If there ar no conflicts, it just passes over.
@@ -236,12 +221,9 @@ public class TaxonomySynthesizer extends Taxonomy {
     @Deprecated
     public void makePreferredOTTOLRelationshipsConflicts() {
 
-//        TraversalDescription TAXCHILDOF_TRAVERSAL = Traversal.description()
-//                .relationships(RelType.TAXCHILDOF, Direction.INCOMING);
-
         // get start node
         Node life = getLifeNode();
-        System.out.println(life.getProperty("name"));
+        System.out.println(life.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 
         Transaction tx = beginTx();
         int nRelsAdded = 0;
@@ -262,9 +244,9 @@ public class TaxonomySynthesizer extends Taxonomy {
 
                     } else {
                         if (endNodeName == "")
-                            endNodeName = (String) rel.getEndNode().getProperty("name");
+                            endNodeName = (String) rel.getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
                         
-                        if ((String) rel.getEndNode().getProperty("name") != endNodeName)
+                        if ((String) rel.getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) != endNodeName)
                             foundConflict = true;
 
                         if (((String) rel.getProperty("source")).compareTo("ncbi") == 0)
@@ -277,14 +259,13 @@ public class TaxonomySynthesizer extends Taxonomy {
                 
                 if (foundConflict && (ncbirel != null || fungirel != null)) {
                     nRelsAdded += 1;
-                    // System.out.println("would make one from "+ncbirel.getStartNode().getProperty("name")+" "+ncbirel.getEndNode().getProperty("name"));
                     if (ncbirel != null){
                     	if (ncbirel.getStartNode().getId() != ncbirel.getEndNode().getId()) {
                     		ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), TaxonomyRelType.PREFTAXCHILDOF);
                     		Relationship newrel2 = ncbirel.getStartNode().createRelationshipTo(ncbirel.getEndNode(), TaxonomyRelType.TAXCHILDOF);
                     		newrel2.setProperty("source", "ottol");
                     	} else {
-                    		System.out.println("would make cycle from " + ncbirel.getEndNode().getProperty("name"));
+                    		System.out.println("would make cycle from " + ncbirel.getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
                     		System.exit(0);// NEED TO EXIT BECAUSE THIS IS A PROBLEM
                     	}
                     }else if(fungirel != null){
@@ -293,7 +274,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                             Relationship newrel2 = fungirel.getStartNode().createRelationshipTo(fungirel.getEndNode(), TaxonomyRelType.TAXCHILDOF);
                             newrel2.setProperty("source", "ottol");
                         } else {
-                            System.out.println("would make cycle from " + fungirel.getEndNode().getProperty("name"));
+                            System.out.println("would make cycle from " + fungirel.getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
                             System.exit(0);// NEED TO EXIT BECAUSE THIS IS A PROBLEM
                         }
                     }
@@ -322,10 +303,10 @@ public class TaxonomySynthesizer extends Taxonomy {
 
         // get the start point
         Node life = getLifeNode();
-        System.out.println(life.getProperty("name"));
+        System.out.println(life.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 
         Transaction tx = beginTx();
-        addToPreferredIndexes(life, ALLTAXA);
+        addToIndexes(life, ALLTAXA);
         HashSet<Long> traveled = new HashSet<Long>();
         int nNewRels = 0;
         try {
@@ -372,7 +353,7 @@ public class TaxonomySynthesizer extends Taxonomy {
 
                             // if we found a dead-end, die
                             if (endNode == null) {
-                                System.out.println(curNode.getProperty("name"));
+                                System.out.println(curNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
                                 System.out.println("Strange, this relationship seems to be pointing at a nonexistent node. Quitting.");
                                 System.exit(0);
                             }
@@ -391,7 +372,7 @@ public class TaxonomySynthesizer extends Taxonomy {
                         // prepare for next iteration
                         } else {
                             curNode = endNode;
-                            addToPreferredIndexes(startNode, ALLTAXA);
+                            addToIndexes(startNode, ALLTAXA);
                         }
                     }
                 }
@@ -430,9 +411,9 @@ public class TaxonomySynthesizer extends Taxonomy {
     	
     	for(Node curnode: TAXCHILDOF_TRAVERSAL.traverse(startnode).nodes()){
     		IndexHits<Node> nhits = null;
-    		System.out.println((String)curnode.getProperty("name")+":"+curnode);
+    		System.out.println((String)curnode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())+":"+curnode);
     		try{
-    			nhits = taxNames.get("name", (String)curnode.getProperty("name"));
+    			nhits = taxNames.get(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), (String)curnode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
     			for (Node tnode: nhits){
     				System.out.println(tnode);
     			}
@@ -446,13 +427,16 @@ public class TaxonomySynthesizer extends Taxonomy {
     /**
      * 
      * @param outfile the outfile that will have the dumped ottol information as id\tparentid\tname
+     * 
+     * NO LONGER USED. Should probably be removed
      */
-    public void dumpPreferredOTTRelationships(String outfile) {
+    @Deprecated
+    public void dumpPreferredOTTOLRelationships(String outfile) {
 //    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 //                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
          // get the start point
          Node life = getLifeNode();
-         System.out.println(life.getProperty("name"));
+         System.out.println(life.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
          PrintWriter outFile;
  		 try {
              outFile = new PrintWriter(new FileWriter(outfile));
@@ -466,7 +450,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             	 }else{
             		 outFile.write("\t|\t");
             	 }
-            	 outFile.write(String.valueOf(n.getProperty("name"))+"\t|\t");
+            	 outFile.write(String.valueOf(n.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()))+"\t|\t");
             	 if (n.hasProperty("rank"))
             		 outFile.write(String.valueOf(n.getProperty("rank"))+"\t|\t");
             	 else
@@ -487,25 +471,27 @@ public class TaxonomySynthesizer extends Taxonomy {
     /**
      * 
      * @param outfile the outfile that will have the dumped ottol information as id\tparentid\tname
+     * 
+     * NO LONGER USED. SHOULD PROBABLY BE REMOVED.
      */
-    public void dumpPreferredOTTSynonymRelationships(String outfile) {
+    @Deprecated
+    public void dumpPreferredOTTOLSynonymRelationships(String outfile) {
 //    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 //                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
          // get the start point
          Node life = getLifeNode();
-         System.out.println(life.getProperty("name"));
+         System.out.println(life.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
          PrintWriter outFile;
  		 try {
              outFile = new PrintWriter(new FileWriter(outfile));
-             outFile.write("synonymname\t|\tacceptednode_uid\t|\tnametype\t|\tsource\t|\t\n");
+             outFile.write("uid\t|\tacceptednode_uid\t|\tsynonymname\t|\tnametype\t|\tsource\t|\t\n");
              for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(life).nodes()) {
             	 if(n.hasRelationship(Direction.INCOMING, TaxonomyRelType.SYNONYMOF)){
             		 for(Relationship tr: n.getRelationships(Direction.INCOMING, TaxonomyRelType.SYNONYMOF)){
                 		 Node p = tr.getStartNode();//synonym node
-            //    		 outFile.write(String.valueOf(p.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
-                		 
-                		 outFile.write(String.valueOf(p.getProperty("name"))+"\t|\t");
+                		 outFile.write(String.valueOf(p.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
                 		 outFile.write(String.valueOf(n.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()))+"\t|\t");
+                		 outFile.write(String.valueOf(p.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("nametype"))+"\t|\t");
                 		 outFile.write(String.valueOf(p.getProperty("source"))+"\t|\t\n");
             		 }
@@ -585,7 +571,7 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
 
         TraversalDescription prefTaxParentOfTraversal = Traversal.description().depthFirst().
-                relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING);
+                relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING); 
         
         // for each ContextTreeNode (i.e. each context)
         for (Entry<String, ContextTreeNode> entry: contextNodesByRootName.entrySet()) {
@@ -597,7 +583,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             for (Node parentNode : prefTaxParentOfTraversal.traverse(contextNode.context.getRootNode()).nodes()) {
 
                 // if/when we find a more inclusive (i.e. parent) context
-                String parentName = String.valueOf(parentNode.getProperty("name"));
+                String parentName = String.valueOf(parentNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
                 if (contextNodesByRootName.containsKey(parentName) && (parentName.equals(childName) == false)) {
 
                     System.out.println("Adding " + childName + " as child of " + parentName);
@@ -627,14 +613,10 @@ public class TaxonomySynthesizer extends Taxonomy {
 		@Override
 		public Evaluation evaluate(Path inPath) {
 
-//			System.out.println("traversing " + inPath.endNode().getProperty("name"));
-			
-			String rank = "";
-			if (inPath.endNode().hasProperty("rank")) {
-				rank = String.valueOf(inPath.endNode().getProperty("rank"));
+			String rank = null;
+			if (inPath.endNode().hasProperty(TaxonomyProperty.RANK.propertyName())) {
+				rank = String.valueOf(inPath.endNode().getProperty(TaxonomyProperty.RANK.propertyName()));
 			}
-			
-//			System.out.println("rank = " + rank);
 			
     		if (isSpecific(rank)) {
     			return Evaluation.INCLUDE_AND_CONTINUE;
@@ -657,12 +639,18 @@ public class TaxonomySynthesizer extends Taxonomy {
 
         Transaction tx = beginTx();
     	try {
-    		for (Node genus : ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_RANK).get("rank", "genus")) {
-//        		System.out.println("starting on genus: " + genus.getProperty("name"));
+    		
+    		for (Node genus : ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_RANK).get(TaxonomyProperty.RANK.propertyName(), "genus")) {
 	        	String gid = String.valueOf(genus.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 	        	for (Node sp : prefTaxChildOfTraversal.evaluator(new isSpecificEvaluator()).traverse(genus).nodes()) {
-//	        		System.out.println("returned " + sp.getProperty("name"));
-	        		prefSpeciesByGenus.add(sp, "genus_uid", gid);
+	        		
+	        		// index all species
+	        		speciesByGenus.add(sp, TaxonomyProperty.PARENT_GENUS_OTT_ID.propertyName(), gid);
+
+	        		// special indexing for non-dubious taxa
+	        		if (! (Boolean) sp.getProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
+		        		prefSpeciesByGenus.add(sp, TaxonomyProperty.PARENT_GENUS_OTT_ID.propertyName(), gid);
+	        		}
 	        	}
 	        	
 	        	if (genCount % genReportFreq == 0) {
@@ -687,12 +675,12 @@ public class TaxonomySynthesizer extends Taxonomy {
         int i = 0;
         
         Transaction tx = beginTx();
-        if (contextRootNode.getProperty("name").equals(LIFE_NODE_NAME) == false) {
+        if (contextRootNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()).equals(LIFE_NODE_NAME) == false) {
 
-            System.out.println("making indices for " + contextRootNode.getProperty("name"));
+            System.out.println("making indices for " + contextRootNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 
             for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(contextRootNode).nodes()) {
-                addToPreferredIndexes(n, context);
+                addToIndexes(n, context);
                 
                 i++;
                 if (i % 100000 == 0)
@@ -716,47 +704,49 @@ public class TaxonomySynthesizer extends Taxonomy {
      * 
      * @param node
      */
-    public void addToPreferredIndexes(Node node, TaxonomyContext context) {
+    public void addToIndexes(Node node, TaxonomyContext context) {
 
-        Index<Node> nameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
-        Index<Node> synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
-        Index<Node> nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+        Index<Node> nameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
+        Index<Node> synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
+        Index<Node> nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
 
-        Index<Node> rankIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_RANK);
+        Index<Node> rankIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_RANK);
         
         // species and subspecific ranks
-        Index<Node> speciesNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_SPECIES);
+        Index<Node> speciesNameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_SPECIES);
 
         // genera only
-        Index<Node> genusNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_GENERA);
+        Index<Node> genusNameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_GENERA);
 
         // higher taxa
-        Index<Node> higherNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
-        Index<Node> higherNameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+        Index<Node> higherNameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_HIGHER);
+        Index<Node> higherNameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+
+        String name = (String) node.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+        String rank = null;
+        if (node.hasProperty(TaxonomyProperty.RANK.propertyName())) {
+        	rank = String.valueOf(node.getProperty(TaxonomyProperty.RANK.propertyName())).toLowerCase();
+        }
         
-        // update the leastcontext property (notion of "least" assumes this is being called by recursive context-building)
-        node.setProperty("leastcontext", context.getDescription().toString());
+        // ===== first index the node under the all-taxon indexes
+        
+        nameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        nameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 
-        // add the taxon node under its own name
-        nameIndex.add(node, "name", node.getProperty("name"));
-        nameOrSynonymIndex.add(node, "name", node.getProperty("name"));
-
-        String rank = "";
-        if (node.hasProperty("rank")) {
-        	rank = String.valueOf(node.getProperty("rank")).toLowerCase();
-        	rankIndex.add(node, "rank", rank);
+        if (rank != null) {
+        	rankIndex.add(node, TaxonomyProperty.RANK.propertyName(), rank);
         }
         
         // add to the rank-specific indexes
         if (isSpecific(rank)) {
-        	speciesNameIndex.add(node, "name", node.getProperty("name"));
-        } else if (rank.equals("genus")) {
-        	genusNameIndex.add(node, "name", node.getProperty("name"));
-        	higherNameIndex.add(node, "name", node.getProperty("name"));
-        	higherNameOrSynonymIndex.add(node, "name", node.getProperty("name"));
+        	speciesNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        } else if ("genus".equals(rank)) {
+        	genusNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        	higherNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
         } else {
-        	higherNameIndex.add(node, "name", node.getProperty("name"));
-        	higherNameOrSynonymIndex.add(node, "name", node.getProperty("name"));
+        	higherNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
         }
         
         // add the taxon node under all its synonym names
@@ -764,37 +754,71 @@ public class TaxonomySynthesizer extends Taxonomy {
                 .breadthFirst()
                 .relationships(TaxonomyRelType.SYNONYMOF,Direction.INCOMING )
                 .traverse(node).nodes()) {
-            synonymIndex.add(node, "name", sn.getProperty("name"));
-            nameOrSynonymIndex.add(node, "name", sn.getProperty("name"));
+        	String synName = (String) sn.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+            synonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+            nameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
             if (!isSpecific(rank)) {
-            	higherNameOrSynonymIndex.add(node, "name", sn.getProperty("name"));
+            	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
             }
         }
+    	
+        // for non-dubious taxa
+        if (! (Boolean) node.getProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
+	        nameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
+	        synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
+	        nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+	
+	        rankIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_RANK);
+	        
+	        // species and subspecific ranks
+	        speciesNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_SPECIES);
+	
+	        // genera only
+	        genusNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_GENERA);
+	
+	        // higher taxa
+	        higherNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
+	        higherNameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+	        
+	        // add the taxon node under its own name
+	        nameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        nameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	
+	        if (rank != null) {
+	        	rankIndex.add(node, TaxonomyProperty.RANK.propertyName(), rank);
+	        }
+	        
+	        // add to the rank-specific indexes
+	        if (isSpecific(rank)) {
+	        	speciesNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        } else if ("genus".equals(rank)) {
+	        	genusNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        	higherNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        } else {
+	        	higherNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        }
+	        
+	        // add the taxon node under all its synonym names
+	        for (Node sn : Traversal.description()
+	                .breadthFirst()
+	                .relationships(TaxonomyRelType.SYNONYMOF,Direction.INCOMING )
+	                .traverse(node).nodes()) {
+	        	String synName = (String) sn.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+	            synonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            nameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            if (!isSpecific(rank)) {
+	            	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            }
+	        }
+        }
     }    
-
-    /**
-    -     * Originally a one-time solution to a specific problem that has now been fixed. Leaving it in case it is useful.
-    -     * @param node
-    -     * @param context
-    -     */
-    @Deprecated
-    public void addToPreferredIndexesAtomicTX(Node node, TaxonomyContext context) {
-    	Transaction tx = beginTx();
-    	addToPreferredIndexes(node, context);
-    	tx.success();
-    	tx.finish();
-    }
 
     /**
      * @param args
      */
     public static void main(String[] args) {
-//        System.out.println("unit testing taxonomy explorer");
-//        String DB_PATH ="/home/smitty/Dropbox/projects/AVATOL/graphtests/neo4j-community-1.8.M02/data/graph.db";
-//        GraphDatabaseAgent gdb = new GraphDatabaseAgent(DB_PATH);
-//        TaxonomyCombiner a = new TaxonomyCombiner(gdb);
-        
         System.out.println("No tests implemented...");
     }
-
 }

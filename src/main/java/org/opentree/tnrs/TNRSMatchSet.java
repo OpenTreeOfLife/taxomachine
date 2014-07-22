@@ -2,23 +2,18 @@ package org.opentree.tnrs;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
-import org.neo4j.server.rest.repr.MappingRepresentation;
-import org.neo4j.server.rest.repr.MappingSerializer;
-import org.opentree.taxonomy.GraphDatabaseAgent;
-import org.opentree.taxonomy.OTTFlag;
-import org.opentree.taxonomy.TaxonomyRelType;
-import org.opentree.taxonomy.Taxon;
+import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.Taxonomy;
-import org.opentree.taxonomy.contexts.ContextDescription;
-import org.opentree.taxonomy.contexts.TaxonomyContext;
+import org.opentree.taxonomy.constants.TaxonomyProperty;
+import org.opentree.taxonomy.constants.TaxonomyRelType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -50,7 +45,8 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
     /**
      * @return an iterator of TNRSMatch objects containing all the matches in this set
      */
-    public Iterator<TNRSMatch> iterator() {
+    @Override
+	public Iterator<TNRSMatch> iterator() {
         return matches.iterator();
     }
 
@@ -75,21 +71,21 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         // for all matches, information associating this match with a known node in the graph
         private String searchString;                   // the original search text queried
         private Node matchedNode;                     // the recognized taxon node we matched
-        private String sourceName;                     // the name of the source where the match was found
+//        private String sourceName;                     // the name of the source where the match was found
         private String nomenCode;                      // the nomenclatural code under which this match is defined
         private boolean isPerfectMatch;                  // whether this is an exact match to known, recognized taxon
         private boolean isApprox;                     // whether this is a fuzzy match (presumably misspellings)
-        private boolean isSynonym;                    // whether the match points to a known synonym (not necessarily in the graph, nor necessarily pointing to a node in the graph)
+        private boolean isSynonym;                    // whether the match points to a known synonym
         private boolean isHomonym;                     // whether the match points to a known homonym
         private String rank;							// the taxonomic rank
         private boolean nameStatusIsKnown;              // whether we know if the match involves a synonym and/or homonym
         private double score;                         // the score of this match
-        private HashMap<String,String> otherData;     // other data provided by the match source
+//        private HashMap<String,String> otherData;     // other data provided by the match source
         
         public Match(TNRSHit m) {
             matchedNode = m.getMatchedNode();
             isPerfectMatch = m.getIsPerfectMatch();
-            sourceName = m.getSourceName();
+//            sourceName = m.getSourceName();
             nomenCode = m.getNomenCode();
             isApprox = m.getIsApprox();
             isSynonym = m.getIsSynonym();
@@ -98,7 +94,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             nameStatusIsKnown = m.getNameStatusIsKnown();
             searchString = m.getSearchString();
             score = m.getScore();
-            otherData = (HashMap<String,String>)m.getOtherData();
+//            otherData = (HashMap<String,String>)m.getOtherData();
         }
         
         /**
@@ -119,18 +115,22 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
 		@Override
 		public Node getParentNode() {
-            TraversalDescription prefTaxTD = Traversal.description().breadthFirst().
-                    relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING).evaluator(Evaluators.toDepth(1));
+			if (matchedNode == null) {
+				return null;
+			}
             
-            Node p = null;
-            for (Node n : prefTaxTD.traverse(matchedNode).nodes()) {
-                p = n;
+            Relationship pRel = matchedNode.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING);
+            if (pRel == null) {
+            	return null;
             }
+            
+            Node p = pRel.getStartNode();
 
-            if (p.equals(matchedNode) == false)
+            if (! p.equals(matchedNode)) {
                 return p;
-            else
-                throw new java.lang.IllegalStateException("Node " + matchedNode + " doesn't seem to have a preferred parent!");
+            } else {
+                return null;
+            }
         }
 
 		@Override
@@ -139,17 +139,35 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         }
 
 		@Override
+		public boolean getIsDeprecated() {
+			if (matchedNode.hasProperty(TaxonomyProperty.DEPRECATED.propertyName())) {
+				return (Boolean) matchedNode.getProperty(TaxonomyProperty.DEPRECATED.propertyName());
+			} else {
+				return false;
+			}
+        }
+		
+		@Override
+		public boolean getIsDubious() {
+			if (matchedNode.hasProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
+				return (Boolean) matchedNode.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
+			} else {
+				return false;
+			}
+		}
+
+		@Override
 		public boolean getIsApproximate() {
             return isApprox;
         }
 
-        /**
+        /*
          * @return the TNRS source that produced this match
-         */
+         *
 		@Override
 		public String getSource() {
             return sourceName;
-        }
+        }*/
         
 		@Override
 		public String getNomenCode() {
@@ -197,27 +215,15 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
 		@Override
 		public String getUniqueName() {
-			String uniqueName = (String) getMatchedNode().getProperty("uniqname");
-			if (uniqueName.length() > 0) {
-				return uniqueName;
-			} else {
-				return (String) getMatchedNode().getProperty("name");
+			String name = (String) getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+			if (matchedNode.hasProperty(TaxonomyProperty.UNIQUE_NAME.propertyName())) {
+				String uniqueName = (String) getMatchedNode().getProperty(TaxonomyProperty.UNIQUE_NAME.propertyName());
+				if (! uniqueName.equals("")) {
+					name = uniqueName;
+				}
 			}
-			/*
-        	String uniqueName = getMatchedNode().getProperty("name").toString();
-        	if (isHomonym) {
-	    		if (getMatchedNode().hasProperty("leastcontext")) {
-	    			String leastContext = String.valueOf(getMatchedNode().getProperty("leastcontext"));
-	    			for (ContextDescription cd : ContextDescription.values()) {
-	    				if (cd.toString().equals(leastContext)) {
-	    					uniqueName = uniqueName.concat(" (").concat(cd.name).concat(")");
-	    				}
-	    			}
-	    		}
-        	}
-
-			return uniqueName; */
-        }
+			return name;
+		}
         
         /**
          * @return a textual description of the type of match this is
@@ -259,7 +265,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
         @Override
         public String toString() {
-            return "Query '" + searchString + "' matched by " + sourceName + " to " + matchedNode.getProperty("name") + " (id=" +
+          return "Query '" + searchString + "' matched to " + matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + " (id=" +
                     matchedNode.getId() + "), score " + String.valueOf(score) + "; (" + getMatchType() + ")";
         }
     }

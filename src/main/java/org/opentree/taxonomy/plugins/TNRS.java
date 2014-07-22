@@ -22,11 +22,10 @@ import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
-import org.neo4j.server.rest.repr.OpentreeRepresentationConverter;
 import org.neo4j.server.rest.repr.TNRSResultsRepresentation;
 import org.opentree.properties.OTPropertyPredicate;
 import org.opentree.properties.OTVocabularyPredicate;
-import org.opentree.taxonomy.GraphDatabaseAgent;
+import org.opentree.graphdb.GraphDatabaseAgent;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.contexts.ContextDescription;
@@ -63,8 +62,6 @@ public class TNRS extends ServerPlugin {
 			idNameMap.put(name, name);
 		}
 
-//        return OpentreeRepresentationConverter.convert(tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().getId());
-		
 		// call TNRS query, remembering names that could not be matched
         Collection<String> namesNotMatched = tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().values();
 
@@ -79,51 +76,30 @@ public class TNRS extends ServerPlugin {
         ContextResult contextResult = new ContextResult(inferredContext, namesNotMatched);
         gdb.shutdownDb();
 
-        return OpentreeRepresentationConverter.convert(contextResult);
+//        return OpentreeRepresentationConverter.convert(contextResult);
+        return TNRSResultsRepresentation.getContextRepresentation(contextResult);
     	
     }
     
-    @Description("Get information about a recognized taxon.")
-    @PluginTarget(GraphDatabaseService.class)
-    public Representation getTaxonInfo(
-    		@Source GraphDatabaseService graphDb,
-    		@Description("The OTT id of the taxon of interest.") @Parameter(name="ottId", optional=false) Long ottId) {
-    	
-    	HashMap<String, Object> results = new HashMap<String, Object>();
-    	
-    	Taxonomy t = new Taxonomy(graphDb);
-    	Taxon match = t.getTaxonForOTTId(ottId);
-    	
-    	if (match != null) {
-		addPropertyFromNode(match.getNode(), "name", results);
-    		addPropertyFromNode(match.getNode(), "rank", results);
-    		addPropertyFromNode(match.getNode(), "source", results);
-    		addPropertyFromNode(match.getNode(), "uniqname", results);
-    		addPropertyFromNode(match.getNode(), OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
-    		results.put("node_id", match.getNode().getId());
-    	
-    		HashSet<String> synonyms = new HashSet<String>();
-	    	for (Node n : match.getSynonymNodes()) {
-	    		synonyms.add((String) n.getProperty("name"));
-	    	}
-	    	results.put("synonyms", synonyms);
-    	
-    	}
-
-    	return OTRepresentationConverter.convert(results);
-    }
-    
-    private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
-		map.put(property, node.getProperty(property));
-    }
-    
-    @Description("Find taxonomic names matching the passed in prefix. Optimized for use with autocomplete boxes on webforms.")
+    @Description("DEPRECATED. An alias to service \"autocompleteQuery\". Please transition your applications to that service; this one will eventually be removed.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation autocompleteBoxQuery(
             @Source GraphDatabaseService graphDb,
             @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
     		@Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName) throws ContextNotFoundException, ParseException {
+    	return(autocompleteQuery(graphDb, queryString, contextName, false));
+	}
 
+    @Description("Find taxonomic names matching the passed in prefix. Optimized for use with autocomplete boxes on webforms.")
+    @PluginTarget(GraphDatabaseService.class)
+    public Representation autocompleteQuery(
+            @Source GraphDatabaseService graphDb,
+            @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
+    		@Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName,
+    		@Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false.") @Parameter(name="includeDubious", optional = true) Boolean includeDubious) throws ContextNotFoundException, ParseException {
+
+    	includeDubious = includeDubious == null ? false : true;
+    	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
         
@@ -134,6 +110,7 @@ public class TNRS extends ServerPlugin {
         }
 
         SingleNamePrefixQuery query = new SingleNamePrefixQuery(taxonomy, context);
+        query.setIncludeDubious(includeDubious);
         TNRSResults results = query.setQueryString(queryString).runQuery().getResults();
 
         // return results if they exist, 
@@ -141,7 +118,7 @@ public class TNRS extends ServerPlugin {
 
         	List<TNRSMatch> matches = results.iterator().next().getMatches().getMatchList();
         	
-            if (!matches.isEmpty()) {
+            if (! matches.isEmpty()) {
 
             	Collections.sort(matches, new MatchComparator());
 
@@ -150,7 +127,7 @@ public class TNRS extends ServerPlugin {
         }
         
         // else just return an empty JSON array
-        return OpentreeRepresentationConverter.convert(new LinkedList<TNRSMatch>());
+        return OTRepresentationConverter.convert(new LinkedList<String>());
     }
 
 	/**
@@ -164,16 +141,16 @@ public class TNRS extends ServerPlugin {
 			// sorts in reverse order: higher priority matches to lower indexes
 
 			// exact matches are top priority
-			if ((Boolean) match1.getIsPerfectMatch() == true && (Boolean) match2.getIsPerfectMatch() == false) {
+			if (match1.getIsPerfectMatch() == true && match2.getIsPerfectMatch() == false) {
 				return -1;
-			} else if ((Boolean) match1.getIsPerfectMatch() == false && (Boolean) match2.getIsPerfectMatch() == true) {
+			} else if (match1.getIsPerfectMatch() == false && match2.getIsPerfectMatch() == true) {
 				return 1;
 			}
 			
 			// higher taxa are higher priority
-			if ((Boolean) match1.getIsHigherTaxon() == true && (Boolean) match1.getIsHigherTaxon() == false) {
+			if (match1.getIsHigherTaxon() == true && match1.getIsHigherTaxon() == false) {
 				return -1;
-			} else if ((Boolean) match1.getIsHigherTaxon() == false && (Boolean) match1.getIsHigherTaxon() == true) {
+			} else if (match1.getIsHigherTaxon() == false && match1.getIsHigherTaxon() == true) {
 				return 1;
 			}
 
@@ -220,12 +197,17 @@ public class TNRS extends ServerPlugin {
     			@Parameter(name="idStrings", optional = true) String[] idStrings,
         	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result. If this parameter is used, ids will be treated as ints.")
     			@Parameter(name="idInts", optional = true) Long[] idInts,
+        	@Description("A boolean indicating whether or not to include deprecated taxa in the search.")
+    			@Parameter(name="includeDeprecated", optional = true) Boolean includeDeprecated,
     		@Description("Whether to include so-called 'dubious' taxa--those which are not accepted by OTT.")
-            	@Parameter(name="includeDubious", optional=true) String includeDubiousStr) throws ContextNotFoundException {
+            	@Parameter(name="includeDubious", optional=true) Boolean includeDubious) throws ContextNotFoundException {
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
 
+        includeDeprecated = includeDeprecated == null ? false : includeDeprecated;
+        includeDubious = includeDubious == null ? false : includeDubious;
+        
         // check valid input on names
         String[] searchStrings = null;
         if (queryString != null && names == null) {
@@ -280,7 +262,7 @@ public class TNRS extends ServerPlugin {
     		results.put("status", "error");
     		results.put("message", "Queries containing more than "+MAX_QUERY_STRINGS+" strings are not supported. You may submit multiple"
     				+ "smaller queries to avoid this limit.");
-            return OpentreeRepresentationConverter.convert(results);
+            return OTRepresentationConverter.convert(results);
     	}
     	
         // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
@@ -291,35 +273,31 @@ public class TNRS extends ServerPlugin {
         	useAutoInference = false;
         }
 
-        // parse the include dubious. we use a string because we can't do a null comparison on a boolean
-        boolean includeDubious = false;
-        if (includeDubiousStr != null) {
-        	if (includeDubiousStr.equalsIgnoreCase("true")) {
-        		includeDubious = true;
-        	} else if (includeDubiousStr.equalsIgnoreCase("false")) {
-        		includeDubious = false;
-        	} else {
-        		throw new IllegalArgumentException("The includeDubious parameter may only be set to 'true' or 'false'.");
-        	}
-        }
-
         MultiNameContextQuery mncq = new MultiNameContextQuery(taxonomy);
-//        HashSet<String> namesSet = Utils.stringArrayToHashset(searchStrings);
-        TNRSResults results = mncq.
-        		setSearchStrings(idNameMap).
-        		setContext(context).
-        		setAutomaticContextInference(useAutoInference).
-        		setIncludeDubious(includeDubious).
-        		runQuery().
-        		getResults();
+        TNRSResults results = mncq
+        		.setSearchStrings(idNameMap)
+        		.setContext(context)
+        		.setAutomaticContextInference(useAutoInference)
+        		.setIncludeDubious(includeDubious)
+        		.setIncludeDeprecated(includeDeprecated)
+        		.runQuery()
+        		.getResults();
 
         gdb.shutdownDb();
-        return OpentreeRepresentationConverter.convert(results);
+        return TNRSResultsRepresentation.getResultsRepresentation(results);
     }
 
+    @Description("DEPRECATED. Use getContexts instead.")
+    @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
+    public Representation getContextsJSON(
+            @Source GraphDatabaseService graphDb) throws IOException {
+    	return getContexts(graphDb);
+    }
+    
     @Description("Return information on available taxonomic contexts")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation getContextsJSON(
+    public Representation getContexts(
             @Source GraphDatabaseService graphDb) throws IOException {
                 
         // format is: HashMap<groupName, ArrayList<contextName>>
@@ -335,6 +313,6 @@ public class TNRS extends ServerPlugin {
             contexts.put(group.toString(), subcontexts);
         }
         
-        return OpentreeRepresentationConverter.convert(contexts);
+        return OTRepresentationConverter.convert(contexts);
     }
 }

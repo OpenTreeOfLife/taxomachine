@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.opentree.exceptions.MultipleHitsException;
+
 public class TNRSResults implements Iterable<TNRSNameResult> {
 	private Map<Object, TNRSNameResult> results;
 	private Map<Object, String> unambiguousNames;
@@ -13,6 +15,10 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 	private String contextName;
 	private String governingCode;
 	private double minimumScore;
+	
+	private boolean includesDubious;
+	private boolean includesDeprecated;
+	private Map<String, Object> taxonomyMetadata;
 
 	public TNRSResults() {
 		results = new HashMap<Object, TNRSNameResult>();
@@ -21,6 +27,9 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 		contextName = "";
 		governingCode = "";
 		minimumScore = 0;
+		includesDubious = false;
+		includesDeprecated = false;
+		taxonomyMetadata = new HashMap<String, Object>();
 	}
 
 	public Iterator<TNRSNameResult> iterator() {
@@ -53,6 +62,18 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 	public double getMinimumScore() {
 		return minimumScore;
 	}
+	
+	public boolean getIncludesDubious() {
+		return includesDubious;
+	}
+
+	public boolean getIncludesDeprecated() {
+		return includesDeprecated;
+	}
+	
+	public Map<String, Object> getTaxonomyMetdata() {
+		return taxonomyMetadata;
+	}
 
 	public int size() {
 		return results.size();
@@ -69,27 +90,55 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 
 	// setters
 
-	public void addNameResult(TNRSNameResult result) {
+	public TNRSResults addNameResult(TNRSNameResult result) {
 		results.put(result.getId(), result);
+		return this;
 	}
 
-	public void addUnmatchedName(Object id, String name) {
+	public TNRSResults addUnmatchedName(Object id, String name) {
 		unmatchedNames.put(id, name);
+		return this;
 	}
 
-	public void addNameWithDirectMatch(Object id, String name) {
+	public TNRSResults addNameWithDirectMatch(Object id, String name) {
 		unambiguousNames.put(id, name);
+		return this;
 	}
 
-	public void setGoverningCode(String code) {
+	public TNRSResults setGoverningCode(String code) {
 		governingCode = code;
+		return this;
 	}
 
-	public void setContextName(String contextName) {
+	public TNRSResults setContextName(String contextName) {
 		this.contextName = contextName;
+		return this;
+	}
+ 
+	public TNRSResults setIncludesDubious(boolean includesDubious) {
+		this.includesDubious = includesDubious;
+		return this;
+	}
+
+	public TNRSResults setIncludesDeprecated(boolean includesDeprecated) {
+		this.includesDeprecated = includesDeprecated;
+		return this;
+	}
+
+	public TNRSResults addTaxMetadataEntry(String key, Object value) {
+		this.taxonomyMetadata.put(key, value);
+		return this;
 	}
 
 	public void setMinimumScore(double s) {
 		minimumScore = s;
+	}
+
+	public boolean containsResultWithId(Object thisId) {
+		return results.containsKey(thisId);
+	}
+
+	public TNRSNameResult getNameResult(Object thisId) {
+		return results.get(thisId);
 	}
 }

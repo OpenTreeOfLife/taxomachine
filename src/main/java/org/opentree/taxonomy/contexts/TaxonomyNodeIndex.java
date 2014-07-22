@@ -21,94 +21,98 @@ import org.opentree.graphdb.NodeIndexDescription;
  */
 public enum TaxonomyNodeIndex implements NodeIndexDescription {
 	
-	// TODO: make the keys consistent with the OTVocabulary
-	
 	// all taxon indexes
 	
-	/** Records all taxa. Field is "name" and key is taxon name. */
-    TAXON_BY_NAME               ("taxNodesByName"),         // all taxon nodes by name
+	/** Records all taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME and key is taxon name. */
+    TAXON_BY_NAME               ("taxNodesByName"),
 
-	/** Records all taxa. Field is "ot:ottolId" and key is ott id. */
-    TAXON_BY_OTT_ID 			("taxNodesByOTTId"),         // all taxon nodes by name
-
-	/** Records all taxa. Field is "name" and key is synonymous name. */
-    TAXON_BY_SYNONYM            ("taxNodesBySyn"),          // all taxon nodes by synonym
+    /** Records all taxa of species or equivalent (incl. lower) rank. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME and key is taxon name. */
+    TAXON_BY_NAME_SPECIES		("taxNodesByNameSpecies"),
     
-    /** Records all taxa. Field is "name", key is taxon name or synonymous name. */
-    TAXON_BY_NAME_OR_SYNONYM            ("taxNodesByNameOrSyn"),          // all taxon nodes by name or synonym
+    /** Records all taxa of generic rank. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME and key is taxon name. */
+    TAXON_BY_NAME_GENERA		("taxNodesByNameGenera"),
 
-    /** Records all taxa. Field is "rank" and key is taxon rank. */
+    /** Records all taxa of rank higher than species. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME and key is taxon name. */
+    TAXON_BY_NAME_HIGHER		("taxNodesByNameHigher"),
+
+	/** Records all taxa. Field is OTVocabularyPredicate.OT_OTT_ID and key is ott id. */
+    TAXON_BY_OTT_ID 			("taxNodesByOTTId"),
+
+	/** Records all taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME and key is synonymous name. */
+    TAXON_BY_SYNONYM            ("taxNodesBySyn"),
+    
+    /** Records all taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is taxon name or synonymous name. */
+    TAXON_BY_NAME_OR_SYNONYM            ("taxNodesByNameOrSyn"),
+
+    /** Records all taxa of rank higher than species. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is taxon name or synonymous name. */
+    TAXON_BY_NAME_OR_SYNONYM_HIGHER            ("taxNodesByNameOrSynHigher"),
+
+    /** Records all taxa. Field is TaxonomyProperty.RANK and key is taxon rank. */
     TAXON_BY_RANK					 ("taxNodesByRank"),
 
+    /** Records species and infraspecific ranks. Field is TaxonomyProperty.PARENT_GENUS_OTT_ID and key is the ott id of the enclosing genus. */
+    SPECIES_BY_GENUS		("speciesNodesByGenus"),
+    
     /** Records all taxa. Field is "flag" and key is flag name. */
-    TAXON_BY_FLAG					("taxNodesByFlag"),
-
+    TAXON_BY_FLAG					("taxNodesByFlag"),    
+    
     // preferred taxon indexes
     
-    /** Records preferred taxa. Field is "rank" and key is taxon rank. */
+    /** Records preferred taxa. Field is TaxonomyProperty.RANK and key is taxon rank. */
     PREFERRED_TAXON_BY_RANK			 ("prexTaxNodesByRank"),
-    
-    /** Records species and infraspecific ranks. Field is "genus_uid" and key is the ott id of the enclosing genus. */
+
+    /** Records species and infraspecific ranks. Field is TaxonomyProperty.PARENT_GENUS_OTT_ID and key is the ott id of the enclosing genus. */
     PREFERRED_SPECIES_BY_GENUS		("prefSpeciesNodesByGenus"),
     
     // all ranks
 
-    /** Records all preferred taxa. Field is "name", key is taxon name. */
+    /** Records all preferred taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is taxon name. */
     PREFERRED_TAXON_BY_NAME     ("prefTaxNodesByName"),
 
-    /** Records all preferred taxa. Field is "name", key is synonymous name. */
+    /** Records all preferred taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is synonymous name. */
     PREFERRED_TAXON_BY_SYNONYM  ("prefTaxNodesBySyn"),
 
-    /** Records all preferred taxa. Field is "name", key is taxon name or synonymous name. */
+    /** Records all preferred taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is taxon name or synonymous name. */
     PREFERRED_TAXON_BY_NAME_OR_SYNONYM  ("prefTaxNodesByNameOrSyn"),
 
     // species and subspecific ranks
 
-    /** Records preferred species and infraspecific taxa. Field is "name", key is taxon name. */
+    /** Records preferred species and infraspecific taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is taxon name. */
     PREFERRED_TAXON_BY_NAME_SPECIES     ("prefTaxNodesByNameSpecies"),
-
-//    /** Records preferred species and infraspecific taxa. Field is "name", key is synonymous name. */
-//    PREFERRED_TAXON_BY_SYNONYM_SPECIES  ("prefTaxNodesBySynSpecies"),
-
-//    /** Records preferred species and infraspecific taxa. Field is "name", key is taxon name or synonymous name. */
-//    PREFERRED_TAXON_BY_NAME_OR_SYNONYM_SPECIES  ("prefTaxNodesByNameOrSynSpecies"),
 
     // genera only
 
-    /** Records preferred genera. Field is "name", key is taxon name. */
+    /** Records preferred genera. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is taxon name. */
     PREFERRED_TAXON_BY_NAME_GENERA     ("prefTaxNodesByNameGenera"),
-
-//    /** Records preferred genera. Field is "name", key is synonymous name. */
-//    PREFERRED_TAXON_BY_SYNONYM_GENERA  ("prefTaxNodesBySynGenera"),
-
-//    /** Records preferred genera. Field is "name", key is taxon name or synonymous name. */
-//    PREFERRED_TAXON_BY_NAME_OR_SYNONYM_GENERA  ("prefTaxNodesByNameOrSynGenera"),
 
     // higher taxa
 
-    /** Records preferred higher taxa. Field is "name", key is taxon name. */
+    /** Records preferred higher taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is taxon name. */
     PREFERRED_TAXON_BY_NAME_HIGHER     ("prefTaxNodesByNameHigher"),
 
-//    /** Records preferred taxa. Field is "name", key is synonymous name. */
-//    PREFERRED_TAXON_BY_SYNONYM_HIGHER  ("prefTaxNodesBySynHigher"), // currently unused, here in case it becomes useful
-
-    /** Records preferred higher taxa. Field is "name", key is taxon name or synonymous name. */
+    /** Records preferred higher taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is taxon name or synonymous name. */
     PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER  ("prefTaxNodesByNameOrSynHigher"), 
 
     /** Stores information about the source taxonomies used to build OTT. */
     TAXONOMY_SOURCES                 ("taxSources"),
     
-    /** Not used. Was used for preottol. */
+    /** Records of deprecated taxa. Indexed by OTVocabularyPredicate.OT_OTT_TAXON_NAME and ...OT_OTT_ID */
+    DEPRECATED_TAXA				("deprecatedTaxa"),
+
+    /* Not used. Was used for preottol. *
     @Deprecated
     TAX_STATUS                  ("taxStatus"),
 
-    /** Not used. Was used for preottol. */
+    /** Not used. Was used for preottol. *
     @Deprecated
     TAX_RANK                    ("taxRank"),
     
-    /** Not used. Not clear what this is for. If this becomes used, please document what it is for. */
+    /** Not used. Not clear what this is for. If this becomes used, please document what it is for. *
     @Deprecated
-    TAXON_UNIQID				("taxUniqId");
+    TAXON_UNIQID				("taxUniqId"), */
+    
+    
+    ;
 
     public final String namePrefix;
 
