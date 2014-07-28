@@ -286,7 +286,19 @@ public class TNRS extends ServerPlugin {
         gdb.shutdownDb();
         return TNRSResultsRepresentation.getResultsRepresentation(results);
     }
+    
+    @Description("Returns the version of the taxonomy used to initialize the graph")
+	@PluginTarget(GraphDatabaseService.class)
+	public Representation getTaxonomyVersion (
+			@Source GraphDatabaseService graphDb) {
 
+		GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
+		String taxVersion = "";
+		taxVersion = (String)gdb.getGraphProperty("source");
+
+		return OTRepresentationConverter.convert(taxVersion);
+	}
+    
     @Description("DEPRECATED. Use getContexts instead.")
     @PluginTarget(GraphDatabaseService.class)
     @Deprecated
