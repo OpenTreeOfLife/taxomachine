@@ -253,7 +253,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			// key is the id from the taxonomy, the array has the synonym and the type of synonym
 			if (synFileExists) {
 				System.out.println("getting synonyms");
-//				synonymhash = new HashMap<String, ArrayList<ArrayList<String>>>();
 				ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
 				try {
 					BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
@@ -272,10 +271,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 							System.out.println("During synonym import, could not interpret id: " + idStr + " for synonym name " + name);
 							continue;
 						}
-						
-//						ArrayList<String> synonymEntry = new ArrayList<String>();
-//						synonymEntry.add(name);
-//						synonymEntry.add("from OTT");
 						
 						if (ottIdToSynonymNamesMap.get(id) == null) {
 							ottIdToSynonymNamesMap.put(id, new ArrayList<String>());
