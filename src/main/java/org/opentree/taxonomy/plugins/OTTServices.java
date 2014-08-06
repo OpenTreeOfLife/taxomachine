@@ -113,6 +113,31 @@ public class OTTServices extends ServerPlugin {
     	return OTRepresentationConverter.convert(results);
     }
     
+    @Description("Return the number of taxa that have been assigned the given flag in the installed OTT taxonomy.")
+    @PluginTarget(GraphDatabaseService.class)
+    public Representation getFlaggedTaxonCount (
+		@Source GraphDatabaseService graphDb,
+		@Description("The flag to search for") @Parameter(name="flag", optional=false) String flag) {
+
+    	HashMap<String, Object> results = new HashMap<String, Object>();
+    	
+		HashMap<String, OTTFlag> ottFlags = new HashMap<String, OTTFlag>();
+		for (OTTFlag f : OTTFlag.values()) {
+			ottFlags.put(f.label, f);
+		}
+
+		if (! ottFlags.containsKey(flag)) {
+			throw new IllegalArgumentException("unrecognized flag: " + flag);
+		}
+    	
+    	Taxonomy t = new Taxonomy(graphDb);
+    	IndexHits<Node> hits = t.taxaByFlag.query("flag", flag);
+    	results.put(flag, hits.size());
+    	
+    	return OTRepresentationConverter.convert(results);
+    	
+    }
+    
     private void addTaxonInfo(Node n, HashMap<String, Object> results) {
 
     	results.put("node_id", n.getId());
@@ -130,7 +155,7 @@ public class OTTServices extends ServerPlugin {
 		}
 		results.put("flags", flags);
     }
-
+    
     private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
 		map.put(property, node.getProperty(property));
     }

@@ -41,8 +41,9 @@ public class Taxonomy {
 	public GraphDatabaseAgent graphDb;
 	public final static String LIFE_NODE_NAME = "life";
 	public TaxonomyContext ALLTAXA;
-	Index<Node> taxaByOTTId;
-	Index<Node> deprecatedTaxa;
+	public Index<Node> taxaByOTTId;
+	public Index<Node> taxaByFlag;
+	public Index<Node> deprecatedTaxa;
 
 	public static final String[] SPECIFIC_RANKS = {"species", "subspecies", "variety", "varietas", "forma", "form"};
 
@@ -60,6 +61,7 @@ public class Taxonomy {
 		ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
 		taxaByOTTId = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_OTT_ID);
 		deprecatedTaxa = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
+		taxaByFlag = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_FLAG);
 	}
 	
 	public Node getLifeNode() {
