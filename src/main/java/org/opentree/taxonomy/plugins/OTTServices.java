@@ -132,6 +132,7 @@ public class OTTServices extends ServerPlugin {
     	
     	Taxonomy t = new Taxonomy(graphDb);
     	IndexHits<Node> hits = t.taxaByFlag.query("flag", flag);
+
     	results.put(flag, hits.size());
     	
     	return OTRepresentationConverter.convert(results);
