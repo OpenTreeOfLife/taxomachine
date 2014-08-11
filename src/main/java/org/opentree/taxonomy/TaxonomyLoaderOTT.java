@@ -253,7 +253,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			// key is the id from the taxonomy, the array has the synonym and the type of synonym
 			if (synFileExists) {
 				System.out.println("getting synonyms");
-//				synonymhash = new HashMap<String, ArrayList<ArrayList<String>>>();
 				ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
 				try {
 					BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
@@ -272,10 +271,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 							System.out.println("During synonym import, could not interpret id: " + idStr + " for synonym name " + name);
 							continue;
 						}
-						
-//						ArrayList<String> synonymEntry = new ArrayList<String>();
-//						synonymEntry.add(name);
-//						synonymEntry.add("from OTT");
 						
 						if (ottIdToSynonymNamesMap.get(id) == null) {
 							ottIdToSynonymNamesMap.put(id, new ArrayList<String>());
@@ -348,11 +343,9 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 
 		System.out.println("\nAdding relationships");
 
-		//add the relationships
-//		ArrayList<String> temppar = new ArrayList<String>();
+		// add the relationships
 		LinkedList<Long> temppar = new LinkedList<Long>();
 		count = 0;
-//		for (String key: dbnodes.keySet()) {
 		for (Long key: dbNodeForOTTIdMap.keySet()) {
 			count += 1;
 			temppar.add(key);
@@ -373,6 +366,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			}
 		}
 		
+		// process any remaining lines for relationships
 		tx = beginTx();
 		try {
 			for (int i = 0; i < temppar.size(); i++) {
@@ -546,7 +540,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		}
 		
 		if (addSynonyms) {
-			// TODO: figure out what to do about indexing synonyms.. should we use "name" or "ot:ottTaxonName" as the property?
 			taxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 //			taxaByNameOrSynonym.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
 		}
@@ -578,8 +571,6 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			prefTaxaByRank.add(tnode, TaxonomyProperty.RANK.propertyName(), rank);
 
 			if (addSynonyms) {
-    			// TODO: figure out what to do about indexing synonyms.. should we use "name" or "ot:ottTaxonName" as the property?
-//				prefTaxaByNameOrSynonym.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
 				prefTaxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 			}
 			
@@ -592,14 +583,12 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	        	prefTaxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 	        	if (addSynonyms) {
 	        		prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
-//	        		prefTaxaByNameOrSynonymHigher.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
 	        	}
 
 	        } else {
         		prefTaxaByNameHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 	        	if (addSynonyms) {
 	        		prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
-//	        		prefTaxaByNameOrSynonymHigher.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
 	        	}
 	        }
 		}
@@ -612,15 +601,10 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			
 			for (String synName : synNames) {
 				
-//				System.out.println("Adding synonym '" + synName + "' for ott id '" + String.valueOf(inputId));
+//				System.out.println("Adding synonym '" + synName + "' for ott id " + String.valueOf(inputId) + " to node " + tnode.getId());
 				
-//			for (int j = 0; j < synNames.size(); j++) {
-//				String synName = synNames.get(j).get(0);
-//				String synNameType = synNames.get(j).get(1);
 				Node synNode = createNode();
 				synNode.setProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
-				
-//				synode.setProperty("nametype", synNameType);
 				synNode.setProperty("source", sourceName);
 				synNode.createRelationshipTo(tnode, TaxonomyRelType.SYNONYMOF);
 				

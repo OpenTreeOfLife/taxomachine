@@ -341,7 +341,7 @@ public class MainRunner {
             // testing
             te.OTTOLNameDump(te.ALLTAXA.findPrefTaxNodesByName("Viburnum").get(0), outfile);
 
-            // te.makeOTTOLNameDump(te.ALLTAXA.getRootNode(), outfile);
+            // te.makeOTTOLNameDump(te.ALLTAXA.getRootNode(), outfile); 
 
         } else if (args[0].equals("dumpott")) {
             String graphname = args[1];
@@ -351,7 +351,7 @@ public class MainRunner {
             System.out.println("dumping OTT relationships");
             te.dumpPreferredOTTRelationships(outfile);
             System.out.println("dumping OTT synonym relationships");
-            te.dumpPreferredOTTSynonymRelationships(outfile + ".synonyms");
+            te.dumpPreferredOTTSynonymRelationships(outfile + ".synonyms"); */
         } else if (args[0].equals("makecontexts")) {
             String graphname = args[1];
             taxdb = new GraphDatabaseAgent(graphname);
