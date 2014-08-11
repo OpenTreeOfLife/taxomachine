@@ -96,9 +96,15 @@ public class TNRS extends ServerPlugin {
             @Source GraphDatabaseService graphDb,
             @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
     		@Description("The name of the taxonomic context to be searched") @Parameter(name = "contextName", optional = true) String contextName,
-    		@Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false.") @Parameter(name="includeDubious", optional = true) Boolean includeDubious) throws ContextNotFoundException, ParseException {
-
-    	includeDubious = includeDubious == null ? false : true;
+    		@Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false.") @Parameter(name = "includeDubious", optional = true) Boolean includeDubious) throws ContextNotFoundException, ParseException {
+    	
+    	
+    	
+    	// includeDubious = includeDubious == null ? false : true; // doesn't behave as intended if supplied parameter value is not expected e.g. 'F' will be true
+    	if (includeDubious == null || includeDubious != true) {
+    		includeDubious = false;
+    	}
+    	
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
