@@ -206,7 +206,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         }
         
         // record unmatchable names to results
-        for (Entry<Object, String> nameEntry : namesWithoutApproxMatches.entrySet()) {
+        for (Entry<Object, String> nameEntry : doFuzzyMatching ? namesWithoutApproxMatches.entrySet() : namesWithoutExactMatches.entrySet()) {
         	results.addUnmatchedName(nameEntry.getKey(), nameEntry.getValue());
         }
         
