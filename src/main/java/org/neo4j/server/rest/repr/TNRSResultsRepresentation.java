@@ -90,6 +90,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				serializer.putString("context", results.getContextName());
 				serializer.putBoolean("includes_deprecated_ids", results.getIncludesDeprecated());
 				serializer.putBoolean("includes_dubious_names", results.getIncludesDubious());
+				serializer.putBoolean("includes_approximate_matches", results.getIncludesApproximate());
 				serializer.putMapping("taxonomy",
 						OTRepresentationConverter.getMapRepresentation(results.getTaxonomyMetdata()));
 				serializer.putList("results", getResultsListRepresentation(results));

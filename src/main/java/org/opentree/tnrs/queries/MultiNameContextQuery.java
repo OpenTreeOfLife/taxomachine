@@ -43,6 +43,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 
     // set during construction by setDefaults()
     private boolean contextAutoInferenceIsOn;
+    private boolean doFuzzyMatching = true;
     private boolean includeDubious;
     private boolean includeDeprecated = false;
     private boolean matchSpTaxaToGenera;
@@ -103,6 +104,17 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	}
 	
 	/**
+	 * Set the fuzzy matching behavior. If set to false, no fuzzy matching will be performed. If set to true, fuzzy
+	 * matching will be performed if no exact string matches can be found. The default setting is true.
+	 * @param doFuzzyMatching
+	 * @return
+	 */
+	public MultiNameContextQuery setDoFuzzyMatching(boolean doFuzzyMatching) {
+		this.doFuzzyMatching = doFuzzyMatching;
+		return this;
+	}
+	
+	/**
 	 * Set the behavior for whether or not to match names of the form 'Genus sp.' to nodes with the name 'Genus'
 	 * @param match
 	 * @return
@@ -156,6 +168,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     @Override
     public MultiNameContextQuery setDefaults() {
         contextAutoInferenceIsOn = true;
+        doFuzzyMatching = true;
         includeDubious = false;
         includeDeprecated = false;
         matchSpTaxaToGenera = true;
@@ -188,7 +201,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         getExactSynonymMatches(queriedNames);
         
         // do fuzzy matching for any names we couldn't match
-        getApproxTaxnameOrSynonymMatches(namesWithoutExactMatches);
+        if (doFuzzyMatching) {
+        	getApproxTaxnameOrSynonymMatches(namesWithoutExactMatches);
+        }
         
         // record unmatchable names to results
         for (Entry<Object, String> nameEntry : namesWithoutApproxMatches.entrySet()) {
@@ -197,6 +212,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         
         results.setIncludesDeprecated(includeDeprecated);
         results.setIncludesDubious(includeDubious);
+        results.setIncludesApproximate(doFuzzyMatching);
         for (Entry<String, Object> entry : taxonomy.getMetadataMap().entrySet()) {
         	results.addTaxMetadataEntry(entry.getKey(), entry.getValue());
         }

@@ -199,14 +199,20 @@ public class TNRS extends ServerPlugin {
     			@Parameter(name="idInts", optional = true) Long[] idInts,
         	@Description("A boolean indicating whether or not to include deprecated taxa in the search.")
     			@Parameter(name="includeDeprecated", optional = true) Boolean includeDeprecated,
+    		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, however, it is on (true).")
+            	@Parameter(name="doApproximateMatching", optional = true) Boolean doFuzzyMatching,
     		@Description("Whether to include so-called 'dubious' taxa--those which are not accepted by OTT.")
             	@Parameter(name="includeDubious", optional=true) Boolean includeDubious) throws ContextNotFoundException {
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
 
+        // including deprecated and dubious names are turned OFF by default
         includeDeprecated = includeDeprecated == null ? false : includeDeprecated;
         includeDubious = includeDubious == null ? false : includeDubious;
+
+        // fuzzy matching is turned ON by default
+        doFuzzyMatching = doFuzzyMatching == null ? true : doFuzzyMatching;
         
         // check valid input on names
         String[] searchStrings = null;
@@ -280,6 +286,7 @@ public class TNRS extends ServerPlugin {
         		.setAutomaticContextInference(useAutoInference)
         		.setIncludeDubious(includeDubious)
         		.setIncludeDeprecated(includeDeprecated)
+        		.setDoFuzzyMatching(doFuzzyMatching)
         		.runQuery()
         		.getResults();
 

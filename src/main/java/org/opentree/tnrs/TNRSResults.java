@@ -18,6 +18,7 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 	
 	private boolean includesDubious;
 	private boolean includesDeprecated;
+	private boolean includesApproximate;
 	private Map<String, Object> taxonomyMetadata;
 
 	public TNRSResults() {
@@ -29,6 +30,7 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 		minimumScore = 0;
 		includesDubious = false;
 		includesDeprecated = false;
+		includesApproximate = true;
 		taxonomyMetadata = new HashMap<String, Object>();
 	}
 
@@ -69,6 +71,10 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 
 	public boolean getIncludesDeprecated() {
 		return includesDeprecated;
+	}
+	
+	public boolean getIncludesApproximate() {
+		return includesApproximate;
 	}
 	
 	public Map<String, Object> getTaxonomyMetdata() {
@@ -122,6 +128,11 @@ public class TNRSResults implements Iterable<TNRSNameResult> {
 
 	public TNRSResults setIncludesDeprecated(boolean includesDeprecated) {
 		this.includesDeprecated = includesDeprecated;
+		return this;
+	}
+	
+	public TNRSResults setIncludesApproximate(boolean includesApproximate) {
+		this.includesApproximate = includesApproximate;
 		return this;
 	}
 
