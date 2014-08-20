@@ -176,8 +176,9 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     		
     		String[] parts = queryString.split("\\s+",2);
 
-			// Hit it against the species index.
+			// Hit it against the species index and the synonym index
 			getExactMatches(escapedQuery, includeDubious ? taxNodesByNameSpecies : prefTaxNodesByNameSpecies, true);
+			getExactMatches(escapedQuery, includeDubious ? taxNodesBySynonym : prefTaxNodesBySynonym, true);
 			
 			if (matches.size() < 1) { // no exact hit against the species index
 				
@@ -238,17 +239,19 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	    				}
 
     				}
-    				
-    			} else { // no exact hit for first word against the genus index
+    			
+    			}
+    			
+    			if (matches.size() < 1) { // no exact hit for first word against the genus index
 
-    				// Hit it against the synonym index and the higher taxon index
-	    			getExactMatches(escapedQuery, includeDubious ? taxNodesBySynonym : prefTaxNodesBySynonym, false);
+    				// Hit query string against the higher taxon index... not sure if this is useful, since it has a space
 	    			getExactMatches(escapedQuery, includeDubious ? taxNodesByNameHigher : prefTaxNodesByNameHigher, true);
 	    			
     				if (matches.size() < 1) {
     					
-    					// Prefix query against the higher taxon index
-    					getPrefixMatches(escapedQuery, includeDubious ? taxNodesByNameOrSynonymHigher : prefTaxNodesByNameOrSynonymHigher);
+    					// Prefix query against the synonyms and higher taxa
+    					getPrefixMatches(escapedQuery, includeDubious ? taxNodesByNameOrSynonym : prefTaxNodesByNameOrSynonym);
+    					getPrefixMatches(escapedQuery, includeDubious ? taxNodesByNameOrSynonymHigher : prefTaxNodesByNameOrSynonymHigher); // not useful? contains a space
 
 	    				if (matches.size() < 1) {
 
@@ -257,7 +260,8 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	    				}
     				}
     			}
-			}	
+			}
+			
     	} else { // does not contain a space at all
 
     		getExactMatches(escapedQuery, includeDubious ? taxNodesByNameOrSynonymHigher : prefTaxNodesByNameOrSynonymHigher, true);
