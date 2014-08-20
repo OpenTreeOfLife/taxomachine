@@ -3,7 +3,6 @@ opentree-taxomachine
 Taxomachine is a tool for merging, exploring, and exporting taxonomies for use with the Open Tree of Life project. 
 
 
-
 Installation
 ---------------
 taxomachine is managed by Maven v. 3 (including the dependencies). In order to compile and build treemachine, it is easiest to let Maven do the hard work.
