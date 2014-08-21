@@ -181,10 +181,55 @@ public class TNRS extends ServerPlugin {
 			return 0;
 		}
 	}
-    
-    @Description("Return information on potential matches to a search query")
+
+    @Description("DEPRECATED. This service is an alias for the service simply named `contextQuery` and is kept only for backwards compatibility. Use `contextQuery` instead."
+    		+ "This one will be removed from a future version of the OpenTree API.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation contextQueryForNames(
+            @Source GraphDatabaseService graphDb,
+
+            /*
+            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db. This is an alternative to the use of the 'names' parameter")
+            	@Parameter(name = "queryString", optional = true) String queryString,
+            @Description("The name of the taxonomic context to be searched")
+            	@Parameter(name = "contextName", optional = true) String contextName,
+        	@Description("An array of taxon names to be queried. This is an alternative to the use of the 'queryString' parameter")
+        		@Parameter(name="names", optional = true) String[] names,
+        	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result. If this parameter is used, ids will be treated as strings.")
+    			@Parameter(name="idStrings", optional = true) String[] idStrings,
+        	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result. If this parameter is used, ids will be treated as ints.")
+    			@Parameter(name="idInts", optional = true) Long[] idInts,
+        	@Description("A boolean indicating whether or not to include deprecated taxa in the search.")
+    			@Parameter(name="includeDeprecated", optional = true) Boolean includeDeprecated,
+    		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, however, it is on (true).")
+            	@Parameter(name="doApproximateMatching", optional = true) Boolean doFuzzyMatching,
+    		@Description("Whether to include so-called 'dubious' taxa--those which are not accepted by OTT.")
+            	@Parameter(name="includeDubious", optional=true) Boolean includeDubious) throws ContextNotFoundException {
+            	*/
+
+            @Description("No information is provided for this service. Use service `contextQuery` instead.")
+	        	@Parameter(name = "queryString", optional = true) String queryString,
+	        @Description("No information is provided for this service. Use service `contextQuery` instead.")
+	        	@Parameter(name = "contextName", optional = true) String contextName,
+	    	@Description("No information is provided for this service. Use service `contextQuery` instead.")
+	    		@Parameter(name="names", optional = true) String[] names,
+	        @Description("No information is provided for this service. Use service `contextQuery` instead.")
+            	@Parameter(name="idStrings", optional = true) String[] idStrings,
+            @Description("No information is provided for this service. Use service `contextQuery` instead.")
+            	@Parameter(name="idInts", optional = true) Long[] idInts,
+            @Description("No information is provided for this service. Use service `contextQuery` instead.")
+            	@Parameter(name="includeDeprecated", optional = true) Boolean includeDeprecated,
+            @Description("No information is provided for this service. Use service `contextQuery` instead.")
+            	@Parameter(name="doApproximateMatching", optional = true) Boolean doFuzzyMatching,
+            @Description("No information is provided for this service. Use service `contextQuery` instead.")
+            	@Parameter(name="includeDubious", optional=true) Boolean includeDubious) throws ContextNotFoundException {
+
+    	return contextQuery(graphDb, queryString, contextName, names, idStrings, idInts, includeDeprecated, doFuzzyMatching, includeDubious);
+    }
+    
+    @Description("Return information about potential matches to a set of taxonomic names. This service uses taxonomic contexts to narrow search parameters and help disambiguate synonyms and homonyms. ")
+    @PluginTarget(GraphDatabaseService.class)
+    public Representation contextQuery(
             @Source GraphDatabaseService graphDb,
 
             @Description("A comma-delimited string of taxon names to be queried against the taxonomy db. This is an alternative to the use of the 'names' parameter")

@@ -53,7 +53,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			protected void serialize(final MappingSerializer serializer) {
 
 				serializer.putString("context_name", result.context.getDescription().name);
-				serializer.putNumber("content_rootnode_ott_id", (Long) result.context.getRootNode().getProperty(
+				serializer.putNumber("context_rootnode_ott_id", (Long) result.context.getRootNode().getProperty(
 						OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 				serializer.putList("ambiguous_names", OTRepresentationConverter
 						.getListRepresentation(result.namesNotMatched));
@@ -151,13 +151,15 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				Node matchedNode = match.getMatchedNode();
 
 				// add these properties for all taxa
-				serializer.putBoolean("is_perfect_match", match.getIsPerfectMatch());
+//				serializer.putBoolean("is_perfect_match", match.getIsPerfectMatch());
 				serializer.putBoolean("is_approximate_match", match.getIsApproximate());
 				serializer.putNumber("matched_node_id", matchedNode.getId());
-				serializer.putString("matched_name", (String) matchedNode.getProperty(
-						OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
-				serializer.putNumber("matched_ott_id", (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID
-						.propertyName()));
+//				serializer.putString("matched_name", (String) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+//				serializer.putNumber("matched_ott_id", (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
+				serializer.putString(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),
+						(String) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+				serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(),
+						(Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 				serializer.putString("search_string", match.getSearchString());
 				serializer.putNumber("score", match.getScore());
 
