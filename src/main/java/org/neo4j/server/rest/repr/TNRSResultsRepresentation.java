@@ -161,6 +161,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(),
 						(Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 				serializer.putString("search_string", match.getSearchString());
+				serializer.putString("matched_name", match.getMatchedName());
 				serializer.putNumber("score", match.getScore());
 
 				// check if taxon is deprecated
@@ -197,13 +198,13 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 					}
 					serializer.putList("flags", OTRepresentationConverter.getListRepresentation(flags));
 					
-					if (match.getNameStatusIsKnown()) {
-						serializer.putString("synonym_or_homonym_status", "known");
-						serializer.putBoolean("is_synonym", match.getIsSynonym());
-						serializer.putBoolean("is_homonym", match.getIsHomonym());
-					} else {
-						serializer.putString("synonym_or_homonym_status", "uncertain");
-					}
+//					if (match.getNameStatusIsKnown()) { // TODO: make this obsolete by ensuring that name status is always known, then remove it
+//						serializer.putString("synonym_or_homonym_status", "known");
+					serializer.putBoolean("is_synonym", match.getIsSynonym());
+//					serializer.putBoolean("is_homonym", match.getIsHomonym());
+//					} else {
+//						serializer.putString("synonym_or_homonym_status", "uncertain");
+//					}
 				}
 			}
 		};
@@ -240,7 +241,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				serializer.putNumber("node_id", match.getMatchedNode().getId()); // matched node id
 				serializer.putNumber("ott_id", (Long) match.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
 				serializer.putString("name", match.getUniqueName()); // unique name
-				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
+//				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
 				serializer.putBoolean("higher", match.getIsHigherTaxon()); // is higher taxon
 				serializer.putBoolean("dubious", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
 			}

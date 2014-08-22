@@ -71,27 +71,29 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         // for all matches, information associating this match with a known node in the graph
         private String searchString;                   // the original search text queried
         private Node matchedNode;                     // the recognized taxon node we matched
+        private String matchedName;						// the name that was matched against during the search. may differ from the name of the taxon that was matched, e.g. if the matched name was a synonym
 //        private String sourceName;                     // the name of the source where the match was found
         private String nomenCode;                      // the nomenclatural code under which this match is defined
-        private boolean isPerfectMatch;                  // whether this is an exact match to known, recognized taxon
+//        private boolean isPerfectMatch;                  // whether this is an exact match to known, recognized taxon
         private boolean isApprox;                     // whether this is a fuzzy match (presumably misspellings)
         private boolean isSynonym;                    // whether the match points to a known synonym
-        private boolean isHomonym;                     // whether the match points to a known homonym
+//        private boolean isHomonym;                     // whether the match points to a known homonym
         private String rank;							// the taxonomic rank
-        private boolean nameStatusIsKnown;              // whether we know if the match involves a synonym and/or homonym
+//        private boolean nameStatusIsKnown;              // whether we know if the match involves a synonym and/or homonym
         private double score;                         // the score of this match
 //        private HashMap<String,String> otherData;     // other data provided by the match source
         
         public Match(TNRSHit m) {
             matchedNode = m.getMatchedNode();
-            isPerfectMatch = m.getIsPerfectMatch();
+            matchedName = m.getMatchedName();
+//            isPerfectMatch = m.getIsPerfectMatch();
 //            sourceName = m.getSourceName();
             nomenCode = m.getNomenCode();
             isApprox = m.getIsApprox();
             isSynonym = m.getIsSynonym();
-            isHomonym = m.getIsHomonym();
+//            isHomonym = m.getIsHomonym();
             rank = m.getRank();
-            nameStatusIsKnown = m.getNameStatusIsKnown();
+//            nameStatusIsKnown = m.getNameStatusIsKnown();
             searchString = m.getSearchString();
             score = m.getScore();
 //            otherData = (HashMap<String,String>)m.getOtherData();
@@ -104,7 +106,15 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 		public String getSearchString() {
             return searchString;
         }
-        
+
+		/**
+		 * @return the name that was matched against during the TNRS search process
+		 */
+		@Override
+		public String getMatchedName() {
+			return matchedName;
+		}
+		
         /**
          * @return the Neo4j Node object for the recognized name to which this match points
          */
@@ -133,10 +143,11 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             }
         }
 
+		/*
 		@Override
 		public boolean getIsPerfectMatch() {
             return isPerfectMatch;
-        }
+        } */
 
 		@Override
 		public boolean getIsDeprecated() {
@@ -183,10 +194,11 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         	return (Boolean) matchedNode.getProperty("dubious");
         } */
 
+		/*
 		@Override
 		public boolean getIsHomonym() {
             return isHomonym;
-        }
+        } */
         
 		@Override
 		public String getRank() {
@@ -203,10 +215,11 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 			return isHigher;
 		}
         
+		/*
 		@Override
 		public boolean getNameStatusIsKnown() {
             return nameStatusIsKnown;
-        }
+        } */
 
 		@Override
 		public double getScore() {
@@ -225,48 +238,38 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 			return name;
 		}
         
-        /**
+        /*
          * @return a textual description of the type of match this is
-         */
+         *
 		@Override
 		public String getMatchType() {
             String desc = "";
-                        
-            if (isPerfectMatch) {
-                desc += "unambiguous match to known taxon";
-            
-            } else {
                 
-            	if (isApprox) {
-                	desc += "approximate match";
-                } else {
-                    desc += "exact match";
-                }
 
-            	if (nameStatusIsKnown) {
-                    if (isSynonym) {
-                    	desc += "to known synonym";
-    
-                    } else {
-                    	desc += "to known taxon";
-    
-                    }
 
-		    if (isHomonym) {
-    	                desc += "; also a homonym";
-                    }
-            	} else {
-            	    desc += "; name status unknown";
-            	}
-            }
 
             return desc;
-        }
+        } */
         
         @Override
         public String toString() {
-          return "Query '" + searchString + "' matched to " + matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) + " (id=" +
-                    matchedNode.getId() + "), score " + String.valueOf(score) + "; (" + getMatchType() + ")";
+        	
+        	String nameType = "";
+            if (isSynonym) {
+            	nameType = "synonym name";
+            } else {
+                if (matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) != getUniqueName()) {
+                	nameType = "non-unique taxon name";
+                } else {
+                	nameType = "unique taxon name";
+                }
+            }
+
+        	String matchType = isApprox ? "Approximate" : "Exact";
+        	
+          return matchType + " match from search string '" + searchString + "\' to " + nameType + " '" + matchedName + "' for ot:ottId=" +
+                    String.valueOf(matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())) + "(score=" +
+                    String.valueOf(score) + ")";
         }
     }
 }

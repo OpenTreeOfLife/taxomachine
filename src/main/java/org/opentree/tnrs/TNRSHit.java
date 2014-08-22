@@ -17,10 +17,11 @@ public class TNRSHit {
 
     Node matchedNode;
     String searchString;
+    String matchedName;
 //    String sourceName;
     String nomenCode;
-    boolean isHomonym;
-    boolean isPerfectMatch;
+//    boolean isHomonym;
+//    boolean isPerfectMatch;
     boolean isApprox;
     boolean isSynonym;
     boolean isDubious;
@@ -33,10 +34,11 @@ public class TNRSHit {
     public TNRSHit() {
         matchedNode = null;
         searchString = "";
+        matchedName = "";
 //        sourceName = "";
         nomenCode = "undetermined";
-        isHomonym = false;
-        isPerfectMatch = false;
+//        isHomonym = false;
+//        isPerfectMatch = false;
         isApprox = false;
         isSynonym = false;
         isDubious = false;
@@ -57,6 +59,11 @@ public class TNRSHit {
         return this;
     }
 
+    public TNRSHit setMatchedName(String matchedName) {
+        this.matchedName = matchedName;
+        return this;
+    }
+
     /*
     public TNRSHit setSourceName(String sourceName) {
         this.sourceName = sourceName;
@@ -68,10 +75,11 @@ public class TNRSHit {
         return this;
     }
     
+    /*
     public TNRSHit setIsHomonym(boolean isHomonym) {
         this.isHomonym = isHomonym;
         return this;
-    }
+    } */
     
     public TNRSHit setIsDubious(boolean isDubious) {
         this.isDubious = isDubious;
@@ -83,25 +91,25 @@ public class TNRSHit {
     	return this;
     }
     
-    /**
+    /*
      * Indicates a match for which it is known whether the matched name represents either a homonym or synonym. For fuzzy matches, this may not be known.
      * @param nameStatusIsKnown
      * @return
-     */
+     *
     public TNRSHit setNameStatusIsKnown(boolean nameStatusIsKnown) {
         this.nameStatusIsKnown = nameStatusIsKnown;
         return this;
-    }
+    } */
 
-    /**
+    /*
      * Indicates a hit to a node this is neither a synonym nor a homonym, and whose name is an exact match to the query.
      * @param isPerfectMatch
      * @return
-     */
+     *
     public TNRSHit setIsPerfectMatch(boolean isPerfectMatch) {
         this.isPerfectMatch = isPerfectMatch;
         return this;
-    }
+    } */
 
     public TNRSHit setIsApprox(boolean isApprox) {
         this.isApprox = isApprox;
@@ -126,7 +134,11 @@ public class TNRSHit {
     
     public Node getMatchedNode() {
         return matchedNode;
-    }    
+    }
+    
+    public String getMatchedName() {
+    	return matchedName;
+    }
     
     public String getSearchString() {
         return searchString;
@@ -136,9 +148,10 @@ public class TNRSHit {
         return nomenCode;
     }
     
+    /*
     public boolean getIsHomonym() {
         return isHomonym;
-    }
+    } */
     
     public String getRank() {
     	return rank;
@@ -148,12 +161,12 @@ public class TNRSHit {
     public String getSourceName() {
         // the name of the source where the match was found
         return sourceName;
-    } */
+    }
 
     public boolean getIsPerfectMatch() {
         // is this an exact direct match to a graph node?
         return isPerfectMatch;
-    }
+    } */
 
     public boolean getIsApprox() {
         // whether the match is a fuzzy match (presumably misspelling)
@@ -165,9 +178,10 @@ public class TNRSHit {
         return isSynonym;
     }
     
+    /*
     public boolean getNameStatusIsKnown() {
         return nameStatusIsKnown;
-    }
+    } */
 
     public double getScore() {
         // the score of this match

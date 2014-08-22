@@ -9,6 +9,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.TermQuery;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
@@ -50,7 +51,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     
     private Index<Node> nameIndex;
     private Index<Node> synonymIndex;
-    private Index<Node> nameOrSynonymIndex;
+//    private Index<Node> nameOrSynonymIndex;
     private Index<Node> deprecatedIndex;
     
     // special-purpose containers used during search
@@ -251,7 +252,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     		Object thisId = nameEntry.getKey();
     		String thisName = nameEntry.getValue();
     		
-            // Attempt to find exact matches against *ALL* preferred taxa
+            // Attempt to find exact matches against *ALL* taxa
             IndexHits<Node> hits = null;
             TermQuery exactQuery = new TermQuery(new Term(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), thisName));
             TNRSMatchSet matches = new TNRSMatchSet(taxonomy);
@@ -271,10 +272,12 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                // add the match to the TNRS results
 	                matches.addMatch(new TNRSHit()
 	                        .setMatchedTaxon(matchedTaxon)
+	                        .setMatchedName(matchedTaxon.getName())
 	                        .setSearchString(thisName)
-	                        .setIsPerfectMatch(true)
+//	                        .setIsPerfectMatch(true)
 	                        .setIsApprox(false)
-	                        .setIsHomonym(false)
+	                        .setIsSynonym(false)
+//	                        .setIsHomonym(false) // TODO: what to do about homonym status?
 	                        .setNomenCode(matchedTaxon.getNomenCode())
 	                        .setScore(PERFECT_SCORE));
 	            } else {
@@ -283,8 +286,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	            }
 	            
 	            if (includeDeprecated) {
-        			// do the deprecated search, add results. NOTE: we don't care about homonyms here
-
+        			// do the deprecated search, add results
+	            	
             		if (hits != null) {
             			hits.close();
             		}
@@ -294,8 +297,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	                    Taxon matchedTaxon = taxonomy.getTaxon(hit);
     	                    matches.addMatch(new TNRSHit()
     	                            .setMatchedTaxon(matchedTaxon)
+    	                            .setMatchedName(matchedTaxon.getName())
     	                            .setSearchString(thisName)
-    	                            .setIsPerfectMatch(true)
+//    	                            .setIsPerfectMatch(true)
+    	                            .setIsSynonym(false)
     	                            .setIsApprox(false)
     	                            .setScore(PERFECT_SCORE));
     	                }
@@ -312,7 +317,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             }
         }
         
-        // update the LICA for the unambiguous (non-homonym) hits. Will set the LICA to the root of the graph if there are no unambiguous hits
+        // update the LICA for the unambiguous hits. Will set the LICA to the root of the graph if there are no unambiguous hits
         updateLICA();
         
         // now set the context closest to the LICA. If the LICA is the root, this will set the context to ALLTAXA
@@ -379,22 +384,25 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                // at least 1 hit; prepare to record matches
 	
 	                // determine within-context homonym status
-	                boolean isHomonym = hits.size() > 1 ? true : false;
+//	                boolean isHomonym = hits.size() > 1 ? true : false;
 	
 	                for (Node hit : hits) {
 	                    // add this match to the match set
 	                    Taxon matchedTaxon = taxonomy.getTaxon(hit);
 	                    matches.addMatch(new TNRSHit()
 	                            .setMatchedTaxon(matchedTaxon)
+	                            .setMatchedName(matchedTaxon.getName())
 	                            .setSearchString(thisName)
-	                            .setIsPerfectMatch(!isHomonym && !usingGenericSpMatching) // if it's not a homonym nor a "Genus sp." match to "Genus"
+//	                            .setIsPerfectMatch(!isHomonym && !usingGenericSpMatching) // if it's not a homonym nor a "Genus sp." match to "Genus"
 	                            .setIsApprox(false)
-	                            .setIsHomonym(isHomonym)
+	                            .setIsSynonym(false)
+//	                            .setIsHomonym(isHomonym) // TODO: what to do about homonym status?
 	                            .setNomenCode(matchedTaxon.getNomenCode())
-	                            .setScore(PERFECT_SCORE));
+	                            .setScore(usingGenericSpMatching ? PERFECT_SCORE * 0.99 : PERFECT_SCORE)); // arbitrary number, high because we're pretty confident, but not 1 to indicate it was not an exact match
 	                    
-	                    if (!isHomonym && !usingGenericSpMatching) {
-	                        validTaxaWithExactMatches.add(matchedTaxon);
+//	                    if (!isHomonym && !usingGenericSpMatching) {
+	                    if (!usingGenericSpMatching) {
+	                    	validTaxaWithExactMatches.add(matchedTaxon);
 	                        results.addNameWithDirectMatch(thisId, thisName);
 	                    }
 	                }
@@ -412,10 +420,12 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	                    Taxon matchedTaxon = taxonomy.getTaxon(hit);
     	                    matches.addMatch(new TNRSHit()
     	                            .setMatchedTaxon(matchedTaxon)
+    	                            .setMatchedName(matchedTaxon.getName())
     	                            .setSearchString(thisName)
-    	                            .setIsPerfectMatch(!usingGenericSpMatching) // it it's not a "Genus sp." match to "Genus"
+    	                            .setIsSynonym(false)
+//    	                            .setIsPerfectMatch(!usingGenericSpMatching) // it it's not a "Genus sp." match to "Genus"
     	                            .setIsApprox(false)
-    	                            .setScore(PERFECT_SCORE));
+    	                            .setScore(usingGenericSpMatching ? PERFECT_SCORE * 0.99 : PERFECT_SCORE));
     	                    
     	                    if (!usingGenericSpMatching) {
 	    	                    results.addNameWithDirectMatch(thisId, thisName);
@@ -473,16 +483,23 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             	hits = synonymIndex.query(exactQuery);
 	            if (hits.size() > 0) {
 	            	// at least 1 hit; prepare to record matches
-	
-	            	for (Node hit : hits) {
+
+	            	for (Node synonymNode : hits) {
 	                    // add this match to the match set
-	                    Taxon matchedTaxon = taxonomy.getTaxon(hit);
+
+	                	// get the synonym name that was matched
+	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+
+	                	// get the taxon node for this synonym
+	                    Taxon matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
+
 	                    matches.addMatch(new TNRSHit()
 	                            .setMatchedTaxon(matchedTaxon)
+	                            .setMatchedName(matchedSynonymName)
 	                            .setSearchString(thisName)
-	                            .setIsPerfectMatch(false)
+//	                            .setIsPerfectMatch(false)
 	                            .setIsApprox(false)
-	                            .setIsHomonym(false)
+//	                            .setIsHomonym(false) // TODO: what to do about homonym status?
 	                            .setIsSynonym(true)
 	                            .setNomenCode(matchedTaxon.getNomenCode())
 	                            .setScore(PERFECT_SCORE));
@@ -530,7 +547,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 
             try {
 
-            	hits = nameOrSynonymIndex.query(fuzzyQuery);
+            	// search for regular taxa, add them if there are results
+//            	hits = nameOrSynonymIndex.query(fuzzyQuery);
+            	hits = nameIndex.query(fuzzyQuery);
             	if (hits.size() > 0) {
 	                // at least 1 hit; prepare to record matches
 	                
@@ -542,10 +561,45 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                    if (score >= minScore) {
 	                        matches.addMatch(new TNRSHit()
 	                                .setMatchedTaxon(matchedTaxon)
+	                                .setMatchedName(matchedTaxon.getName())
 	                                .setSearchString(thisName)
-	                                .setIsPerfectMatch(false)
+//	                                .setIsPerfectMatch(false)
 	                                .setIsApprox(true)
-	                                .setNameStatusIsKnown(false)
+//	                                .setNameStatusIsKnown(false)
+	                                .setIsSynonym(false)
+	                                // TODO: what to do about homonym status?
+	                                .setNomenCode(matchedTaxon.getNomenCode())
+	                                .setScore(score));
+	                    }
+	                }
+            	}
+            	
+            	// search for synonyms, add them if there are results
+            	hits = synonymIndex.query(fuzzyQuery);
+            	if (hits.size() > 0) {
+	                // at least 1 hit; prepare to record matches
+	                
+	                for (Node synonymNode : hits) {
+	                    
+	                	// get the synonym name that was matched
+	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+
+	                	// get the taxon node for this synonym
+	                    Taxon matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
+
+	                	// add the match if it scores high enough
+	                    double score = getScore(thisName, matchedSynonymName, matchedTaxon, synonymNode);
+		                if (score >= minScore) {
+		                		                    
+	                        matches.addMatch(new TNRSHit()
+	                                .setMatchedTaxon(matchedTaxon)
+	                                .setMatchedName(matchedSynonymName)
+	                                .setSearchString(thisName)
+//	                                .setIsPerfectMatch(false)
+	                                .setIsApprox(true)
+//	                                .setNameStatusIsKnown(false)
+	                                .setIsSynonym(true)
+	                                // TODO: what to do about homonym status?
 	                                .setNomenCode(matchedTaxon.getNomenCode())
 	                                .setScore(score));
 	                    }
@@ -569,10 +623,12 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     	                    if (score >= minScore) {
     	                        matches.addMatch(new TNRSHit()
     	                                .setMatchedTaxon(matchedTaxon)
+    	                                .setMatchedName(matchedTaxon.getName())
     	                                .setSearchString(thisName)
-    	                                .setIsPerfectMatch(false)
+//    	                                .setIsPerfectMatch(false)
     	                                .setIsApprox(true)
-    	                                .setNameStatusIsKnown(false)
+    	                                .setIsSynonym(false)
+//    	                                .setNameStatusIsKnown(false)
     	                                .setScore(score));
     	                    }
     	                }
@@ -595,16 +651,17 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     }
 
     /**
-     * Calculate scores for non-exact matches
+     * Calculate scores for non-exact matches where the name to score against may be arbitarily defined (as an argument).
      * 
      * @param thisName
+     * @param matchedName
      * @param matchedTaxon
      * @param hit
      * @return
      */
-    private double getScore(String thisName, Taxon matchedTaxon, Node hit) {
+    private double getScore(String thisName, String matchedName, Taxon matchedTaxon, Node hit) {
     	        
-    	double baseScore = getScore(thisName, matchedTaxon.getName());
+    	double baseScore = getScore(thisName, matchedName);
 
     	// weight scores by distance outside of inferred lica (this may need to go away if it is a speed bottleneck)
         double scoreModifier = 1;
@@ -619,6 +676,18 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         // return the score
         return baseScore * scoreModifier;
     	
+    }
+
+    /**
+     * Calculate scores for non-exact matches where the name to score against is the name of the matched taxon.
+     * 
+     * @param thisName
+     * @param matchedTaxon
+     * @param hit
+     * @return
+     */
+    private double getScore(String thisName, Taxon matchedTaxon, Node hit) {
+    	return getScore(thisName, matchedTaxon.getName(), matchedTaxon, hit);
     }
     
     private double getScore(String searchName, String hitName) {
@@ -648,12 +717,14 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 		deprecatedIndex = taxonomy.ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
     	if (includeDubious) {
     		nameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
-    		synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
-    		nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
+//    		synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
+    		synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.SYNONYM_NODES_BY_SYNONYM);
+//    		nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
     	} else {
     		nameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
-    		synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
-    		nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+//    		synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
+    		synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SYNONYM_NODES_BY_SYNONYM);
+//    		nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
     	}
     }
 }

@@ -140,12 +140,13 @@ public class TNRS extends ServerPlugin {
 			
 			// sorts in reverse order: higher priority matches to lower indexes
 
+			/*
 			// exact matches are top priority
 			if (match1.getIsPerfectMatch() == true && match2.getIsPerfectMatch() == false) {
 				return -1;
 			} else if (match1.getIsPerfectMatch() == false && match2.getIsPerfectMatch() == true) {
 				return 1;
-			}
+			} */
 			
 			// higher taxa are higher priority
 			if (match1.getIsHigherTaxon() == true && match1.getIsHigherTaxon() == false) {
