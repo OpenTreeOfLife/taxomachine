@@ -584,9 +584,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             	hits = synonymIndex.query(fuzzyQuery);
             	if (hits.size() > 0) {
 	                // at least 1 hit; prepare to record matches
-            		throw new RuntimeException(String.valueOf(hits.size()));
-/*	                
-	                for (Node synonymNode : hits) {
+
+            		for (Node synonymNode : hits) {
 	                    
 	                	// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
@@ -616,7 +615,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                                .setNomenCode(matchedTaxon.getNomenCode())
 	                                .setScore(score));
 	                    }
-	                }*/
+	                }
             	}
             	
             	if (includeDeprecated) {
