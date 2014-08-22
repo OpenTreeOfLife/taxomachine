@@ -492,6 +492,12 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	            	for (Node synonymNode : hits) {
 	                    // add this match to the match set
 
+            			// TEMPORARY KLUDGE to prevent blowing up when a taxon node is found in the synonym index.
+            			// To be removed once db is corrected (should not find taxon nodes from synonym index).
+            			if (synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.INCOMING)) {
+            				continue;
+            			}
+	            		
 	                	// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 
@@ -587,20 +593,18 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 
             		for (Node synonymNode : hits) {
 	                    
+            			// TEMPORARY KLUDGE to prevent blowing up when a taxon node is found in the synonym index.
+            			// To be removed once db is corrected (should not find taxon nodes from synonym index).
+            			if (synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.INCOMING)) {
+            				continue;
+            			}
+            			
 	                	// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
-
-	                	Taxon matchedTaxon = null;
-	                	try {
-	                	// get the taxon node for this synonym
-	                		matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
-	                	} catch (Exception ex) {
-	                		String err = "";
-	                		for (String v : synonymNode.getPropertyKeys()) {
-	                			err += v + ": " +String.valueOf(synonymNode.getProperty(v)) + "\n";
-	                		}
-	                		throw new RuntimeException(err);
-	                	}
+	                	
+	                	// get the associated taxon
+	                	Taxon matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
+	                	
 	                	// add the match if it scores high enough
 	                    double score = getScore(thisName, matchedSynonymName, matchedTaxon, synonymNode);
 		                if (score >= minScore) {
