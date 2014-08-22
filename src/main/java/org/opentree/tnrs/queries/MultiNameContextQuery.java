@@ -498,7 +498,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             				continue;
             			}
 	            		
-	                	// get the synonym name that was matched
+	              
+            			// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 
 	                	// get the taxon node for this synonym
