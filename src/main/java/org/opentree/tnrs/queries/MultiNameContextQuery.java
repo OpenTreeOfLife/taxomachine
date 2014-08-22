@@ -595,8 +595,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                	// get the taxon node for this synonym
 	                		matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
 	                	} catch (Exception ex) {
-	                		String err = (Arrays.toString(((List<String>) synonymNode.getPropertyKeys().iterator()).toArray())) + "\n" +
-	                				(Arrays.toString(((List<String>) synonymNode.getPropertyValues().iterator()).toArray()));
+	                		String err = "";
+	                		for (String v : synonymNode.getPropertyKeys()) {
+	                			err += v + ": " +String.valueOf(synonymNode.getProperty(v)) + "\n";
+	                		}
 	                		throw new RuntimeException(err);
 	                	}
 	                	// add the match if it scores high enough
