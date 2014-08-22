@@ -1,20 +1,17 @@
 package org.neo4j.server.rest.repr;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.helpers.collection.FirstItemIterable;
 import org.neo4j.helpers.collection.IterableWrapper;
 import org.neo4j.helpers.collection.IteratorWrapper;
-import org.opentree.properties.OTPropertyPredicate;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.OTTFlag;
 import org.opentree.taxonomy.constants.TaxonomyProperty;
@@ -151,11 +148,8 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				Node matchedNode = match.getMatchedNode();
 
 				// add these properties for all taxa
-//				serializer.putBoolean("is_perfect_match", match.getIsPerfectMatch());
 				serializer.putBoolean("is_approximate_match", match.getIsApproximate());
 				serializer.putNumber("matched_node_id", matchedNode.getId());
-//				serializer.putString("matched_name", (String) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
-//				serializer.putNumber("matched_ott_id", (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 				serializer.putString(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),
 						(String) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 				serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(),
@@ -198,13 +192,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 					}
 					serializer.putList("flags", OTRepresentationConverter.getListRepresentation(flags));
 					
-//					if (match.getNameStatusIsKnown()) { // TODO: make this obsolete by ensuring that name status is always known, then remove it
-//						serializer.putString("synonym_or_homonym_status", "known");
 					serializer.putBoolean("is_synonym", match.getIsSynonym());
-//					serializer.putBoolean("is_homonym", match.getIsHomonym());
-//					} else {
-//						serializer.putString("synonym_or_homonym_status", "uncertain");
-//					}
 				}
 			}
 		};
@@ -237,11 +225,11 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				// TODO: THESE ARE DEPRECATED, REMOVE AT NEXT VERSION OF API
 				serializer.putNumber("nodeId", match.getMatchedNode().getId()); // matched node id
 				serializer.putNumber("ottId", (Long) match.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
-
+				// END: deprecated properties
+				
 				serializer.putNumber("node_id", match.getMatchedNode().getId()); // matched node id
 				serializer.putNumber("ott_id", (Long) match.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
 				serializer.putString("name", match.getUniqueName()); // unique name
-//				serializer.putBoolean("exact", match.getIsPerfectMatch()); // is perfect match
 				serializer.putBoolean("higher", match.getIsHigherTaxon()); // is higher taxon
 				serializer.putBoolean("dubious", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
 			}
@@ -274,8 +262,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	}
 
 	@Override
-	protected void serialize(MappingSerializer serializer) {
-	}
+	protected void serialize(MappingSerializer serializer) {}
 
 	// ========= private methods
 
@@ -295,40 +282,8 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				// if (value instanceof TNRSNameResult) {
 				return getNameResultRepresentation((TNRSNameResult) value);
-
-				/*
-				 * } else if (value instanceof Iterable) { final FirstItemIterable<Representation> nested =
-				 * convertValuesToRepresentations((Iterable) value); return new ListRepresentation(getType(nested),
-				 * nested);
-				 * 
-				 * } else if (value instanceof Map<?, ?>) { return
-				 * GeneralizedMappingRepresentation.getMapRepresentation((Map<String, Object>) value);
-				 */
-				// } else {
-				// return null;
-				// }
 			}
 		});
 		return new ListRepresentation(RepresentationType.MAP.toString(), results);
 	}
-
-	/*
-	 * static FirstItemIterable<Representation> convertValuesToRepresentations(Iterable data) {
-	 * 
-	 * return new FirstItemIterable<Representation>( new IterableWrapper<Representation, Object>(data) {
-	 * 
-	 * @Override protected Representation underlyingObjectToObject(Object value) {
-	 * 
-	 * if (value instanceof TNRSNameResult) { return getNameResultRepresentation((TNRSNameResult)value);
-	 * 
-	 * /* } else if (value instanceof Iterable) { final FirstItemIterable<Representation> nested =
-	 * convertValuesToRepresentations((Iterable) value); return new ListRepresentation(getType(nested), nested);
-	 * 
-	 * } else if (value instanceof Map<?, ?>) { return
-	 * GeneralizedMappingRepresentation.getMapRepresentation((Map<String, Object>) value);
-	 * 
-	 * 
-	 * } else { return null; } } }); }
-	 */
-
 }
