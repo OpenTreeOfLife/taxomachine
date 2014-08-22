@@ -492,11 +492,12 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	            	for (Node synonymNode : hits) {
 	                    // add this match to the match set
 
+	            		/*
             			// TEMPORARY KLUDGE to prevent blowing up when a taxon node is found in the synonym index.
             			// To be removed once db is corrected (should not find taxon nodes from synonym index).
             			if (!synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.OUTGOING)) {
             				continue;
-            			}
+            			}*/
 	            		
 	                	// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
@@ -593,11 +594,12 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 
             		for (Node synonymNode : hits) {
 	                    
+            			/*
             			// TEMPORARY KLUDGE to prevent blowing up when a taxon node is found in the synonym index.
             			// To be removed once db is corrected (should not find taxon nodes from synonym index).
             			if (!synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.OUTGOING)) {
             				continue;
-            			}
+            			}*/
             			
 	                	// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
