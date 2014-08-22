@@ -1,7 +1,12 @@
 package org.opentree.tnrs.queries;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -532,7 +537,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * 
      * @param searchStrings
      */
-    private void getApproxTaxnameOrSynonymMatches(Map<Object, String> searchStrings) {
+    @SuppressWarnings("unchecked")
+	private void getApproxTaxnameOrSynonymMatches(Map<Object, String> searchStrings) {
     	
         for (Entry <Object, String> nameEntry : searchStrings.entrySet()) {
 
@@ -587,9 +593,11 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                	Taxon matchedTaxon = null;
 	                	try {
 	                	// get the taxon node for this synonym
-	                     matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
+	                		matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
 	                	} catch (Exception ex) {
-	                		throw new RuntimeException(synonymNode.toString());
+	                		String err = (Arrays.toString(((List<String>) synonymNode.getPropertyKeys().iterator()).toArray())) + "\n" +
+	                				(Arrays.toString(((List<String>) synonymNode.getPropertyValues().iterator()).toArray()));
+	                		throw new RuntimeException(err);
 	                	}
 	                	// add the match if it scores high enough
 	                    double score = getScore(thisName, matchedSynonymName, matchedTaxon, synonymNode);
