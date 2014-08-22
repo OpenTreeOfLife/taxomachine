@@ -584,9 +584,13 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                	// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 
+	                	Taxon matchedTaxon = null;
+	                	try {
 	                	// get the taxon node for this synonym
-	                    Taxon matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
-
+	                     matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
+	                	} catch (Exception ex) {
+	                		throw new RuntimeException(synonymNode.toString());
+	                	}
 	                	// add the match if it scores high enough
 	                    double score = getScore(thisName, matchedSynonymName, matchedTaxon, synonymNode);
 		                if (score >= minScore) {
