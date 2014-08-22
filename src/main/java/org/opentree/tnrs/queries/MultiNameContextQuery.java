@@ -494,7 +494,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 
             			// TEMPORARY KLUDGE to prevent blowing up when a taxon node is found in the synonym index.
             			// To be removed once db is corrected (should not find taxon nodes from synonym index).
-            			if (synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.INCOMING)) {
+            			if (!synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.OUTGOING)) {
             				continue;
             			}
 	            		
@@ -595,7 +595,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	                    
             			// TEMPORARY KLUDGE to prevent blowing up when a taxon node is found in the synonym index.
             			// To be removed once db is corrected (should not find taxon nodes from synonym index).
-            			if (synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.INCOMING)) {
+            			if (!synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.OUTGOING)) {
             				continue;
             			}
             			
