@@ -497,7 +497,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             			if (!synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.OUTGOING)) {
             				continue;
             			}
-	            		
+
+            			
 	                	// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 
