@@ -191,7 +191,9 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     public MultiNameContextQuery runQuery() {
     	
     	setIndexes();
-        
+    	
+    	throw new RuntimeException("testing");
+/*        
     	Map<Object, String> namesToMatchToTaxa =  new HashMap<Object, String>();
     	if (contextAutoInferenceIsOn) {
         	namesToMatchToTaxa = (HashMap<Object, String>) inferContextAndReturnAmbiguousNames();
@@ -222,7 +224,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         for (Entry<String, Object> entry : taxonomy.getMetadataMap().entrySet()) {
         	results.addTaxMetadataEntry(entry.getKey(), entry.getValue());
         }
-        return this;
+        return this; */
     }
     
     /**
