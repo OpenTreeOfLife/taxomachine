@@ -210,9 +210,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 
         	String matchType = isApprox ? "Approximate" : "Exact";
         	
-          return matchType + " match from search string '" + searchString + "\' to " + nameType + " '" + matchedName + "' for ot:ottId=" +
-                    String.valueOf(matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())) + "(score=" +
-                    String.valueOf(score) + ")";
+          return matchType + " match from search string '" + searchString + "' to " + nameType + " '" + matchedName + "'";
         }
     }
 }
