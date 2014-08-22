@@ -53,6 +53,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	Index<Node> taxaByNameOrSynonym;
 	Index<Node> taxaByNameHigher;
 	Index<Node> taxaByNameOrSynonymHigher;
+	Index<Node> synonymNodesBySynonym;
+	Index<Node> synonymNodesBySynonymHigher;
 
 	// all taxa by other info
 	Index<Node> taxaByOTTId;
@@ -69,6 +71,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	Index<Node> prefTaxaByNameOrSynonym;	
 	Index<Node> prefTaxaByNameHigher;
 	Index<Node> prefTaxaByNameOrSynonymHigher;
+	Index<Node> prefSynonymNodesBySynonym;
+	Index<Node> prefSynonymNodesBySynonymHigher;
 
 	// preferred rank-based
 	Index<Node> prefTaxaByRank;	
@@ -221,8 +225,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	 *  Name (e.g. "Rana palustris")
 	 *  Rank ("genus" etc.)
 	 *  Sources - this takes the form tag:id,tag:id where tag is a short string identifying the source taxonomy (currently just "ncbi" or "gbif") and id is the numeric accession number within that taxonomy. Examples: ncbi:8404,gbif:2427185 ncbi:1235509
-	 *  Unique name - if the name is a homonym, then the name qualified with its rank and the name of its parent taxon, e.g. "Roperia (genus in family Hemidiscaceae)"
-	 *
+	 *  Unique name - if the name is a homonym, then the name qualified with its rank and the name of an ancestral taxon it does not share with the other taxa that share its name, e.g. "Roperia (genus in family Hemidiscaceae) vs. Roperia (genus in subclass Apiidae)"
 	 *
 	 * Creates nodes and TAXCHILDOF relationships for each line.
 	 * Nodes get a OTVocabularyPredicate.OT_OTT_TAXON_NAME property. Relationships get "source", "childid", "parentid" properties.
@@ -611,16 +614,20 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				// indexing
 				taxaBySynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 				taxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+				synonymNodesBySynonym.add(synNode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 	            if (!isSpecific(rank)) {
 	            	taxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+					synonymNodesBySynonymHigher.add(synNode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 	            }
 
 	            // additional indexing (smaller indexes) for non-hidden taxa
 				if (buildPreferredIndexes && !dubious) {
 					prefTaxaBySynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
 					prefTaxaByNameOrSynonym.add(tnode,OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),synName);
+					prefSynonymNodesBySynonym.add(synNode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 		            if (!isSpecific(rank)) {
 		            	prefTaxaByNameOrSynonymHigher.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+						prefSynonymNodesBySynonymHigher.add(synNode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 		            }
 				}
 			}
@@ -672,6 +679,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			taxaBySynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
 			taxaByNameOrSynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
 			taxaByNameOrSynonymHigher = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+			synonymNodesBySynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.SYNONYM_NODES_BY_SYNONYM);
+			synonymNodesBySynonymHigher = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.SYNONYM_NODES_BY_SYNONYM_HIGHER);
 		}
 
 		// only for ott id option
@@ -692,6 +701,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				prefTaxaBySynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
 				prefTaxaByNameOrSynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
 				prefTaxaByNameOrSynonymHigher = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+				prefSynonymNodesBySynonym = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SYNONYM_NODES_BY_SYNONYM);
+				prefSynonymNodesBySynonymHigher = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SYNONYM_NODES_BY_SYNONYM_HIGHER);
 			}
 		}
 	}

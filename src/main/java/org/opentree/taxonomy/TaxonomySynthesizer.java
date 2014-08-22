@@ -706,21 +706,24 @@ public class TaxonomySynthesizer extends Taxonomy {
      */
     public void addToIndexes(Node node, TaxonomyContext context) {
 
-        Index<Node> nameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
-        Index<Node> synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
-        Index<Node> nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
+        Index<Node> taxonByName = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
+//        Index<Node> synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
+        Index<Node> taxonBySynonym = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
+        Index<Node> taxonByNameOrSynonym = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
+        Index<Node> synonymNodeBySynonym = context.getNodeIndex(TaxonomyNodeIndex.SYNONYM_NODES_BY_SYNONYM);
+        Index<Node> synonymNodeBySynonymHigher = context.getNodeIndex(TaxonomyNodeIndex.SYNONYM_NODES_BY_SYNONYM_HIGHER);
 
-        Index<Node> rankIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_RANK);
+        Index<Node> taxonByRank = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_RANK);
         
         // species and subspecific ranks
-        Index<Node> speciesNameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_SPECIES);
+        Index<Node> taxonByNameSpecies = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_SPECIES);
 
         // genera only
-        Index<Node> genusNameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_GENERA);
+        Index<Node> taxonByNameGenus = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_GENERA);
 
         // higher taxa
-        Index<Node> higherNameIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_HIGHER);
-        Index<Node> higherNameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+        Index<Node> taxonByNameHigher = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_HIGHER);
+        Index<Node> taxonByNameOrSynHigher = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM_HIGHER);
 
         String name = (String) node.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
         String rank = null;
@@ -730,23 +733,23 @@ public class TaxonomySynthesizer extends Taxonomy {
         
         // ===== first index the node under the all-taxon indexes
         
-        nameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
-        nameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        taxonByName.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        taxonByNameOrSynonym.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 
         if (rank != null) {
-        	rankIndex.add(node, TaxonomyProperty.RANK.propertyName(), rank);
+        	taxonByRank.add(node, TaxonomyProperty.RANK.propertyName(), rank);
         }
         
         // add to the rank-specific indexes
         if (isSpecific(rank)) {
-        	speciesNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        	taxonByNameSpecies.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
         } else if ("genus".equals(rank)) {
-        	genusNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
-        	higherNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
-        	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        	taxonByNameGenus.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        	taxonByNameHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        	taxonByNameOrSynHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
         } else {
-        	higherNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
-        	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        	taxonByNameHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+        	taxonByNameOrSynHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
         }
         
         // add the taxon node under all its synonym names
@@ -755,49 +758,54 @@ public class TaxonomySynthesizer extends Taxonomy {
                 .relationships(TaxonomyRelType.SYNONYMOF,Direction.INCOMING )
                 .traverse(node).nodes()) {
         	String synName = (String) sn.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
-            synonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
-            nameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+
+        	taxonBySynonym.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+        	taxonByNameOrSynonym.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+        	synonymNodeBySynonym.add(sn, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
             if (!isSpecific(rank)) {
-            	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+            	taxonByNameOrSynHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+            	synonymNodeBySynonymHigher.add(sn, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
             }
         }
     	
         // for non-dubious taxa
         if (! (Boolean) node.getProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
-	        nameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
-	        synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
-	        nameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
-	
-	        rankIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_RANK);
+	        taxonByName = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME);
+	        taxonBySynonym = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_SYNONYM);
+	        taxonByNameOrSynonym = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM);
+	        synonymNodeBySynonym = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SYNONYM_NODES_BY_SYNONYM);
+	        synonymNodeBySynonymHigher = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_SYNONYM_NODES_BY_SYNONYM_HIGHER);
+	        
+	        taxonByRank = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_RANK);
 	        
 	        // species and subspecific ranks
-	        speciesNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_SPECIES);
+	        taxonByNameSpecies = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_SPECIES);
 	
 	        // genera only
-	        genusNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_GENERA);
+	        taxonByNameGenus = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_GENERA);
 	
 	        // higher taxa
-	        higherNameIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
-	        higherNameOrSynonymIndex = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
+	        taxonByNameHigher = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_HIGHER);
+	        taxonByNameOrSynHigher = context.getNodeIndex(TaxonomyNodeIndex.PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER);
 	        
 	        // add the taxon node under its own name
-	        nameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
-	        nameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        taxonByName.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        taxonByNameOrSynonym.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 	
 	        if (rank != null) {
-	        	rankIndex.add(node, TaxonomyProperty.RANK.propertyName(), rank);
+	        	taxonByRank.add(node, TaxonomyProperty.RANK.propertyName(), rank);
 	        }
 	        
 	        // add to the rank-specific indexes
 	        if (isSpecific(rank)) {
-	        	speciesNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        	taxonByNameSpecies.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 	        } else if ("genus".equals(rank)) {
-	        	genusNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
-	        	higherNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
-	        	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        	taxonByNameGenus.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        	taxonByNameHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        	taxonByNameOrSynHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 	        } else {
-	        	higherNameIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
-	        	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        	taxonByNameHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
+	        	taxonByNameOrSynHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
 	        }
 	        
 	        // add the taxon node under all its synonym names
@@ -806,10 +814,13 @@ public class TaxonomySynthesizer extends Taxonomy {
 	                .relationships(TaxonomyRelType.SYNONYMOF,Direction.INCOMING )
 	                .traverse(node).nodes()) {
 	        	String synName = (String) sn.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
-	            synonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
-	            nameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            
+	        	taxonBySynonym.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	        	taxonByNameOrSynonym.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	        	synonymNodeBySynonym.add(sn, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 	            if (!isSpecific(rank)) {
-	            	higherNameOrSynonymIndex.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            	taxonByNameOrSynHigher.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
+	            	synonymNodeBySynonymHigher.add(sn, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
 	            }
 	        }
         }

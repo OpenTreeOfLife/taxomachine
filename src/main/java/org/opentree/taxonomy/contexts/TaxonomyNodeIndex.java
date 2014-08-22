@@ -50,6 +50,12 @@ public enum TaxonomyNodeIndex implements NodeIndexDescription {
     /** Records all taxa. Field is TaxonomyProperty.RANK and key is taxon rank. */
     TAXON_BY_RANK					 ("taxNodesByRank"),
 
+    /** Records synonym nodes. Field is OTVocabularPredicate.OT_OTT_TAXON_NAME and key is synonym name. */
+	SYNONYM_NODES_BY_SYNONYM			("synonymNodesBySynonym"),
+
+    /** Records synonym nodes of rank higher than species. Field is OTVocabularPredicate.OT_OTT_TAXON_NAME and key is synonym name. */
+	SYNONYM_NODES_BY_SYNONYM_HIGHER		("synonymNodesBySynonymHigher"),
+    
     /** Records species and infraspecific ranks. Field is TaxonomyProperty.PARENT_GENUS_OTT_ID and key is the ott id of the enclosing genus. */
     SPECIES_BY_GENUS		("speciesNodesByGenus"),
     
@@ -93,6 +99,12 @@ public enum TaxonomyNodeIndex implements NodeIndexDescription {
     /** Records preferred higher taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME, key is taxon name or synonymous name. */
     PREFERRED_TAXON_BY_NAME_OR_SYNONYM_HIGHER  ("prefTaxNodesByNameOrSynHigher"), 
 
+    /** Records synonym nodes. Field is OTVocabularPredicate.OT_OTT_TAXON_NAME and key is synonym name. */
+	PREFERRED_SYNONYM_NODES_BY_SYNONYM			("prefSynonymNodesBySynonym"),
+
+    /** Records synonym nodes of rank higher than species. Field is OTVocabularPredicate.OT_OTT_TAXON_NAME and key is synonym name. */
+	PREFERRED_SYNONYM_NODES_BY_SYNONYM_HIGHER		("prefSynonymNodesBySynonymHigher"),
+    
     /** Stores information about the source taxonomies used to build OTT. */
     TAXONOMY_SOURCES                 ("taxSources"),
     
