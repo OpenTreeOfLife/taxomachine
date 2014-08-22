@@ -1,7 +1,12 @@
 package org.opentree.tnrs.queries;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -186,7 +191,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     public MultiNameContextQuery runQuery() {
     	
     	setIndexes();
-        
+    	
     	Map<Object, String> namesToMatchToTaxa =  new HashMap<Object, String>();
     	if (contextAutoInferenceIsOn) {
         	namesToMatchToTaxa = (HashMap<Object, String>) inferContextAndReturnAmbiguousNames();
@@ -487,6 +492,12 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
 	            	for (Node synonymNode : hits) {
 	                    // add this match to the match set
 
+            			// TEMPORARY KLUDGE to prevent blowing up when a taxon node is found in the synonym index.
+            			// To be removed once db is corrected (should not find taxon nodes from synonym index).
+            			if (!synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.OUTGOING)) {
+            				continue;
+            			}
+	            		
 	                	// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 
@@ -532,7 +543,8 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * 
      * @param searchStrings
      */
-    private void getApproxTaxnameOrSynonymMatches(Map<Object, String> searchStrings) {
+    @SuppressWarnings("unchecked")
+	private void getApproxTaxnameOrSynonymMatches(Map<Object, String> searchStrings) {
     	
         for (Entry <Object, String> nameEntry : searchStrings.entrySet()) {
 
@@ -578,15 +590,21 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
             	hits = synonymIndex.query(fuzzyQuery);
             	if (hits.size() > 0) {
 	                // at least 1 hit; prepare to record matches
-	                
-	                for (Node synonymNode : hits) {
+
+            		for (Node synonymNode : hits) {
 	                    
+            			// TEMPORARY KLUDGE to prevent blowing up when a taxon node is found in the synonym index.
+            			// To be removed once db is corrected (should not find taxon nodes from synonym index).
+            			if (!synonymNode.hasRelationship(TaxonomyRelType.SYNONYMOF,Direction.OUTGOING)) {
+            				continue;
+            			}
+            			
 	                	// get the synonym name that was matched
 	                	String matchedSynonymName = (String) synonymNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
-
-	                	// get the taxon node for this synonym
-	                    Taxon matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
-
+	                	
+	                	// get the associated taxon
+	                	Taxon matchedTaxon = taxonomy.getTaxon(synonymNode.getSingleRelationship(TaxonomyRelType.SYNONYMOF, Direction.OUTGOING).getEndNode());
+	                	
 	                	// add the match if it scores high enough
 	                    double score = getScore(thisName, matchedSynonymName, matchedTaxon, synonymNode);
 		                if (score >= minScore) {

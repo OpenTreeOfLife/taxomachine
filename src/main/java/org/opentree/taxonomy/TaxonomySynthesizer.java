@@ -753,10 +753,12 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
         
         // add the taxon node under all its synonym names
-        for (Node sn : Traversal.description()
+/*        for (Node sn : Traversal.description()
                 .breadthFirst()
                 .relationships(TaxonomyRelType.SYNONYMOF,Direction.INCOMING )
-                .traverse(node).nodes()) {
+                .traverse(node).nodes()) { */
+        for (Relationship synRel : node.getRelationships(TaxonomyRelType.SYNONYMOF, Direction.INCOMING)) {
+        	Node sn = synRel.getStartNode();
         	String synName = (String) sn.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 
         	taxonBySynonym.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
@@ -809,10 +811,12 @@ public class TaxonomySynthesizer extends Taxonomy {
 	        }
 	        
 	        // add the taxon node under all its synonym names
-	        for (Node sn : Traversal.description()
+/*	        for (Node sn : Traversal.description()
 	                .breadthFirst()
 	                .relationships(TaxonomyRelType.SYNONYMOF,Direction.INCOMING )
-	                .traverse(node).nodes()) {
+	                .traverse(node).nodes()) */
+	        for (Relationship synRel : node.getRelationships(TaxonomyRelType.SYNONYMOF, Direction.INCOMING)) {
+	        	Node sn = synRel.getStartNode();
 	        	String synName = (String) sn.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 	            
 	        	taxonBySynonym.add(node, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), synName);
