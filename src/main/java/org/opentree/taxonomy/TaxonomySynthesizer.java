@@ -707,7 +707,6 @@ public class TaxonomySynthesizer extends Taxonomy {
     public void addToIndexes(Node node, TaxonomyContext context) {
 
         Index<Node> taxonByName = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME);
-//        Index<Node> synonymIndex = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
         Index<Node> taxonBySynonym = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SYNONYM);
         Index<Node> taxonByNameOrSynonym = context.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_NAME_OR_SYNONYM);
         Index<Node> synonymNodeBySynonym = context.getNodeIndex(TaxonomyNodeIndex.SYNONYM_NODES_BY_SYNONYM);
@@ -753,10 +752,6 @@ public class TaxonomySynthesizer extends Taxonomy {
         }
         
         // add the taxon node under all its synonym names
-/*        for (Node sn : Traversal.description()
-                .breadthFirst()
-                .relationships(TaxonomyRelType.SYNONYMOF,Direction.INCOMING )
-                .traverse(node).nodes()) { */
         for (Relationship synRel : node.getRelationships(TaxonomyRelType.SYNONYMOF, Direction.INCOMING)) {
         	Node sn = synRel.getStartNode();
         	String synName = (String) sn.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
@@ -811,10 +806,6 @@ public class TaxonomySynthesizer extends Taxonomy {
 	        }
 	        
 	        // add the taxon node under all its synonym names
-/*	        for (Node sn : Traversal.description()
-	                .breadthFirst()
-	                .relationships(TaxonomyRelType.SYNONYMOF,Direction.INCOMING )
-	                .traverse(node).nodes()) */
 	        for (Relationship synRel : node.getRelationships(TaxonomyRelType.SYNONYMOF, Direction.INCOMING)) {
 	        	Node sn = synRel.getStartNode();
 	        	String synName = (String) sn.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());

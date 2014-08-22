@@ -18,34 +18,26 @@ public class TNRSHit {
     Node matchedNode;
     String searchString;
     String matchedName;
-//    String sourceName;
     String nomenCode;
-//    boolean isHomonym;
-//    boolean isPerfectMatch;
     boolean isApprox;
     boolean isSynonym;
     boolean isDubious;
     boolean isDeprecated;
     String rank;
     boolean nameStatusIsKnown;
-//    HashMap<String,String> otherData;
     double score;
 
     public TNRSHit() {
         matchedNode = null;
         searchString = "";
         matchedName = "";
-//        sourceName = "";
         nomenCode = "undetermined";
-//        isHomonym = false;
-//        isPerfectMatch = false;
         isApprox = false;
         isSynonym = false;
         isDubious = false;
         isDeprecated = true;
         rank = "";
         nameStatusIsKnown = true;
-//        otherData = null;
         score = -1;
     }
     
@@ -64,22 +56,10 @@ public class TNRSHit {
         return this;
     }
 
-    /*
-    public TNRSHit setSourceName(String sourceName) {
-        this.sourceName = sourceName;
-        return this;
-    } */
-
     public TNRSHit setNomenCode(String nomenCode) {
         this.nomenCode = nomenCode;
         return this;
     }
-    
-    /*
-    public TNRSHit setIsHomonym(boolean isHomonym) {
-        this.isHomonym = isHomonym;
-        return this;
-    } */
     
     public TNRSHit setIsDubious(boolean isDubious) {
         this.isDubious = isDubious;
@@ -91,26 +71,6 @@ public class TNRSHit {
     	return this;
     }
     
-    /*
-     * Indicates a match for which it is known whether the matched name represents either a homonym or synonym. For fuzzy matches, this may not be known.
-     * @param nameStatusIsKnown
-     * @return
-     *
-    public TNRSHit setNameStatusIsKnown(boolean nameStatusIsKnown) {
-        this.nameStatusIsKnown = nameStatusIsKnown;
-        return this;
-    } */
-
-    /*
-     * Indicates a hit to a node this is neither a synonym nor a homonym, and whose name is an exact match to the query.
-     * @param isPerfectMatch
-     * @return
-     *
-    public TNRSHit setIsPerfectMatch(boolean isPerfectMatch) {
-        this.isPerfectMatch = isPerfectMatch;
-        return this;
-    } */
-
     public TNRSHit setIsApprox(boolean isApprox) {
         this.isApprox = isApprox;
         return this;
@@ -120,12 +80,6 @@ public class TNRSHit {
         this.isSynonym = isSynonym;
         return this;
     }
-
-    /*
-    public TNRSHit setOtherData(Map<String,String> otherData) {
-        this.otherData = (HashMap<String, String>)otherData;
-        return this;
-    } */
 
     public TNRSHit setScore(double score) {
         this.score = score;
@@ -148,26 +102,10 @@ public class TNRSHit {
         return nomenCode;
     }
     
-    /*
-    public boolean getIsHomonym() {
-        return isHomonym;
-    } */
-    
     public String getRank() {
     	return rank;
     }
      
-    /*
-    public String getSourceName() {
-        // the name of the source where the match was found
-        return sourceName;
-    }
-
-    public boolean getIsPerfectMatch() {
-        // is this an exact direct match to a graph node?
-        return isPerfectMatch;
-    } */
-
     public boolean getIsApprox() {
         // whether the match is a fuzzy match (presumably misspelling)
         return isApprox;
@@ -178,20 +116,8 @@ public class TNRSHit {
         return isSynonym;
     }
     
-    /*
-    public boolean getNameStatusIsKnown() {
-        return nameStatusIsKnown;
-    } */
-
     public double getScore() {
         // the score of this match
         return score;
     }
-
-    /*
-    public Map<String, String> getOtherData() {
-        // any other data
-        return otherData;
-    }*/
-
 }
