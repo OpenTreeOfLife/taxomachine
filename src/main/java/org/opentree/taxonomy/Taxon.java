@@ -194,16 +194,16 @@ public class Taxon {
     }
 
     /**
-     * This essentially uses every relationship and constructs a newick tree (hardcoded to taxtree.tre file)
-     * 
-     * It would be trivial to only include certain relationship sources @ name the name of the internal node that will be the root of the subtree that is
-     * written
+     * Return a JadeTree object containing the taxonomic structure below this taxon.
+     * @return
      */
-    public void buildTaxonomyTree() {
+    public JadeTree getTaxonomySubtree() {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
+        
         System.out.println(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+
         JadeNode root = new JadeNode();
         root.setName(((String) taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_"));
         HashMap<Node, JadeNode> nodes = new HashMap<Node, JadeNode>();
@@ -211,7 +211,9 @@ public class Taxon {
         
         int count = 0;
         for (Relationship rel : CHILDOF_TRAVERSAL.traverse(taxNode).relationships()) {
-            count += 1;
+            
+        	count += 1;
+            
             if (nodes.containsKey(rel.getStartNode()) == false) {
                 JadeNode node = new JadeNode();
                 node.setName(((String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
@@ -225,10 +227,25 @@ public class Taxon {
                 nodes.put(rel.getEndNode(), node);
             }
             nodes.get(rel.getEndNode()).addChild(nodes.get(rel.getStartNode()));
+        
             if (count % 100000 == 0)
                 System.out.println(count);
+
         }
-        JadeTree tree = new JadeTree(root);
+        
+        return new JadeTree(root);
+    }
+    
+    /**
+     * This essentially uses every relationship and constructs a newick tree (hardcoded to taxtree.tre file)
+     * 
+     * It would be trivial to only include certain relationship sources @ name the name of the internal node that will be the root of the subtree that is
+     * written
+     */
+    @Deprecated
+    public void buildTaxonomyTree() {
+
+        JadeTree tree = getTaxonomySubtree();
         PrintWriter outFile;
         try {
             outFile = new PrintWriter(new FileWriter("taxtree.tre"));
@@ -320,6 +337,8 @@ public class Taxon {
         }
     }
 
+    /*
+    @Deprecated
     public String constructJSONAltRels(String domsource, ArrayList<Long> altrels) {
         cne.setStartNode(taxNode);
         cne.setChildThreshold(200);
@@ -376,7 +395,7 @@ public class Taxon {
                     /*
                      * just for last ditch efforts if(pf.findSinglePath(rel.getEndNode(), firstNode) != null || visited.contains(rel.getEndNode())){ preferred =
                      * rel; }
-                     */
+                     *
                 }
             }
             if (keep == null) {
@@ -480,7 +499,7 @@ public class Taxon {
         ret += tree.getRoot().getJSON(false);
         ret += ",{\"domsource\":\"" + sourcename + "\"}]\n";
         return ret;
-    }
+    } */
 
 /*    public void runittest() {
 
