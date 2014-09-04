@@ -203,12 +203,14 @@ public class taxonomy extends ServerPlugin {
     
     private void addTaxonInfo(Node n, HashMap<String, Object> results) {
 
+    	// TODO: need to update this to use the TaxonomyProperty enum once the taxonomy uniqname field is changed to this format
+    	results.put("unique_name", n.getProperty(TaxonomyProperty.UNIQUE_NAME.propertyName()));
+
     	results.put("node_id", n.getId());
-		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
+    	addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
 		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
 //		addPropertyFromNode(n, TaxonomyProperty.SOURCE.propertyName(), results);
 		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
-		addPropertyFromNode(n, TaxonomyProperty.UNIQUE_NAME.propertyName(), results);
 
 		HashSet<String> flags = new HashSet<String>();
 		for (OTTFlag flag : OTTFlag.values()) {
