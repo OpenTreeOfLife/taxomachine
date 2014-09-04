@@ -33,9 +33,12 @@ public class TaxonSet implements Iterable<Taxon> {
      * Assumes all taxa are coming from the same taxonomy (since we only expect to ever be working with one taxonomy)
      * @param inTaxa
      */
-    public TaxonSet (Set<Taxon> inTaxa) {
+    public TaxonSet (Iterable<Taxon> inTaxa) {
         lica = null;
-        taxa = (HashSet<Taxon>) inTaxa;
+        taxa = new HashSet<Taxon>();
+        for (Taxon t : inTaxa) {
+        	taxa.add(t);
+        }
 
         if (taxa.size() > 0)
             taxonomy = taxa.iterator().next().getTaxonomy();
@@ -43,13 +46,14 @@ public class TaxonSet implements Iterable<Taxon> {
             taxonomy = null;
     }
     
-    public TaxonSet (LinkedList<Node> inNodes, Taxonomy taxonomy) {
+    public TaxonSet (Iterable<Node> inNodes, Taxonomy taxonomy) {
         lica = null;
         this.taxonomy = taxonomy;
 
         taxa = new HashSet<Taxon>();
-        for (Node n : inNodes)
+        for (Node n : inNodes) {
             taxa.add(taxonomy.getTaxon(n));
+        }
     }
     
     public Taxon getLICA() {
