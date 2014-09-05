@@ -84,15 +84,16 @@ public class Taxon {
     }
     
     /**
-     * Returns the least inclusive TaxonomyContext object that contains `taxon`
+     * Returns the least inclusive TaxonomyContext object that contains this taxon.
      * @param taxon
      * @return
      */
     public TaxonomyContext getLeastInclusiveContext() {
         
     	String leastContext = "";
-    	if (taxNode.hasProperty("leastcontext")) {
-    		leastContext = String.valueOf(taxNode.getProperty("leastcontext"));
+    	if (taxNode.hasProperty(TaxonomyProperty.LEAST_INCLUSIVE_CONTEXT.propertyName())) {
+    		leastContext = String.valueOf(taxNode.getProperty(TaxonomyProperty.LEAST_INCLUSIVE_CONTEXT.propertyName()));
+
     	} else {
     		return taxonomy.ALLTAXA;
     	}
@@ -136,7 +137,25 @@ public class Taxon {
         
         return false;
     }
-
+    
+    public Taxon getParentTaxon() {
+		if (taxNode == null) {
+			return null;
+		}
+		
+		Relationship pRel = taxNode.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING);
+		if (pRel == null) {
+			return null;
+		}
+		
+//		Node p = ;
+		
+//		if (! p.equals(taxNode)) {
+		    return taxonomy.getTaxon(pRel.getEndNode());
+//		} else {
+//		    return null;
+//		}
+    }
     
     /**
      * Writes a dot file for the taxonomy graph that is rooted at `clade_name`

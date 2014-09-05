@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -154,7 +155,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		Node deprecatedContainerNode = graphDb.createNode();
 		deprecatedContainerNode.setProperty("description", "container node to which deprecated taxon nodes are attached");
 		
-		Node lifeNode = getLifeNode();
+		Node lifeNode = getTaxonomyRootNode();
 		if (lifeNode != null) {
 			deprecatedContainerNode.createRelationshipTo(lifeNode, TaxonomyRelType.CONTAINEDBY);
 		}
@@ -414,7 +415,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			tx.finish();
 		}
 	}
-	
+
 	/**
 	 * add relationships for a processed taxon
 	 * @param childId
@@ -425,6 +426,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		if (parentNode == null) {
 
 			Node graphRootNode = dbNodeForOTTIdMap.get(childId);
+			setTaxonomyRootNode(graphRootNode);
 			
 			// special case for the taxonomy root - the 'life' node in non-subsetted taxonomies, in other cases name could be anything
 			metadatanode.createRelationshipTo(graphRootNode, TaxonomyRelType.METADATAFOR);
@@ -456,6 +458,12 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		
 		// split the input line all the way to the end. we expect trailing empty strings when flags and uniqname are not set
 		String[] tokens = line.split("\t\\|\t",-1);
+		if (tokens.length == 1) {
+			tokens = line.split("\t",-1);
+		}
+		if (tokens.length == 1) {
+			throw new UnsupportedOperationException("The input file does not seem to be delimited in a known format (either \\t or \\t|\\t).");
+		}
 		int i = 0;
 		String inputIdStr = tokens[i++];
 		

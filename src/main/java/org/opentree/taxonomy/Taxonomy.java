@@ -16,6 +16,7 @@ import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.constants.TaxonomyProperty;
 import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.ContextNotFoundException;
@@ -63,8 +64,9 @@ public class Taxonomy {
 		deprecatedTaxa = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
 		taxaByFlag = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_FLAG);
 	}
-	
-	public Node getLifeNode() {
+
+	/*
+	public Node getTaxonomyRootNode() {
 
 		Node lifeNode;
 		try {
@@ -75,8 +77,30 @@ public class Taxonomy {
 		}
 
 		return lifeNode;
-	}
+	} */
 
+	/**
+	 * @param rootNode
+	 */
+	protected void setTaxonomyRootNode(Node rootNode) {
+		graphDb.setGraphProperty(TaxonomyProperty.TAXONOMY_ROOT_NODE_ID.propertyName(), rootNode.getId());
+	}
+	
+	/**
+	 * @return the deepest node in the taxonomy
+	 */
+	public Node getTaxonomyRootNode() {
+		Long nodeId = (Long) graphDb.getGraphProperty(TaxonomyProperty.TAXONOMY_ROOT_NODE_ID.propertyName());
+		if (nodeId != null) {
+			return graphDb.getNodeById(nodeId);
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * @return
+	 */
 	public GraphDatabaseAgent getGraphDb() {
 		return graphDb;
 	}
@@ -249,7 +273,7 @@ public class Taxonomy {
 	 * @return
 	 */
 	public Map<String, Object> getMetadataMap() {
-		Node metaNode = this.getLifeNode().getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.INCOMING).getStartNode();
+		Node metaNode = this.getTaxonomyRootNode().getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.INCOMING).getStartNode();
 		Map<String, Object> metadata = new HashMap<String, Object>();
 		for (String key : metaNode.getPropertyKeys()) {
 			metadata.put(key, metaNode.getProperty(key));
@@ -264,7 +288,7 @@ public class Taxonomy {
 	public void addMetadataEntry(String key, Object value) {
 		Node metaNode;
 		try {
-			metaNode = this.getLifeNode().getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.INCOMING).getStartNode();
+			metaNode = this.getTaxonomyRootNode().getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.INCOMING).getStartNode();
 		} catch (Exception ex) {
 			throw new RuntimeException("There was a problem finding the taxonomy root or the metadata node. Is the taxonomy fully installed?");
 		}

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -222,7 +223,7 @@ public class TaxonomySynthesizer extends Taxonomy {
     public void makePreferredOTTOLRelationshipsConflicts() {
 
         // get start node
-        Node life = getLifeNode();
+        Node life = getTaxonomyRootNode();
         System.out.println(life.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 
         Transaction tx = beginTx();
@@ -302,7 +303,7 @@ public class TaxonomySynthesizer extends Taxonomy {
 //                .relationships(RelType.TAXCHILDOF, Direction.INCOMING);
 
         // get the start point
-        Node life = getLifeNode();
+        Node life = getTaxonomyRootNode();
         System.out.println(life.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 
         Transaction tx = beginTx();
@@ -435,7 +436,7 @@ public class TaxonomySynthesizer extends Taxonomy {
 //    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 //                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
          // get the start point
-         Node life = getLifeNode();
+         Node life = getTaxonomyRootNode();
          System.out.println(life.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
          PrintWriter outFile;
  		 try {
@@ -479,7 +480,7 @@ public class TaxonomySynthesizer extends Taxonomy {
 //    	 TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
 //                 .relationships(RelType.PREFTAXCHILDOF, Direction.INCOMING);
          // get the start point
-         Node life = getLifeNode();
+         Node life = getTaxonomyRootNode();
          System.out.println(life.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
          PrintWriter outFile;
  		 try {
@@ -514,14 +515,18 @@ public class TaxonomySynthesizer extends Taxonomy {
         
         TaxonomyContext context;
         ArrayList<ContextTreeNode> children;
+        ContextTreeNode parent;
 
         ContextTreeNode(TaxonomyContext context) {
             this.context = context;
             children = new ArrayList<ContextTreeNode>();
+            parent = null;
         }
+
         
         void addChild(ContextTreeNode child) {
             children.add(child);
+            child.parent = this;
         }
         
         TaxonomyContext getContext() {
@@ -539,14 +544,17 @@ public class TaxonomySynthesizer extends Taxonomy {
      * @param contextNode
      * @param prefix
      */
-    private void printContextTree(ContextTreeNode contextNode, String prefix) {
+    private void printContextTree(ContextTreeNode contextNode, String prefix, boolean first) {
 
-        prefix = prefix + "    ";
+    	if (first) {
+    		System.out.println(prefix + contextNode.getContext().getDescription().name);
+    	}
+
+    	prefix = prefix + "    ";
         for (ContextTreeNode childNode : contextNode.getChildren()) {
             System.out.println(prefix + childNode.getContext().getDescription().name);
-            printContextTree(childNode, prefix);
+            printContextTree(childNode, prefix, false);
         }
-
     }
     
     /**
@@ -573,39 +581,56 @@ public class TaxonomySynthesizer extends Taxonomy {
         TraversalDescription prefTaxParentOfTraversal = Traversal.description().depthFirst().
                 relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.OUTGOING); 
         
+        ContextTreeNode deepestContext = null;
         // for each ContextTreeNode (i.e. each context)
         for (Entry<String, ContextTreeNode> entry: contextNodesByRootName.entrySet()) {
             
             String childName = entry.getKey();
             ContextTreeNode contextNode = entry.getValue();
-                        
+            
+            System.out.println(contextNode.context.getDescription().toString());
+            
             // traverse back up the taxonomy tree from the root of this context toward life
-            for (Node parentNode : prefTaxParentOfTraversal.traverse(contextNode.context.getRootNode()).nodes()) {
+            Node cr = contextNode.context.getRootNode();
+            if (cr != null) {
+	            for (Node parentNode : prefTaxParentOfTraversal.traverse(cr).nodes()) {
+	
+	                // if/when we find a more inclusive (i.e. parent) context
+	                String parentName = String.valueOf(parentNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+	                if (contextNodesByRootName.containsKey(parentName) && (parentName.equals(childName) == false)) {
+	
+	                    System.out.println("Adding " + childName + " as child of " + parentName);
+	                    
+	                    // add this link in the contextNode hierarchy and move to the next contextNode
+	                    ContextTreeNode parentContextNode = contextNodesByRootName.get(parentName);
+	                    parentContextNode.addChild(contextNode);
 
-                // if/when we find a more inclusive (i.e. parent) context
-                String parentName = String.valueOf(parentNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
-                if (contextNodesByRootName.containsKey(parentName) && (parentName.equals(childName) == false)) {
+	                    ContextTreeNode p = contextNode;
+	                    while (p != null) {
+	                    	deepestContext = p;
+	                    	p = p.parent;
+	                    }
 
-                    System.out.println("Adding " + childName + " as child of " + parentName);
-                    
-                    // add this link in the contextNode hierarchy and move to the next contextNode
-                    ContextTreeNode parentContextNode = contextNodesByRootName.get(parentName);
-                    parentContextNode.addChild(contextNode);
-                    break;
-
-                }
+	                    break;
+	
+	                }
+	            }
             }
         }
         
         // get the root of the ContextTreeNode tree (i.e. most inclusive context)
-        ContextTreeNode contextHierarchyRoot = contextNodesByRootName.get(LIFE_NODE_NAME);
+//        ContextTreeNode contextHierarchyRoot = contextNodesByRootName.get(LIFE_NODE_NAME);
     
-        System.out.println("\nHierarchy for contexts (note: paraphyletic groups do not have their own contexts):");
-        printContextTree(contextHierarchyRoot, "");
-        System.out.println("");
-
-        // make the contexts!
-        makeContextsRecursive(contextHierarchyRoot);
+        if (deepestContext != null) {
+	        System.out.println("\nHierarchy for contexts (note: paraphyletic groups do not have their own contexts):");
+	        printContextTree(deepestContext, "", true);
+	        System.out.println("");
+	
+	        // make the contexts!
+	        makeContextsRecursive(deepestContext);
+        } else {
+	        System.out.println("\nCould not find any nodes corresponding to identified contexts. No context-specific indexes will be built.");
+        }
     }
     
     class isSpecificEvaluator implements Evaluator {
@@ -681,9 +706,10 @@ public class TaxonomySynthesizer extends Taxonomy {
 
             for (Node n : PREFTAXCHILDOF_TRAVERSAL.traverse(contextRootNode).nodes()) {
                 addToIndexes(n, context);
+
+                n.setProperty(TaxonomyProperty.LEAST_INCLUSIVE_CONTEXT.propertyName(), context.getDescription().toString());
                 
-                i++;
-                if (i % 100000 == 0)
+                if (++i % 100000 == 0)
                     System.out.println(i / 1000 + "K");
             }
         }
@@ -691,9 +717,9 @@ public class TaxonomySynthesizer extends Taxonomy {
         tx.finish();
         
         // now move on to all children
-        for (ContextTreeNode childNode : contextNode.getChildren())
+        for (ContextTreeNode childNode : contextNode.getChildren()) {
             makeContextsRecursive(childNode);
-
+        }
     }
     
     /**
