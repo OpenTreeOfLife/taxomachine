@@ -29,16 +29,19 @@ import org.opentree.taxonomy.constants.TaxonomyProperty;
 import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
+@Deprecated
 public class OTTServices extends ServerPlugin {
 
     @Description("Get information about the taxonomy itself.")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation getTaxonomyInfo (@Source GraphDatabaseService graphDb) {
     	return OTRepresentationConverter.convert(new Taxonomy(graphDb).getMetadataMap());
     }
 	
     @Description("Get a list of deprecated ott ids and the names to which they correspond.")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation getDeprecatedTaxa (@Source GraphDatabaseService graphDb) {
 
     	List<HashMap<String,Object>> deprecatedTaxa = new LinkedList<HashMap<String, Object>>();
@@ -63,6 +66,7 @@ public class OTTServices extends ServerPlugin {
     @Description("Get information about a known taxon. If the option to include info about the lineage is used, the information will be provided " +
     			 "in an ordered array, with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation getTaxonInfo (
     		@Source GraphDatabaseService graphDb,
     		@Description("The OTT id of the taxon of interest.") @Parameter(name="ottId", optional=false) Long ottId,
@@ -115,6 +119,7 @@ public class OTTServices extends ServerPlugin {
     
     @Description("Return the number of taxa that have been assigned the given flag in the installed OTT taxonomy.")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation getFlaggedTaxonCount (
 		@Source GraphDatabaseService graphDb,
 		@Description("The flag to search for") @Parameter(name="flag", optional=false) String flag) {
@@ -139,6 +144,7 @@ public class OTTServices extends ServerPlugin {
     	
     }
     
+    @Deprecated
     private void addTaxonInfo(Node n, HashMap<String, Object> results) {
 
     	results.put("node_id", n.getId());
@@ -157,6 +163,7 @@ public class OTTServices extends ServerPlugin {
 		results.put("flags", flags);
     }
     
+    @Deprecated
     private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
 		map.put(property, node.getProperty(property));
     }
