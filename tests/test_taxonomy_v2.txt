@@ -1,6 +1,6 @@
 Example curl calls and their expected return values:
 
-curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/about
+curl -X POST http://devapi.opentreeoflife.org/taxomachine/ext/taxonomy/graphdb/about
 
 
 {
@@ -12,7 +12,7 @@ curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/ab
 
 
 
-curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/taxon -H "content-type:application/json" -d '{"ott_id":766177}'
+curl -X POST http://devapi.opentreeoflife.org/taxomachine/ext/taxonomy/graphdb/taxon -H "content-type:application/json" -d '{"ott_id":766177}'
 
 {
   "ot:ottId" : 766177,
@@ -27,7 +27,7 @@ curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/ta
 
 
 
-curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/subtree -H "content-type:application/json" -d '{"ott_id":372706}'
+curl -X POST http://devapi.opentreeoflife.org/taxomachine/ext/taxonomy/graphdb/subtree -H "content-type:application/json" -d '{"ott_id":372706}'
 
 {
   "subtree" : "(Canis_sp._Russia/33_500,Canis_sp._Belgium/36_000,Canis_lepophagus,Canis_armbrusteri,Canis_ferox,Canis_dirus,Canis_alopex,Canis_edwardii,Canis_apolloniensis,Canis_cedazoensis,Canis_primigenius,Canis_hyaena,Canis_spelaeus,Canis_lycaon,Canis_simensis,(Canis_mesomelas_elongae)Canis_mesomelas,Canis_aureus,Canis_adustus,Canis_sp._CANInt1,Canis_indica,Canis_himalayensis,(Canis_lupus_arctos,Canis_lupus_x_Canis_lupus_familiaris,Canis_lupus_campestris,Canis_lupus_lupaster,Canis_lupus_lupus,Canis_lupus_signatus,Canis_lupus_labradorius,Canis_lupus_dingo,Canis_lupus_hodophilax,Canis_lupus_mogollonensis,Canis_lupus_familiaris,Canis_lupus_desertorum,Canis_lupus_hattai,Canis_lupus_laniger,Canis_lupus_baileyi,Canis_lupus_chanco,Canis_lupus_pallipes)Canis_lupus,Canis_latrans,Canis_rufus)Canis"
@@ -36,7 +36,7 @@ curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/su
 
 
 
-curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/lica -H "content-type:application/json" -d '{"ott_ids":[5551856,821970,82195]}'
+curl -X POST http://devapi.opentreeoflife.org/taxomachine/ext/taxonomy/graphdb/lica -H "content-type:application/json" -d '{"ott_ids":[5551856,821970,770319]}'
 
 {
   "lica" : {
@@ -54,7 +54,7 @@ curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/li
 
 
 
-curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/deprecated_taxa
+curl -X POST http://devapi.opentreeoflife.org/taxomachine/ext/taxonomy/graphdb/deprecated_taxa
 
 [ {
   "ot:ottId" : 4085853,
@@ -72,7 +72,7 @@ curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/de
 
 
 
-curl -X POST http://devapi.opentreeolife.org/taxomachine/ext/taxonomy/graphdb/flagged_taxa -H "content-type:application/json" -d '{"flag":"not_otu"}'
+curl -X POST http://devapi.opentreeoflife.org/taxomachine/ext/taxonomy/graphdb/flagged_taxa -H "content-type:application/json" -d '{"flag":"not_otu"}'
 
 {
   "not_otu" : 39123
