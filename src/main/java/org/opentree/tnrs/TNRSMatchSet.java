@@ -4,6 +4,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.constants.TaxonomyProperty;
 import org.opentree.taxonomy.constants.TaxonomyRelType;
@@ -66,7 +67,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 
         // for all matches, information associating this match with a known node in the graph
         private String searchString;                   // the original search text queried
-        private Node matchedNode;                     // the recognized taxon node we matched
+        private Taxon matchedTaxon;                     // the recognized taxon node we matched
         private String matchedName;						// the name that was matched against during the search. may differ from the name of the taxon that was matched, e.g. if the matched name was a synonym
         private String nomenCode;                      // the nomenclatural code under which this match is defined
         private boolean isApprox;                     // whether this is a fuzzy match (presumably misspellings)
@@ -75,7 +76,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         private double score;                         // the score of this match
         
         public Match(TNRSHit m) {
-            matchedNode = m.getMatchedNode();
+            matchedTaxon = m.getMatchedTaxon();
             matchedName = m.getMatchedName();
             nomenCode = m.getNomenCode();
             isApprox = m.getIsApprox();
@@ -101,38 +102,70 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 			return matchedName;
 		}
 		
+		/**
+		 * @return 
+		 */
+		@Override
+		public List<String> getSynonyms() {
+			List<String> synonyms = new ArrayList<String>();
+			for (Node s : matchedTaxon.getSynonymNodes()) {
+				synonyms.add((String) s.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+			}
+			return synonyms;
+		}
+		
         /**
          * @return the Neo4j Node object for the recognized name to which this match points
          */
 		@Override
-		public Node getMatchedNode() {
-            return matchedNode;
+		public Taxon getMatchedTaxon() {
+            return matchedTaxon;
         }
-        
+        /**
+         * @return the node matched during tnrs
+         */
 		@Override
+		@Deprecated
+		public Node getMatchedNode() {
+			return matchedTaxon.getNode();
+		}
+		
+		/*
+		 * @return the parent of the matched taxon
+		 *
+		@Override
+		public Taxon getParentTaxon() {
+
+        }*/
+
+		/**
+		 * @return the parent of the matched node, if any
+		 */
+		@Override
+		@Deprecated
 		public Node getParentNode() {
-			if (matchedNode == null) {
+			if (matchedTaxon == null) {
 				return null;
 			}
             
-            Relationship pRel = matchedNode.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING);
+            Relationship pRel = matchedTaxon.getNode().getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING);
             if (pRel == null) {
             	return null;
             }
             
             Node p = pRel.getStartNode();
 
-            if (! p.equals(matchedNode)) {
+            if (! p.equals(matchedTaxon.getNode())) {
                 return p;
             } else {
                 return null;
             }
-        }
+		}
 
 		@Override
 		public boolean getIsDeprecated() {
-			if (matchedNode.hasProperty(TaxonomyProperty.DEPRECATED.propertyName())) {
-				return (Boolean) matchedNode.getProperty(TaxonomyProperty.DEPRECATED.propertyName());
+			if (matchedTaxon.getNode().hasProperty(TaxonomyProperty.DEPRECATED.propertyName())) {
+				return (Boolean) matchedTaxon.getNode().getProperty(TaxonomyProperty.DEPRECATED.propertyName());
 			} else {
 				return false;
 			}
@@ -140,8 +173,8 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
 		
 		@Override
 		public boolean getIsDubious() {
-			if (matchedNode.hasProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
-				return (Boolean) matchedNode.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
+			if (matchedTaxon.getNode().hasProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
+				return (Boolean) matchedTaxon.getNode().getProperty(TaxonomyProperty.DUBIOUS.propertyName());
 			} else {
 				return false;
 			}
@@ -184,9 +217,9 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
         
 		@Override
 		public String getUniqueName() {
-			String name = (String) getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
-			if (matchedNode.hasProperty(TaxonomyProperty.UNIQUE_NAME.propertyName())) {
-				String uniqueName = (String) getMatchedNode().getProperty(TaxonomyProperty.UNIQUE_NAME.propertyName());
+			String name = (String) matchedTaxon.getNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+			if (matchedTaxon.getNode().hasProperty(TaxonomyProperty.UNIQUE_NAME.propertyName())) {
+				String uniqueName = (String) matchedTaxon.getNode().getProperty(TaxonomyProperty.UNIQUE_NAME.propertyName());
 				if (! uniqueName.equals("")) {
 					name = uniqueName;
 				}
@@ -201,7 +234,7 @@ public class TNRSMatchSet implements Iterable<TNRSMatch> {
             if (isSynonym) {
             	nameType = "synonym name";
             } else {
-                if (matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) != getUniqueName()) {
+                if (matchedTaxon.getNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()) != getUniqueName()) {
                 	nameType = "non-unique taxon name";
                 } else {
                 	nameType = "unique taxon name";
