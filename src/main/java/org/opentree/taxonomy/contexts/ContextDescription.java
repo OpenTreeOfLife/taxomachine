@@ -68,8 +68,16 @@ public enum ContextDescription {
     FLOWERING_PLANTS    ("Flowering plants",ContextGroup.PLANTS,    "Magnoliophyta",    "Magnoliophyta",    99252L,     Nomenclature.ICN),
     MONOCOTS            ("Monocots",        ContextGroup.PLANTS,    "Monocots",         "Liliopsida",       1058517L,   Nomenclature.ICN),
     EUDICOTS            ("Eudicots",        ContextGroup.PLANTS,    "Eudicots",         "eudicotyledons",   431495L,    Nomenclature.ICN),
+    ROSIDS              ("Rosids",          ContextGroup.PLANTS,    "Rosids",           "rosids",           1008296L,   Nomenclature.ICN),
     ASTERIDS            ("Asterids",        ContextGroup.PLANTS,    "Asterids",         "asterids",         1008294L,   Nomenclature.ICN),
-    ROSIDS              ("Rosids",          ContextGroup.PLANTS,    "Rosids",           "rosids",           1008296L,   Nomenclature.ICN);
+    ASTERALES           ("Asterales",       ContextGroup.PLANTS,    "Asterales",        "Asterales",        1042120L,   Nomenclature.ICN),
+    ASTERACEAE          ("Asteraceae",      ContextGroup.PLANTS,    "Asteraceae",       "Asteraceae",       46248L,   	Nomenclature.ICN),    
+    ASTER          		("Aster",      		ContextGroup.PLANTS,    "Aster",       		"Aster",       		409712L,   	Nomenclature.ICN),    
+    SYMPHYOTRICHUM		("Symphyotrichum",  ContextGroup.PLANTS,    "Symphyotrichum",   "Symphyotrichum",   1058735L,   Nomenclature.ICN),
+    CAMPANULACEAE		("Campanulaceae",  	ContextGroup.PLANTS,    "Campanulaceae",   	"Campanulaceae",   	1086303L,   Nomenclature.ICN),
+    LOBELIA				("Lobelia",  		ContextGroup.PLANTS,    "Lobelia",   		"Lobelia",   		1086294L,   Nomenclature.ICN),
+
+    ;
     
     public final String name;
     public final ContextGroup group;
