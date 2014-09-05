@@ -243,6 +243,7 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
      * @return the initiating NameslistStandardQuery object
      */
     public Map<Object, String> inferContextAndReturnAmbiguousNames() {
+//    public Object inferContextAndReturnAmbiguousNames() {
 
     	setIndexes();
     	
@@ -318,10 +319,13 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
         }
         
         // update the LICA for the unambiguous hits. Will set the LICA to the root of the graph if there are no unambiguous hits
-        updateLICA();
-        
+    	updateLICA();
+
+//    	return bestGuessLICAForNames.getName();
+    	
         // now set the context closest to the LICA. If the LICA is the root, this will set the context to ALLTAXA
         setContext(bestGuessLICAForNames.getLeastInclusiveContext());
+//        return bestGuessLICAForNames.getName();
         
         return namesUnmatchableAgainstAllTaxaContext;
     }
@@ -694,10 +698,12 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     private void updateLICA() {
         // update the lica to reflect all direct hits
         TaxonSet ts = new TaxonSet(validTaxaWithExactMatches);
-        if (ts.size() > 0)
+        if (ts.size() > 0) {
             bestGuessLICAForNames = ts.getLICA();
-        else
-            bestGuessLICAForNames = taxonomy.getTaxon(taxonomy.ALLTAXA.getRootNode());
+        } else {
+//            bestGuessLICAForNames = taxonomy.getTaxon(taxonomy.ALLTAXA.getRootNode());
+        	bestGuessLICAForNames = taxonomy.getTaxon(taxonomy.getTaxonomyRootNode());
+        }
     }
 
     /**
