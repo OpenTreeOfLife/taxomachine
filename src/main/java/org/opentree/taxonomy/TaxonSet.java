@@ -33,9 +33,12 @@ public class TaxonSet implements Iterable<Taxon> {
      * Assumes all taxa are coming from the same taxonomy (since we only expect to ever be working with one taxonomy)
      * @param inTaxa
      */
-    public TaxonSet (Set<Taxon> inTaxa) {
+    public TaxonSet (Iterable<Taxon> inTaxa) {
         lica = null;
-        taxa = (HashSet<Taxon>) inTaxa;
+        taxa = new HashSet<Taxon>();
+        for (Taxon t : inTaxa) {
+        	taxa.add(t);
+        }
 
         if (taxa.size() > 0)
             taxonomy = taxa.iterator().next().getTaxonomy();
@@ -43,13 +46,14 @@ public class TaxonSet implements Iterable<Taxon> {
             taxonomy = null;
     }
     
-    public TaxonSet (LinkedList<Node> inNodes, Taxonomy taxonomy) {
+    public TaxonSet (Iterable<Node> inNodes, Taxonomy taxonomy) {
         lica = null;
         this.taxonomy = taxonomy;
 
         taxa = new HashSet<Taxon>();
-        for (Node n : inNodes)
+        for (Node n : inNodes) {
             taxa.add(taxonomy.getTaxon(n));
+        }
     }
     
     public Taxon getLICA() {
@@ -150,7 +154,8 @@ public class TaxonSet implements Iterable<Taxon> {
         if (heavyChildren.size() > 1) {
 
             // this node represents a branching event, i.e. an internal node; make the node and add its children
-            JadeNode treeNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
+            JadeNode treeNode = new JadeNode(DEF_BRLEN, taxNode.getName(), null);
+            treeNode.assocObject("number", nodeIndex++);
 
             for (Node heavyChild : heavyChildren) {
                 treeNode.addChild(makeSubtree(new Taxon(heavyChild, taxonomy)));
@@ -166,7 +171,8 @@ public class TaxonSet implements Iterable<Taxon> {
         } else {
             
             // this should be a tip node
-            JadeNode tipNode = new JadeNode(DEF_BRLEN, nodeIndex++, taxNode.getName(), null);
+            JadeNode tipNode = new JadeNode(DEF_BRLEN, taxNode.getName(), null);
+            tipNode.assocObject("number", nodeIndex++);
             return tipNode;
         }
     }
