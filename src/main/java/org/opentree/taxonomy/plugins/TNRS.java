@@ -22,7 +22,7 @@ import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
-import org.neo4j.server.rest.repr.TNRSResultsRepresentation;
+import org.neo4j.server.rest.repr.TNRSResultsRepresentation_v1;
 import org.opentree.properties.OTPropertyPredicate;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.graphdb.GraphDatabaseAgent;
@@ -40,12 +40,14 @@ import org.opentree.tnrs.TNRSResults;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.tnrs.queries.SingleNamePrefixQuery;
 
+@Deprecated
 public class TNRS extends ServerPlugin {
 
 	public static int MAX_QUERY_STRINGS = 1000;
 	
     @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names.")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation getContextForNames(
             @Source GraphDatabaseService graphDb,
             @Description("An array of taxon names to be queried.")
@@ -77,12 +79,13 @@ public class TNRS extends ServerPlugin {
         gdb.shutdownDb();
 
 //        return OpentreeRepresentationConverter.convert(contextResult);
-        return TNRSResultsRepresentation.getContextRepresentation(contextResult);
+        return TNRSResultsRepresentation_v1.getContextRepresentation(contextResult);
     	
     }
     
     @Description("DEPRECATED. An alias to service \"autocompleteQuery\". Please transition your applications to that service; this one will eventually be removed.")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation autocompleteBoxQuery(
             @Source GraphDatabaseService graphDb,
             @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
@@ -92,6 +95,7 @@ public class TNRS extends ServerPlugin {
 
     @Description("Find taxonomic names matching the passed in prefix. Optimized for use with autocomplete boxes on webforms.")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation autocompleteQuery(
             @Source GraphDatabaseService graphDb,
             @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "queryString") String queryString,
@@ -122,7 +126,7 @@ public class TNRS extends ServerPlugin {
 
             	Collections.sort(matches, new MatchComparator());
 
-            	return TNRSResultsRepresentation.getMatchSetRepresentationForAutocompleteBox(matches.iterator());
+            	return TNRSResultsRepresentation_v1.getMatchSetRepresentationForAutocompleteBox(matches.iterator());
             }
         }
         
@@ -134,7 +138,8 @@ public class TNRS extends ServerPlugin {
 	 * A small custom comparator to facilitate sorting matches for the autocomplete box.
 	 * @author cody
 	 */
-	private static class MatchComparator implements Comparator<TNRSMatch> {
+    @Deprecated
+    private static class MatchComparator implements Comparator<TNRSMatch> {
 		@Override
 		public int compare(TNRSMatch match1, TNRSMatch match2) {
 			
@@ -186,6 +191,7 @@ public class TNRS extends ServerPlugin {
     @Description("DEPRECATED. This service is an alias for the service simply named `contextQuery` and is kept only for backwards compatibility. Use `contextQuery` instead."
     		+ "This one will be removed from a future version of the OpenTree API.")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation contextQueryForNames(
             @Source GraphDatabaseService graphDb,
 
@@ -230,6 +236,7 @@ public class TNRS extends ServerPlugin {
     
     @Description("Return information about potential matches to a set of taxonomic names. This service uses taxonomic contexts to narrow search parameters and help disambiguate synonyms and homonyms. ")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation contextQuery(
             @Source GraphDatabaseService graphDb,
 
@@ -337,12 +344,13 @@ public class TNRS extends ServerPlugin {
         		.getResults();
 
         gdb.shutdownDb();
-        return TNRSResultsRepresentation.getResultsRepresentation(results);
+        return TNRSResultsRepresentation_v1.getResultsRepresentation(results);
     }
     
     @Description("Returns the version of the taxonomy used to initialize the graph")
 	@PluginTarget(GraphDatabaseService.class)
-	public Representation getTaxonomyVersion (
+    @Deprecated
+    public Representation getTaxonomyVersion (
 			@Source GraphDatabaseService graphDb) {
 
 		GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
@@ -362,6 +370,7 @@ public class TNRS extends ServerPlugin {
     
     @Description("Return information on available taxonomic contexts")
     @PluginTarget(GraphDatabaseService.class)
+    @Deprecated
     public Representation getContexts(
             @Source GraphDatabaseService graphDb) throws IOException {
                 

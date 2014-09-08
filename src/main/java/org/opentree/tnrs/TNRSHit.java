@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.neo4j.graphdb.Node;
 import org.opentree.taxonomy.Taxon;
+import org.opentree.taxonomy.Taxonomy;
 
 /**
  * TNRSHit objects are mutable precursors to TNRSMatch objects. They are intended to be used as organizational containers, which temporarily hold
@@ -15,34 +16,22 @@ import org.opentree.taxonomy.Taxon;
  */
 public class TNRSHit {
 
-    Node matchedNode;
-    String searchString;
-    String matchedName;
-    String nomenCode;
-    boolean isApprox;
-    boolean isSynonym;
-    boolean isDubious;
-    boolean isDeprecated;
-    String rank;
-    boolean nameStatusIsKnown;
-    double score;
+    Taxon matchedTaxon = null;
+    String searchString = "";
+    String matchedName = "";
+    String nomenCode = "undetermined";
+    boolean isApprox = false;
+    boolean isSynonym = false;
+    boolean isDubious = false;
+    boolean isDeprecated = false;
+    String rank = "";
+//    boolean nameStatusIsKnown;
+    double score = -1;
 
-    public TNRSHit() {
-        matchedNode = null;
-        searchString = "";
-        matchedName = "";
-        nomenCode = "undetermined";
-        isApprox = false;
-        isSynonym = false;
-        isDubious = false;
-        isDeprecated = true;
-        rank = "";
-        nameStatusIsKnown = true;
-        score = -1;
-    }
+    public TNRSHit() {}
     
     public TNRSHit setMatchedTaxon(Taxon matchedTaxon) {
-        this.matchedNode = matchedTaxon.getNode();
+        this.matchedTaxon = matchedTaxon;
         return this;
     }
 
@@ -86,12 +75,17 @@ public class TNRSHit {
         return this;
     }
     
+    /*
     public Node getMatchedNode() {
-        return matchedNode;
-    }
+        return matchedTaxon.getNode();
+    }*/
     
     public String getMatchedName() {
     	return matchedName;
+    }
+    
+    public Taxon getMatchedTaxon() {
+    	return matchedTaxon;
     }
     
     public String getSearchString() {

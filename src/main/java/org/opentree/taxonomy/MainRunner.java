@@ -141,7 +141,7 @@ public class MainRunner {
 //        } else
         
         TaxonomyLoaderOTT tlo = new TaxonomyLoaderOTT(taxdb);
-        Node lifeNode = tlo.getLifeNode();
+        Node lifeNode = tlo.getTaxonomyRootNode();
         System.out.println("life node: " + lifeNode);
 
         if (args[0].equals("loadtaxsyn")) { 
@@ -426,7 +426,7 @@ public class MainRunner {
         GraphDatabaseAgent inga = new GraphDatabaseAgent(graphdbname);
         System.out.println("setting database: " + graphdbname);
         TaxonomyLoaderOTT tlo = new TaxonomyLoaderOTT(inga);
-        Node dbnode = tlo.getLifeNode();
+        Node dbnode = tlo.getTaxonomyRootNode();
         System.out.println("removing mrcas");
         tlo.removeMRCAs(dbnode);
         System.out.println("adding mrcas");

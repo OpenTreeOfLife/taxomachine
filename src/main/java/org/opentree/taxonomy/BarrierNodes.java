@@ -72,7 +72,7 @@ public final class BarrierNodes {
      */
     public void initializeBarrierNodes() {
 
-        Node lifen = taxonomy.getLifeNode();
+        Node lifen = taxonomy.getTaxonomyRootNode();
 
         // traverse from each barrier node to life and pick the closest one
         PathFinder<Path> tfinder = GraphAlgoFactory.shortestPath(Traversal.expanderForTypes(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING), 10000);

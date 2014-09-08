@@ -174,11 +174,11 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
     				for (TNRSMatch genusMatch : genusMatches) {
 
     					Index<Node> nodeByGenusIndex = includeDubious ? speciesNodesByGenus : prefSpeciesNodesByGenus;
-    					IndexHits<Node> speciesHits = nodeByGenusIndex.get(TaxonomyProperty.PARENT_GENUS_OTT_ID.propertyName(), genusMatch.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
+    					IndexHits<Node> speciesHits = nodeByGenusIndex.get(TaxonomyProperty.PARENT_GENUS_OTT_ID.propertyName(), genusMatch.getMatchedTaxon().getNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 
 	    				try {
 	    				
-		    				String genusName = String.valueOf(genusMatch.getMatchedNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+		    				String genusName = String.valueOf(genusMatch.getMatchedTaxon().getNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 		    				char[] searchEpithet = parts[1].trim().toCharArray();
 		    				
 		    				// add any species to the results whose name matches the second search term prefix

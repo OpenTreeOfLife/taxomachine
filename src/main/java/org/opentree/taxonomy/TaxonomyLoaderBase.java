@@ -150,7 +150,7 @@ public abstract class TaxonomyLoaderBase extends Taxonomy {
 	public void verifyLoadedTaxonomy(String sourcename) {
 		//get life node
 		//traverse starting at life, checking to see if any of the nodes have multiple parents if looking at the source from sourcename
-		Node startnode = getLifeNode();
+		Node startnode = getTaxonomyRootNode();
 		TraversalDescription MRCACHILDOF_TRAVERSAL = Traversal.description()
 		        .relationships( TaxonomyRelType.TAXCHILDOF,Direction.INCOMING );
 		for (Node friendnode : MRCACHILDOF_TRAVERSAL.traverse(startnode).nodes()) {

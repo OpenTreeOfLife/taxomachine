@@ -55,6 +55,16 @@ public enum TaxonomyProperty implements OTPropertyPredicate {
 	 * Whether or not this node represents a deprecated taxon. Assumed to be false if absent.
 	 */
 	DEPRECATED ("deprecated", Boolean.class),
+	
+	/**
+	 * The name of the least inclusive taxonomic context for this node.
+	 */
+	LEAST_INCLUSIVE_CONTEXT ("least_context", String.class),
+	
+	/**
+	 * The node id of the deepest node in the taxonomy.
+	 */
+	TAXONOMY_ROOT_NODE_ID ("taxonomy_root_node_id", String.class),
 
 	;
 
