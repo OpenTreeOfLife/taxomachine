@@ -1,4 +1,4 @@
-Example curl calls and their expected return values:
+Currently, there are no automated tests for taxomachine or its services. You may test the services by querying them using cURL or other clients. Here are some cURL calls and their expected return values:
 
 ```bash
 curl -X POST http://devapi.opentreeoflife.org/taxomachine/ext/taxonomy/graphdb/about
