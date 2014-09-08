@@ -1,4 +1,4 @@
-Currently, there are no automated tests for taxomachine or its services. You may test the services by querying them using cURL or other clients. Here are some cURL calls and their expected return values:
+Currently, there are no automated tests for taxomachine or its services. You may test the services by querying them using cURL or other clients. Here are some cURL calls and their expected return values (for the ott 2.8 taxonomy):
 
 ```bash
 curl -X POST http://devapi.opentreeoflife.org/taxomachine/ext/taxonomy/graphdb/about
