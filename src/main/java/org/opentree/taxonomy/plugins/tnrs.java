@@ -44,7 +44,10 @@ public class tnrs extends ServerPlugin {
 
 	public static int MAX_QUERY_STRINGS = 1000;
 	    
-    @Description("Return information on available taxonomic contexts")
+    @Description("Taxonomic contexts are available to limit the scope of TNRS searches. These contexts correspond to higher "
+    		+ "taxa such as 'Animals' or 'Land plants'. This service returns a list containing all available taxonomic context "
+    		+ "names, which may be used as input to limit the search scope of other services (e.g. [match_names](#match_names) and "
+    		+ "[autocomplete_name](#autocomplete_name)) via their `context_name` parameter.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation contexts(
             @Source GraphDatabaseService graphDb) throws IOException {
@@ -65,7 +68,9 @@ public class tnrs extends ServerPlugin {
         return OTRepresentationConverter.convert(contexts);
     }
 	
-    @Description("Find the least inclusive taxonomic context defined for the provided set of taxon names.")
+    @Description("Find the least inclusive [taxonomic context](#contexts) that includes all the unambiguous names in the input set. "
+    		+ "Unambiguous names are names with exact matches to non-homonym taxa. Ambiguous names (those *without* exact matches to "
+    		+ "non-homonym taxa) are indicated in results.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation infer_context(
             @Source GraphDatabaseService graphDb,
@@ -83,8 +88,6 @@ public class tnrs extends ServerPlugin {
 			idNameMap.put(name, name);
 		}
 
-//		return OTRepresentationConverter.convert(tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames());
-
 		// call TNRS query, remembering names that could not be matched
 		Collection<String> namesNotMatched = tnrs.setSearchStrings(idNameMap).inferContextAndReturnAmbiguousNames().values();
 
@@ -99,13 +102,18 @@ public class tnrs extends ServerPlugin {
     	
     }
 
-    @Description("Find taxonomic names matching the passed in prefix. Only intended for use with (and optimized for) autocomplete boxes on webforms.")
+    @Description("Assumes the input is a taxon name that may be incomplete (i.e. the beginning of a taxon name such as 'Ast', "
+    		+ "which would match 'Astelia', 'Astilbe', 'Aster', 'Asteroidea', 'Asteraceae', 'Astrantia', etc.). If the input "
+    		+ "string is an exact string match to an existing taxon name, then only the exact match will be returned, (i.e. the "
+    		+ "input 'Aster' will produce a single result 'Aster'). This service is optimized and (obviously) intended for use "
+    		+ "with autocomplete boxes on web forms. It should not be used for general purpose TNRS queries. For all search "
+    		+ "purposes other than autocompleting webform fields, use the [`match_names`](#match_names) service.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation autocomplete_name(
             @Source GraphDatabaseService graphDb,
             @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "name") String queryString,
-    		@Description("The name of the taxonomic context to be searched") @Parameter(name = "context_name", optional = true) String contextName,
-    		@Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false.") @Parameter(name="include_dubious", optional = true) Boolean includeDubious) throws ContextNotFoundException, ParseException {
+    		@Description("The name of the [taxonomic context](#contexts) to be searched") @Parameter(name = "context_name", optional = true) String contextName,
+    		@Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false (suppressed taxa are not included).") @Parameter(name="include_dubious", optional = true) Boolean includeDubious) throws ContextNotFoundException, ParseException {
 
     	includeDubious = includeDubious == null ? false : includeDubious;
     	
@@ -139,7 +147,14 @@ public class tnrs extends ServerPlugin {
         return OTRepresentationConverter.convert(new LinkedList<String>());
     }
     
-    @Description("Return information about potential matches to a set of taxonomic names. This service uses taxonomic contexts to narrow search parameters and help disambiguate synonyms and homonyms. ")
+    @Description("Accepts one or more taxonomic names and returns information about potential matches for these names to known taxa in "
+    		+ "OTT. This service uses taxonomic contexts to disambiguate homonyms and misspelled names. Taxonomic contexts are "
+    		+ "taxonomically uncontested clades that have been designated for use as contexts. A context may be specified using the "
+    		+ "contextName parameter, or if not specified then it will be inferred as the shallowest taxonomic context that contains all "
+    		+ "the unambiguous names in the input set. A name is considered unambiguous if it is not a synonym and has only one exact "
+    		+ "match to any taxon name in OTT. Once a context has been identified (either specified or by inference), all taxon name "
+    		+ "matches will performed only against taxa within that context.\n\nFor a list of available taxonomic contexts, see the "
+    		+ "getContexts service.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation match_names(
             @Source GraphDatabaseService graphDb,
