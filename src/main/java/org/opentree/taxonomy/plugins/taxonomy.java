@@ -1,7 +1,5 @@
 package org.opentree.taxonomy.plugins;
 
-import jade.tree.JadeNode;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,17 +11,14 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.server.plugins.Description;
 import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
-import org.neo4j.server.rest.repr.JadeNodeRepresentation;
 import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
-import org.opentree.exceptions.TaxonNotFoundException;
 import org.opentree.graphdb.GraphDatabaseAgent;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.OTTFlag;
@@ -36,8 +31,8 @@ import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
 public class taxonomy extends ServerPlugin {
 
-    @Description("Get matadata and information about the taxonomy itself. Currently the recorded metadata is fairly sparse, but it "
-    		+ "should include (at least) the version, and the location from which the taxonomy itself can be downloaded.")
+    @Description("Return metadata and information about the taxonomy itself. Currently the available metadata is fairly sparse, but "
+    		+ "includes (at least) the version, and the location from which the complete taxonomy source files can be downloaded.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation about (@Source GraphDatabaseService graphDb) {
     	return OTRepresentationConverter.convert(new Taxonomy(graphDb).getMetadataMap());
@@ -87,11 +82,15 @@ public class taxonomy extends ServerPlugin {
     
     @Description("Return information about the least inclusive common ancestral taxon (the LICA) of the identified taxa. A "
     		+ "taxonomic LICA is analogous to a most recent common ancestor (MRCA) in a phylogenetic tree. For example, the "
-    		+ "LICA for the taxa 'Pan' and 'Lemur' is 'Primates'.")
+    		+ "LICA for the taxa 'Pan' and 'Lemur' in the taxonomy represented by the newick string "
+    		+ "'((((Pan,Homo),Gorilla)Hominidae,Gibbon),Lemur)Primates' is 'Primates'.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation lica (@Source GraphDatabaseService graphDb,
-		@Description("The ott ids for the taxa of interest.") @Parameter(name="ott_ids", optional=false) Long[] ottIds,
-		@Description("Whether or not to include information about the higher level taxa that include the identified LICA.") @Parameter(name="include_lineage", optional=true) Boolean includeLineage) {
+		@Description("The ott ids for the taxa whose LICA is to be found.") @Parameter(name="ott_ids", optional=false) Long[] ottIds,
+		@Description("Whether or not to include information about the higher level taxa that include the identified LICA. "
+				+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
+				+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
+    				@Parameter(name="include_lineage", optional=true) Boolean includeLineage) {
 
     	Taxonomy taxonomy = new Taxonomy(graphDb);
     	HashMap<String,Object> results = new HashMap<String, Object>();
@@ -129,7 +128,8 @@ public class taxonomy extends ServerPlugin {
     		@Description("The OTT id of the taxon of interest.") @Parameter(name="ott_id", optional=false) Long ottId,
     		@Description("Whether or not to include information about all the higher level taxa that include this one. "
     		+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
-    		+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).") @Parameter(name="include_lineage", optional=true) Boolean includeLineage) throws TaxonNotFoundException {
+    		+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
+    			@Parameter(name="include_lineage", optional=true) Boolean includeLineage) {
     	
     	HashMap<String, Object> results = new HashMap<String, Object>();
     	
@@ -139,13 +139,13 @@ public class taxonomy extends ServerPlugin {
     	if (match != null) {
     		results = (HashMap<String, Object>) getTaxonInfo(match, includeLineage);
     	} else {
-    		throw new TaxonNotFoundException(ottId);
+    		results.put("error", "the ott id " + String.valueOf(ottId) + " could not be found.");
     	}
 
     	return OTRepresentationConverter.convert(results);
     }
     
-    @Description("Return a list of taxonomic flags used in this database, including the number of taxa to which each flag "
+    @Description("Return a list of all taxonomic flags used in this database, including the number of taxa to which each flag "
     		+ "has been assigned.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation flags (@Source GraphDatabaseService graphDb) {
