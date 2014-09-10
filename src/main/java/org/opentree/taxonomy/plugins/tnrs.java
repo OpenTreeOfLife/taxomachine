@@ -107,8 +107,9 @@ public class tnrs extends ServerPlugin {
     		+ "string is an exact string match to an existing taxon name, then only the exact match will be returned, (i.e. the "
     		+ "input 'Aster' will produce a single result 'Aster'). Name expansion will stop at whitespace, but spaces may be "
     		+ "included in the input, and indeed, they *must* be included in the input in order to match species names. For example, "
-    		+ "'Garcinia' will only match the genus name 'Garcinia' itself, but 'Garcinia ' will match all the species in the genus. "
-    		+ "Similarly, 'Garcinia m' will match all Garcinia species with epithets starting with the letter 'm'."
+    		+ "'Garcinia' will only match the genus name 'Garcinia' itself, but 'Garcinia ' (note the trailing space) will match all "
+    		+ "the species in the genus. Similarly, 'Garcinia m' will match all Garcinia species whose specific epithets start with "
+    		+ "the letter 'm'."
     		+ "\n\n**IMPORTANT NOTE: This service should not be used for general purpose TNRS queries.** It is optimized for and "
     		+ "(obviously) intended for use *only* with autocomplete boxes on web forms. For all name matching purposes other than "
     		+ "autocompleting name fields on forms, use the [`match_names`](#match_names) service.")
