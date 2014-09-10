@@ -44,10 +44,10 @@ public class tnrs extends ServerPlugin {
 
 	public static int MAX_QUERY_STRINGS = 1000;
 	    
-    @Description("Taxonomic contexts are available to limit the scope of TNRS searches. These contexts correspond to higher "
+    @Description("Taxonomic contexts are available to limit the scope of TNRS searches. These contexts correspond to uncontested higher "
     		+ "taxa such as 'Animals' or 'Land plants'. This service returns a list containing all available taxonomic context "
-    		+ "names, which may be used as input to limit the search scope of other services (e.g. [match_names](#match_names) and "
-    		+ "[autocomplete_name](#autocomplete_name)) via their `context_name` parameter.")
+    		+ "names, which may be used as input (via the `context_name` parameter) to limit the search scope of other services including "
+    		+ "[match_names](#match_names) and [autocomplete_name](#autocomplete_name).")
     @PluginTarget(GraphDatabaseService.class)
     public Representation contexts(
             @Source GraphDatabaseService graphDb) throws IOException {
@@ -105,9 +105,13 @@ public class tnrs extends ServerPlugin {
     @Description("Assumes the input is a taxon name that may be incomplete (i.e. the beginning of a taxon name such as 'Ast', "
     		+ "which would match 'Astelia', 'Astilbe', 'Aster', 'Asteroidea', 'Asteraceae', 'Astrantia', etc.). If the input "
     		+ "string is an exact string match to an existing taxon name, then only the exact match will be returned, (i.e. the "
-    		+ "input 'Aster' will produce a single result 'Aster'). **This service should not be used for general purpose TNRS "
-    		+ "queries.** It is optimized for and (obviously) intended for use only with autocomplete boxes on web forms. For all "
-    		+ "name matching purposes other than autocompleting name fields on forms, use the [`match_names`](#match_names) service.")
+    		+ "input 'Aster' will produce a single result 'Aster'). Name expansion will stop at whitespace, but spaces may be "
+    		+ "included in the input, and indeed, they *must* be included in the input in order to match species names. For example, "
+    		+ "'Garcinia' will only match the genus name 'Garcinia' itself, but 'Garcinia ' will match all the species in the genus. "
+    		+ "Similarly, 'Garcinia m' will match all Garcinia species with epithets starting with the letter 'm'."
+    		+ "\n\n**IMPORTANT NOTE: This service should not be used for general purpose TNRS queries.** It is optimized for and "
+    		+ "(obviously) intended for use *only* with autocomplete boxes on web forms. For all name matching purposes other than "
+    		+ "autocompleting name fields on forms, use the [`match_names`](#match_names) service.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation autocomplete_name(
             @Source GraphDatabaseService graphDb,
@@ -148,27 +152,24 @@ public class tnrs extends ServerPlugin {
     }
     
     @Description("Accepts one or more taxonomic names and returns information about potential matches for these names to known taxa in "
-    		+ "OTT. This service uses taxonomic contexts to disambiguate homonyms and misspelled names. Taxonomic contexts are "
-    		+ "taxonomically uncontested clades that have been designated for use as contexts. A context may be specified using the "
-    		+ "contextName parameter, or if not specified then it will be inferred as the shallowest taxonomic context that contains all "
-    		+ "the unambiguous names in the input set. A name is considered unambiguous if it is not a synonym and has only one exact "
-    		+ "match to any taxon name in OTT. Once a context has been identified (either specified or by inference), all taxon name "
-    		+ "matches will performed only against taxa within that context.\n\nFor a list of available taxonomic contexts, see the "
-    		+ "getContexts service.")
+    		+ "OTT. This service uses taxonomic contexts to disambiguate homonyms and misspelled names. [Taxonomic contexts](#contexts) "
+    		+ "are uncontested higher taxa that have been selected to allow limits to be applied to the scope of TNRS searches (e.g. "
+    		+ "'match names only within flowering plants'). A context may be specified using the `context_name` parameter. If no "
+    		+ "context is specified then the context will be inferred as the shallowest taxonomic context that contains all "
+    		+ "unambiguous names in the input set. A name is considered unambiguous if it is not a synonym and has only one exact "
+    		+ "match to any taxon name in the entire taxonomy. Once a context has been identified (either user-specified or inferred), "
+    		+ "all taxon name matches will performed only against taxa within that context.\n\nFor a list of available taxonomic "
+    		+ "contexts, see the [contexts](#contexts) service.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation match_names(
             @Source GraphDatabaseService graphDb,
 
-/*            @Description("A comma-delimited string of taxon names to be queried against the taxonomy db. This is an alternative to the use of the 'names' parameter")
-            	@Parameter(name = "queryString", optional = true) String queryString, */
             @Description("The name of the taxonomic context to be searched")
             	@Parameter(name = "context_name", optional = true) String contextName,
         	@Description("An array of taxon names to be queried.")
         		@Parameter(name="names", optional = false) String[] names,
         	@Description("An array of ids to use for identifying names. These will be assigned to each name in the `names` array. If `ids` is provided, then `ids` and `names` must be identical in length.")
     			@Parameter(name="ids", optional = true) String[] ids,
-/*        	@Description("An array of ids to use for identifying names. These will be set in the id field of each name result. If this parameter is used, ids will be treated as ints.")
-    			@Parameter(name="id_ints", optional = true) Long[] idInts, */
         	@Description("A boolean indicating whether or not to include deprecated taxa in the search.")
     			@Parameter(name="include_deprecated", optional = true) Boolean includeDeprecated,
     		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, however, it is on (true).")
