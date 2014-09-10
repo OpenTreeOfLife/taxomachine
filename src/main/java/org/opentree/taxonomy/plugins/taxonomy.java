@@ -36,13 +36,19 @@ import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
 public class taxonomy extends ServerPlugin {
 
-    @Description("Get information about the taxonomy itself.")
+    @Description("Get matadata and information about the taxonomy itself. Currently the recorded metadata is fairly sparse, but it "
+    		+ "should include (at least) the version, and the location from which the taxonomy itself can be downloaded.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation about (@Source GraphDatabaseService graphDb) {
     	return OTRepresentationConverter.convert(new Taxonomy(graphDb).getMetadataMap());
     }
 	
-    @Description("Get a list of deprecated ott ids and the names to which they correspond.")
+    @Description("Get a list of deprecated ott ids and the names to which they correspond. Deprecated ott ids are ott ids that were "
+    		+ "included in a previous version of the OTT taxonomy, but which have been retired and no longer exist in subsequent "
+    		+ "versions. Deprecated ids are thus known to be unstable across versions and should not be used. In most cases, the "
+    		+ "reason for deprecation is that the taxonomic names have either ceased to exist, or were duplicates of other names, and "
+    		+ "have since been combined. This service is provided as a convenience. The canonical list of deprecated ids is available "
+    		+ "from http://file.opentreeoflife.org/.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation deprecated_taxa (@Source GraphDatabaseService graphDb) {
 
@@ -65,7 +71,8 @@ public class taxonomy extends ServerPlugin {
     	return OTRepresentationConverter.convert(deprecatedTaxa);
     }
     
-    @Description("Extract the taxonomic subtree (a subset of the taxonomy) below a given taxon and return it (in newick format).")
+    @Description("Extract and return the inclusive taxonomic subtree i.e. (a subset of the taxonomy) below a given taxon. "
+    		+ "The taxonomy subtree is returned in newick format.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation subtree (@Source GraphDatabaseService graphDb,
 		@Description("The OTT id of the taxon of interest.") @Parameter(name="ott_id", optional=false) Long ottId) {
@@ -78,7 +85,9 @@ public class taxonomy extends ServerPlugin {
     	return OTRepresentationConverter.convert(results);
     }
     
-    @Description("Return information about the least inclusive common ancestral taxon (the LICA) of the identified taxa.")
+    @Description("Return information about the least inclusive common ancestral taxon (the LICA) of the identified taxa. A "
+    		+ "taxonomic LICA is analogous to a most recent common ancestor (MRCA) in a phylogenetic tree. For example, the "
+    		+ "LICA for the taxa 'Pan' and 'Lemur' is 'Primates'.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation lica (@Source GraphDatabaseService graphDb,
 		@Description("The ott ids for the taxa of interest.") @Parameter(name="ott_ids", optional=false) Long[] ottIds,
@@ -113,13 +122,14 @@ public class taxonomy extends ServerPlugin {
     	return OTRepresentationConverter.convert(results);
     }
     
-    @Description("Get information about a known taxon. If the option to include info about the lineage is used, the information will be provided " +
-    			 "in an ordered array, with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
+    @Description("Get information about a known taxon in the taxonomy.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation taxon (
     		@Source GraphDatabaseService graphDb,
     		@Description("The OTT id of the taxon of interest.") @Parameter(name="ott_id", optional=false) Long ottId,
-    		@Description("Whether or not to include information about all the higher level taxa that include this one.") @Parameter(name="include_lineage", optional=true) Boolean includeLineage) throws TaxonNotFoundException {
+    		@Description("Whether or not to include information about all the higher level taxa that include this one. "
+    		+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
+    		+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).") @Parameter(name="include_lineage", optional=true) Boolean includeLineage) throws TaxonNotFoundException {
     	
     	HashMap<String, Object> results = new HashMap<String, Object>();
     	
@@ -135,32 +145,23 @@ public class taxonomy extends ServerPlugin {
     	return OTRepresentationConverter.convert(results);
     }
     
-    @Description("Return the number of taxa that have been assigned the given flag in the installed OTT taxonomy.")
+    @Description("Return a list of taxonomic flags used in this database, including the number of taxa to which each flag "
+    		+ "has been assigned.")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation flagged_taxa (
-		@Source GraphDatabaseService graphDb,
-		@Description("The flag to search for") @Parameter(name="flag", optional=false) String flag) {
+    public Representation flags (@Source GraphDatabaseService graphDb) {
 
     	HashMap<String, Object> results = new HashMap<String, Object>();
     	
-		HashMap<String, OTTFlag> ottFlags = new HashMap<String, OTTFlag>();
-		for (OTTFlag f : OTTFlag.values()) {
-			ottFlags.put(f.label, f);
-		}
-
-		if (! ottFlags.containsKey(flag)) {
-			throw new IllegalArgumentException("unrecognized flag: " + flag);
-		}
-    	
     	Taxonomy t = new Taxonomy(graphDb);
-    	IndexHits<Node> hits = t.taxaByFlag.query("flag", flag);
-
-    	results.put(flag, hits.size());
+		for (OTTFlag f : OTTFlag.values()) {
+	    	IndexHits<Node> hits = t.taxaByFlag.query("flag", f.label);
+	    	results.put(f.label, hits.size());
+		}
     	
     	return OTRepresentationConverter.convert(results);
-    	
     }
     
+
     private Map<String,Object> getTaxonInfo(Taxon t, Boolean includeLineage) {
     	
     	HashMap<String, Object> results = new HashMap<String, Object>();
