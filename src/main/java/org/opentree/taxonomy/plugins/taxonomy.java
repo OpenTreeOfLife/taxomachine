@@ -83,14 +83,19 @@ public class taxonomy extends ServerPlugin {
     @Description("Return information about the least inclusive common ancestral taxon (the LICA) of the identified taxa. A "
     		+ "taxonomic LICA is analogous to a most recent common ancestor (MRCA) in a phylogenetic tree. For example, the "
     		+ "LICA for the taxa 'Pan' and 'Lemur' in the taxonomy represented by the newick string "
-    		+ "'((((Pan,Homo),Gorilla)Hominidae,Gibbon),Lemur)Primates' is 'Primates'.")
+    		+ "'(((Pan,Homo,Gorilla)Hominidae,Gibbon)Hominoidea,Lemur)Primates' is 'Primates'.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation lica (@Source GraphDatabaseService graphDb,
-		@Description("The ott ids for the taxa whose LICA is to be found.") @Parameter(name="ott_ids", optional=false) Long[] ottIds,
-		@Description("Whether or not to include information about the higher level taxa that include the identified LICA. "
+		
+    	@Description("The ott ids (in an array) for the taxa whose LICA is to be found.")
+    	@Parameter(name="ott_ids", optional=false)
+    	Long[] ottIds,
+		
+    	@Description("Whether or not to include information about the higher level taxa that include the identified LICA. "
 				+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
 				+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
-    				@Parameter(name="include_lineage", optional=true) Boolean includeLineage) {
+    	@Parameter(name="include_lineage", optional=true)
+    	Boolean includeLineage) {
 
     	Taxonomy taxonomy = new Taxonomy(graphDb);
     	HashMap<String,Object> results = new HashMap<String, Object>();
@@ -123,13 +128,17 @@ public class taxonomy extends ServerPlugin {
     
     @Description("Get information about a known taxon in the taxonomy.")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation taxon (
-    		@Source GraphDatabaseService graphDb,
-    		@Description("The OTT id of the taxon of interest.") @Parameter(name="ott_id", optional=false) Long ottId,
+    public Representation taxon (@Source GraphDatabaseService graphDb,
+    		
+    		@Description("The OTT id of the taxon of interest.")
+    		@Parameter(name="ott_id", optional=false)
+    		Long ottId,
+    		
     		@Description("Whether or not to include information about all the higher level taxa that include this one. "
     		+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
     		+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
-    			@Parameter(name="include_lineage", optional=true) Boolean includeLineage) {
+    		@Parameter(name="include_lineage", optional=true)
+    		Boolean includeLineage) {
     	
     	HashMap<String, Object> results = new HashMap<String, Object>();
     	
@@ -160,7 +169,6 @@ public class taxonomy extends ServerPlugin {
     	
     	return OTRepresentationConverter.convert(results);
     }
-    
 
     private Map<String,Object> getTaxonInfo(Taxon t, Boolean includeLineage) {
     	
