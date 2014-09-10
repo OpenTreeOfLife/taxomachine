@@ -105,9 +105,9 @@ public class tnrs extends ServerPlugin {
     @Description("Assumes the input is a taxon name that may be incomplete (i.e. the beginning of a taxon name such as 'Ast', "
     		+ "which would match 'Astelia', 'Astilbe', 'Aster', 'Asteroidea', 'Asteraceae', 'Astrantia', etc.). If the input "
     		+ "string is an exact string match to an existing taxon name, then only the exact match will be returned, (i.e. the "
-    		+ "input 'Aster' will produce a single result 'Aster'). This service is optimized and (obviously) intended for use "
-    		+ "with autocomplete boxes on web forms. It should not be used for general purpose TNRS queries. For all search "
-    		+ "purposes other than autocompleting webform fields, use the [`match_names`](#match_names) service.")
+    		+ "input 'Aster' will produce a single result 'Aster'). **This service should not be used for general purpose TNRS "
+    		+ "queries.** It is optimized for and (obviously) intended for use only with autocomplete boxes on web forms. For all "
+    		+ "name matching purposes other than autocompleting name fields on forms, use the [`match_names`](#match_names) service.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation autocomplete_name(
             @Source GraphDatabaseService graphDb,
