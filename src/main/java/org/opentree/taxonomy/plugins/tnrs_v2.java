@@ -169,13 +169,13 @@ public class tnrs_v2 extends ServerPlugin {
     
     @Description("Accepts one or more taxonomic names and returns information about potential matches for these names to known taxa in "
     		+ "OTT. This service uses taxonomic contexts to disambiguate homonyms and misspelled names; a context may be specified using "
-    		+ "the `context_name` parameter. [Taxonomic contexts](#contexts) are uncontested higher taxa that have been selected to "
-    		+ "allow limits to be applied to the scope of TNRS searches (e.g. 'match names only within flowering plants').\n\nIf no "
-    		+ "context is specified, then the shallowest taxonomic context that contains all unambiguous names in the input set will be "
-    		+ "used. A name is considered unambiguous if it is not a synonym and has only one exact match to any taxon name in the "
-    		+ "entire taxonomy. Once a context has been identified (either user-specified or inferred), all taxon name matches will "
-    		+ "performed only against taxa within that context.\n\nFor a list of available taxonomic contexts, see the "
-    		+ "[contexts](#contexts) service.")
+    		+ "the `context_name` parameter. If no context is specified, then the context will be inferred: the shallowest taxonomic "
+    		+ "context that contains all unambiguous names in the input set will be used. A name is considered unambiguous if it is not "
+    		+ "a synonym and has only one exact match to any taxon name in the entire taxonomy.\n\n"
+    		+ "[Taxonomic contexts](#contexts) are uncontested higher taxa that have been selected to allow limits to be applied to the "
+    		+ "scope of TNRS searches (e.g. 'match names only within flowering plants'). Once a context has been identified (either "
+    		+ "user-specified or inferred), all taxon name matches will performed only against taxa within that context.\n\nFor a list "
+    		+ "of available taxonomic contexts, see the [contexts](#contexts) service.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation match_names(
             @Source GraphDatabaseService graphDb,
