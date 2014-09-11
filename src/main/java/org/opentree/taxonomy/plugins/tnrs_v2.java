@@ -40,7 +40,7 @@ import org.opentree.tnrs.TNRSResults;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.tnrs.queries.SingleNamePrefixQuery;
 
-public class tnrs extends ServerPlugin {
+public class tnrs_v2 extends ServerPlugin {
 
 	public static int MAX_QUERY_STRINGS = 1000;
 	    
@@ -114,28 +114,43 @@ public class tnrs extends ServerPlugin {
     		+ "(obviously) intended for use *only* with autocomplete boxes on web forms. For all name matching purposes other than "
     		+ "autocompleting name fields on forms, use the [`match_names`](#match_names) service.")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation autocomplete_name(
-            @Source GraphDatabaseService graphDb,
-            @Description("A string containing a single name (or partial name prefix) to be queried against the db") @Parameter(name = "name") String queryString,
-    		@Description("The name of the [taxonomic context](#contexts) to be searched") @Parameter(name = "context_name", optional = true) String contextName,
-    		@Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false (suppressed taxa are not included).") @Parameter(name="include_dubious", optional = true) Boolean includeDubious) throws ContextNotFoundException, ParseException {
+    public Representation autocomplete_name(@Source GraphDatabaseService graphDb,
+    		
+            @Description("A string containing a single name (or partial name prefix) to be queried against the db")
+            @Parameter(name = "name")
+            String queryString,
+    		
+            @Description("The name of the [taxonomic context](#contexts) to be searched")
+            @Parameter(name = "context_name", optional = true)
+            String contextName,
+    		
+            @Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false "
+            		+ "(suppressed taxa are not included).")
+            @Parameter(name="include_dubious", optional = true)
+            Boolean includeDubious) {
 
     	includeDubious = includeDubious == null ? false : includeDubious;
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
+        HashMap<String, Object> errorResults = new HashMap<String, Object>();
         
         // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
         if (contextName != null) {
-        	context = taxonomy.getContextByName(contextName);
+        	try {
+        		context = taxonomy.getContextByName(contextName);
+        	} catch (ContextNotFoundException ex) {
+        		errorResults.put("error", "The context '" + contextName + " could not be found.");
+        		return OTRepresentationConverter.convert(errorResults);
+        	}
         }
 
         SingleNamePrefixQuery query = new SingleNamePrefixQuery(taxonomy, context);
         query.setIncludeDubious(includeDubious);
         TNRSResults results = query.setQueryString(queryString).runQuery().getResults();
 
-        // return results if they exist, 
+        // return results if they exist
         if (results.iterator().hasNext()) {
 
         	List<TNRSMatch> matches = results.iterator().next().getMatches().getMatchList();
@@ -153,14 +168,14 @@ public class tnrs extends ServerPlugin {
     }
     
     @Description("Accepts one or more taxonomic names and returns information about potential matches for these names to known taxa in "
-    		+ "OTT. This service uses taxonomic contexts to disambiguate homonyms and misspelled names. [Taxonomic contexts](#contexts) "
-    		+ "are uncontested higher taxa that have been selected to allow limits to be applied to the scope of TNRS searches (e.g. "
-    		+ "'match names only within flowering plants'). A context may be specified using the `context_name` parameter. If no "
-    		+ "context is specified then the context will be inferred as the shallowest taxonomic context that contains all "
-    		+ "unambiguous names in the input set. A name is considered unambiguous if it is not a synonym and has only one exact "
-    		+ "match to any taxon name in the entire taxonomy. Once a context has been identified (either user-specified or inferred), "
-    		+ "all taxon name matches will performed only against taxa within that context.\n\nFor a list of available taxonomic "
-    		+ "contexts, see the [contexts](#contexts) service.")
+    		+ "OTT. This service uses taxonomic contexts to disambiguate homonyms and misspelled names; a context may be specified using "
+    		+ "the `context_name` parameter. [Taxonomic contexts](#contexts) are uncontested higher taxa that have been selected to "
+    		+ "allow limits to be applied to the scope of TNRS searches (e.g. 'match names only within flowering plants').\n\nIf no "
+    		+ "context is specified, then the shallowest taxonomic context that contains all unambiguous names in the input set will be "
+    		+ "used. A name is considered unambiguous if it is not a synonym and has only one exact match to any taxon name in the "
+    		+ "entire taxonomy. Once a context has been identified (either user-specified or inferred), all taxon name matches will "
+    		+ "performed only against taxa within that context.\n\nFor a list of available taxonomic contexts, see the "
+    		+ "[contexts](#contexts) service.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation match_names(
             @Source GraphDatabaseService graphDb,
@@ -176,7 +191,7 @@ public class tnrs extends ServerPlugin {
     		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, however, it is on (true).")
             	@Parameter(name="do_approximate_matching", optional = true) Boolean doFuzzyMatching,
     		@Description("Whether to include so-called 'dubious' taxa--those which are not accepted by OTT.")
-            	@Parameter(name="include_dubious", optional=true) Boolean includeDubious) throws ContextNotFoundException {
+            	@Parameter(name="include_dubious", optional=true) Boolean includeDubious) {
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
@@ -187,82 +202,49 @@ public class tnrs extends ServerPlugin {
 
         // fuzzy matching is turned ON by default
         doFuzzyMatching = doFuzzyMatching == null ? true : doFuzzyMatching;
-        
-        /*
-        // check valid input on names
-        String[] searchStrings = null;
-        if (queryString != null && names == null) {
-	        searchStrings = queryString.split("\\s*\\,\\s*");
-        } else if (names != null && queryString == null) {
-        	searchStrings = names;
-        } else {
-    		throw new IllegalArgumentException("You must provide exactly one of either the 'queryString' or 'names' parameters");
-    	} */
 
-        /*
-        // check valid input on ids
-        Object[] ids = null;
-        if (idInts != null && idStrings == null) {
-
-        	ids = new Object[idInts.length];
-        	int i=0;
-        	for (Long id : idInts) {
-        		ids[i++] = id;
-        	}
-
-        } else if (idStrings != null && idInts == null) { 
-        	ids = idStrings;
-        	
-        } else if (idStrings != null && idInts != null) {
-    		throw new IllegalArgumentException("You may provide at most one of the 'idStrings' an 'idInts' parameters");
-*/        
+        HashMap<String, Object> errorResults = new HashMap<String, Object>();
         if (ids == null) {
         	ids = names;
 
         } else if (ids.length != names.length) {
-        	throw new IllegalArgumentException("If you provide ids, then you must provide exactly as many ids as names.");
+        	errorResults.put("error", "The number of names and ids does not match. If you provide ids, then you "
+        			+ "must provide exactly as many ids as names.");
+			return OTRepresentationConverter.convert(errorResults);
         
         } else {
         	HashSet<String> idSet = new HashSet<String>();
         	for (String id : ids) {
         		if (idSet.contains(id)) {
-        			throw new IllegalArgumentException("The id " + id + " is not unique. If you provide ids, they must be unique.");
+        			errorResults.put("error", "The id " + id + " is not unique. If you provide ids, they must be unique.");
+        			return OTRepresentationConverter.convert(errorResults);
         		}
         		idSet.add(id);
         	}
         }
         
         Map<Object, String> idNameMap = new HashMap<Object, String>();
-/*    	if (ids != null) { */
         
         for (int i = 0; i < names.length; i++) {
         	idNameMap.put(ids[i], names[i]);
         }
-        
-        /*
-            if (ids.length > i) {
-        		throw new IllegalArgumentException("There are more ids than names");
-            } /*
-    	} else {
-
-        for (String name : names) {
-			idNameMap.put(name, name);
-		}
-
-//    	} */
-        
+                
     	if (idNameMap.keySet().size() > MAX_QUERY_STRINGS) {
-    		HashMap<String, Object> results = new HashMap<String, Object>();
-    		results.put("error", "Queries containing more than "+MAX_QUERY_STRINGS+" strings are not supported. You may submit multiple"
+    		errorResults.put("error", "Queries containing more than "+MAX_QUERY_STRINGS+" strings are not supported. You may submit multiple"
     				+ "smaller queries to avoid this limit.");
-            return OTRepresentationConverter.convert(results);
+            return OTRepresentationConverter.convert(errorResults);
     	}
     	
         // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
         boolean useAutoInference = true;
         if (contextName != null) {
-        	context = taxonomy.getContextByName(contextName);
+        	try {
+        		context = taxonomy.getContextByName(contextName);
+        	} catch (ContextNotFoundException ex) {
+        		errorResults.put("error", "The context '" + contextName + " could not be found.");
+        		return OTRepresentationConverter.convert(errorResults);
+        	}
         	useAutoInference = false;
         }
 
