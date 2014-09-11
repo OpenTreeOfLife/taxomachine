@@ -105,11 +105,13 @@ public class tnrs_v2 extends ServerPlugin {
     @Description("Assumes the input is a taxon name that may be incomplete (i.e. the beginning of a taxon name such as 'Ast', "
     		+ "which would match 'Astelia', 'Astilbe', 'Aster', 'Asteroidea', 'Asteraceae', 'Astrantia', etc.). If the input "
     		+ "string is an exact string match to an existing taxon name, then only the exact match will be returned, (i.e. the "
-    		+ "input 'Aster' will produce a single result 'Aster'). If name expansion identifies a valid genus name, the results will "
+    		+ "input 'Aster' will produce a single result 'Aster')."
+    		+ "\n\nIf name expansion identifies a valid genus name, the results will "
     		+ "not include species names from within that genus, but if a trailing space exists in the input following a valid "
-    		+ "genus name, then species names will be returned. For example, 'Garcin' an 'Garcinia' will match the genus name "
+    		+ "genus name, then species names will be returned. For example, both 'Garcin' and 'Garcinia' will match the genus name "
     		+ "'Garcinia' itself but will not match any species names within the genus, but 'Garcinia ' (note the trailing space) "
-    		+ "will match all the species in the genus."
+    		+ "will match all the species in the genus, and 'Garcinia m' with match all species names in Garcinia with a specific "
+    		+ "epithet that starts with 'm'."
     		+ "\n\n**IMPORTANT NOTE: This service should not be used for general purpose TNRS queries.** It is optimized for and "
     		+ "(obviously) intended for use *only* with autocomplete boxes on web forms. For all name matching purposes other than "
     		+ "autocompleting name fields on forms, use the [`match_names`](#match_names) service.")
@@ -272,14 +274,6 @@ public class tnrs_v2 extends ServerPlugin {
 		public int compare(TNRSMatch match1, TNRSMatch match2) {
 			
 			// sorts in reverse order: higher priority matches to lower indexes
-
-			/*
-			// exact matches are top priority
-			if (match1.getIsPerfectMatch() == true && match2.getIsPerfectMatch() == false) {
-				return -1;
-			} else if (match1.getIsPerfectMatch() == false && match2.getIsPerfectMatch() == true) {
-				return 1;
-			} */
 			
 			// higher taxa are higher priority
 			if (match1.getIsHigherTaxon() == true && match1.getIsHigherTaxon() == false) {
