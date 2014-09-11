@@ -40,7 +40,7 @@ import org.opentree.tnrs.TNRSResults;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.tnrs.queries.SingleNamePrefixQuery;
 
-public class tnrs extends ServerPlugin {
+public class tnrs_v2 extends ServerPlugin {
 
 	public static int MAX_QUERY_STRINGS = 1000;
 	    
