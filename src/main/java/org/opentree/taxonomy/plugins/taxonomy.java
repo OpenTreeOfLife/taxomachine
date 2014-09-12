@@ -101,7 +101,8 @@ public class taxonomy extends ServerPlugin {
     	HashMap<String,Object> results = new HashMap<String, Object>();
 
     	if (ottIds.length < 1) {
-    		throw new IllegalArgumentException("You must provide at least one ott id");
+    		results.put("error","You must provide at least one ott id");
+    		return OTRepresentationConverter.convert(results);
     	}
     	
     	LinkedList<Taxon> taxa = new LinkedList<Taxon>();
@@ -120,7 +121,7 @@ public class taxonomy extends ServerPlugin {
         	results.put("lica", getTaxonInfo(ts.getLICA(), includeLineage));
         	results.put("ott_ids_not_found", ottIdsNotFound);
     	} else {
-    		throw new IllegalArgumentException("None of the ott ids provided could be matched to known taxa.");
+    		results.put("error","None of the ott ids provided could be matched to known taxa.");
     	}
     	
     	return OTRepresentationConverter.convert(results);
