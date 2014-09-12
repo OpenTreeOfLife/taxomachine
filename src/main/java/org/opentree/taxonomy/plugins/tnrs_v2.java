@@ -137,7 +137,7 @@ public class tnrs_v2 extends ServerPlugin {
         Taxonomy taxonomy = new Taxonomy(gdb);
         HashMap<String, Object> errorResults = new HashMap<String, Object>();
         
-        // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
+        // attempt to get the named context, return an error if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
         if (contextName != null) {
         	try {
@@ -237,7 +237,7 @@ public class tnrs_v2 extends ServerPlugin {
             return OTRepresentationConverter.convert(errorResults);
     	}
     	
-        // attempt to get the named context, will throw exception if a name is supplied but no corresponding context can be found
+        // attempt to get the named context, return an error if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
         boolean useAutoInference = true;
         if (contextName != null) {
