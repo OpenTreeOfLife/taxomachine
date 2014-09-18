@@ -27,6 +27,7 @@ import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.tnrs.queries.SimpleQuery;
+import org.opentree.utils.GeneralUtils;
 import org.opentree.exceptions.MultipleHitsException;
 
 
@@ -211,15 +212,6 @@ public class Taxon {
             e.printStackTrace();
         }
     }
-
-    /**
-     * 
-     * @param name
-     * @return
-     */
-    private String cleanTaxonName(String name) {
-    	return name.replaceAll("\\s+", "_");
-    }
     
     /**
      * Return a JadeTree object containing the taxonomic structure below this taxon.
@@ -241,7 +233,7 @@ public class Taxon {
         System.out.println(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 
         JadeNode root = new JadeNode();
-        root.setName(((String) taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_"));
+        root.setName(GeneralUtils.cleanName((String) taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())));
         HashMap<Node, JadeNode> nodes = new HashMap<Node, JadeNode>();
         nodes.put(taxNode, root);
         
@@ -257,7 +249,7 @@ public class Taxon {
                 if (labelFormat == LabelFormat.NAME || labelFormat == LabelFormat.NAME_AND_ID || labelFormat == LabelFormat.ORIGINAL_NAME) {
                 	name = (String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
                 	if (labelFormat != LabelFormat.ORIGINAL_NAME) {
-                		name = cleanTaxonName(name);
+                		name = GeneralUtils.cleanName(name);
                 	}
                 }
                 
@@ -283,7 +275,7 @@ public class Taxon {
             }
             if (nodes.containsKey(rel.getEndNode()) == false) {
                 JadeNode node = new JadeNode();
-                node.setName(((String) rel.getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
+                node.setName(GeneralUtils.cleanName((String) rel.getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
                         .replace(":", "_"));
                 nodes.put(rel.getEndNode(), node);
             }
