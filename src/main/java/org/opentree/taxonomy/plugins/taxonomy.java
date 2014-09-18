@@ -85,9 +85,19 @@ public class taxonomy extends ServerPlugin {
     	Taxonomy taxonomy = new Taxonomy(graphDb);
     	HashMap<String,Object> results = new HashMap<String, Object>();
 
-    	LabelFormat format = LabelFormat.valueOf(labelFormatStr);
+    	LabelFormat format = null;
+    	for (LabelFormat f : LabelFormat.values()) {
+    		if (f.toString().equals(labelFormatStr)) {
+    			format = f;
+    		}
+    	}
     	
-    	results.put("subtree", taxonomy.getTaxonForOTTId(ottId).getTaxonomySubtree(format).getRoot().getNewick(false));
+    	if (format == null) {
+    		results.put("error", "The specified label type '" + labelFormatStr + "' was not recognized.");
+
+    	} else {
+        	results.put("subtree", taxonomy.getTaxonForOTTId(ottId).getTaxonomySubtree(format).getRoot().getNewick(false));
+    	}
     	
     	return OTRepresentationConverter.convert(results);
     }
