@@ -217,6 +217,14 @@ public class Taxon {
      * @return
      */
     public JadeTree getTaxonomySubtree() {
+    	return getTaxonomySubtree(LabelFormat.NAME_AND_ID);
+    }
+
+    /**
+     * Return a JadeTree object containing the taxonomic structure below this taxon.
+     * @return
+     */
+    public JadeTree getTaxonomySubtree(LabelFormat labelFormat) {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
@@ -235,8 +243,31 @@ public class Taxon {
             
             if (nodes.containsKey(rel.getStartNode()) == false) {
                 JadeNode node = new JadeNode();
-                node.setName(((String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
-                        .replace(":", "_"));
+                
+                String name = null;
+                if (labelFormat == LabelFormat.NAME || labelFormat == LabelFormat.NAME_AND_ID) {
+                	name = ((String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()))
+                			.replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_").replace(":", "_");
+                }
+                
+                String ottId = null;
+                if (labelFormat == LabelFormat.ID || labelFormat == LabelFormat.NAME_AND_ID) {
+                	ottId = ((String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
+                }
+                
+                // generate the node label
+                String label = "";
+                if (name != null) {
+                	if (ottId != null) {
+                		label = name + "_ott" + ottId;
+                	} else {
+                		label = name;
+                	}
+                } else {
+                	label = ottId;
+                }
+                
+                node.setName(label);
                 nodes.put(rel.getStartNode(), node);
             }
             if (nodes.containsKey(rel.getEndNode()) == false) {

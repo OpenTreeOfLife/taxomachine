@@ -21,6 +21,7 @@ import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
 import org.opentree.graphdb.GraphDatabaseAgent;
 import org.opentree.properties.OTVocabularyPredicate;
+import org.opentree.taxonomy.LabelFormat;
 import org.opentree.taxonomy.OTTFlag;
 import org.opentree.taxonomy.Taxon;
 import org.opentree.taxonomy.TaxonSet;
@@ -70,12 +71,23 @@ public class taxonomy extends ServerPlugin {
     		+ "The taxonomy subtree is returned in newick format.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation subtree (@Source GraphDatabaseService graphDb,
-		@Description("The OTT id of the taxon of interest.") @Parameter(name="ott_id", optional=false) Long ottId) {
+
+    		@Description("The OTT id of the taxon of interest.")
+    		@Parameter(name="ott_id", optional=false)
+    		Long ottId,
+    		
+    		@Description("The format for the labels. If provided, this must be one of the options: [\"name\", "
+    				+ "\"id\", \"name_id\"], indicating whether the node labels should contain just the name, just the "
+    				+ "ott id, or both. If not provided, labels will include both the name and the id.")
+    		@Parameter(name="label_format", optional=true)
+    		String labelFormatStr) {
     	
     	Taxonomy taxonomy = new Taxonomy(graphDb);
     	HashMap<String,Object> results = new HashMap<String, Object>();
 
-    	results.put("subtree", taxonomy.getTaxonForOTTId(ottId).getTaxonomySubtree().getRoot().getNewick(false));
+    	LabelFormat format = LabelFormat.valueOf(labelFormatStr);
+    	
+    	results.put("subtree", taxonomy.getTaxonForOTTId(ottId).getTaxonomySubtree(format).getRoot().getNewick(false));
     	
     	return OTRepresentationConverter.convert(results);
     }
@@ -135,11 +147,17 @@ public class taxonomy extends ServerPlugin {
     		@Parameter(name="ott_id", optional=false)
     		Long ottId,
     		
+    		@Description("Provide a list of terminal OTT ids contained by this taxon.")
+    		@Parameter(name="list_terminal_descendants", optional=true)
+    		Boolean listDescendants,
+    		
     		@Description("Whether or not to include information about all the higher level taxa that include this one. "
     		+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
     		+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
     		@Parameter(name="include_lineage", optional=true)
     		Boolean includeLineage) {
+    	
+    	listDescendants = listDescendants == null ? false : listDescendants;
     	
     	HashMap<String, Object> results = new HashMap<String, Object>();
     	
@@ -148,6 +166,11 @@ public class taxonomy extends ServerPlugin {
     	
     	if (match != null) {
     		results = (HashMap<String, Object>) getTaxonInfo(match, includeLineage);
+    		
+    		if (listDescendants) {
+    			
+    		}
+    		
     	} else {
     		results.put("error", "the ott id " + String.valueOf(ottId) + " could not be found.");
     	}
