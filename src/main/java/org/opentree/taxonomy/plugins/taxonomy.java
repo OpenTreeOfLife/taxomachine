@@ -89,7 +89,7 @@ public class taxonomy extends ServerPlugin {
 
     	LabelFormat format = null;
     	for (LabelFormat f : LabelFormat.values()) {
-    		if (f.toString().toLowerCase().equals(labelFormatStr)) {
+    		if (f.toString().toLowerCase().equals(labelFormatStr.toLowerCase())) {
     			format = f;
     		}
     	}
