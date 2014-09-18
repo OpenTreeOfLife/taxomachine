@@ -252,7 +252,7 @@ public class Taxon {
                 
                 String ottId = null;
                 if (labelFormat == LabelFormat.ID || labelFormat == LabelFormat.NAME_AND_ID) {
-                	ottId = ((String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
+                	ottId = String.valueOf(rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
                 }
                 
                 // generate the node label
