@@ -77,10 +77,12 @@ public class taxonomy extends ServerPlugin {
     		Long ottId,
     		
     		@Description("The format for the labels. If provided, this must be one of the options: [\"name\", "
-    				+ "\"id\", \"name_id\"], indicating whether the node labels should contain just the name, just the "
+    				+ "\"id\", \"name_and_id\"], indicating whether the node labels should contain just the name, just the "
     				+ "ott id, or both. If not provided, labels will include both the name and the id.")
     		@Parameter(name="label_format", optional=true)
     		String labelFormatStr) {
+    	
+    	labelFormatStr = labelFormatStr == null ? LabelFormat.NAME_AND_ID.toString() : labelFormatStr;
     	
     	Taxonomy taxonomy = new Taxonomy(graphDb);
     	HashMap<String,Object> results = new HashMap<String, Object>();
