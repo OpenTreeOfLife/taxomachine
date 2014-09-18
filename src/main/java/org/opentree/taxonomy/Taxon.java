@@ -212,7 +212,7 @@ public class Taxon {
             e.printStackTrace();
         }
     }
-    
+        
     /**
      * Return a JadeTree object containing the taxonomic structure below this taxon.
      * @return
@@ -233,7 +233,7 @@ public class Taxon {
         System.out.println(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 
         JadeNode root = new JadeNode();
-        root.setName(GeneralUtils.cleanName((String) taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())));
+        root.setName(Taxonomy.getNodeLabel(taxNode, labelFormat));
         HashMap<Node, JadeNode> nodes = new HashMap<Node, JadeNode>();
         nodes.put(taxNode, root);
         
@@ -245,38 +245,14 @@ public class Taxon {
             if (nodes.containsKey(rel.getStartNode()) == false) {
                 JadeNode node = new JadeNode();
                 
-                String name = null;
-                if (labelFormat == LabelFormat.NAME || labelFormat == LabelFormat.NAME_AND_ID || labelFormat == LabelFormat.ORIGINAL_NAME) {
-                	name = (String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
-                	if (labelFormat != LabelFormat.ORIGINAL_NAME) {
-                		name = GeneralUtils.cleanName(name);
-                	}
-                }
-                
-                String ottId = null;
-                if (labelFormat == LabelFormat.ID || labelFormat == LabelFormat.NAME_AND_ID) {
-                	ottId = String.valueOf(rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
-                }
-                
-                // generate the node label
-                String label = "";
-                if (name != null) {
-                	if (ottId != null) {
-                		label = name + "_ott" + ottId;
-                	} else {
-                		label = name;
-                	}
-                } else {
-                	label = ottId;
-                }
+                String label = Taxonomy.getNodeLabel(rel.getStartNode(), labelFormat);
                 
                 node.setName(label);
                 nodes.put(rel.getStartNode(), node);
             }
             if (nodes.containsKey(rel.getEndNode()) == false) {
                 JadeNode node = new JadeNode();
-                node.setName(GeneralUtils.cleanName((String) rel.getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
-                        .replace(":", "_"));
+                node.setName(Taxonomy.getNodeLabel(rel.getEndNode(), labelFormat));
                 nodes.put(rel.getEndNode(), node);
             }
             nodes.get(rel.getEndNode()).addChild(nodes.get(rel.getStartNode()));

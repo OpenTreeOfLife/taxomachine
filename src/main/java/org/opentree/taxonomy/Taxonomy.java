@@ -22,6 +22,7 @@ import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.ContextNotFoundException;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
+import org.opentree.utils.GeneralUtils;
 import org.opentree.graphdb.GraphDatabaseAgent;
 
 /**
@@ -295,6 +296,36 @@ public class Taxonomy {
 		metaNode.setProperty(key, value);
 	}
 
+	public static String getNodeLabel(Node n, LabelFormat format) {
+	    String name = null;
+	    if (format == LabelFormat.NAME || format == LabelFormat.NAME_AND_ID || format == LabelFormat.ORIGINAL_NAME) {
+	    	name = (String) n.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+	    	if (format != LabelFormat.ORIGINAL_NAME) {
+	    		name = GeneralUtils.cleanName(name);
+	    	}
+	    }
+	    
+	    String ottId = null;
+	    if (format == LabelFormat.ID || format == LabelFormat.NAME_AND_ID) {
+	    	ottId = String.valueOf(n.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
+	    }
+	    
+	    // generate the node label
+	    String label = "";
+	    if (name != null) {
+	    	if (ottId != null) {
+	    		label = name + "_ott" + ottId;
+	    	} else {
+	    		label = name;
+	    	}
+	    } else {
+	    	label = ottId;
+	    }
+	    
+	    return label;
+    }
+
+	
 	/**
 	 * Just a wrapper for the underlying database method defined in the GraphDatabaseAgent class
 	 * 
