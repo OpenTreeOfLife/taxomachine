@@ -218,7 +218,7 @@ public class Taxon {
      * @return
      */
     private String cleanTaxonName(String name) {
-    	return name.replaceAll("\\s+", "");
+    	return name.replaceAll("\\s+", "_");
     }
     
     /**
