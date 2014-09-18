@@ -167,6 +167,7 @@ if [ $SETUP_DB ]; then
 	$TAXOMACHINE_COMMAND makecontexts $TAXOMACHINE_DB
 	$TAXOMACHINE_COMMAND makegenusindexes $TAXOMACHINE_DB
     $TAXOMACHINE_COMMAND adddeprecated $OTT_DEPRECATED $TAXOMACHINE_DB
+
 fi
 
 # start the server
