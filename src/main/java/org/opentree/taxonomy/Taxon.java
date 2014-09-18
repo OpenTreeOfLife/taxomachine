@@ -213,6 +213,15 @@ public class Taxon {
     }
 
     /**
+     * 
+     * @param name
+     * @return
+     */
+    private String cleanTaxonName(String name) {
+    	return name.replaceAll("\\s+", "");
+    }
+    
+    /**
      * Return a JadeTree object containing the taxonomic structure below this taxon.
      * @return
      */
@@ -245,9 +254,11 @@ public class Taxon {
                 JadeNode node = new JadeNode();
                 
                 String name = null;
-                if (labelFormat == LabelFormat.NAME || labelFormat == LabelFormat.NAME_AND_ID) {
-                	name = ((String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()))
-                			.replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_").replace(":", "_");
+                if (labelFormat == LabelFormat.NAME || labelFormat == LabelFormat.NAME_AND_ID || labelFormat == LabelFormat.ORIGINAL_NAME) {
+                	name = (String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+                	if (labelFormat != LabelFormat.ORIGINAL_NAME) {
+                		name = cleanTaxonName(name);
+                	}
                 }
                 
                 String ottId = null;

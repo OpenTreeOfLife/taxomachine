@@ -77,8 +77,10 @@ public class taxonomy extends ServerPlugin {
     		Long ottId,
     		
     		@Description("The format for the labels. If provided, this must be one of the options: [\"name\", "
-    				+ "\"id\", \"name_and_id\"], indicating whether the node labels should contain just the name, just the "
-    				+ "ott id, or both. If not provided, labels will include both the name and the id.")
+    				+ "\"id\", \"name_and_id\",\"original_name\"], indicating whether the node labels should contain "
+    				+ "(respecitvely) just the cleaned name (i.e. with punctuation and whitespace replaced with underscores), "
+    				+ "just the ott id, the cleaned name and as well as the ott id (default), or the original name without "
+    				+ "punctuation removed.")
     		@Parameter(name="label_format", optional=true)
     		String labelFormatStr) {
     	
