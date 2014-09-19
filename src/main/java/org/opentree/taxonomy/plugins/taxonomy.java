@@ -100,7 +100,7 @@ public class taxonomy extends ServerPlugin {
     		results.put("error", "The specified label type '" + labelFormatStr + "' was not recognized.");
 
     	} else {
-        	results.put("subtree", taxonomy.getTaxonForOTTId(ottId).getTaxonomySubtree(format).getRoot().getNewick(false));
+        	results.put("subtree", taxonomy.getTaxonForOTTId(ottId).getTaxonomySubtree(format).getRoot().getNewick(false)+";");
     	}
     	
     	return OTRepresentationConverter.convert(results);
