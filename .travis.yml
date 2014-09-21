@@ -7,6 +7,9 @@ branches:
     only:
         - taxon_labels
 install:
-    - ./setup_for_travis.sh
+    - ./mvn_cmdline.sh
+    - ./travis-config/setup_db.sh
+    - ./mvn_serverplugins.sh
+    - ./travis-config/setup_neo4j.sh
 script:
     - true

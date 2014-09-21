@@ -34,7 +34,7 @@ if [ ! $VERSION ]; then
 fi
 
 # assume we are running this from within the taxomachine directory
-TAXOMACHINE_HOME=pwd
+TAXOMACHINE_HOME=$(pwd)
 
 if [ ! $PFSET ]; then
 	PREFIX="../"
