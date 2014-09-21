@@ -63,9 +63,6 @@ if [ ! -d $JARSDIR ]; then
     mkdir $JARSDIR
 fi
 
-echo $(ls $JARSDIR)
-exit
-
 OTT_SOURCENAME=$VERSION
 OTT_DOWNLOADDIR=$PREFIX"/data"
 if [ ! -d $OTT_DOWNLOADDIR ]; then
