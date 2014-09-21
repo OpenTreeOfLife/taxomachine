@@ -1,0 +1,10 @@
+language: java
+before_install:
+    - ./mvn_install_dependencies.sh
+branches:
+    only:
+        - master
+install:
+    - ./setup-taxomachine.sh --recompile-standalone --setup-db --download-ott -ott-version aster --recompile-plugin --restart-neo4j --setup-neo4j --prefix . --force
+script:
+    - true
