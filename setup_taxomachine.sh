@@ -33,6 +33,9 @@ if [ ! $VERSION ]; then
 	printf "\nwill attempt to use $VERSION\n"
 fi
 
+# assume we are running this from within the taxomachine directory
+TAXOMACHINE_HOME=pwd
+
 if [ ! $PFSET ]; then
 	PREFIX="../"
 	if [ ! $FORCE ]; then
@@ -94,11 +97,11 @@ OTT_SYNONYMS=$OTT_SOURCEDIR"/synonyms.tsv"
 OTT_DEPRECATED=$OTT_SOURCEDIR"/deprecated.tsv"
 
 # download taxomachine
-TAXOMACHINE_HOME=$PREFIX"/taxomachine"
-if [ ! -d $TAXOMACHINE_HOME ]; then
-	printf "\ninstalling taxomachine at: $TAXOMACHINE_HOME\n"
-	git clone http://github.com/OpenTreeOfLife/taxomachine.git
-fi
+#TAXOMACHINE_HOME=$PREFIX"/taxomachine"
+#if [ ! -d $TAXOMACHINE_HOME ]; then
+#	printf "\ninstalling taxomachine at: $TAXOMACHINE_HOME\n"
+#	git clone http://github.com/OpenTreeOfLife/taxomachine.git
+#fi
 printf "\nusing taxomachine at: $TAXOMACHINE_HOME\n"
 
 # pull from the git repo and remove the binary if updating is turned on
