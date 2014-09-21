@@ -1,5 +1,5 @@
 # we are running from within the taxomachine directory
-TAXOMACHINE_HOME=pwd
+HOME=pwd
 
 # download and set up ott
 wget "http://files.opentreeoflife.org/ott/aster.tgz"
@@ -11,8 +11,8 @@ OTT_DEPRECATED="aster/deprecated.tsv"
 # pull from the git repo and remove the binary if updating is turned on
 TAXOMACHINE_JAR="target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar"
 
-# compile taxomachine if necessary
-mvn_cmdline.sh
+# compile taxomachine standalone jar
+mvn clean compile assembly:single
 TAXOMACHINE_COMMAND="java -jar $TAXOMACHINE_JAR "
 
 # download neo4j
@@ -35,7 +35,7 @@ printf "$TAXOMACHINE_DB_ASSIGNMENT\n\n" > "$SERVER_PROPERTIES"
 grep -v "org.neo4j.server.database.location" "$ORIG_SERVER_PROPERTIES" >> "$SERVER_PROPERTIES"
 
 # compile and install the server plugin
-mvn_serverplugins.sh
+mvn -f pom.serverplugins.xml clean compile package jar:jar
 PLUGIN_COMPILE_LOCATION="target/taxomachine-neo4j-plugins-0.0.1-SNAPSHOT.jar"
 PLUGIN_INSTALL_LOCATION="neo4j-server/plugins/taxomachine-plugin.jar"
 mv "$PLUGIN_COMPILE_LOCATION" "$PLUGIN_INSTALL_LOCATION"
