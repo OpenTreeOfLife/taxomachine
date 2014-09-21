@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/OpenTreeOfLife/taxomachine.png)](http://travis-ci.org/OpenTreeOfLife/taxomachine)
+
 opentree-taxomachine
 ====================
 Taxomachine is a tool for merging, exploring, and exporting taxonomies for use with the Open Tree of Life project. 
