@@ -97,7 +97,7 @@ OTT_DEPRECATED=$OTT_SOURCEDIR"/deprecated.tsv"
 TAXOMACHINE_HOME=$PREFIX"/taxomachine"
 if [ ! -d $TAXOMACHINE_HOME ]; then
 	printf "\ninstalling taxomachine at: $TAXOMACHINE_HOME\n"
-	git clone git@github.com:OpenTreeOfLife/taxomachine.git
+	git clone http://github.com/OpenTreeOfLife/taxomachine.git
 fi
 printf "\nusing taxomachine at: $TAXOMACHINE_HOME\n"
 
@@ -143,6 +143,15 @@ TAXOMACHINE_COMMAND="$JAVA $JAVAFLAGS -jar $TAXOMACHINE_INSTALL_LOCATION "
 TAXO_NEO4J_HOME="$PREFIX/neo4j-taxomachine"
 TAXO_NEO4J_DAEMON="$TAXO_NEO4J_HOME/bin/neo4j"
 
+# download neo4j if necessary
+if [ ! -d $TAXO_NEO4J_HOME ]; then
+    cd "$HOME/Downloads"
+    wget "http://neo4j.com/artifact.php?name=neo4j-community-1.9.8-unix.tar.gz"
+    tar -xvf "neo4j-community-1.9.8-unix.tar.gz"
+    printf "\ninstalling neo4j instance for taxomachine at: $TAXO_NEO4J_HOME\n"
+    mv neo4j-community-1.9.7 $TAXO_NEO4J_HOME
+fi
+
 # clean the db if necessary
 TAXOMACHINE_DB="$OTT_DOWNLOADDIR/$VERSION.db"
 if [ $CLEANDB ]; then
@@ -172,15 +181,6 @@ fi
 
 # start the server
 if [ $SETUP_NEO4J ]; then
-
-    # download neo4j if necessary
-    if [ ! -d $TAXO_NEO4J_HOME ]; then
-        cd "$HOME/Downloads"
-        wget "http://download.neo4j.org/artifact?edition=community&version=1.9.5&distribution=tarball&dlid=2600508"
-        tar -xvf "artifact?edition=community&version=1.9.5&distribution=tarball&dlid=2600508"
-        printf "\ninstalling neo4j instance for taxomachine at: $TAXO_NEO4J_HOME\n"
-        mv neo4j-community-1.9.5 $TAXO_NEO4J_HOME
-    fi
     
     # point the server at the taxomachine db location
     TAXOMACHINE_DB_ASSIGNMENT="org.neo4j.server.database.location=$TAXOMACHINE_DB"
