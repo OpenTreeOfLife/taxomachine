@@ -59,9 +59,9 @@ PREFIX=$(pwd)
 printf "\nworking at prefix $PREFIX\n"
 
 JARSDIR="$PREFIX/jars"
-if [ ! -d $JARSDIR ]; then
+#if [ ! -d $JARSDIR ]; then
     mkdir $JARSDIR
-fi
+#fi
 
 OTT_SOURCENAME=$VERSION
 OTT_DOWNLOADDIR=$PREFIX"/data"
@@ -151,8 +151,9 @@ if [ ! -d $TAXO_NEO4J_HOME ]; then
     cd "$HOME/Downloads"
     wget "http://neo4j.com/artifact.php?name=neo4j-community-1.9.8-unix.tar.gz"
     tar -xvf "neo4j-community-1.9.8-unix.tar.gz"
+    tar -xvf "artifact.php?name=neo4j-community-1.9.8-unix.tar.gz"
     printf "\ninstalling neo4j instance for taxomachine at: $TAXO_NEO4J_HOME\n"
-    mv neo4j-community-1.9.8 $TAXO_NEO4J_HOME
+    mv "neo4j-community-1.9.8 $TAXO_NEO4J_HOME"
 fi
 
 # clean the db if necessary
