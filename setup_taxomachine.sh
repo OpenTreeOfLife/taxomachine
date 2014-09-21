@@ -151,9 +151,9 @@ if [ ! -d $TAXO_NEO4J_HOME ]; then
     cd "$HOME/Downloads"
     wget "http://neo4j.com/artifact.php?name=neo4j-community-1.9.8-unix.tar.gz"
     tar -xvf "neo4j-community-1.9.8-unix.tar.gz"
-    tar -xvf "artifact.php?name=neo4j-community-1.9.8-unix.tar.gz"
+    tar -xvf "artifact.php?name=neo4j-community-1.9.8-unix.tar.gz"  # this seems to be what happens for travis ci
     printf "\ninstalling neo4j instance for taxomachine at: $TAXO_NEO4J_HOME\n"
-    mv "neo4j-community-1.9.8 $TAXO_NEO4J_HOME"
+    mv neo4j-community-1.9.8 $TAXO_NEO4J_HOME
 fi
 
 # clean the db if necessary
