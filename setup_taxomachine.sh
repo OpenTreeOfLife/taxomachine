@@ -63,7 +63,7 @@ if [ ! -d $JARSDIR ]; then
     mkdir $JARSDIR
 fi
 
-ls $JARSDIR
+echo $(ls $JARSDIR)
 exit
 
 OTT_SOURCENAME=$VERSION
