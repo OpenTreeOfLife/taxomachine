@@ -1,4 +1,4 @@
-+[![Build Status](https://secure.travis-ci.org/OpenTreeOfLife/taxomachine.png)](http://travis-ci.org/OpenTreeOfLife/taxomachine)
+[![Build Status](https://secure.travis-ci.org/OpenTreeOfLife/taxomachine.png)](http://travis-ci.org/OpenTreeOfLife/taxomachine)
 
 opentree-taxomachine
 ====================
