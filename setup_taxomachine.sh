@@ -78,7 +78,7 @@ if [ $DOWNLOAD_OTT ]; then
 	# download and decompress ott
 	wget "http://files.opentreeoflife.org/ott/$VERSION.tgz"
 	tar -xvf $VERSION.tgz
-	mv ott $VERSION # might cause problems with older versions of ott
+	mv ott $VERSION # doesn't work with nonstandard releases of ott (like aster)
 	
 fi 
 
