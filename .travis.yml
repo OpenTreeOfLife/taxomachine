@@ -1,9 +1,11 @@
 language: java
+java:
+    - "1.7"
 before_install:
     - ./mvn_install_dependencies.sh
 branches:
     only:
-        - master
+        - taxon_labels
 install:
     - ./setup-taxomachine.sh --recompile-standalone --setup-db --download-ott -ott-version aster --recompile-plugin --restart-neo4j --setup-neo4j --prefix . --force
 script:
