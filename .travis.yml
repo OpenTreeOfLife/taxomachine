@@ -13,5 +13,4 @@ install:
     - ./mvn_serverplugins.sh
     - ./travis-config/setup_neo4j.sh
 script:
-    - true
-    
+    - true # we are just testing the build right now. need to define java unit tests to run here
