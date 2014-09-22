@@ -8,12 +8,12 @@ branches:
     only:
         - taxon_labels
 install:
-    - $(true)
+    - export NO_VIRT_ENV_INSTALL=1 ; ./travis-config/setup.sh
 #    - ./mvn_cmdline.sh
 #    - ./travis-config/setup_db.sh
 #    - ./mvn_serverplugins.sh
 #    - ./travis-config/setup_neo4j.sh
 #    pip install nose
 script:
-    - pip install requests
     - nosetests travis-config/curl_tests.py
+    
