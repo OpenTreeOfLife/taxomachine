@@ -2,11 +2,13 @@ language: java
 java:
     - "1.7"
 before_install:
+    true
 #    - ./mvn_install_dependencies.sh
 branches:
     only:
         - taxon_labels
 install:
+    true
 #    - ./mvn_cmdline.sh
 #    - ./travis-config/setup_db.sh
 #    - ./mvn_serverplugins.sh
