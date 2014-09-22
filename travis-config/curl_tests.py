@@ -1,4 +1,4 @@
-import json, pycurl, sys
+import json, requests, sys
 from StringIO import StringIO
 
 taxonomy_tests = [
@@ -18,33 +18,15 @@ tnrs_tests = [
     ('hgskjiuyc ilgfaw', {})
 ]
 
-class RequestSender():
-    def __init__(self):
-        self.json_storage = StringIO()
-        self.c = pycurl.Curl()    
-
-    def execute(self, url, data):
-        self.json_storage.truncate(0)
-        self.c.setopt(self.c.URL, url)
-        self.c.setopt(self.c.HTTPHEADER, ["Content-type:Application/json"])
-        self.c.setopt(self.c.WRITEFUNCTION, self.json_storage.write)
-        self.c.perform()
-        return self
-        
-    @property
-    def response(self):
-        return self.json_storage
-
 if __name__ == "__main__":
 
-    r = RequestSender()
-    
     url = "http://localhost:7474/db/data/ext/{}"
 
     for service, data in taxonomy_tests:
-        data = r.execute(url.format(service),json.dumps(data)).response
+        r = requests.post(url.format(service), json.dumps(data))
+        print r.json
 #        try:
-        json.loads(data)
+#           json.loads(r.json)
 #        except:
 #            sys.exit(1)
         print("passed: " + service)
