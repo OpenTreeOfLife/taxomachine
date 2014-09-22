@@ -15,4 +15,5 @@ install:
 #    - ./travis-config/setup_neo4j.sh
 #    pip install nose
 script:
-    - python travis-config/curl_tests.py
+    - pip install requests
+    - nosetests travis-config/curl_tests.py
