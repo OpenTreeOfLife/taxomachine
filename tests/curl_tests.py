@@ -4,9 +4,13 @@ tests = [
     
     # taxonomy
     ('taxonomy/graphdb/about', {}),
-    ('taxonomy/graphdb/lica', {"ott_ids":[515698,590452,409712,643717]}),
+    ('taxonomy/graphdb/lica', {"ott_ids":[5551856,821970,770319]}), # canidae
+    ('taxonomy/graphdb/lica', {"ott_ids":[515698,590452,409712,643717]}), # asterales
     ('taxonomy/graphdb/subtree', {"ott_id":515698}),
+    ('taxonomy/graphdb/subtree', {"ott_id":372706}), # canis
     ('taxonomy/graphdb/taxon', {"ott_id":515698}),
+    ('taxonomy/graphdb/taxon', {"ott_id":766177}), # garcinia mangostana
+
     ('taxonomy/graphdb/flags', {}),
     ('taxonomy/graphdb/deprecated_taxa', {}),
 
@@ -31,6 +35,9 @@ def exec_call(service, data):
     try:
         r = requests.post(url.format(service), json.dumps(data))
         d = json.loads(r.text)
+        
+        # need to check for stacktrace
+        
         if 'error' not in d:
             sys.stderr.write("ok\n")
         else:

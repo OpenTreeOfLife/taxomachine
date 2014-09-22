@@ -1,0 +1,1 @@
+nosetests -vs curl_tests.py
