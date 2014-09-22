@@ -27,6 +27,7 @@ import org.opentree.taxonomy.contexts.ContextDescription;
 import org.opentree.taxonomy.contexts.TaxonomyContext;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.tnrs.queries.SimpleQuery;
+import org.opentree.utils.GeneralUtils;
 import org.opentree.exceptions.MultipleHitsException;
 
 
@@ -211,12 +212,20 @@ public class Taxon {
             e.printStackTrace();
         }
     }
-
+        
     /**
      * Return a JadeTree object containing the taxonomic structure below this taxon.
      * @return
      */
     public JadeTree getTaxonomySubtree() {
+    	return getTaxonomySubtree(LabelFormat.NAME_AND_ID);
+    }
+
+    /**
+     * Return a JadeTree object containing the taxonomic structure below this taxon.
+     * @return
+     */
+    public JadeTree getTaxonomySubtree(LabelFormat labelFormat) {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
@@ -224,7 +233,7 @@ public class Taxon {
         System.out.println(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 
         JadeNode root = new JadeNode();
-        root.setName(((String) taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_"));
+        root.setName(Taxonomy.getNodeLabel(taxNode, labelFormat));
         HashMap<Node, JadeNode> nodes = new HashMap<Node, JadeNode>();
         nodes.put(taxNode, root);
         
@@ -235,14 +244,15 @@ public class Taxon {
             
             if (nodes.containsKey(rel.getStartNode()) == false) {
                 JadeNode node = new JadeNode();
-                node.setName(((String) rel.getStartNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
-                        .replace(":", "_"));
+                
+                String label = Taxonomy.getNodeLabel(rel.getStartNode(), labelFormat);
+                
+                node.setName(label);
                 nodes.put(rel.getStartNode(), node);
             }
             if (nodes.containsKey(rel.getEndNode()) == false) {
                 JadeNode node = new JadeNode();
-                node.setName(((String) rel.getEndNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).replace(" ", "_").replace(",", "_").replace(")", "_").replace("(", "_")
-                        .replace(":", "_"));
+                node.setName(Taxonomy.getNodeLabel(rel.getEndNode(), labelFormat));
                 nodes.put(rel.getEndNode(), node);
             }
             nodes.get(rel.getEndNode()).addChild(nodes.get(rel.getStartNode()));
