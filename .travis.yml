@@ -2,15 +2,18 @@ language: java
 java:
     - "1.7"
 before_install:
-    - ./mvn_install_dependencies.sh
+    - $(true)
+#    - ./mvn_install_dependencies.sh
 branches:
     only:
         - taxon_labels
 install:
-    - ./mvn_cmdline.sh
-    - ./travis-config/setup_db.sh
-    - ./mvn_serverplugins.sh
-    - ./travis-config/setup_neo4j.sh
-    - python travis-config/curl_tests.py
+    - export NO_VIRT_ENV_INSTALL=1 ; ./travis-config/setup.sh
+#    - ./mvn_cmdline.sh
+#    - ./travis-config/setup_db.sh
+#    - ./mvn_serverplugins.sh
+#    - ./travis-config/setup_neo4j.sh
+#    pip install nose
 script:
-    - true
+    - nosetests travis-config/curl_tests.py
+    
