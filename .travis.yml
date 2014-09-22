@@ -11,5 +11,6 @@ install:
     - ./travis-config/setup_db.sh
     - ./mvn_serverplugins.sh
     - ./travis-config/setup_neo4j.sh
+    - python travis-config/curl_tests.py
 script:
     - true
