@@ -7,10 +7,11 @@ branches:
     only:
         - taxon_labels
 install:
-    - ./mvn_cmdline.sh
-    - ./travis-config/setup_db.sh
-    - ./mvn_serverplugins.sh
-    - ./travis-config/setup_neo4j.sh
-    - python travis-config/curl_tests.py
+#    - ./mvn_cmdline.sh
+#    - ./travis-config/setup_db.sh
+#    - ./mvn_serverplugins.sh
+#    - ./travis-config/setup_neo4j.sh
+    pip install nose
 script:
-    - true
+#    - python travis-config/curl_tests.py
+    true
