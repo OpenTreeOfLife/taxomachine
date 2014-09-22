@@ -1,14 +1,12 @@
 language: java
 java:
     - "1.7"
-before_install:
-    true
+#before_install:
 #    - ./mvn_install_dependencies.sh
 branches:
     only:
         - taxon_labels
-install:
-    true
+#install:
 #    - ./mvn_cmdline.sh
 #    - ./travis-config/setup_db.sh
 #    - ./mvn_serverplugins.sh
@@ -16,4 +14,3 @@ install:
 #    pip install nose
 script:
     - python travis-config/curl_tests.py
-    true
