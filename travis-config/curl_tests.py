@@ -43,8 +43,8 @@ if __name__ == "__main__":
 
     for service, data in taxonomy_tests:
         data = r.execute(url.format(service),json.dumps(data)).response
-        try:
-            json.loads(data)
-        except:
-            sys.exit(1)
-        sys.stderr("passed: " + service)
+#        try:
+        json.loads(data)
+#        except:
+#            sys.exit(1)
+        print("passed: " + service)
