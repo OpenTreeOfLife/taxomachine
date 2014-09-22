@@ -6,6 +6,7 @@ before_install:
 branches:
     only:
         - taxon_labels
+        - master
 install:
     - export NO_VIRT_ENV_INSTALL=1 ; ./travis-config/setup.sh
     - ./mvn_cmdline.sh
