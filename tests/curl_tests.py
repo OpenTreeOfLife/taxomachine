@@ -30,7 +30,7 @@ def run_test():
 
 def exec_call(service, data):
 
-    sys.stderr.write(service + " " + json.dumps(data) + "...")
+    sys.stderr.write("\ncurl -X POST " + url.format(service) + " -H 'content-type:application/json' -d '" + json.dumps(data) + "'")
 
     try:
         r = requests.post(url.format(service), json.dumps(data))
