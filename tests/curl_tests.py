@@ -21,11 +21,8 @@ tests = [
     ('tnrs/graphdb/infer_context', {"names":["Pan","Homo","Mus","Bufo","Drosophila"]}),
 ]
 
-url = "http://{s}/db/data/ext/{r}"
+url = "http://{s}/ext/{r}"
 server = os.environ['TAXOMACHINE_SERVER']
-#sys.stderr.write("server: "+server)
-#sys.stderr.flush()
-#exit()
 
 def run_test():
 
