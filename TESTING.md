@@ -7,7 +7,7 @@ The `test.sh` script will run a set of basic tests against the taxomachine web s
 ./test.sh
 ```
 
-You can point this script at different servers by setting the TAXOMACHINE_SERVER environment variable in your shell before running the script. For example:
+You can point this script at different servers by setting the TAXOMACHINE_SERVER environment variable in your shell before running the script. This variable needs to indicate the server as well as any path components preceding the 'ext/...' in the service parth. For example:
 
 ```bash
 # to test devapi remotely
