@@ -1,6 +1,9 @@
-Run the following command to test the basic functionality of the services:
+The `test.sh` script will run a set of basic tests against the taxomachine web services. The current tests are simple and relatively brittle, and were designed using ott 2.8, so some may fail against other versions of the taxonomy.
+
+**IMPORTANT:** these tests must be run against a neo4j server connected to a valid OTT database. By default, the script will look for the services on the local machine at the default neo4j port (7474):
 
 ```
+# to test against localhost:7474
 ./test.sh
 ```
 
