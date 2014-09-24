@@ -15,10 +15,10 @@ tests = [
     ('taxonomy/graphdb/deprecated_taxa', {}),
 
     # tnrs
-    ('tnrs/graphdb/match_names', {"names":["Aster","Symphyotrichum","Erigeron","Barnadesia"]}),
-    ('tnrs/graphdb/autocomplete_name', {"name":"Endoxyla","context_name":"All life"}),
-    ('tnrs/graphdb/contexts', {}),
-    ('tnrs/graphdb/infer_context', {"names":["Pan","Homo","Mus","Bufo","Drosophila"]}),
+    ('tnrs_v2/graphdb/match_names', {"names":["Aster","Symphyotrichum","Erigeron","Barnadesia"]}),
+    ('tnrs_v2/graphdb/autocomplete_name', {"name":"Endoxyla","context_name":"All life"}),
+    ('tnrs_v2/graphdb/contexts', {}),
+    ('tnrs_v2/graphdb/infer_context', {"names":["Pan","Homo","Mus","Bufo","Drosophila"]}),
 ]
 
 url = "http://{s}/ext/{r}"
@@ -33,21 +33,27 @@ def exec_call(service, data):
 
     service_url = url.format(s=server,r=service)
     sys.stderr.write("\ncurl -X POST " + service_url + " -H 'content-type:application/json' -d '" + json.dumps(data) + "'")
+    sys.stderr.flush()
 
-    try:
-        r = requests.post(service_url, json.dumps(data))
-        d = json.loads(r.text)
-        
-        # need to check for stacktrace
-        
-        if 'error' not in d:
-            sys.stderr.write("ok\n")
-        else:
-            sys.stderr.write('error: ' + d['error'])
-            assert False
-
-    except Exception as ex:
-        sys.stderr.write(ex)
+#    try:
+    r = requests.post(service_url, json.dumps(data))
+    d = json.loads(r.text)
+            
+    # check for error returned by service itself
+    if 'error' in d:
+        sys.stderr.write('error: ' + d['error'] + '\n')
         assert False
     
+    # check for java exception
+    elif 'exception' in d:
+        print d
+#        sys.stderr.write('exception: ' + d['fullname'] + '\n' + d['stacktrace'] + '\n')
+        assert False
+    
+#    # check for json parsing exception or problem calling service
+#    except Exception as ex:
+#        sys.stderr.write(e.message)
+#        assert False
+    
+    sys.stderr.flush()
 
