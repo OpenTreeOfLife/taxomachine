@@ -1,4 +1,4 @@
-import json, requests, sys
+import json, os, requests, sys
 
 tests = [
     
@@ -8,7 +8,7 @@ tests = [
     ('taxonomy/graphdb/lica', {"ott_ids":[515698,590452,409712,643717]}), # asterales
     ('taxonomy/graphdb/subtree', {"ott_id":515698}),
     ('taxonomy/graphdb/subtree', {"ott_id":372706}), # canis
-    ('taxonomy/graphdb/taxon', {"ott_id":515698}),
+    ('taxonomy/graphdb/taxon', {"ott_id":515698, "include_lineage":True}),
     ('taxonomy/graphdb/taxon', {"ott_id":766177}), # garcinia mangostana
 
     ('taxonomy/graphdb/flags', {}),
@@ -21,7 +21,11 @@ tests = [
     ('tnrs/graphdb/infer_context', {"names":["Pan","Homo","Mus","Bufo","Drosophila"]}),
 ]
 
-url = "http://localhost:7474/db/data/ext/{}"
+url = "http://{s}/db/data/ext/{r}"
+server = os.environ['TAXOMACHINE_SERVER']
+#sys.stderr.write("server: "+server)
+#sys.stderr.flush()
+#exit()
 
 def run_test():
 
@@ -30,10 +34,13 @@ def run_test():
 
 def exec_call(service, data):
 
-    sys.stderr.write("\ncurl -X POST " + url.format(service) + " -H 'content-type:application/json' -d '" + json.dumps(data) + "'")
+    service_url = url.format(s=server,r=service)
+    sys.stderr.write("\ncurl -X POST " + service_url + " -H 'content-type:application/json' -d '" + json.dumps(data) + "'")
+    sys.stderr.flush()
+    exit()
 
     try:
-        r = requests.post(url.format(service), json.dumps(data))
+        r = requests.post(service_url, json.dumps(data))
         d = json.loads(r.text)
         
         # need to check for stacktrace
