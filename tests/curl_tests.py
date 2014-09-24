@@ -35,25 +35,25 @@ def exec_call(service, data):
     sys.stderr.write("\ncurl -X POST " + service_url + " -H 'content-type:application/json' -d '" + json.dumps(data) + "'")
     sys.stderr.flush()
 
-#    try:
-    r = requests.post(service_url, json.dumps(data))
-    d = json.loads(r.text)
+    try:
+        r = requests.post(service_url, json.dumps(data))
+        d = json.loads(r.text)
             
-    # check for error returned by service itself
-    if 'error' in d:
-        sys.stderr.write('error: ' + d['error'] + '\n')
-        assert False
+        # check for error returned by service itself
+        if 'error' in d:
+            sys.stderr.write('error: ' + d['error'] + '\n')
+            assert False
     
-    # check for java exception
-    elif 'exception' in d:
-        print d
-#        sys.stderr.write('exception: ' + d['fullname'] + '\n' + d['stacktrace'] + '\n')
-        assert False
+        # check for java exception
+        elif 'exception' in d:
+            print d
+            sys.stderr.write('exception: ' + d['fullname'] + '\n' + d['stacktrace'] + '\n')
+            assert False
     
-#    # check for json parsing exception or problem calling service
-#    except Exception as ex:
-#        sys.stderr.write(e.message)
-#        assert False
+    # check for json parsing exception or problem calling service
+    except Exception as ex:
+        sys.stderr.write(e.message)
+        assert False
     
     sys.stderr.flush()
 
