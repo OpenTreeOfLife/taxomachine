@@ -301,7 +301,7 @@ public class Taxonomy {
 	    if (format == LabelFormat.NAME || format == LabelFormat.NAME_AND_ID || format == LabelFormat.ORIGINAL_NAME) {
 	    	name = (String) n.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 	    	if (format != LabelFormat.ORIGINAL_NAME) {
-	    		name = GeneralUtils.cleanName(name);
+	    		name = GeneralUtils.newickName(name);
 	    	}
 	    }
 	    
