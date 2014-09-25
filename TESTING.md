@@ -19,3 +19,4 @@ TAXOMACHINE_SERVER=devapi.opentreeoflife.org/taxomachine && export TAXOMACHINE_S
 # nonstandard port (in this case 7476)
 TAXOMACHINE_SERVER=localhost:7476/db/data && export TAXOMACHINE_SERVER && ./test.sh
 ```
+
