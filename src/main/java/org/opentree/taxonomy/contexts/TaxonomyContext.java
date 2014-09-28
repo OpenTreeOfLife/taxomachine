@@ -2,6 +2,7 @@ package org.opentree.taxonomy.contexts;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.Index;
@@ -90,9 +91,10 @@ public class TaxonomyContext {
 		try {
 			try {
 				return rootMatches.getSingle();
-			} catch (Exception ex) {
-				throw new java.lang.IllegalStateException("There was a problem getting the root node: " + contextDescription.licaNodeName + " for context "
-						+ contextDescription.name);
+			} catch (NoSuchElementException ex) {
+				throw new java.lang.IllegalStateException("Two or more nodes were found matching the root taxon `" + 
+						contextDescription.licaNodeName + "` (ottId=" + contextDescription.ottId +") for context " +
+						contextDescription.name + ". Have you already installed a (partial) taxonomy into this database?");
 			}
 		} finally {
 			rootMatches.close();
