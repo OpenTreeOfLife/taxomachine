@@ -3,10 +3,10 @@ java:
     - "1.7"
 before_install:
     - ./mvn_install_dependencies.sh
-branches:
-    only:
-        - taxon_labels
-        - master
+#branches:
+#    only:
+#        - v2
+#        - master
 install:
     - ./mvn_cmdline.sh
     - ./travis-config/setup_db.sh
