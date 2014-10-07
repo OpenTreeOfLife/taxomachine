@@ -5,6 +5,8 @@ type mvn >/dev/null 2>&1 || { echo >&2 "maven is required for testing but could 
 
 tests/run_unit_tests.sh
 
+count=$?
+
 ## service tests
 echo "Running Neo4j service tests"
 
@@ -18,3 +20,8 @@ type nosetests >/dev/null 2>&1 || { echo "installing test dependencies"; ./insta
 python -c "import requests" >/dev/null 2>&1 || { echo "installing test dependencies"; ./install_dependencies_for_tests.sh; }
 
 tests/run_service_tests.sh
+
+count=$(($count+$?))
+
+echo "A total of $count tests failed"
+exit $count
