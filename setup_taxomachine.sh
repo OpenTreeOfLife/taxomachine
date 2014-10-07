@@ -117,7 +117,7 @@ fi
 # compile taxomachine if necessary
 if [ ! -f $TAXOMACHINE_INSTALL_LOCATION ]; then
 	cd $TAXOMACHINE_HOME
-	sh mvn_cmdline.sh
+	sh compile_standalone.sh
 	mv $TAXOMACHINE_COMPILE_LOCATION $TAXOMACHINE_INSTALL_LOCATION
 fi
 
@@ -217,7 +217,7 @@ fi
 # recompile if the plugin is not there    
 if [[ -d $TAXO_NEO4J_HOME && ! -f $PLUGIN_INSTALL_LOCATION ]]; then
     cd $TAXOMACHINE_HOME	
-    sh mvn_serverplugins.sh
+    sh compile_server_plugins.sh
     PLUGIN_COMPILE_LOCATION="$TAXOMACHINE_HOME/target/$PLUGIN"
     mv "$PLUGIN_COMPILE_LOCATION" "$PLUGIN_INSTALL_LOCATION"
 fi
