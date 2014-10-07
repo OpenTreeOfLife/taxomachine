@@ -8,3 +8,5 @@
 [ -z "$TAXOMACHINE_SERVER" ] && TAXOMACHINE_SERVER='localhost:7474/db/data' && export TAXOMACHINE_SERVER
 
 cd tests && nosetests -vs ServiceTests.py
+
+# capture output and return number of failed/errored tests
