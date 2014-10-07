@@ -23,7 +23,6 @@ print r[0],r[1]
 
 for line in r[1].split("\n"):
     if "FAILED" in line:
-        print line
         parts = line.split("=")
         failed = int(parts[1].strip(")"))
         sys.exit(failed)
