@@ -1,8 +1,27 @@
-# set the TAXOMACHINE_SERVER environment variable in your shell to point the script at the right location, e.g.:
-#
-# TAXOMACHINE_SERVER=devapi.opentreeoflife.org/taxomachine # to run remotely against devapi
-#
-# TAXOMACHINE_SERVER=localhost:7476/db/data # to run locally on devapi
+## java unit tests
+echo "Running Java unit tests"
 
-[ -z "$TAXOMACHINE_SERVER" ] && TAXOMACHINE_SERVER='localhost:7474/db/data' && export TAXOMACHINE_SERVER
-cd tests && nosetests -vs curl_tests.py
+type mvn >/dev/null 2>&1 || { echo >&2 "maven is required for testing but could not be found. Aborting."; exit 1; }
+
+tests/run_unit_tests.sh
+
+count=$?
+
+## service tests
+echo "Running Neo4j service tests"
+
+# attempt to create a virtualenv for testing
+type virtualenv >/dev/null 2>&1 || { echo >&2 "virtualenv is required for testing but could not be found. Aborting."; exit 1; }
+virtualenv test_venv
+. test_venv/bin/activate || { echo "could not activate virtualenv for testing. Aborting."; exit 1; }
+
+# install test dependencies if necessary
+type nosetests >/dev/null 2>&1 || { echo "installing test dependencies"; ./install_dependencies_for_tests.sh; }
+python -c "import requests" >/dev/null 2>&1 || { echo "installing test dependencies"; ./install_dependencies_for_tests.sh; }
+
+tests/run_service_tests.sh
+
+count=$(($count+$?))
+
+echo "A total of $count tests failed"
+exit $count

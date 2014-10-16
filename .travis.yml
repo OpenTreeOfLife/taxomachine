@@ -2,15 +2,15 @@ language: java
 java:
     - "1.7"
 before_install:
-    - ./mvn_install_dependencies.sh
+    - ./install_dependencies.sh
 #branches:
 #    only:
 #        - v2
 #        - master
 install:
-    - ./mvn_cmdline.sh
+    - ./compile_standalone.sh
     - ./travis-config/setup_db.sh
-    - ./mvn_serverplugins.sh
+    - ./compile_server_plugins.sh
     - ./travis-config/setup_neo4j.sh
 script:
-    - true # we are just testing the build right now. need to define java unit tests to run here
+    - ./tests/run_unit_tests.sh # junit tests
