@@ -2,7 +2,7 @@
 
 opentree-taxomachine
 ====================
-Taxomachine is a tool for indexing and querying the Open Tree Taxonomy (OTT) associated with the Open Tree of Life project.
+Taxomachine is a tool for indexing and querying the Open Tree Taxonomy (OTT) associated with the Open Tree of Life project. It can be run either as a server plugin, or as a standalone program.
 
 
 Installation
