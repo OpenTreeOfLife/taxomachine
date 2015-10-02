@@ -1,6 +1,8 @@
 language: java
-java:
-    - "1.7"
+jdk:
+    - oraclejdk8
+#java:
+#    - "1.8"
 before_install:
     - ./install_dependencies.sh
 #branches:
