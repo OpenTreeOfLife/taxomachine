@@ -31,7 +31,7 @@ public enum OTTFlag {
 	/**
 	 * Extinct taxa; replaced extinct_direct
 	 */
-	EXTINCT ("extinct_direct", true),
+	EXTINCT ("extinct", true),
 
 	/**
 	 * Extinct taxa. Replaced by 'extinct'
