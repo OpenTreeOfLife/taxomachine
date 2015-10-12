@@ -1,5 +1,6 @@
 package org.opentree.taxonomy.plugins;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -219,7 +220,7 @@ public class taxonomy extends ServerPlugin {
 			addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
 			addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
 			addPropertyFromNode(n, TaxonomyProperty.REASON.propertyName(), results);
-			addPropertyFromNode(n, TaxonomyProperty.SOURCE_INFO.propertyName(), results);
+			addPropertyFromNode(n, TaxonomyProperty.INPUT_SOURCES.propertyName(), results);
 			results.put("flags", Arrays.asList(new String[] {TaxonomyProperty.DEPRECATED.toString()}));
 			
 		} else {
@@ -256,8 +257,8 @@ public class taxonomy extends ServerPlugin {
     	results.put("node_id", n.getId());
     	addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
 		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
-//		addPropertyFromNode(n, TaxonomyProperty.SOURCE.propertyName(), results);
 		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
+		addTaxSources(n, results);
 
 		HashSet<String> flags = new HashSet<String>();
 		for (OTTFlag flag : OTTFlag.values()) {
@@ -270,6 +271,22 @@ public class taxonomy extends ServerPlugin {
     
     private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
 		map.put(property, node.getProperty(property));
+    }
+    
+
+    //parses an input_sources string (e.g. "ncbi: 1234, worms 5678") into a Map<String,String>
+    //value must be string because some ids from some sources (e.g., SILVA) are not always numeric
+    //TODO maybe propagate "tax_sources" back through INPUT_SOURCES property
+    private void addTaxSources(Node node, Map<String, Object> map){
+                Map<String,String>sourceMap = new HashMap<String,String>();
+                String property = TaxonomyProperty.INPUT_SOURCES.propertyName();
+                String sources = (String)node.getProperty(property);
+                String[] components = sources.split(",");
+                for (String s :components){
+                        String[] component = s.split(":");
+                        sourceMap.put(component[0], component[1]);
+                }
+                map.put("tax_sources",sourceMap);
     }
 
 }
