@@ -274,7 +274,7 @@ public class taxonomy extends ServerPlugin {
     }
     
 
-    //parses an input_sources string (e.g. "ncbi: 1234, worms: 5678") into a List<String>
+    //parses an input_sources string (e.g. "ncbi:1234,if:5678") into a List<String>
     //Because the elements are curieoruri, (http://www.w3.org/TR/rdfa-core/#s_curieprocessing)
     //it doesn't make sense to parse any deeper here
     //TODO maybe propagate "tax_sources" back through INPUT_SOURCES property
