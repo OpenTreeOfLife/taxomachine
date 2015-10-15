@@ -274,19 +274,16 @@ public class taxonomy extends ServerPlugin {
     }
     
 
-    //parses an input_sources string (e.g. "ncbi: 1234, worms 5678") into a Map<String,String>
-    //value must be string because some ids from some sources (e.g., SILVA) are not always numeric
+    //parses an input_sources string (e.g. "ncbi: 1234, worms: 5678") into a List<String>
+    //Because the elements are curieoruri, (http://www.w3.org/TR/rdfa-core/#s_curieprocessing)
+    //it doesn't make sense to parse any deeper here
     //TODO maybe propagate "tax_sources" back through INPUT_SOURCES property
-    private void addTaxSources(Node node, Map<String, Object> map){
-                Map<String,String>sourceMap = new HashMap<String,String>();
-                String property = TaxonomyProperty.INPUT_SOURCES.propertyName();
-                String sources = (String)node.getProperty(property);
-                String[] components = sources.split(",");
-                for (String s :components){
-                        String[] component = s.split(":");
-                        sourceMap.put(component[0], component[1]);
-                }
-                map.put("tax_sources",sourceMap);
+    private void addTaxSources(Node node, Map<String, Object> resultsMap){
+    	String property = TaxonomyProperty.INPUT_SOURCES.propertyName();
+    	if (node.getProperty(property) != null){
+    		String[] sources = ((String)node.getProperty(property)).split(",");
+    		resultsMap.put("tax_sources",Arrays.asList(sources));
+    	}
     }
 
 }
