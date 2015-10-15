@@ -93,7 +93,7 @@ Bootstrapping a database from OTT
 ----------------------
 First, put an OTT version somewhere on the system (here, we use /data/ott, but you can put it anywhere). Second, choose a directory name for the new neo4j database (and make sure the directory does not already exist, else the creation will fail). Here we use graph.db, but you can call it anything.  
 
-Create the database from containing OTT:
+Create the database by loading OTT:
 
 ```bash
 java -Xmx30g -XX:-UseConcMarkSweepGC -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar loadtaxsyn ott /data/ott/taxonomy.tsv /data/ott/synonyms.tsv graph.db
