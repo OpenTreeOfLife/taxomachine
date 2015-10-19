@@ -2,6 +2,7 @@ package org.opentree.taxonomy;
 
 import jade.tree.JadeNode;
 import jade.tree.JadeTree;
+import jade.tree.TreeNode;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
@@ -264,6 +266,57 @@ public class Taxon {
         
         return new JadeTree(root);
     }
+    
+    /**
+     * Return a list terminal taxa below this taxon.
+     * @return
+     */
+    public List<Integer> getTaxonomyTerminals(LabelFormat labelFormat) {
+
+        TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
+                .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
+        
+        System.out.println(taxNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+
+        JadeNode root = new JadeNode();
+        root.setName(Taxonomy.getNodeLabel(taxNode, labelFormat));
+        HashMap<Node, JadeNode> nodes = new HashMap<Node, JadeNode>();
+        nodes.put(taxNode, root);
+        
+        int count = 0;
+        for (Relationship rel : CHILDOF_TRAVERSAL.traverse(taxNode).relationships()) {
+            
+        	count += 1;
+            
+            if (nodes.containsKey(rel.getStartNode()) == false) {
+                JadeNode node = new JadeNode();
+                
+                String label = Taxonomy.getNodeLabel(rel.getStartNode(), labelFormat);
+                
+                node.setName(label);
+                nodes.put(rel.getStartNode(), node);
+            }
+            if (nodes.containsKey(rel.getEndNode()) == false) {
+                JadeNode node = new JadeNode();
+                node.setName(Taxonomy.getNodeLabel(rel.getEndNode(), labelFormat));
+                nodes.put(rel.getEndNode(), node);
+            }
+            nodes.get(rel.getEndNode()).addChild(nodes.get(rel.getStartNode()));
+        
+            if (count % 100000 == 0)
+                System.out.println(count);
+
+        }
+        List<TreeNode> tips = root.getTips();
+        List<Integer> result = new ArrayList<Integer>();
+        for(TreeNode tip : tips){
+            JadeNode j = (JadeNode)tip;
+        	
+        	result.add(Integer.parseInt(j.getLabel().toString()));
+        }
+        return result;
+    }
+
     
     /**
      * This essentially uses every relationship and constructs a newick tree (hardcoded to taxtree.tre file)
