@@ -18,6 +18,7 @@ tests = [
     ('tnrs_v2/graphdb/autocomplete_name', {"name":"Endoxyla","context_name":"All life"}),
     ('tnrs_v2/graphdb/contexts', {}),
     ('tnrs_v2/graphdb/infer_context', {"names":["Pan","Homo","Mus","Bufo","Drosophila"]}),
+    ('TNRS/graphdb/autocompleteQuery', {"queryString":"bacteria","contextName":"All life"}),
 ]
 
 url = "http://{s}/ext/{r}"

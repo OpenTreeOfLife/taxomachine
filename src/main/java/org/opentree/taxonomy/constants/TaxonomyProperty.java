@@ -42,12 +42,12 @@ public enum TaxonomyProperty implements OTPropertyPredicate {
 	REASON ("reason", String.class),
 
 	/**
-	 * The original source information for this taxon.
+	 * The original source information for this deprecated taxon.
 	 */
 	SOURCE_INFO ("source_info", String.class),
 	
 	/**
-	 * ??? This might be redundant/deprecated
+	 * The current property for taxonomic sources
 	 */
 	INPUT_SOURCES ("input_sources", String.class),
 	
