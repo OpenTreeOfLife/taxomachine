@@ -91,12 +91,12 @@ but using lower numbers will mean that taxomachine will require less memory. (No
 
 Bootstrapping a database from OTT
 ----------------------
-If you have an OTT version in, say, /data/ott (you can put it anywhere),
-and you want to create a new neo4j database containing OTT in directory taxomachine.db,
-then you can use:
+First, put an OTT version somewhere on the system (here, we use /data/ott, but you can put it anywhere). Second, choose a directory name for the new neo4j database (and make sure the directory does not already exist, else the creation will fail). Here we use graph.db, but you can call it anything.  
+
+Create the database by loading OTT:
 
 ```bash
-java -Xmx10g -XX:-UseConcMarkSweepGC -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar loadtaxsyn ott /data/ott/taxonomy.tsv /data/ott/synonyms.tsv graph.db
+java -Xmx30g -XX:-UseConcMarkSweepGC -jar target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar loadtaxsyn ott /data/ott/taxonomy.tsv /data/ott/synonyms.tsv graph.db
 ```
 
 For the new database to function for TNRS, it is necessary to build additional indexes. This can be very memory-intensive:
