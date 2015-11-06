@@ -67,7 +67,7 @@ public enum OTTFlag {
      * (pseudo-taxa in NCBI with the string "unclassified" in their name).
      * New 2014-04-26
 	 */
-	UNCLASSIFIED ("unclassified", false),
+	UNCLASSIFIED ("unclassified", true),
 
 	/**
 	 * Taxa with the string "unclassified" in their name, but which
@@ -80,7 +80,7 @@ public enum OTTFlag {
 	/**
 	 * Descendants of UNCLASSIFIED taxa.
 	 */
-	UNCLASSIFIED_INHERITED ("unclassified_inherited", false),
+	UNCLASSIFIED_INHERITED ("unclassified_inherited", true),
 
 	/**
 	 * Viruses.
