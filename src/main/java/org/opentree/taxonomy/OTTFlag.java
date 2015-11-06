@@ -13,11 +13,6 @@ public enum OTTFlag {
 	// dubious flags: guilty until proven innocent
 
 	/**
-	 * Higher taxa with zero species-level children.
-	 */
-	BARREN ("barren", false),
-
-	/**
 	 * Things with the string "environmental" in their name.
 	 */
 	ENVIRONMENTAL ("environmental", false),
@@ -29,6 +24,11 @@ public enum OTTFlag {
 	ENVIRONMENTAL_INHERITED ("environmental_inherited", false),
 
 	/**
+	 * Higher taxa with zero species-level children.
+	 */
+	BARREN ("barren", true),
+
+	/**
 	 * Extinct taxa; replaced extinct_direct
 	 */
 	EXTINCT ("extinct", true),
@@ -37,13 +37,13 @@ public enum OTTFlag {
 	 * Extinct taxa. Replaced by 'extinct'
 	 */
 	 @Deprecated
-	EXTINCT_DIRECT ("extinct_direct", true), // TODO: should these be hidden?
-
+	EXTINCT_DIRECT ("extinct_direct", true),
+    
 	/**
 	 * Extinct taxa?
 	 */
-	EXTINCT_INHERITED ("extinct_inherited", true), // TODO: should these be hidden?
-
+	EXTINCT_INHERITED ("extinct_inherited", true),
+    
 	/**
 	 * Low-rank children of high-rank taxa (e.g. genus child of class).
 	 * Replaces major_rank_conflict_direct
