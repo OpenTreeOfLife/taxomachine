@@ -24,7 +24,37 @@ public enum OTTFlag {
 	ENVIRONMENTAL_INHERITED ("environmental_inherited", false),
 
 	/**
-	 * Higher taxa with zero species-level children.
+	 * Viruses.
+	 */
+	VIRAL ("viral", false),
+
+	/**
+	 * Taxa that have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
+	 */
+	HIDDEN ("hidden", false),
+
+	/**
+	 * Taxa contained within taxa have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
+	 */
+	HIDDEN_INHERITED ("hidden_inherited", false),
+
+	/**
+	 * Taxa with the string "unclassified" in their name, but which
+	 * have no children and thus are (hopefully) no longer a
+	 * container.
+     * 2014-04-26 DEPRECATED, these are now just labeled "not_otu".
+	 */
+	UNCLASSIFIED_DIRECT ("unclassified_direct", false),
+
+	 /**
+	 Treat same as incertae_sedis, merged, and inconsistent - the 'taxon' was formerly a 'bucket' but is now empty and is preserved as a placeholder.
+	*/
+	WAS_CONTAINER ("was_container", false),
+
+	// ===== flags not designating suppression
+
+	/**
+	 * Higher taxa with zero species-level children. (feedback #107)
 	 */
 	BARREN ("barren", true),
 
@@ -70,34 +100,9 @@ public enum OTTFlag {
 	UNCLASSIFIED ("unclassified", true),
 
 	/**
-	 * Taxa with the string "unclassified" in their name, but which
-	 * have no children and thus are (hopefully) no longer a
-	 * container.
-     * 2014-04-26 DEPRECATED, these are now just labeled "not_otu".
-	 */
-	UNCLASSIFIED_DIRECT ("unclassified_direct", false),
-
-	/**
 	 * Descendants of UNCLASSIFIED taxa.
 	 */
 	UNCLASSIFIED_INHERITED ("unclassified_inherited", true),
-
-	/**
-	 * Viruses.
-	 */
-	VIRAL ("viral", false),
-
-	/**
-	 * Taxa that have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
-	 */
-	HIDDEN ("hidden", false),
-
-	/**
-	 * Taxa contained within taxa have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
-	 */
-	HIDDEN_INHERITED ("hidden_inherited", false),
-
-	// ===== flags not designating suppression
 
 	/**
 	 * Taxa that have been manually edited.
@@ -186,12 +191,8 @@ public enum OTTFlag {
 	Taxon is hidden, children aren't. Taxon may be revived if it's learned later
 	that the it is actually different.
 	*/
-	 MERGED ("merged", true),
-
-	 /**
-	 Treat same as incertae_sedis, merged, and inconsistent - the 'taxon' was formerly a 'bucket' but is now empty and is preserved as a placeholder.
-	*/
-	WAS_CONTAINER ("was_container", false);
+	 MERGED ("merged", true)
+    ;
 
 	public final String label;
 	public final boolean includeInPrefIndexes;
