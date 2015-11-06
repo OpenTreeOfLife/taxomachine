@@ -10,8 +10,8 @@ if not test:
     sys.exit(1)
 # result is large dictionary.  Will do a minimal test
 if u'incertae_sedis' not in result:
-    sys.stderr.write('No reported count of incertae_sedis taxa')
+    sys.stderr.write('No reported count of incertae_sedis taxa\n')
     sys.exit(1)
 if u'unclassified' not in result:
-    sys.stderr.write('No reported count of unclassified taxa')
+    sys.stderr.write('No reported count of unclassified taxa\n')
     sys.exit(1)

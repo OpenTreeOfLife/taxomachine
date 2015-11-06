@@ -18,7 +18,7 @@ if u'ot:ottId' not in lica:
     sys.exit(1)
 expectedId = 637370
 if lica[u'ot:ottId'] != expectedId:
-    errstr = 'Expected {} , found {}'
+    errstr = 'Expected {} , found {}\n'
     sys.stderr.write(errstr.format(expectedId,lica[u'ot:ottId']))
     sys.exit(1)
 

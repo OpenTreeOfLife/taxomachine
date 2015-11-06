@@ -14,8 +14,8 @@ if not (u'PLANTS' in result and u'ANIMALS' in result and
     sys.stderr.write(errstr.format(result))
     sys.exit(1)        
 if u'Archaea' not in result[u'MICROBES']:
-    sys.stderr.write('Archaea not in context MICROBES')
+    sys.stderr.write('Archaea not in context MICROBES\n')
     sys.exit(1)
 if u'Arachnides' not in result[u'ANIMALS']:  # spelling?
-    sys.stderr.write('Arachnides not in context Animals')
+    sys.stderr.write('Arachnides not in context Animals\n')
     sys.exit(1)
