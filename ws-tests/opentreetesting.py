@@ -231,6 +231,6 @@ translations = [('/v2/study/', '/phylesystem/v1/study/'),
 def translate(s):
     if config('host', 'translate', 'false') == 'true':
         for (src, dst) in translations:
-            if s.startswith(src):
-                return dst + s[len(src):]
+            if src in s:
+                return s.replace(src, dst)
     return s

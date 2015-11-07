@@ -4,6 +4,8 @@ dependency-reduced-pom.xml
 .project
 .settings
 *.db
+*.tmp
+.out_test*
 
 *venv
 *.pyc
