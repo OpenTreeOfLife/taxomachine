@@ -3,7 +3,7 @@ import sys, os
 from opentreetesting import test_http_json_method, config
 DOMAIN = config('host', 'apihost')
 SUBMIT_URI = DOMAIN + '/v2/tnrs/infer_context'
-NAMESLIST = ["Pan","Homo","Mus","Bufo"]
+NAMESLIST = ["Pan","Homo","Mus musculus","Upupa epops"]
 test, result, _ = test_http_json_method(SUBMIT_URI,
                                         data={"names":NAMESLIST},
                                         expected_status=200,
