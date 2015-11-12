@@ -9,6 +9,9 @@ test, result, _ = test_http_json_method(SUBMIT_URI,
                                         return_bool_data=True)
 if not test:
     sys.exit(1)
+if u'ot:ottId' not in result:
+    sys.stderr.write('ot:ottId not found in result')
+    sys.exit(1)
 if result[u'ot:ottId'] != 515698:
     sys.stderr.write('Incorrect ottid in returned taxon {}',format(result[u'ot:ottId']))
     sys.exit(1)

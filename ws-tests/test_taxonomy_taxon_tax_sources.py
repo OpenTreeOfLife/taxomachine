@@ -9,6 +9,9 @@ test, result, _ = test_http_json_method(SUBMIT_URI,
                                         return_bool_data=True)
 if not test:
     sys.exit(1)
+if u'tax_sources' not in result:
+    sys.stderr.write('No tax_sources found in result\n')
+    sys.exit(1)
 sources = result[u'tax_sources']
 if u'ncbi:58228' not in sources:
     errstr = 'Expected ncbi taxon id (58228) not found in tax_sources\n {}'
