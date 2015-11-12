@@ -41,10 +41,104 @@ import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.tnrs.queries.SimpleQuery;
 import org.opentree.graphdb.GraphDatabaseAgent;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+
 public class MainRunner {
 
     private static GraphDatabaseAgent taxdb;
-
+    
+    /*
+     *  Initialize graph directly from OTT distribution files.
+     *  Depends on the existence of the following files:
+     *  1. taxonomy.tsv
+     *  2. synonyms.tsv
+     *  3. version.txt
+     *  Will create a DB called 'ott_v[ottVersion].db' e.g. 'ott_v2.8draft5.db'
+     *  Finally, it will build the contexts
+    */
+    // @returns 0 for success, 1 for poorly formed command, -1 for failure to complete well-formed command
+    public int buildOTT(String [] args) throws FileNotFoundException, IOException {
+        if (args.length != 2 && args.length != 3) {
+            System.out.println("arguments should be: ott_directory [graph_name (defaults to 'ott_v[ottVersion].db')]");
+            return 1;
+        }
+        
+        String ottDir = args[1];
+        
+        if (args[1].endsWith("/") || args[1].endsWith("\\")) {
+            ottDir = args[1].substring(0, args[1].length() - 1);
+        }
+        
+        if (!new File(ottDir).exists()) {
+            System.out.println("Directory '" + ottDir + "' not found. Exiting...");
+            return -1;
+        }
+        
+        String ottVersion = "";
+        String taxFile = ottDir + File.separator + "taxonomy.tsv";
+        String synFile = ottDir + File.separator + "synonyms.tsv";
+        String versionFile = ottDir + File.separator + "version.txt";
+        String graphName = "";
+        
+        // grab taxonomy version
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(versionFile));
+            ottVersion = br.readLine();
+            br.close();
+        } catch (FileNotFoundException e) {
+            System.err.println("Could not open the file '" + versionFile + "'. Exiting...");
+            return -1;
+        } catch (IOException ioe) {
+            
+        }
+        
+        if (!ottVersion.isEmpty()) {
+            ottVersion = "ott_v" + ottVersion;
+            if (args.length == 3) {
+                graphName = args[2];
+            } else {
+                graphName = ottVersion + ".db";
+            }
+        }
+        
+        // check if graph already exists. abort if it does to prevent overwriting.
+        if (new File(graphName).exists()) {
+            System.err.println("Graph database '" + graphName + "' already exists. Exiting...");
+            return -1;
+        }
+        if (!new File(taxFile).exists()) {
+            System.err.println("Could not open the file '" + taxFile + "'. Exiting...");
+            return -1;
+        }
+        if (!new File(synFile).exists()) {
+            System.err.println("Could not open the file '" + synFile + "'. Exiting...");
+            return -1;
+        }
+        
+        taxdb = new GraphDatabaseAgent(graphName);
+        TaxonomyLoaderOTT tlo = new TaxonomyLoaderOTT(taxdb);
+        Node lifeNode = tlo.getTaxonomyRootNode();
+        System.out.println("Initializing ott taxonomy '" + ottVersion + "' DB from '"
+            + taxFile + "' with synonyms in '" + synFile + "' to graphDB '" + graphName + "'.\n");
+        
+        // Load the taxonomy
+        tlo.setAddSynonyms(true);
+        tlo.setCreateOTTIdIndexes(true);
+        tlo.setbuildPreferredIndexes(true);
+        tlo.loadOTTIntoGraph(ottVersion, taxFile, synFile);
+        
+        // Build contexts
+        TaxonomySynthesizer te = null;
+        te = new TaxonomySynthesizer(taxdb);
+        System.out.println("Building context-specific indexes (this can take a while).");
+        te.makeContexts();
+        
+        taxdb.shutdownDb();
+        
+        return 0;
+    }
+    
     public void taxonomyLoadParser(String[] args) throws FileNotFoundException, IOException {
 
         String graphname = "";
@@ -557,6 +651,8 @@ public class MainRunner {
         System.out.println("");
         System.out.println("commands");
         System.out.println("---taxonomy---");
+        
+        System.out.println("\tbuildott <ott_directory> [graph_name (defaults to 'ott_v[ottVersion].db'] (build taxonomy db from ott distribution)");
 //        System.out.println("\tinittax <sourcename> <filename> <graphdbfolder> (initializes the tax graph with a tax list)");
 //        System.out.println("\taddtax <sourcename> <filename> <graphdbfolder> (adds a tax list into the tax graph)");
         System.out.println("\tadddeprecated <filename> <graphdbfolder> (adds the deprecated taxa in the file to the graph)");
@@ -618,7 +714,7 @@ public class MainRunner {
             if (args.length == 0 || args[0].equals("help") || args[0].equals("-h") || args[0].equals("--help")) {
                 printHelp();
                 System.exit(0);
-            } else if (args.length < 2) {
+            } else if (args.length < 1) {
                 System.err.println("\nERROR: expecting multiple arguments\n");
                 printHelp();
                 System.exit(1);
@@ -629,8 +725,10 @@ public class MainRunner {
                 /*
                  * if (args[0].matches("testScrub")) { mr.testSrcub(args); System.exit(0); }
                  */
-
-                if (args[0].equals("inittax")
+                
+                 if (args[0].equals("buildott")) {
+                     mr.buildOTT(args);
+                 } else if (args[0].equals("inittax")
                         || args[0].equals("addtax")
                         || args[0].equals("adddeprecated")
                         || args[0].equals("inittaxsyn")
