@@ -13,11 +13,6 @@ public enum OTTFlag {
 	// dubious flags: guilty until proven innocent
 
 	/**
-	 * Higher taxa with zero species-level children.
-	 */
-	BARREN ("barren", false),
-
-	/**
 	 * Things with the string "environmental" in their name.
 	 */
 	ENVIRONMENTAL ("environmental", false),
@@ -29,6 +24,41 @@ public enum OTTFlag {
 	ENVIRONMENTAL_INHERITED ("environmental_inherited", false),
 
 	/**
+	 * Viruses.
+	 */
+	VIRAL ("viral", false),
+
+	/**
+	 * Taxa that have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
+	 */
+	HIDDEN ("hidden", false),
+
+	/**
+	 * Taxa contained within taxa have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
+	 */
+	HIDDEN_INHERITED ("hidden_inherited", false),
+
+	/**
+	 * Taxa with the string "unclassified" in their name, but which
+	 * have no children and thus are (hopefully) no longer a
+	 * container.
+     * 2014-04-26 DEPRECATED, these are now just labeled "not_otu".
+	 */
+	UNCLASSIFIED_DIRECT ("unclassified_direct", false),
+
+	 /**
+	 Treat same as incertae_sedis, merged, and inconsistent - the 'taxon' was formerly a 'bucket' but is now empty and is preserved as a placeholder.
+	*/
+	WAS_CONTAINER ("was_container", false),
+
+	// ===== flags not designating suppression
+
+	/**
+	 * Higher taxa with zero species-level children. (feedback #107)
+	 */
+	BARREN ("barren", true),
+
+	/**
 	 * Extinct taxa; replaced extinct_direct
 	 */
 	EXTINCT ("extinct", true),
@@ -37,13 +67,13 @@ public enum OTTFlag {
 	 * Extinct taxa. Replaced by 'extinct'
 	 */
 	 @Deprecated
-	EXTINCT_DIRECT ("extinct_direct", true), // TODO: should these be hidden?
-
+	EXTINCT_DIRECT ("extinct_direct", true),
+    
 	/**
 	 * Extinct taxa?
 	 */
-	EXTINCT_INHERITED ("extinct_inherited", true), // TODO: should these be hidden?
-
+	EXTINCT_INHERITED ("extinct_inherited", true),
+    
 	/**
 	 * Low-rank children of high-rank taxa (e.g. genus child of class).
 	 * Replaces major_rank_conflict_direct
@@ -67,37 +97,12 @@ public enum OTTFlag {
      * (pseudo-taxa in NCBI with the string "unclassified" in their name).
      * New 2014-04-26
 	 */
-	UNCLASSIFIED ("unclassified", false),
-
-	/**
-	 * Taxa with the string "unclassified" in their name, but which
-	 * have no children and thus are (hopefully) no longer a
-	 * container.
-     * 2014-04-26 DEPRECATED, these are now just labeled "not_otu".
-	 */
-	UNCLASSIFIED_DIRECT ("unclassified_direct", false),
+	UNCLASSIFIED ("unclassified", true),
 
 	/**
 	 * Descendants of UNCLASSIFIED taxa.
 	 */
-	UNCLASSIFIED_INHERITED ("unclassified_inherited", false),
-
-	/**
-	 * Viruses.
-	 */
-	VIRAL ("viral", false),
-
-	/**
-	 * Taxa that have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
-	 */
-	HIDDEN ("hidden", false),
-
-	/**
-	 * Taxa contained within taxa have been intentionally hidden (by a curator? for some reason other than those listed in other flags?).
-	 */
-	HIDDEN_INHERITED ("hidden_inherited", false),
-
-	// ===== flags not designating suppression
+	UNCLASSIFIED_INHERITED ("unclassified_inherited", true),
 
 	/**
 	 * Taxa that have been manually edited.
@@ -186,12 +191,8 @@ public enum OTTFlag {
 	Taxon is hidden, children aren't. Taxon may be revived if it's learned later
 	that the it is actually different.
 	*/
-	 MERGED ("merged", true),
-
-	 /**
-	 Treat same as incertae_sedis, merged, and inconsistent - the 'taxon' was formerly a 'bucket' but is now empty and is preserved as a placeholder.
-	*/
-	WAS_CONTAINER ("was_container", false);
+	 MERGED ("merged", true)
+    ;
 
 	public final String label;
 	public final boolean includeInPrefIndexes;
