@@ -104,7 +104,8 @@
   		<plugin>
   			<groupId>org.apache.maven.plugins</groupId>
   			<artifactId>maven-compiler-plugin</artifactId>
-  			<version>2.5</version>
+                        <!-- thank goodness for stackoverflow http://stackoverflow.com/questions/14164386/maven-cannot-find-symbol-message-unhelpful -->
+  			<version>3.1</version>
 			<configuration>
 				<source>1.8</source>
 				<target>1.8</target>

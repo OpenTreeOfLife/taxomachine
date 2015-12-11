@@ -13,6 +13,7 @@ import org.mortbay.log.Log;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.server.plugins.Description;
 import org.neo4j.server.plugins.Parameter;
@@ -146,7 +147,7 @@ public class taxonomy extends ServerPlugin {
 
     	if (taxa.size() > 0) {
     		TaxonSet ts = new TaxonSet(taxa);
-        	results.put("lica", getTaxonInfo(ts.getLICA(), includeLineage));
+        	results.put("lica", getTaxonInfo(ts.getLICA(), includeLineage, false));
         	results.put("ott_ids_not_found", ottIdsNotFound);
     	} else {
     		results.put("error","None of the ott ids provided could be matched to known taxa.");
@@ -171,7 +172,12 @@ public class taxonomy extends ServerPlugin {
     		+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
     		+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
     		@Parameter(name="include_lineage", optional=true)
-    		Boolean includeLineage) {
+    		Boolean includeLineage,
+
+    		@Description("Whether or not to include information about all the children of this taxon. "
+    		+ "By default, this option is set to false. If it is set to true, the children will be provided in an array.")
+    		@Parameter(name="include_children", optional=true)
+    		Boolean includeChildren) {
 
     	listDescendants = listDescendants == null ? false : listDescendants;
 
@@ -181,7 +187,7 @@ public class taxonomy extends ServerPlugin {
     	Taxon match = t.getTaxonForOTTId(ottId);
 
     	if (match != null) {
-    		results = (HashMap<String, Object>) getTaxonInfo(match, includeLineage);
+    		results = (HashMap<String, Object>) getTaxonInfo(match, includeLineage, includeChildren);
 
     		if (listDescendants) {
                         LabelFormat tipFormat = LabelFormat.ID;  //API specifies ids; could support alternate labels
@@ -213,7 +219,7 @@ public class taxonomy extends ServerPlugin {
     	return OTRepresentationConverter.convert(results);
     }
 
-    private Map<String,Object> getTaxonInfo(Taxon t, Boolean includeLineage) {
+    private Map<String,Object> getTaxonInfo(Taxon t, Boolean includeLineage, Boolean includeChildren) {
 
     	HashMap<String, Object> results = new HashMap<String, Object>();
 		Node n = t.getNode();
@@ -248,6 +254,17 @@ public class taxonomy extends ServerPlugin {
     			}
     			results.put("taxonomic_lineage", lineage);
     		}
+
+            if (includeChildren != null && includeChildren == true) {
+    			LinkedList<HashMap<String,Object>> children = new LinkedList<HashMap<String, Object>>();
+                for (Relationship child : n.getRelationships(TaxonomyRelType.TAXCHILDOF, Direction.INCOMING)) {
+                    Node c = child.getStartNode();
+    				HashMap<String,Object> info = new HashMap<String, Object>();
+    				addTaxonInfo(c, info);
+    				children.add(info);
+                }
+    			results.put("children", children);
+            }
 		}
 
 		return results;
