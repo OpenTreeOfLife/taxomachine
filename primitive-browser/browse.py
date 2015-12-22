@@ -123,7 +123,7 @@ def display_taxon_info(info, limit, output):
             end_el(output, 'p')
         else:
             output.write('missing lineage field %s\n', info.keys())
-            any_suppressed = False
+        any_suppressed = False
         if u'children' in info:
             children = sorted(info[u'children'], key=priority)
             if len(children) > 0:
