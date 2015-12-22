@@ -129,10 +129,9 @@ def display_taxon_info(info, limit, output):
             if len(children) > 0:
                 start_el(output, 'p', 'children')
                 output.write('Children:\n')
-                i = 0
                 if limit == None: limit = 200
                 start_el(output, 'ul', 'children')
-                for child in children:
+                for child in children[:limit]:
                     if ishidden(child):
                         start_el(output, 'li', 'child suppressed')
                         write_suppressed(output)
@@ -144,13 +143,13 @@ def display_taxon_info(info, limit, output):
                         end_el(output, 'span')
                     output.write(' ')
                     display_basic_info(child, output)
-                    i += 1
-                    if i > limit:
-                        output.write('... %s\n' % link_to_taxon(id,
-                                                                ('%s more children' %
-                                                                 (len(children)-limit)),
-                                                                limit=100000))
-                        break
+                    end_el(output, 'li')
+                if len(children) > limit:
+                    start_el(output, 'li', 'more_children')
+                    output.write('... %s' % link_to_taxon(id,
+                                                          ('%s more children' %
+                                                           (len(children)-limit)),
+                                                          limit=100000))
                     end_el(output, 'li')
                 end_el(output, 'ul')
                 end_el(output, 'p')
