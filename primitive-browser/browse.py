@@ -162,7 +162,7 @@ def display_taxon_info(info, limit, output):
             output.write("' = suppressed from synthetic tree\n")
             end_el(output, 'p')
         start_el(output, 'p', 'footer flags')
-        output.write("<a href='https://github.com/OpenTreeOfLife/reference-taxonomy/wiki/Taxon-flags'>explanation of flags</a>\n")
+        output.write('<a href="https://github.com/OpenTreeOfLife/reference-taxonomy/wiki/Taxon-flags">explanation of flags</a>\n')
         end_el(output, 'p')
     else:
         output.write('? losing')
@@ -223,7 +223,7 @@ def source_link(source_id):
         return source_id
 
 def start_el(output, tag, clas):
-    output.write('<%s class=%s>' % (tag, clas))
+    output.write('<%s class="%s">' % (tag, clas))
 def end_el(output, tag):
     output.write('</%s>' % tag)
 
@@ -232,14 +232,14 @@ def link_to_taxon(id, text, limit=None):
         option = ''
     else:
         option = '&limit=%s' % limit
-    return "<a href='browse?id=%s%s'>%s</a>" % (id, option, style_name(cgi.escape(text)))
+    return '<a href="browse?id=%s%s">%s</a>' % (id, option, style_name(cgi.escape(text)))
 
 def link_to_name(name):
     name = cgi.escape(name)
-    return "<a href='browse?name=%s'>%s</a>" % (name, style_name(name))
+    return '<a href="browse?name=%s">%s</a>' % (name, style_name(name))
 
 def style_name(ename):
-    return "<span class='name'>%s</span>" % ename
+    return '<span class="name">%s</span>' % ename
 
 def priority(child):
     if ishidden(child):
