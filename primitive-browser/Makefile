@@ -19,5 +19,5 @@ install:
 
 # Browse on remote system (assumes OS X 'open' command)
 browse:
-	open https://$(REMOTE)/cgi-bin/browse?$(QUERY)
+	open http://$(REMOTE)/cgi-bin/browse?$(QUERY)
 
