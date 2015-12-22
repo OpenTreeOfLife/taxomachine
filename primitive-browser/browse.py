@@ -274,6 +274,9 @@ if __name__ == '__main__':
     print
     output = sys.stdout
     start_el(output, 'html', 'foo')
+    start_el(output, 'head', '')
+    output.write('<link rel="stylesheet" href="http://opentreeoflife.github.io/css/main.css" />')
+    end_el(output, 'head')
     start_el(output, 'body', 'foo')
     print browse(id, name, limit, api_base)
     end_el(output, 'body')
