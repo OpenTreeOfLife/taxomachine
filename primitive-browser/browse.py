@@ -222,7 +222,7 @@ def source_link(source_id):
     else:
         return source_id
 
-def start_el(output, tag, clas):
+def start_el(output, tag, clas=''):
     output.write('<%s class="%s">' % (tag, clas))
 def end_el(output, tag):
     output.write('</%s>' % tag)
@@ -273,11 +273,11 @@ if __name__ == '__main__':
     print 'Content-type: text/html'
     print
     output = sys.stdout
-    start_el(output, 'html', 'foo')
+    start_el(output, 'html')
     start_el(output, 'head', '')
     output.write('<link rel="stylesheet" href="http://opentreeoflife.github.io/css/main.css" />')
     end_el(output, 'head')
-    start_el(output, 'body', 'foo')
+    start_el(output, 'body')
     print browse(id, name, limit, api_base)
     end_el(output, 'body')
     end_el(output, 'html')
