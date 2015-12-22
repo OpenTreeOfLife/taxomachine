@@ -72,7 +72,6 @@ def browse_by_id(id, limit=None):
     info = get_taxon_info(id)
     #print simplejson.dumps(info, sort_keys=True, indent=4)
     display_taxon_info(info, limit)
-    sys.stdout.write("\n<a href='https://github.com/OpenTreeOfLife/reference-taxonomy/wiki/Taxon-flags'>explanation of flags</a>\n");
 
 def get_taxon_info(ottid):
     d=simplejson.dumps({'ott_id': ottid, 'include_children': True, 'include_lineage': True})
@@ -105,6 +104,7 @@ def display_taxon_info(info, limit=None):
             sys.stdout.write('\n')
         else:
             print 'missing lineage field', info.keys()
+        any_suppressed = False
         if u'children' in info:
             children = sorted(info[u'children'], key=priority)
             if len(children) > 0:
@@ -114,6 +114,7 @@ def display_taxon_info(info, limit=None):
                 for child in children:
                     if ishidden(child):
                         sys.stdout.write("* ")
+                        any_suppressed = True
                     else:
                         sys.stdout.write("  ")
                     display_basic_info(child)
@@ -124,6 +125,10 @@ def display_taxon_info(info, limit=None):
                                                                      (len(children)-limit)),
                                                                     limit=100000))
                         break
+        sys.stdout.write("\n")
+        if any_suppressed:
+            sys.stdout.write("'*' = suppressed from synthetic tree\n")
+        sys.stdout.write("<a href='https://github.com/OpenTreeOfLife/reference-taxonomy/wiki/Taxon-flags'>explanation of flags</a>\n")
     else:
         print '? losing'
         print simplejson.dumps(info, sort_keys=True, indent=4)
