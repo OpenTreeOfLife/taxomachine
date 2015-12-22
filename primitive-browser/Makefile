@@ -1,7 +1,7 @@
-TAXON=Opisthokonta
+QUERY=name=Opisthokonta
 
 test:
-	@QUERY_STRING=$(TAXON) ./browse.py | grep -q Holozoa
+	@QUERY_STRING=$(QUERY) ./browse.py | grep Holozoa
 
 # For testing on OS X with the apple built-in apache installation
 # (enable with 'sudo apachectl start')
@@ -10,7 +10,7 @@ local-install:
 
 # Browse locally (assumes OS X 'open' command)
 local-browse:
-	open http://localhost/cgi-bin/browse?$(TAXON)
+	open http://localhost/cgi-bin/browse?$(QUERY)
 
 # Install to some remote system
 REMOTE=varela.csail.mit.edu
@@ -19,5 +19,5 @@ install:
 
 # Browse on remote system (assumes OS X 'open' command)
 browse:
-	open https://$(REMOTE)/cgi-bin/browse?$(TAXON)
+	open https://$(REMOTE)/cgi-bin/browse?$(QUERY)
 

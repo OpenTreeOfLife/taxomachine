@@ -21,6 +21,7 @@ api_base_url = 'https://devapi.opentreeoflife.org/'
 
 import os
 import sys
+import cgi, cgitb
 
 import requests
 import simplejson
@@ -29,6 +30,16 @@ headers = {
     'content-type' : 'application/json',
     'accept' : 'application/json',
 }
+
+def link_to_taxon(id, text, limit=None):
+    if limit == None:
+        option = ''
+    else:
+        option = '&limit=%s' % limit
+    return "<a href='browse?id=%s%s'>%s</a>" % (id, option, text)
+
+def link_to_name(name):
+    return "<a href='browse?name=%s'>%s</a>" % (name, name)
 
 def browse_by_name(name):
     result = look_up_name(name)
@@ -39,7 +50,7 @@ def browse_by_name(name):
     elif len(matches) > 1:
         sys.stdout.write('Matches for %s: \n' % name)
         for match in matches:
-            sys.stdout.write("  <a href='browse?%s'>%s</a>\n" % (match[u'ot:ottId'], match[u'unique_name']))
+            sys.stdout.write("  %s\n" % link_to_taxon(match[u'ot:ottId'], match[u'unique_name']))
     else:
         id = matches[0][u'ot:ottId']
         browse_by_id(id)
@@ -57,12 +68,13 @@ def look_up_name(name):
         return None # shouldn't happen
     return results[0]
 
-def browse_by_id(id):
-    info = taxon_info(id)
+def browse_by_id(id, limit=None):
+    info = get_taxon_info(id)
     #print simplejson.dumps(info, sort_keys=True, indent=4)
-    display_info(info, True)
+    display_taxon_info(info, limit)
+    sys.stdout.write("\n<a href='https://github.com/OpenTreeOfLife/reference-taxonomy/wiki/Taxon-flags'>explanation of flags</a>\n");
 
-def taxon_info(ottid):
+def get_taxon_info(ottid):
     d=simplejson.dumps({'ott_id': ottid, 'include_children': True, 'include_lineage': True})
     response = requests.post(api_base_url + 'v2/taxonomy/taxon',
                              headers=headers,
@@ -70,57 +82,70 @@ def taxon_info(ottid):
     response.raise_for_status()
     return response.json()
 
-def display_info(info, longp):
+def display_taxon_info(info, limit=None):
     if u'ot:ottId' in info:
-        if ishidden(info): sys.stdout.write("* ")
+        sys.stdout.write("Taxon: ")
+        display_basic_info(info)
 
-        name = info[u'ot:ottTaxonName']
-
-        # Main info line
-        sys.stdout.write("<a href='browse?%s'>" % info[u'ot:ottId'])
-        if not info[u'rank'].startswith('no rank'):
-            sys.stdout.write("%s " % info[u'rank'])
-        if u'unique_name' in info and len(info[u'unique_name']) > 0:
-            sys.stdout.write("%s" % info[u'unique_name'])
-        elif u'ot:ottTaxonName' in info:
-            sys.stdout.write("%s" % name)
-        sys.stdout.write("</a> ")
-
-        if u'tax_sources' in info:
-            sys.stdout.write('%s ' % ', '.join(map(source_link, info[u'tax_sources'])))
-        sys.stdout.write('%s ' % ', '.join(map(lambda f:f.lower(), info[u'flags'])))
-        sys.stdout.write('\n')
-        if longp:
-            if u'synonyms' in info:
-                synonyms = info[u'synonyms']
-                if name in synonyms:
-                    synonyms.remove(name)
-                if len(synonyms) > 0:
-                    sys.stdout.write("  a.k.a. %s\n" % ', '.join(synonyms))
-            if u'taxonomic_lineage' in info:
-                first = True
-                sys.stdout.write('  ')
-                for ancestor in info[u'taxonomic_lineage']:
-                    if not first:
-                        sys.stdout.write(' &lt; ')
-                    sys.stdout.write('<a href="browse?%s">%s</a>' % (ancestor[u'ot:ottId'], ancestor[u'ot:ottTaxonName']))
-                    first = False
-                sys.stdout.write('\n')
-            else:
-                print 'missing lineage field', info.keys()
-            if u'children' in info:
-                sys.stdout.write('\n')
-                children = sorted(info[u'children'], key=priority)
+        if u'synonyms' in info:
+            synonyms = info[u'synonyms']
+            name = info[u'ot:ottTaxonName']
+            if name in synonyms:
+                synonyms.remove(name)
+            if len(synonyms) > 0:
+                sys.stdout.write("Synonym(s): %s\n" % ', '.join(map(link_to_name, synonyms)))
+        if u'taxonomic_lineage' in info:
+            first = True
+            sys.stdout.write('Lineage: ')
+            for ancestor in info[u'taxonomic_lineage']:
+                if not first:
+                    sys.stdout.write(' &lt; ')
+                sys.stdout.write(link_to_taxon(ancestor[u'ot:ottId'], ancestor[u'ot:ottTaxonName']))
+                first = False
+            sys.stdout.write('\n')
+        else:
+            print 'missing lineage field', info.keys()
+        if u'children' in info:
+            children = sorted(info[u'children'], key=priority)
+            if len(children) > 0:
+                sys.stdout.write('Children:\n')
                 i = 0
+                if limit == None: limit = 200
                 for child in children:
-                    display_info(child, False)
+                    if ishidden(child):
+                        sys.stdout.write("* ")
+                    else:
+                        sys.stdout.write("  ")
+                    display_basic_info(child)
                     i += 1
-                    if i > 20: 
-                        sys.stdout.write('... %s more children\n' % (len(children)-20))
+                    if i > limit:
+                        sys.stdout.write('... %s\n' % link_to_taxon(info[u'ot:ottId'],
+                                                                    ('%s more children' %
+                                                                     (len(children)-limit)),
+                                                                    limit=100000))
                         break
     else:
         print '? losing'
         print simplejson.dumps(info, sort_keys=True, indent=4)
+
+def display_basic_info(info):
+    # Might be better to put rank as a separate column in a table.  That way the
+    # names will line up
+    if not info[u'rank'].startswith('no rank'):
+        sys.stdout.write(info[u'rank'] + ' ')
+
+    # Taxon name
+    if u'unique_name' in info and len(info[u'unique_name']) > 0:
+        text = info[u'unique_name']
+    elif u'ot:ottTaxonName' in info:
+        text = info[u'ot:ottTaxonName']
+    sys.stdout.write(link_to_taxon(info[u'ot:ottId'], text))
+
+    # Sources and flags
+    if u'tax_sources' in info:
+        sys.stdout.write(' %s ' % ', '.join(map(source_link, info[u'tax_sources'])))
+    sys.stdout.write('%s ' % ', '.join(map(lambda f:f.lower(), info[u'flags'])))
+    sys.stdout.write('\n')
 
 def source_link(source_id):
     parts = source_id.split(':')
@@ -170,11 +195,15 @@ print 'Content-type: text/html'
 print
 print '<pre>'
 
-name_or_id = os.environ.get('QUERY_STRING')
-
-if name_or_id.isdigit():
-    browse_by_id(int(name_or_id))
+form = cgi.FieldStorage()
+limit = None
+if "limit" in form:
+    limit = int(form["limit"].value)
+if "name" in form:
+    browse_by_name(form["name"].value)
+elif "id" in form:
+    browse_by_id(int(form["id"].value), limit=limit)
 else:
-    browse_by_name(name_or_id)
+    print "bogus invocation"
 
 print '</pre>'
