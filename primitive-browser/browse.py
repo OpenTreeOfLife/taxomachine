@@ -123,16 +123,15 @@ def display_taxon_info(info, limit, output):
             end_el(output, 'p')
         else:
             output.write('missing lineage field %s\n', info.keys())
-            any_suppressed = False
+        any_suppressed = False
         if u'children' in info:
             children = sorted(info[u'children'], key=priority)
             if len(children) > 0:
                 start_el(output, 'p', 'children')
                 output.write('Children:\n')
-                i = 0
                 if limit == None: limit = 200
                 start_el(output, 'ul', 'children')
-                for child in children:
+                for child in children[:limit]:
                     if ishidden(child):
                         start_el(output, 'li', 'child suppressed')
                         write_suppressed(output)
@@ -144,13 +143,13 @@ def display_taxon_info(info, limit, output):
                         end_el(output, 'span')
                     output.write(' ')
                     display_basic_info(child, output)
-                    i += 1
-                    if i > limit:
-                        output.write('... %s\n' % link_to_taxon(id,
-                                                                ('%s more children' %
-                                                                 (len(children)-limit)),
-                                                                limit=100000))
-                        break
+                    end_el(output, 'li')
+                if len(children) > limit:
+                    start_el(output, 'li', 'more_children')
+                    output.write('... %s' % link_to_taxon(id,
+                                                          ('%s more children' %
+                                                           (len(children)-limit)),
+                                                          limit=100000))
                     end_el(output, 'li')
                 end_el(output, 'ul')
                 end_el(output, 'p')
@@ -162,7 +161,7 @@ def display_taxon_info(info, limit, output):
             output.write("' = suppressed from synthetic tree\n")
             end_el(output, 'p')
         start_el(output, 'p', 'footer flags')
-        output.write("<a href='https://github.com/OpenTreeOfLife/reference-taxonomy/wiki/Taxon-flags'>explanation of flags</a>\n")
+        output.write('<a href="https://github.com/OpenTreeOfLife/reference-taxonomy/wiki/Taxon-flags">explanation of flags</a>\n')
         end_el(output, 'p')
     else:
         output.write('? losing')
@@ -222,8 +221,8 @@ def source_link(source_id):
     else:
         return source_id
 
-def start_el(output, tag, clas):
-    output.write('<%s class=%s>' % (tag, clas))
+def start_el(output, tag, clas=''):
+    output.write('<%s class="%s">' % (tag, clas))
 def end_el(output, tag):
     output.write('</%s>' % tag)
 
@@ -232,14 +231,14 @@ def link_to_taxon(id, text, limit=None):
         option = ''
     else:
         option = '&limit=%s' % limit
-    return "<a href='browse?id=%s%s'>%s</a>" % (id, option, style_name(cgi.escape(text)))
+    return '<a href="browse?id=%s%s">%s</a>' % (id, option, style_name(cgi.escape(text)))
 
 def link_to_name(name):
     name = cgi.escape(name)
-    return "<a href='browse?name=%s'>%s</a>" % (name, style_name(name))
+    return '<a href="browse?name=%s">%s</a>' % (name, style_name(name))
 
 def style_name(ename):
-    return "<span class='name'>%s</span>" % ename
+    return '<span class="name">%s</span>' % ename
 
 def priority(child):
     if ishidden(child):
@@ -273,8 +272,11 @@ if __name__ == '__main__':
     print 'Content-type: text/html'
     print
     output = sys.stdout
-    start_el(output, 'html', 'foo')
-    start_el(output, 'body', 'foo')
+    start_el(output, 'html')
+    start_el(output, 'head', '')
+    output.write('<link rel="stylesheet" href="http://opentreeoflife.github.io/css/main.css" />')
+    end_el(output, 'head')
+    start_el(output, 'body')
     print browse(id, name, limit, api_base)
     end_el(output, 'body')
     end_el(output, 'html')
