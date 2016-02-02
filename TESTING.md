@@ -29,3 +29,5 @@ Tests are invoked from the ws-tests directory, e.g.
 ```cd ws-tests
 ./run_tests.sh host:apihost=https://devapi.opentreeoflife.org
 ```
+
+These tests will be invoked from the overall web API test script (in the germinator repo).
