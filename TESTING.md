@@ -26,7 +26,8 @@ See [open tree testing overview](https://github.com/OpenTreeOfLife/germinator/bl
 
 Tests are invoked from the ws-tests directory, e.g.
 
-```cd ws-tests
+```
+cd ws-tests
 ./run_tests.sh host:apihost=https://devapi.opentreeoflife.org
 ```
 
