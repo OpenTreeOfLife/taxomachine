@@ -4,7 +4,7 @@ from opentreetesting import test_http_json_method, config
 DOMAIN = config('host', 'apihost')
 SUBMIT_URI = DOMAIN + '/v2/taxonomy/taxon'
 TEST_NAME = u'Alseuosmia banksii'
-test, result, _ = test_http_json_method(SUBMIT_URI,
+test, result, _ = test_http_json_method(SUBMIT_URI, "POST",
                                         data={"ott_id":901642},
                                         expected_status=200,
                                         return_bool_data=True)

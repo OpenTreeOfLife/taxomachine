@@ -3,7 +3,7 @@ import sys, os, re
 from opentreetesting import test_http_json_method, config
 DOMAIN = config('host', 'apihost')
 SUBMIT_URI = DOMAIN + '/v2/taxonomy/subtree'
-test, result, _ = test_http_json_method(SUBMIT_URI,
+test, result, _ = test_http_json_method(SUBMIT_URI, "POST",
                                         data={"ott_id":515698},
                                         expected_status=200,
                                         return_bool_data=True)
