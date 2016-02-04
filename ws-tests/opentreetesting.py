@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# This file was copied from the phylesystem-api repo.  Please keep in sync.
+
 from ConfigParser import SafeConfigParser
 from cStringIO import StringIO
 import requests
@@ -128,7 +131,7 @@ def get_obj_from_http(url,
     return resp.json()
 
 def test_http_json_method(url,
-                     verb='POST',
+                     verb='GET',
                      data=None,
                      headers=None,
                      expected_status=200,

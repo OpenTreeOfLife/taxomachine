@@ -3,7 +3,7 @@ import sys, os
 from opentreetesting import test_http_json_method, config
 DOMAIN = config('host', 'apihost')
 SUBMIT_URI = DOMAIN + '/v2/taxonomy/taxon'
-test, result, _ = test_http_json_method(SUBMIT_URI,
+test, result, _ = test_http_json_method(SUBMIT_URI, "POST",
                                        data={"ott_id":1066581, 
                                              "list_terminal_descendants":
                                                  "true"},

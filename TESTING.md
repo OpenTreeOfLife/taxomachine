@@ -20,3 +20,15 @@ TAXOMACHINE_SERVER=devapi.opentreeoflife.org/taxomachine && export TAXOMACHINE_S
 TAXOMACHINE_SERVER=localhost:7476/db/data && export TAXOMACHINE_SERVER && ./test.sh
 ```
 
+## Web services tests following standard pattern
+
+See [open tree testing overview](https://github.com/OpenTreeOfLife/germinator/blob/master/TESTING.md)
+
+Tests are invoked from the ws-tests directory, e.g.
+
+```
+cd ws-tests
+./run_tests.sh host:apihost=https://devapi.opentreeoflife.org
+```
+
+These tests will be invoked from the overall web API test script (in the germinator repo).
