@@ -2,6 +2,9 @@
 
 opentree-taxomachine
 ====================
+
+(For Open Tree of Life documentation, see [the germinator repository's wiki](https://github.com/OpenTreeOfLife/germinator/wiki).)
+
 Taxomachine is a tool for indexing and querying the Open Tree Taxonomy (OTT) associated with the Open Tree of Life project. It can be run either as a server plugin, or as a standalone program.
 
 The following instructions assume that the working directory is the root of the clone of the taxomachine repository.
