@@ -19,7 +19,7 @@ if tree is None or tree == '':
     sys.exit(1)
 # trying to avoid dealing with a newick parser here...
 ROOTTAXONSTR = "\)Argophyllaceae_ott3826;"
-DESCENDANTTAXONSTR = "\,Canis_lycaon_ott948004\,"
+DESCENDANTTAXONSTR = "\,Argophyllum_nitidum_ott5746190\,"
 namecheck =  re.compile(ROOTTAXONSTR)
 namecheck2 = re.compile(DESCENDANTTAXONSTR)
 if re.search(namecheck,tree) is None:
