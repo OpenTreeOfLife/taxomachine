@@ -18,7 +18,7 @@ if tree is None or tree == '':
     sys.stderr.write("Expected result to have a tree, but found {}\n".format(result))
     sys.exit(1)
 # trying to avoid dealing with a newick parser here...
-ROOTTAXONSTR = "\)Canis_ott372706;"
+ROOTTAXONSTR = "\)Argophyllaceae_ott3826;"
 DESCENDANTTAXONSTR = "\,Canis_lycaon_ott948004\,"
 namecheck =  re.compile(ROOTTAXONSTR)
 namecheck2 = re.compile(DESCENDANTTAXONSTR)

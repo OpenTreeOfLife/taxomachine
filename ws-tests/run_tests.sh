@@ -3,6 +3,9 @@
 # For local testing you'll want to do something like
 #  ./run_tests.sh host:apihost=http://localhost:7474 host:translate=true
 
+# For testing devapi:
+#  ./run_tests.sh host:apihost=https://devapi.opentreeoflife.org
+
 if ! python -c 'import peyotl' 2>/dev/null;
 then
     echo 'peyotl must be installed to run tests'
