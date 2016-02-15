@@ -60,8 +60,8 @@ public class taxonomy_v3 extends ServerPlugin {
     	for (Node d : dTaxNodes) {
     		HashMap<String, Object> dMap = new HashMap<String, Object>();
 
-    		addPropertyFromNode(d, OTVocabularyPredicate.OT_OTT_ID.propertyName(), dMap);
-    		addPropertyFromNode(d, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), dMap);
+    		addPropertyFromNode(d, OTVocabularyPredicate.OT_OTT_ID.propertyName(), "ott_id", dMap);
+    		addPropertyFromNode(d, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), "name", dMap);
     		addPropertyFromNode(d, TaxonomyProperty.REASON.propertyName(), dMap);
     		addPropertyFromNode(d, TaxonomyProperty.SOURCE_INFO.propertyName(), dMap);
     		deprecatedTaxa.add(dMap);
@@ -109,14 +109,14 @@ public class taxonomy_v3 extends ServerPlugin {
     	return OTRepresentationConverter.convert(results);
     }
 
-    @Description("Return information about the least inclusive common ancestral taxon (the LICA) of the identified taxa. A "
-    		+ "taxonomic LICA is analogous to a most recent common ancestor (MRCA) in a phylogenetic tree. For example, the "
-    		+ "LICA for the taxa 'Pan' and 'Lemur' in the taxonomy represented by the newick string "
+    @Description("Return information about the most recent common ancestor (MRCA) of the identified taxa. "
+            + "For example, the "
+    		+ "MRCA of the taxa 'Pan' and 'Lemur' in the taxonomy represented by the newick string "
     		+ "'(((Pan,Homo,Gorilla)Hominidae,Gibbon)Hominoidea,Lemur)Primates' is 'Primates'.")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation lica (@Source GraphDatabaseService graphDb,
+    public Representation mrca (@Source GraphDatabaseService graphDb,
 
-    	@Description("The ott ids (in an array) for the taxa whose LICA is to be found.")
+    	@Description("The ott ids (in an array) for the taxa whose MRCA is to be found.")
     	@Parameter(name="ott_ids", optional=false)
     	Long[] ottIds,
 
@@ -158,7 +158,7 @@ public class taxonomy_v3 extends ServerPlugin {
 
     @Description("Get information about a known taxon in the taxonomy.")
     @PluginTarget(GraphDatabaseService.class)
-    public Representation taxon (@Source GraphDatabaseService graphDb,
+    public Representation taxon_info (@Source GraphDatabaseService graphDb,
 
     		@Description("The OTT id of the taxon of interest.")
     		@Parameter(name="ott_id", optional=false)
@@ -226,9 +226,8 @@ public class taxonomy_v3 extends ServerPlugin {
 
 		if (t.isDeprecated()) {
 			// for deprecated ids, add only appropriate properties
-	    	results.put("node_id", n.getId());
-			addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
-			addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
+			addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), "ott_id", results);
+            addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), "name", results);
 			addPropertyFromNode(n, TaxonomyProperty.REASON.propertyName(), results);
 			addPropertyFromNode(n, TaxonomyProperty.INPUT_SOURCES.propertyName(), results);
 			results.put("flags", Arrays.asList(new String[] {TaxonomyProperty.DEPRECATED.toString()}));
@@ -275,9 +274,8 @@ public class taxonomy_v3 extends ServerPlugin {
     	// TODO: need to update this to use the TaxonomyProperty enum once the taxonomy uniqname field is changed to this format
     	results.put("unique_name", n.getProperty(TaxonomyProperty.UNIQUE_NAME.propertyName()));
 
-    	results.put("node_id", n.getId());
-    	addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), results);
-		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), results);
+    	addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), "ott_id", results);
+		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), "name", results);
 		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
 		addTaxSources(n, results);
 
@@ -292,6 +290,10 @@ public class taxonomy_v3 extends ServerPlugin {
 
     private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
 		map.put(property, node.getProperty(property));
+    }
+
+    private void addPropertyFromNode(Node node, String property, String resultName, Map<String, Object> map) {
+		map.put(resultName, node.getProperty(property));
     }
 
 

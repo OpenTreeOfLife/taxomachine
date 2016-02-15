@@ -150,9 +150,9 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				// add these properties for all taxa
 				serializer.putBoolean("is_approximate_match", match.getIsApproximate());
 				serializer.putNumber("matched_node_id", matchedNode.getId());
-				serializer.putString(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),
+				serializer.putString("name",
 						(String) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
-				serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(),
+				serializer.putNumber("ott_id",
 						(Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 				serializer.putString("search_string", match.getSearchString());
 				serializer.putString("matched_name", match.getMatchedName());
@@ -226,7 +226,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
 				serializer.putNumber("node_id", match.getMatchedTaxon().getNode().getId()); // matched node id
-				serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(), (Long) match.getMatchedTaxon().getNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
+				serializer.putNumber("ott_id", (Long) match.getMatchedTaxon().getNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
 				serializer.putString("unique_name", match.getUniqueName()); // unique name
 				serializer.putBoolean("is_higher", match.getIsHigherTaxon()); // is higher taxon
 				serializer.putBoolean("is_dubious", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
