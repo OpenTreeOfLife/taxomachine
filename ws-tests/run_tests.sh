@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# For local testing you'll want to do something like
+#  ./run_tests.sh host:apihost=http://localhost:7474 host:translate=true
+
 if ! python -c 'import peyotl' 2>/dev/null;
 then
     echo 'peyotl must be installed to run tests'

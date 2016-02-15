@@ -33,6 +33,8 @@ import org.opentree.taxonomy.constants.TaxonomyProperty;
 import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 
+import jade.tree.JadeTree;
+
 public class taxonomy_v3 extends ServerPlugin {
 
     @Description("Return metadata and information about the taxonomy itself. Currently the available metadata is fairly sparse, but "
@@ -70,6 +72,8 @@ public class taxonomy_v3 extends ServerPlugin {
     	return OTRepresentationConverter.convert(deprecatedTaxa);
     }
 
+    static int SUBTREE_LIMIT = 50000;
+
     @Description("Extract and return the inclusive taxonomic subtree i.e. (a subset of the taxonomy) below a given taxon. "
     		+ "The taxonomy subtree is returned in newick format.")
     @PluginTarget(GraphDatabaseService.class)
@@ -103,7 +107,20 @@ public class taxonomy_v3 extends ServerPlugin {
     		results.put("error", "The specified label type '" + labelFormatStr + "' was not recognized.");
 
     	} else {
-        	results.put("subtree", taxonomy.getTaxonForOTTId(ottId).getTaxonomySubtree(format).getRoot().getNewick(false)+";");
+    		Taxon match = taxonomy.getTaxonForOTTId(ottId);
+            if (match == null)
+                results.put("error",
+                            String.format("The specified taxon %s was not found.", ottId));
+            else {
+                JadeTree tree = match.getTaxonomySubtree(format);
+                int count = tree.nodeCount();
+                if (count > SUBTREE_LIMIT)
+                    results.put("error",
+                                String.format("The requested subtree exceeds the limit of %s taxa.",
+                                              count));
+                else
+                    results.put("subtree", tree.getRoot().getNewick(false)+";");
+            }
     	}
 
     	return OTRepresentationConverter.convert(results);
@@ -120,7 +137,7 @@ public class taxonomy_v3 extends ServerPlugin {
     	@Parameter(name="ott_ids", optional=false)
     	Long[] ottIds,
 
-    	@Description("Whether or not to include information about the higher level taxa that include the identified LICA. "
+    	@Description("Whether or not to include information about the higher level taxa that include the identified MRCA. "
 				+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
 				+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
     	@Parameter(name="include_lineage", optional=true)
@@ -147,7 +164,7 @@ public class taxonomy_v3 extends ServerPlugin {
 
     	if (taxa.size() > 0) {
     		TaxonSet ts = new TaxonSet(taxa);
-        	results.put("lica", getTaxonInfo(ts.getLICA(), includeLineage, false));
+        	results.put("mrca", getTaxonInfo(ts.getLICA(), includeLineage, false));
         	results.put("ott_ids_not_found", ottIdsNotFound);
     	} else {
     		results.put("error","None of the ott ids provided could be matched to known taxa.");
