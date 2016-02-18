@@ -2,7 +2,7 @@
 import sys, os
 from opentreetesting import test_http_json_method, config
 DOMAIN = config('host', 'apihost')
-SUBMIT_URI = DOMAIN + '/v2/tnrs/match_names'
+SUBMIT_URI = DOMAIN + '/v3/tnrs/match_names'
 TEST_LIST = ["Aster","Symphyotrichum","Erigeron","Barnadesia"]
 TEST_IDS = [5507594,1058735,643717,515698]
 test, result, _ = test_http_json_method(SUBMIT_URI, "POST",
@@ -18,9 +18,9 @@ if set(TEST_LIST) != set(result[u'matched_name_ids']):
 MATCH_LIST = result['results']
 for match in MATCH_LIST:
     m = match[u'matches'][0]
-    if m[u'ot:ottId'] not in TEST_IDS:
+    if m[u'ott_id'] not in TEST_IDS:
         errstr = "bad match return {}, expected one of {}\n"
-        sys.stderr.write(errstr.format(m[u'ot:ottId'],str(TEST_IDS)))
+        sys.stderr.write(errstr.format(m[u'ott_id'],str(TEST_IDS)))
         sys.exit(1)
     if m[u'matched_name'] not in TEST_LIST:
         errstr = "bad match return {}, expected one of {}\n"

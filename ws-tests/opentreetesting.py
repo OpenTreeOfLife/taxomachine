@@ -225,8 +225,11 @@ translations = [('/v2/study/', '/phylesystem/v1/study/'),
                 ('/v2/tree_of_life/', '/db/data/ext/tree_of_life/graphdb/'),
                 ('/v2/graph/', '/db/data/ext/graph/graphdb/'),
                 # taxomachine
+                ('/taxomachine/v1/', '/db/data/ext/TNRS/graphdb/'),
                 ('/v2/tnrs/', '/db/data/ext/tnrs_v2/graphdb/'),
                 ('/v2/taxonomy/', '/db/data/ext/taxonomy/graphdb/'),
+                ('/v3/tnrs/', '/db/data/ext/tnrs_v3/graphdb/'),
+                ('/v3/taxonomy/', '/db/data/ext/taxonomy_v3/graphdb/'),
                 # oti
                 ('/v2/studies/', '/db/data/ext/studies/graphdb/'),
 ]
