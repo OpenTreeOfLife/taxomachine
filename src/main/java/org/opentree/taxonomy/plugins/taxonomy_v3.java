@@ -164,7 +164,7 @@ public class taxonomy_v3 extends ServerPlugin {
 
     	if (taxa.size() > 0) {
     		TaxonSet ts = new TaxonSet(taxa);
-        	results.put("mrca", getTaxonInfo(ts.getLICA(), includeLineage, false));
+        	results.put("taxon", getTaxonInfo(ts.getLICA(), includeLineage, false));
         	results.put("ott_ids_not_found", ottIdsNotFound);
     	} else {
     		results.put("error","None of the ott ids provided could be matched to known taxa.");
