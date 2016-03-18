@@ -1,28 +1,33 @@
 #!/usr/bin/env python
-import sys, os
-from opentreetesting import test_http_json_method, config
-DOMAIN = config('host', 'apihost')
-SUBMIT_URI = DOMAIN + '/v3/tnrs/match_names'
+
+from check import *
+
 TEST_LIST = ["Hylobates"]
 TEST_IDS = [166552]
-test, result, _ = test_http_json_method(SUBMIT_URI, "POST",
-                                        data={"names":TEST_LIST, "context_name": 'Mammals'},
-                                        expected_status=200,
-                                        return_bool_data=True)
-if not test:
-    sys.exit(1)
-if set(TEST_LIST) != set(result[u'matched_name_ids']):
-    errstr = "Failed to match, submitted: {}, returned {}\n"
-    sys.stderr.write(errstr.format(TEST_LIST,result[u'matched_name_ids']))
-    sys.exit(1)
-MATCH_LIST = result['results']
-for match in MATCH_LIST:
-    m = match[u'matches'][0]
-    if m[u'matched_name'] not in TEST_LIST:
-        errstr = "bad match return {}, expected one of {}\n"
-        sys.stderr.write(errstr.format(m[u'matched_name'],str(TEST_LIST)))
-        sys.exit(1)
-    if m[u'ott_id'] not in TEST_IDS:
-        errstr = "bad match return {}, expected one of {}\n"
-        sys.stderr.write(errstr.format(m[u'ott_id'],str(TEST_IDS)))
-        sys.exit(1)
+
+def check_result(result):
+    if set(TEST_LIST) != set(result[u'matched_names']):
+        errstr = "Failed to match, submitted: {}, returned {}\n"
+        sys.stderr.write(errstr.format(TEST_LIST,result[u'matched_names']))
+        return False
+    for match in result['results']:
+        m = match[u'matches'][0]
+        if m[u'matched_name'] not in TEST_LIST:
+            errstr = "bad match return {}, expected one of {}\n"
+            sys.stderr.write(errstr.format(m[u'matched_name'],str(TEST_LIST)))
+            return False
+        if m[u'ott_id'] not in TEST_IDS:
+            errstr = "bad match return {}, expected one of {}\n"
+            sys.stderr.write(errstr.format(m[u'ott_id'],str(TEST_IDS)))
+            return False
+    return True
+
+status = 0
+
+status += \
+simple_test('/v3/tnrs/match_names',
+            {u'names': TEST_LIST, u'context_name': 'Mammals'},
+            check_match_names_result,
+            check_result)
+
+sys.exit(status)
