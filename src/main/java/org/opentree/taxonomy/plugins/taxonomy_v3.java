@@ -104,22 +104,25 @@ public class taxonomy_v3 extends ServerPlugin {
     	}
 
     	if (format == null) {
+            // Should be a 400
     		results.put("error", "The specified label type '" + labelFormatStr + "' was not recognized.");
 
     	} else {
     		Taxon match = taxonomy.getTaxonForOTTId(ottId);
             if (match == null)
+                // Should be a 400
                 results.put("error",
                             String.format("The specified taxon %s was not found.", ottId));
             else {
                 JadeTree tree = match.getTaxonomySubtree(format);
                 int count = tree.nodeCount();
                 if (count > SUBTREE_LIMIT)
+                    // Should be a 4xx or 5xx
                     results.put("error",
                                 String.format("The requested subtree exceeds the limit of %s taxa.",
                                               count));
                 else
-                    results.put("subtree", tree.getRoot().getNewick(false)+";");
+                    results.put("newick", tree.getRoot().getNewick(false)+";");
             }
     	}
 
@@ -154,9 +157,9 @@ public class taxonomy_v3 extends ServerPlugin {
     	LinkedList<Taxon> taxa = new LinkedList<Taxon>();
     	LinkedList<Long> ottIdsNotFound = new LinkedList<Long>();
     	for (Long o : ottIds) {
-    		Taxon t = taxonomy.getTaxonForOTTId(o);
-    		if (t != null) {
-    			taxa.add(t);
+    		Taxon tax = taxonomy.getTaxonForOTTId(o);
+    		if (tax != null) {
+    			taxa.add(tax);
     		} else {
     			ottIdsNotFound.add(o);
     		}
@@ -164,8 +167,10 @@ public class taxonomy_v3 extends ServerPlugin {
 
     	if (taxa.size() > 0) {
     		TaxonSet ts = new TaxonSet(taxa);
-        	results.put("taxon", getTaxonInfo(ts.getLICA(), includeLineage, false));
-        	results.put("ott_ids_not_found", ottIdsNotFound);
+        	results.put("mrca", getTaxonInfo(ts.getLICA(), includeLineage, false));
+            if (ottIdsNotFound.size() > 0)
+                // TBD: 400 if any ott ids not found
+                results.put("ott_ids_not_found", ottIdsNotFound);
     	} else {
     		results.put("error","None of the ott ids provided could be matched to known taxa.");
     	}
@@ -200,8 +205,8 @@ public class taxonomy_v3 extends ServerPlugin {
 
     	HashMap<String, Object> results = new HashMap<String, Object>();
 
-    	Taxonomy t = new Taxonomy(graphDb);
-    	Taxon match = t.getTaxonForOTTId(ottId);
+    	Taxonomy tax = new Taxonomy(graphDb);
+    	Taxon match = tax.getTaxonForOTTId(ottId);
 
     	if (match != null) {
     		results = (HashMap<String, Object>) getTaxonInfo(match, includeLineage, includeChildren);
@@ -216,7 +221,6 @@ public class taxonomy_v3 extends ServerPlugin {
     		results.put("error", "the ott id " + String.valueOf(ottId) + " could not be found.");
     	}
 
-
     	return OTRepresentationConverter.convert(results);
     }
 
@@ -227,14 +231,16 @@ public class taxonomy_v3 extends ServerPlugin {
 
     	HashMap<String, Object> results = new HashMap<String, Object>();
 
-    	Taxonomy t = new Taxonomy(graphDb);
+    	Taxonomy tax = new Taxonomy(graphDb);
 		for (OTTFlag f : OTTFlag.values()) {
-	    	IndexHits<Node> hits = t.taxaByFlag.query("flag", f.label);
+	    	IndexHits<Node> hits = tax.taxaByFlag.query("flag", f.label);
 	    	results.put(f.label, hits.size());
 		}
 
     	return OTRepresentationConverter.convert(results);
     }
+
+    // Utility to generate a taxon-description-blob
 
     private Map<String,Object> getTaxonInfo(Taxon t, Boolean includeLineage, Boolean includeChildren) {
 
@@ -248,29 +254,26 @@ public class taxonomy_v3 extends ServerPlugin {
 			addPropertyFromNode(n, TaxonomyProperty.REASON.propertyName(), results);
 			addPropertyFromNode(n, TaxonomyProperty.INPUT_SOURCES.propertyName(), results);
 			results.put("flags", Arrays.asList(new String[] {TaxonomyProperty.DEPRECATED.toString()}));
-            // Need is_suppressed 
-			results.put("is_suppressed", True);
+            // is_suppressed is required by spec.  This seems wrong somehow.
+			results.put("is_suppressed", Boolean.TRUE);
+            // synonyms is required by spec.  This seems wrong somehow.
+            results.put("synonyms", new HashSet<String>());  // No synonyms for deprecated
 
 		} else {
 			// not deprecated, add regular info
 			addTaxonInfo(n, results);
 
-    		HashSet<String> synonyms = new HashSet<String>();
-    		for (Node m : t.getSynonymNodes()) {
-    			synonyms.add((String) m.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
-    		}
-    		results.put("synonyms", synonyms);
-
     		if (includeLineage != null && includeLineage == true) {
     			Node p = n;
     			LinkedList<HashMap<String,Object>> lineage = new LinkedList<HashMap<String, Object>>();
+                String ottprop = OTVocabularyPredicate.OT_OTT_ID.propertyName();
     			while (p.hasRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING)) {
     				p = p.getSingleRelationship(TaxonomyRelType.TAXCHILDOF, Direction.OUTGOING).getEndNode();
     				HashMap<String,Object> info = new HashMap<String, Object>();
     				addTaxonInfo(p, info);
     				lineage.add(info);
     			}
-    			results.put("taxonomic_lineage", lineage);
+    			results.put("lineage", lineage);
     		}
 
             if (includeChildren != null && includeChildren == true) {
@@ -288,17 +291,24 @@ public class taxonomy_v3 extends ServerPlugin {
 		return results;
     }
 
+    // Compare addTaxonInfo in class TNRSResultsRepresentation
+
     private void addTaxonInfo(Node n, HashMap<String, Object> results) {
 
-    	// TODO: need to update this to use the TaxonomyProperty enum once the taxonomy uniqname field is changed to this format
-    	results.put("unique_name", n.getProperty(TaxonomyProperty.UNIQUE_NAME.propertyName()));
-
     	addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_ID.propertyName(), "ott_id", results);
-		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), "name", results);
+
+        String nameProperty = OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName();
+		addPropertyFromNode(n, nameProperty, "name", results);
 		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
 		addTaxSources(n, results);
 
-        Boolean isSuppressed = Boolean.false;
+    	// TODO: need to update this to use the TaxonomyProperty enum once the taxonomy uniqname field is changed to this format
+        String uname = (String) n.getProperty(TaxonomyProperty.UNIQUE_NAME.propertyName());
+        if (uname.length() == 0)
+            uname = (String) n.getProperty(nameProperty);
+    	results.put("unique_name", uname);
+
+        Boolean isSuppressed = Boolean.FALSE;
         if (n.hasProperty(TaxonomyProperty.DUBIOUS.propertyName()))
             isSuppressed = (Boolean) n.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
 
@@ -312,6 +322,13 @@ public class taxonomy_v3 extends ServerPlugin {
 			}
 		}
 		results.put("flags", flags);
+
+        HashSet<String> synonyms = new HashSet<String>();
+        for (Node m : Taxon.getSynonymNodes(n)) {
+            if (m != n)
+                synonyms.add((String) m.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+        }
+        results.put("synonyms", synonyms);
     }
 
     private void addPropertyFromNode(Node node, String property, Map<String, Object> map) {
@@ -329,10 +346,10 @@ public class taxonomy_v3 extends ServerPlugin {
     //TODO maybe propagate "tax_sources" back through INPUT_SOURCES property
     private void addTaxSources(Node node, Map<String, Object> resultsMap){
         String property = TaxonomyProperty.INPUT_SOURCES.propertyName();
-	if (node.getProperty(property) != null){
-	    String[] sources = ((String)node.getProperty(property)).split(",");
-	    resultsMap.put("tax_sources",Arrays.asList(sources));
-	}
+        if (node.getProperty(property) != null){
+            String[] sources = ((String)node.getProperty(property)).split(",");
+            resultsMap.put("tax_sources",Arrays.asList(sources));
+        }
     }
 
 

@@ -14,6 +14,10 @@ neo4j-community-1.9.5/bin/neo4j start
 
 cd ws-tests
 
-./run_tests.sh host:apihost=http://localhost:7474 host:translate=true
+# ./run_tests.sh host:apihost=http://localhost:7474 host:translate=true
+for test in test_v3*.py; do
+  echo $test
+  python $test host:apihost=http://localhost:7474 host:translate=true
+done
 
 # or `python test_blahblah.py` to run one test

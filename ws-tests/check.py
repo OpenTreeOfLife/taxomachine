@@ -68,6 +68,18 @@ def check_source_id(x, where):
     else:
         return True
 
+# In v3, the unique_name should never be null
+def check_unique_name(x, where):
+    if not isinstance(x, unicode):
+        print '** expected string but got', x, where
+        return False
+    elif len(x) == 0:
+        print '** expected non-null unique_name but got', x, where
+        return False
+    else:
+        return True
+
+
 def field(name, check):
     return (name, check, True)
 
@@ -130,7 +142,7 @@ def check_dict(check_key, check_val):
 taxon_blob_fields = [field(u'ott_id', check_integer),
                      field(u'name', check_string),
                      field(u'rank', check_string),
-                     field(u'unique_name', check_string),
+                     field(u'unique_name', check_unique_name),
                      field(u'tax_sources', check_list(check_string))]
 
 check_taxon_blob = check_blob(taxon_blob_fields)

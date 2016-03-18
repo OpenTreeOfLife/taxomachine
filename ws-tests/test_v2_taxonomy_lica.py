@@ -16,7 +16,7 @@ lica = result[u'lica']
 if u'ot:ottId' not in lica:
     sys.stderr.write('No ott id returned in lica \n{}'.format(result))
     sys.exit(1)
-expectedId = 1042120
+expectedId = 1042120  # order Asterales
 if lica[u'ot:ottId'] != expectedId:
     sys.stderr.write('Expected , found {}'.format(lica[u'ottId']))
     sys.exit(1)

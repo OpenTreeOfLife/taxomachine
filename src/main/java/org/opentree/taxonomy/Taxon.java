@@ -113,13 +113,21 @@ public class Taxon {
     }
     
     public Iterable<Node> getSynonymNodes() {
-    	
+    	return getSynonymNodes(taxNode);
+    }
+
+    // Added by JAR 2016-03-18.  I don't know this code very well so
+    // this is probably stylistically the wrong place to put this
+    // method.  See taxonomy_v3.
+
+    public static Iterable<Node> getSynonymNodes(Node aTaxNode) {
+
     	HashSet<Node> synonyms = new HashSet<Node>();
     	
         TraversalDescription synonymTraversal = Traversal.description()
                 .relationships(TaxonomyRelType.SYNONYMOF, Direction.INCOMING);
         
-        for (Node n : synonymTraversal.traverse(taxNode).nodes()) {
+        for (Node n : synonymTraversal.traverse(aTaxNode).nodes()) {
         	synonyms.add(n);
         }
         

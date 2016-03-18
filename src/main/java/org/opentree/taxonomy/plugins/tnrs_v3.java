@@ -128,10 +128,10 @@ public class tnrs_v3 extends ServerPlugin {
     		
             @Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false "
             		+ "(suppressed taxa are not included).")
-            @Parameter(name="include_dubious", optional = true)
-            Boolean includeDubious) {
+            @Parameter(name="include_suppressed", optional = true)
+            Boolean includeSuppressed) {
 
-    	includeDubious = includeDubious == null ? false : includeDubious;
+    	includeSuppressed = includeSuppressed == null ? false : includeSuppressed;
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
@@ -149,7 +149,7 @@ public class tnrs_v3 extends ServerPlugin {
         }
 
         SingleNamePrefixQuery query = new SingleNamePrefixQuery(taxonomy, context);
-        query.setIncludeDubious(includeDubious);
+        query.setIncludeDubious(includeSuppressed);
         TNRSResults results = query.setQueryString(queryString).runQuery().getResults();
 
         // return results if they exist
@@ -192,15 +192,15 @@ public class tnrs_v3 extends ServerPlugin {
     			@Parameter(name="include_deprecated", optional = true) Boolean includeDeprecated,
     		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, however, it is on (true).")
             	@Parameter(name="do_approximate_matching", optional = true) Boolean doFuzzyMatching,
-    		@Description("Whether to include so-called 'dubious' taxa--those which are not accepted by OTT.")
-            	@Parameter(name="include_dubious", optional=true) Boolean includeDubious) {
+    		@Description("Whether to include so-called 'suppressed' taxa--those which are not accepted by OTT.")
+            	@Parameter(name="include_suppressed", optional=true) Boolean includeSuppressed) {
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
 
-        // including deprecated and dubious names are turned OFF by default
+        // including deprecated and suppressed names are turned OFF by default
         includeDeprecated = includeDeprecated == null ? false : includeDeprecated;
-        includeDubious = includeDubious == null ? false : includeDubious;
+        includeSuppressed = includeSuppressed == null ? false : includeSuppressed;
 
         // fuzzy matching is turned ON by default
         doFuzzyMatching = doFuzzyMatching == null ? true : doFuzzyMatching;
@@ -255,7 +255,7 @@ public class tnrs_v3 extends ServerPlugin {
         		.setSearchStrings(idNameMap)
         		.setContext(context)
         		.setAutomaticContextInference(useAutoInference)
-        		.setIncludeDubious(includeDubious)
+        		.setIncludeDubious(includeSuppressed)
         		.setIncludeDeprecated(includeDeprecated)
         		.setDoFuzzyMatching(doFuzzyMatching)
         		.runQuery()

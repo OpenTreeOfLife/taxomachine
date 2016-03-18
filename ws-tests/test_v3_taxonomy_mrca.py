@@ -4,6 +4,9 @@ from check import *
 
 status = 0
 
+# In asterales system maybe this should be 46248 (family Asteraceae)?
+expectedId = 1042120  # order Asterales
+
 status += \
 simple_test('/v3/taxonomy/mrca',
             {u'ott_ids': [513931,3899965,3895873,4727679]},

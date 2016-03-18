@@ -152,22 +152,36 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				// add these properties for all taxa
 				serializer.putBoolean("is_approximate_match", match.getIsApproximate());
-				serializer.putNumber("matched_node_id", matchedNode.getId());
                 if (V2)
-                    serializer.putString(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(),
-                                         (String) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+                    serializer.putNumber("matched_node_id", matchedNode.getId());
+				serializer.putString("search_string", match.getSearchString());
+				serializer.putString("matched_name", match.getMatchedName());
+				serializer.putNumber("score", match.getScore());
+
+                // Taxon - in v3 all this information has to go into a separate blob
+
+                addTaxonInfo(match, serializer);
+            }
+        };
+    }
+
+    // Compare addTaxonInfo in plugin taxonomy_v3
+
+    private static void addTaxonInfo(final TNRSMatch match, final MappingSerializer serializer) {
+
+				Node matchedNode = match.getMatchedTaxon().getNode();
+
+                String name = (String) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+                if (V2)
+                    serializer.putString(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
                 if (V3)
-                    serializer.putString("name",
-                                         (String) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+                    serializer.putString("name", name);
                 if (V2)
                     serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(),
                                          (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
                 if (V3)
                     serializer.putNumber("ott_id",
                                          (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
-				serializer.putString("search_string", match.getSearchString());
-				serializer.putString("matched_name", match.getMatchedName());
-				serializer.putNumber("score", match.getScore());
 
 				// check if taxon is deprecated
 				boolean isDeprecated = match.getIsDeprecated();
@@ -178,7 +192,9 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				} else {
 					// only add these properties for non-deprecated taxa
-					serializer.putString("unique_name", match.getUniqueName()); // TODO; update this to use the TaxonomyProperty enum once the unique_name field is fixed in ott input
+                    String uname = match.getUniqueName();
+                    if (V3 && uname.length() == 0) uname = name;
+					serializer.putString("unique_name", uname); // TODO; update this to use the TaxonomyProperty enum once the unique_name field is fixed in ott input
 					serializer.putString("rank", match.getRank());
 					serializer.putString("nomenclature_code", match.getNomenCode());
 
@@ -212,9 +228,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 					
 					serializer.putBoolean("is_synonym", match.getIsSynonym());
 				}
-			}
-		};
-	}
+    }
 
 	// /////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
@@ -239,14 +253,19 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 		return new MappingRepresentation(RepresentationType.MAP.toString()) {
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
+				Node matchedNode = match.getMatchedTaxon().getNode();
                 if (V2)
-                    serializer.putNumber("node_id", match.getMatchedTaxon().getNode().getId()); // matched node id
+                    serializer.putNumber("node_id", matchedNode.getId()); // matched node id
                 if (V2)
-                    serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(), (Long) match.getMatchedTaxon().getNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
+                    serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(), (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
                 if (V3)
-                    serializer.putNumber("ott_id", (Long) match.getMatchedTaxon().getNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
-				serializer.putString("unique_name", match.getUniqueName()); // unique name
-				serializer.putBoolean("is_higher", match.getIsHigherTaxon()); // is higher taxon
+                    serializer.putNumber("ott_id", (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
+                String uname = match.getUniqueName();
+                if (V3 && uname.length() == 0)
+                    uname = (String)matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
+				serializer.putString("unique_name", uname); // unique name
+
+				serializer.putBoolean("is_higher", match.getIsHigherTaxon()); // is higher taxon ... num_tips would be more consistent with synth
                 if (V2)
                     serializer.putBoolean("is_dubious", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
                 if (V3)
