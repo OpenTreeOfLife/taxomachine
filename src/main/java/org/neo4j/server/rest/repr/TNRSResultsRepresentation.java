@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.neo4j.graphdb.Node;
@@ -220,7 +221,14 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                     serializer.putNumber("ott_id",
                                          (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 
-                // Need tax_sources here!  Damn - requires another class !?  !!!!!!
+                String taxSources = (String) matchedNode.getProperty(TaxonomyProperty.INPUT_SOURCES.propertyName());
+                List<String> sources;
+                if (taxSources != null)
+                    sources = Arrays.asList(taxSources.split(","));
+                else
+                    sources = new ArrayList<String>(0);
+                serializer.putList("tax_sources",
+                                   OTRepresentationConverter.getListRepresentation(sources));
 
 				// check if taxon is deprecated
 				boolean isDeprecated = match.getIsDeprecated();

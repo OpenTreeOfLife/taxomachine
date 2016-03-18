@@ -5,11 +5,11 @@ NAMESLIST = [u'Pan', u'Homo', u'Mus musculus', u'Upupa epops']
 
 def check_result(result):
     if result[u'context_name'] != u'Tetrapods':
-        errstr = 'Expected context = Tetrapods, returned {}\n'
+        errstr = '** expected context = Tetrapods, returned {}\n'
         sys.stderr.write(errstr.format(result[u'context_name']))
         return False
     if result[u'ambiguous_names'] != []:
-        errstr = 'Expected no ambiguous_names, but found {}\n'
+        errstr = '** expected no ambiguous_names, but found {}\n'
         sys.stderr.write(errstr.format(result[u'ambiguous_names']))
         return False
     return True
