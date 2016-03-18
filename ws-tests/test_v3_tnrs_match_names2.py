@@ -23,9 +23,10 @@ def check_result(result):
         errstr = "** bad match return {}, expected one of {}\n"
         sys.stderr.write(errstr.format(m[u'matched_name'],str(TEST_LIST)))
         return False
-    if m[u'ott_id'] not in TEST_IDS:
+    ott_id = m[u'taxon'][u'ott_id']
+    if ott_id not in TEST_IDS:
         errstr = "** bad match return {}, expected one of {}\n"
-        sys.stderr.write(errstr.format(m[u'ott_id'],str(TEST_IDS)))
+        sys.stderr.write(errstr.format(ott_id, str(TEST_IDS)))
         return False
     return True
 

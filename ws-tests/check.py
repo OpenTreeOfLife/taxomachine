@@ -11,7 +11,7 @@ def simple_test(path, input, check, is_right=(lambda x:True)):
     DOMAIN = config('host', 'apihost')
     url = DOMAIN + path
     try:
-        print 'checking', url
+        # print 'checking', url
         output = get_obj_from_http(url, verb='POST', data=input)
         if isinstance(output, dict) and 'error' in output:
             # Should be 400, not 200
