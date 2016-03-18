@@ -72,17 +72,17 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	 * @param results
 	 * @return
 	 */
-	public static TNRSResultsRepresentation getResultsRepresentation(final TNRSResults results) {
+         public static TNRSResultsRepresentation getResultsRepresentation(final TNRSResults results, boolean v3) {
 		return new TNRSResultsRepresentation(RepresentationType.MAP.toString()) {
 
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
 				serializer.putString("governing_code", results.getGoverningCode());
-				serializer.putList("unambiguous_name_ids",
+				serializer.putList((v3 ? "unambiguous_names" : "unambiguous_name_ids"),
 						OTRepresentationConverter.getListRepresentation(results.getNameIdsWithDirectMatches()));
-				serializer.putList("unmatched_name_ids", 
+				serializer.putList((v3 ? "unmatched_names" : "unmatched_name_ids"), 
 						OTRepresentationConverter.getListRepresentation(results.getUnmatchedNameIds()));
-				serializer.putList("matched_name_ids",
+				serializer.putList((v3 ? "matched_names" : "matched_name_ids"),
 						OTRepresentationConverter.getListRepresentation(results.getMatchedNameIds()));
 				serializer.putString("context", results.getContextName());
 				serializer.putBoolean("includes_deprecated_taxa", results.getIncludesDeprecated());

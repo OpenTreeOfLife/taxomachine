@@ -262,7 +262,7 @@ public class tnrs_v2 extends ServerPlugin {
         		.getResults();
 
         gdb.shutdownDb();
-        return TNRSResultsRepresentation.getResultsRepresentation(results);
+        return TNRSResultsRepresentation.getResultsRepresentation(results, false);
     }
     
     /**
