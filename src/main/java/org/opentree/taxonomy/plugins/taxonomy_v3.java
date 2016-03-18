@@ -248,6 +248,8 @@ public class taxonomy_v3 extends ServerPlugin {
 			addPropertyFromNode(n, TaxonomyProperty.REASON.propertyName(), results);
 			addPropertyFromNode(n, TaxonomyProperty.INPUT_SOURCES.propertyName(), results);
 			results.put("flags", Arrays.asList(new String[] {TaxonomyProperty.DEPRECATED.toString()}));
+            // Need is_suppressed 
+			results.put("is_suppressed", True);
 
 		} else {
 			// not deprecated, add regular info
@@ -295,6 +297,13 @@ public class taxonomy_v3 extends ServerPlugin {
 		addPropertyFromNode(n, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), "name", results);
 		addPropertyFromNode(n, TaxonomyProperty.RANK.propertyName(), results);
 		addTaxSources(n, results);
+
+        Boolean isSuppressed = Boolean.false;
+        if (n.hasProperty(TaxonomyProperty.DUBIOUS.propertyName()))
+            isSuppressed = (Boolean) n.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
+
+        // Do this only if property is present on node?  and is true?
+        results.put("is_suppressed", isSuppressed);
 
 		HashSet<String> flags = new HashSet<String>();
 		for (OTTFlag flag : OTTFlag.values()) {

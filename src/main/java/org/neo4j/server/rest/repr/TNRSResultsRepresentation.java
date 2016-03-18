@@ -192,12 +192,15 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 					serializer.putList("synonyms", OTRepresentationConverter.getListRepresentation(match.getSynonyms()));
 					
 					// check dubiousness
-					boolean isDubious = false;
+					Boolean isSuppressed = Boolean.FALSE;
 					if (matchedNode.hasProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
-						isDubious = (Boolean) matchedNode.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
+						isSuppressed = (Boolean) matchedNode.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
 					}
-					serializer.putBoolean("is_dubious", isDubious);
-	
+                    if (V2)
+                        serializer.putBoolean("is_dubious", isSuppressed);
+                    if (V3)
+                        serializer.putBoolean("is_suppressed", isSuppressed);
+
 					// get all flags
 					List<OTTFlag> flags = new LinkedList<OTTFlag>();
 					for (OTTFlag flag : OTTFlag.values()) {
@@ -244,7 +247,10 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
                     serializer.putNumber("ott_id", (Long) match.getMatchedTaxon().getNode().getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
 				serializer.putString("unique_name", match.getUniqueName()); // unique name
 				serializer.putBoolean("is_higher", match.getIsHigherTaxon()); // is higher taxon
-				serializer.putBoolean("is_dubious", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
+                if (V2)
+                    serializer.putBoolean("is_dubious", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
+                if (V3)
+                    serializer.putBoolean("is_suppressed", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
 			}
 		};
 	}
