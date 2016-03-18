@@ -74,7 +74,7 @@ def check_unique_name(x, where):
         print '** expected string but got', x, where
         return False
     elif len(x) == 0:
-        print '** expected non-null unique_name but got', x, where
+        print '** expected non-null unique_name but got null', where
         return False
     else:
         return True

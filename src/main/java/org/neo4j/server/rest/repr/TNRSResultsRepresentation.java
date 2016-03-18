@@ -21,15 +21,27 @@ import org.opentree.tnrs.TNRSMatchSet;
 import org.opentree.tnrs.TNRSNameResult;
 import org.opentree.tnrs.TNRSResults;
 
+// MappingRepresentation is inherited from neo4j's
+// org.neo4j.server.rest.repr package.
+
 public class TNRSResultsRepresentation extends MappingRepresentation {
 
 	public TNRSResultsRepresentation(RepresentationType type) {
 		super(type);
 	}
 
-	TNRSResultsRepresentation(String type) {
+	TNRSResultsRepresentation(String type, final int apiVersion) {
 		super(type);
+        this.apiVersion = apiVersion;
 	}
+
+    // Really sorry about the fact that 'apiVersion' is passed
+    // everywhere, but it seems the easiest way to keep both the v2
+    // and the v3 code running at the same time.  A wholesale rewrite
+    // could probably get rid of apiVersion.
+
+    // Turns out this isn't used, because all methods are static
+    int apiVersion;  // 2 or 3
 
 	// /////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
@@ -43,8 +55,9 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	 * @param result
 	 * @return
 	 */
-	public static TNRSResultsRepresentation getContextRepresentation(final ContextResult result) {
-		return new TNRSResultsRepresentation(RepresentationType.MAP.toString()) {
+    // used by API
+	public static TNRSResultsRepresentation getContextRepresentation(final ContextResult result, final int apiVersion) {
+		return new TNRSResultsRepresentation(RepresentationType.MAP.toString(), apiVersion) {
 
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
@@ -72,33 +85,42 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	 * @param results
 	 * @return
 	 */
-         public static TNRSResultsRepresentation getResultsRepresentation(final TNRSResults results, boolean v3) {
-		return new TNRSResultsRepresentation(RepresentationType.MAP.toString()) {
+    public static TNRSResultsRepresentation getResultsRepresentation(final TNRSResults results, final int apiVersion) {
+		return new TNRSResultsRepresentation(RepresentationType.MAP.toString(), apiVersion) {
 
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
 				serializer.putString("governing_code", results.getGoverningCode());
-				serializer.putList((v3 ? "unambiguous_names" : "unambiguous_name_ids"),
+                boolean V3 = (apiVersion >= 3);
+				serializer.putList((V3 ? "unambiguous_names" : "unambiguous_name_ids"),
 						OTRepresentationConverter.getListRepresentation(results.getNameIdsWithDirectMatches()));
-				serializer.putList((v3 ? "unmatched_names" : "unmatched_name_ids"), 
+				serializer.putList((V3 ? "unmatched_names" : "unmatched_name_ids"), 
 						OTRepresentationConverter.getListRepresentation(results.getUnmatchedNameIds()));
-				serializer.putList((v3 ? "matched_names" : "matched_name_ids"),
+				serializer.putList((V3 ? "matched_names" : "matched_name_ids"),
 						OTRepresentationConverter.getListRepresentation(results.getMatchedNameIds()));
 				serializer.putString("context", results.getContextName());
 				serializer.putBoolean("includes_deprecated_taxa", results.getIncludesDeprecated());
-				serializer.putBoolean("includes_dubious_names", results.getIncludesDubious());
+                if (apiVersion <= 2)
+                    serializer.putBoolean("includes_dubious_names", results.getIncludesDubious());
+                else
+                    serializer.putBoolean("includes_suppressed_names", results.getIncludesDubious());
 				serializer.putBoolean("includes_approximate_matches", results.getIncludesApproximate());
 				serializer.putMapping("taxonomy",
 						OTRepresentationConverter.getMapRepresentation(results.getTaxonomyMetdata()));
-				serializer.putList("results", getResultsListRepresentation(results));
+				serializer.putList("results", getResultsListRepresentation(results, apiVersion));
 			}
 		};
 	}
 
-	public static MappingRepresentation getNameResultRepresentation(TNRSNameResult r) {
+    // Blob for matches for a single name
+
+	private static MappingRepresentation getNameResultRepresentation(TNRSNameResult r, final int apiVersion) {
 
 		final HashMap<String, Object> nameResultMap = new HashMap<String, Object>();
-		nameResultMap.put("id", r.getId());
+        if (apiVersion <= 2)
+            nameResultMap.put("id", r.getId());
+        else
+            nameResultMap.put("name", r.getId());
 		nameResultMap.put("matches", r.getMatches());
 
 		return new MappingRepresentation(RepresentationType.MAP.toString()) {
@@ -112,9 +134,9 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 					if (value instanceof String) {
 						serializer.putString(key, (String) value);
 					} else if (value instanceof TNRSMatchSet) {
-						serializer.putList(key, getMatchSetRepresentation((TNRSMatchSet) value));
+						serializer.putList(key, getMatchSetRepresentation((TNRSMatchSet) value, apiVersion));
 					} else if (value instanceof TNRSMatch) {
-						serializer.putMapping(key, getMatchRepresentation((TNRSMatch) value));
+						serializer.putMapping(key, getMatchRepresentation((TNRSMatch) value, apiVersion));
 					} else if (value instanceof Long) {
 						serializer.putNumber(key, (Long) value);
 					} else if (value instanceof Double) {
@@ -127,22 +149,19 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 		};
 	}
 
-	public static ListRepresentation getMatchSetRepresentation(final TNRSMatchSet matchSet) {
+	private static ListRepresentation getMatchSetRepresentation(final TNRSMatchSet matchSet, final int apiVersion) {
 
 		FirstItemIterable<Representation> results = new FirstItemIterable<Representation>(
 				new IteratorWrapper<Representation, Object>((Iterator) matchSet.iterator()) {
 					@Override
 					protected Representation underlyingObjectToObject(Object value) {
-						return getMatchRepresentation((TNRSMatch) value);
+						return getMatchRepresentation((TNRSMatch) value, apiVersion);
 					}
 				});
 		return new ListRepresentation(RepresentationType.PROPERTIES, results);
 	}
 
-    static boolean V2 = true;
-    static boolean V3 = true;
-
-	public static MappingRepresentation getMatchRepresentation(final TNRSMatch match) {
+	private static MappingRepresentation getMatchRepresentation(final TNRSMatch match, final int apiVersion) {
 
 		return new MappingRepresentation(RepresentationType.MAP.toString()) {
 			@Override
@@ -152,40 +171,61 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 
 				// add these properties for all taxa
 				serializer.putBoolean("is_approximate_match", match.getIsApproximate());
-                if (V2)
+                if (apiVersion <= 2)
                     serializer.putNumber("matched_node_id", matchedNode.getId());
 				serializer.putString("search_string", match.getSearchString());
 				serializer.putString("matched_name", match.getMatchedName());
 				serializer.putNumber("score", match.getScore());
+                serializer.putBoolean("is_synonym", match.getIsSynonym());
+                serializer.putString("nomenclature_code", match.getNomenCode());
 
                 // Taxon - in v3 all this information has to go into a separate blob
 
-                addTaxonInfo(match, serializer);
+                if (apiVersion <= 2)
+                    addTaxonInfo(match, serializer, apiVersion);
+                else
+                    serializer.putMapping("taxon", getTaxonRepresentation(match, apiVersion));
+            }
+        };
+    }
+
+	private static MappingRepresentation getTaxonRepresentation(final TNRSMatch match, final int apiVersion) {
+
+		return new MappingRepresentation(RepresentationType.MAP.toString()) {
+			@Override
+			protected void serialize(final MappingSerializer serializer) {
+
+                // Taxon - in v3 all this information has to go into a separate blob
+
+                addTaxonInfo(match, serializer, apiVersion);
             }
         };
     }
 
     // Compare addTaxonInfo in plugin taxonomy_v3
 
-    private static void addTaxonInfo(final TNRSMatch match, final MappingSerializer serializer) {
+    private static void addTaxonInfo(final TNRSMatch match, final MappingSerializer serializer, final int apiVersion) {
 
 				Node matchedNode = match.getMatchedTaxon().getNode();
 
                 String name = (String) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
-                if (V2)
+                if (apiVersion <= 2)
                     serializer.putString(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), name);
-                if (V3)
+                else
                     serializer.putString("name", name);
-                if (V2)
+                if (apiVersion <= 2)
                     serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(),
                                          (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
-                if (V3)
+                else
                     serializer.putNumber("ott_id",
                                          (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName()));
 
+                // Need tax_sources here!  Damn - requires another class !?  !!!!!!
+
 				// check if taxon is deprecated
 				boolean isDeprecated = match.getIsDeprecated();
-				serializer.putBoolean("is_deprecated", isDeprecated);
+                if (apiVersion <= 2)
+                    serializer.putBoolean("is_deprecated", isDeprecated);
 
 				if (isDeprecated) {
 					serializer.putList("flags", OTRepresentationConverter.getListRepresentation(Arrays.asList(new String[] {"DEPRECATED",})));
@@ -193,10 +233,9 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 				} else {
 					// only add these properties for non-deprecated taxa
                     String uname = match.getUniqueName();
-                    if (V3 && uname.length() == 0) uname = name;
+                    if (apiVersion >= 3 && uname.length() == 0) uname = name;
 					serializer.putString("unique_name", uname); // TODO; update this to use the TaxonomyProperty enum once the unique_name field is fixed in ott input
 					serializer.putString("rank", match.getRank());
-					serializer.putString("nomenclature_code", match.getNomenCode());
 
 					/*
 					Node pNode = match.getMatchedTaxon().getParentTaxon().getNode();
@@ -212,9 +251,9 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 					if (matchedNode.hasProperty(TaxonomyProperty.DUBIOUS.propertyName())) {
 						isSuppressed = (Boolean) matchedNode.getProperty(TaxonomyProperty.DUBIOUS.propertyName());
 					}
-                    if (V2)
+                    if (apiVersion <= 2)
                         serializer.putBoolean("is_dubious", isSuppressed);
-                    if (V3)
+                    else
                         serializer.putBoolean("is_suppressed", isSuppressed);
 
 					// get all flags
@@ -225,8 +264,6 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 						}
 					}
 					serializer.putList("flags", OTRepresentationConverter.getListRepresentation(flags));
-					
-					serializer.putBoolean("is_synonym", match.getIsSynonym());
 				}
     }
 
@@ -236,39 +273,40 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	//
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public static ListRepresentation getMatchSetRepresentationForAutocompleteBox(final Iterator<TNRSMatch> matchIter) {
+    // used by API
+	public static ListRepresentation getMatchSetRepresentationForAutocompleteBox(final Iterator<TNRSMatch> matchIter, final int apiVersion) {
 
 		FirstItemIterable<Representation> results = new FirstItemIterable<Representation>(
 				new IteratorWrapper<Representation, Object>((Iterator) matchIter) {
 					@Override
 					protected Representation underlyingObjectToObject(Object value) {
-						return getMatchRepresentationForAutocompleteBox((TNRSMatch) value);
+						return getMatchRepresentationForAutocompleteBox((TNRSMatch) value, apiVersion);
 					}
 				});
 		return new ListRepresentation(RepresentationType.PROPERTIES, results);
 	}
 
-	public static MappingRepresentation getMatchRepresentationForAutocompleteBox(final TNRSMatch match) {
+	private static MappingRepresentation getMatchRepresentationForAutocompleteBox(final TNRSMatch match, final int apiVersion) {
 
 		return new MappingRepresentation(RepresentationType.MAP.toString()) {
 			@Override
 			protected void serialize(final MappingSerializer serializer) {
 				Node matchedNode = match.getMatchedTaxon().getNode();
-                if (V2)
+                if (apiVersion <= 2)
                     serializer.putNumber("node_id", matchedNode.getId()); // matched node id
-                if (V2)
+                if (apiVersion <= 2)
                     serializer.putNumber(OTVocabularyPredicate.OT_OTT_ID.propertyName(), (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
-                if (V3)
+                else
                     serializer.putNumber("ott_id", (Long) matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_ID.propertyName())); // matched ott id
                 String uname = match.getUniqueName();
-                if (V3 && uname.length() == 0)
+                if (apiVersion >= 3 && uname.length() == 0)
                     uname = (String)matchedNode.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
 				serializer.putString("unique_name", uname); // unique name
 
 				serializer.putBoolean("is_higher", match.getIsHigherTaxon()); // is higher taxon ... num_tips would be more consistent with synth
-                if (V2)
+                if (apiVersion <= 2)
                     serializer.putBoolean("is_dubious", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
-                if (V3)
+                else
                     serializer.putBoolean("is_suppressed", match.getIsDubious());  // is hidden by virtue of having some suppressed flag
 			}
 		};
@@ -310,7 +348,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 	 * @param data
 	 * @return
 	 */
-	public static ListRepresentation getResultsListRepresentation(TNRSResults data) {
+	private static ListRepresentation getResultsListRepresentation(TNRSResults data, final int apiVersion) {
 		final FirstItemIterable<Representation> results = // convertValuesToRepresentations(data);
 
 		new FirstItemIterable<Representation>(new IterableWrapper<Representation, Object>((Iterable) data) {
@@ -319,7 +357,7 @@ public class TNRSResultsRepresentation extends MappingRepresentation {
 			protected Representation underlyingObjectToObject(Object value) {
 
 				// if (value instanceof TNRSNameResult) {
-				return getNameResultRepresentation((TNRSNameResult) value);
+				return getNameResultRepresentation((TNRSNameResult) value, apiVersion);
 			}
 		});
 		return new ListRepresentation(RepresentationType.MAP.toString(), results);

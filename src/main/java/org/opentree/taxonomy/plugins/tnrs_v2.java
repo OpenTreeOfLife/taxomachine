@@ -42,6 +42,8 @@ import org.opentree.tnrs.queries.SingleNamePrefixQuery;
 
 public class tnrs_v2 extends ServerPlugin {
 
+    public final static int apiVersion = 2;
+
 	public static int MAX_QUERY_STRINGS = 1000;
 	    
     @Description("Taxonomic contexts are available to limit the scope of TNRS searches. These contexts correspond to uncontested higher "
@@ -98,7 +100,7 @@ public class tnrs_v2 extends ServerPlugin {
         ContextResult contextResult = new ContextResult(inferredContext, namesNotMatched);
         gdb.shutdownDb();
 
-        return TNRSResultsRepresentation.getContextRepresentation(contextResult);
+        return TNRSResultsRepresentation.getContextRepresentation(contextResult, apiVersion);
     	
     }
 
@@ -161,7 +163,7 @@ public class tnrs_v2 extends ServerPlugin {
 
             	Collections.sort(matches, new MatchComparator());
 
-            	return TNRSResultsRepresentation.getMatchSetRepresentationForAutocompleteBox(matches.iterator());
+            	return TNRSResultsRepresentation.getMatchSetRepresentationForAutocompleteBox(matches.iterator(), apiVersion);
             }
         }
         
@@ -262,7 +264,7 @@ public class tnrs_v2 extends ServerPlugin {
         		.getResults();
 
         gdb.shutdownDb();
-        return TNRSResultsRepresentation.getResultsRepresentation(results, false);
+        return TNRSResultsRepresentation.getResultsRepresentation(results, apiVersion);
     }
     
     /**
