@@ -79,6 +79,16 @@ def check_unique_name(x, where):
     else:
         return True
 
+def check_rank(x, where):
+    if not isinstance(x, unicode):
+        print '** expected string but got', x, where
+        return False
+    elif len(x) == 0:
+        print '** expected non-null rank but got null', where
+        return False
+    else:
+        return True
+
 
 def field(name, check):
     return (name, check, True)
@@ -142,7 +152,7 @@ def check_dict(check_key, check_val):
 
 taxon_blob_fields = [field(u'ott_id', check_integer),
                      field(u'name', check_string),
-                     field(u'rank', check_string),
+                     field(u'rank', check_rank),
                      field(u'unique_name', check_unique_name),
                      field(u'tax_sources', check_list(check_string))]
 
