@@ -23,6 +23,7 @@ import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
 import org.neo4j.server.rest.repr.TNRSResultsRepresentation;
+import org.neo4j.server.rest.repr.BadInputException;
 import org.opentree.properties.OTPropertyPredicate;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.graphdb.GraphDatabaseAgent;
@@ -44,7 +45,8 @@ public class tnrs_v3 extends ServerPlugin {
 
     public final static int apiVersion = 3;
 
-	public static int MAX_QUERY_STRINGS = 1000;
+    // Reduced from 1000 to 400.  See https://github.com/OpenTreeOfLife/feedback/issues/242
+	public static int MAX_QUERY_STRINGS = 400;
 	    
     @Description("Taxonomic contexts are available to limit the scope of TNRS searches. These contexts correspond to uncontested higher "
     		+ "taxa such as 'Animals' or 'Land plants'. This service returns a list containing all available taxonomic context "
@@ -131,13 +133,14 @@ public class tnrs_v3 extends ServerPlugin {
             @Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false "
             		+ "(suppressed taxa are not included).")
             @Parameter(name="include_suppressed", optional = true)
-            Boolean includeSuppressed) {
+            Boolean includeSuppressed)
+        throws BadInputException
+    {
 
     	includeSuppressed = includeSuppressed == null ? false : includeSuppressed;
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
-        HashMap<String, Object> errorResults = new HashMap<String, Object>();
         
         // attempt to get the named context, return an error if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
@@ -145,8 +148,7 @@ public class tnrs_v3 extends ServerPlugin {
         	try {
         		context = taxonomy.getContextByName(contextName);
         	} catch (ContextNotFoundException ex) {
-        		errorResults.put("error", "The context '" + contextName + " could not be found.");
-        		return OTRepresentationConverter.convert(errorResults);
+        		throw new BadInputException("The context '" + contextName + " could not be found.");
         	}
         }
 
@@ -195,7 +197,9 @@ public class tnrs_v3 extends ServerPlugin {
     		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, however, it is on (true).")
             	@Parameter(name="do_approximate_matching", optional = true) Boolean doFuzzyMatching,
     		@Description("Whether to include so-called 'suppressed' taxa--those which are not accepted by OTT.")
-            	@Parameter(name="include_suppressed", optional=true) Boolean includeSuppressed) {
+            	@Parameter(name="include_suppressed", optional=true) Boolean includeSuppressed)
+        throws BadInputException
+    {
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
@@ -212,16 +216,14 @@ public class tnrs_v3 extends ServerPlugin {
         	ids = names;
 
         } else if (ids.length != names.length) {
-        	errorResults.put("error", "The number of names and ids does not match. If you provide ids, then you "
+            throw new BadInputException("The number of names and ids does not match. If you provide ids, then you "
         			+ "must provide exactly as many ids as names.");
-			return OTRepresentationConverter.convert(errorResults);
         
         } else {
         	HashSet<String> idSet = new HashSet<String>();
         	for (String id : ids) {
         		if (idSet.contains(id)) {
-        			errorResults.put("error", "The id " + id + " is not unique. If you provide ids, they must be unique.");
-        			return OTRepresentationConverter.convert(errorResults);
+        			throw new BadInputException("The id " + id + " is not unique. If you provide ids, they must be unique.");
         		}
         		idSet.add(id);
         	}
@@ -234,9 +236,8 @@ public class tnrs_v3 extends ServerPlugin {
         }
                 
     	if (idNameMap.keySet().size() > MAX_QUERY_STRINGS) {
-    		errorResults.put("error", "Queries containing more than "+MAX_QUERY_STRINGS+" strings are not supported. You may submit multiple"
+    		throw new BadInputException("Queries containing more than "+MAX_QUERY_STRINGS+" strings are not supported. You may submit multiple"
     				+ "smaller queries to avoid this limit.");
-            return OTRepresentationConverter.convert(errorResults);
     	}
     	
         // attempt to get the named context, return an error if a name is supplied but no corresponding context can be found
@@ -246,8 +247,7 @@ public class tnrs_v3 extends ServerPlugin {
         	try {
         		context = taxonomy.getContextByName(contextName);
         	} catch (ContextNotFoundException ex) {
-        		errorResults.put("error", "The context '" + contextName + " could not be found.");
-        		return OTRepresentationConverter.convert(errorResults);
+        		throw new BadInputException("The context '" + contextName + " could not be found.");
         	}
         	useAutoInference = false;
         }

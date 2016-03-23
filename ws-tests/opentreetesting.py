@@ -144,7 +144,7 @@ def test_http_json_method(url,
          has the expected status code, AND
          has the expected content (if expected_response is not None)
     '''
-    fail_return = (False, None) if return_bool_data else False
+    fail_return = (False, None, False) if return_bool_data else False
     if headers is None:
         headers = {
             'content-type' : 'application/json',

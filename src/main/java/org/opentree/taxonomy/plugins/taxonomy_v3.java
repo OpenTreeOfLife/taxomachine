@@ -22,6 +22,7 @@ import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
+import org.neo4j.server.rest.repr.BadInputException;
 import org.opentree.graphdb.GraphDatabaseAgent;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.LabelFormat;
@@ -44,34 +45,6 @@ public class taxonomy_v3 extends ServerPlugin {
     	return OTRepresentationConverter.convert(new Taxonomy(graphDb).getMetadataMap());
     }
 
-    @Description("Get a list of deprecated ott ids and the names to which they correspond. Deprecated ott ids are ott ids that were "
-    		+ "included in a previous version of the OTT taxonomy, but which have been retired and no longer exist in subsequent "
-    		+ "versions. Deprecated ids are thus known to be unstable across versions and should not be used. In most cases, the "
-    		+ "reason for deprecation is that the taxonomic names have either ceased to exist, or were duplicates of other names, and "
-    		+ "have since been combined. This service is provided as a convenience. The canonical list of deprecated ids is available "
-    		+ "from http://file.opentreeoflife.org/.")
-    @PluginTarget(GraphDatabaseService.class)
-    public Representation deprecated_taxa (@Source GraphDatabaseService graphDb) {
-
-    	List<HashMap<String,Object>> deprecatedTaxa = new LinkedList<HashMap<String, Object>>();
-
-    	IndexHits<Node> dTaxNodes = new Taxonomy(new GraphDatabaseAgent(graphDb)).ALLTAXA
-    			.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA)
-    			.query(new MatchAllDocsQuery());
-
-    	for (Node d : dTaxNodes) {
-    		HashMap<String, Object> dMap = new HashMap<String, Object>();
-
-    		addPropertyFromNode(d, OTVocabularyPredicate.OT_OTT_ID.propertyName(), "ott_id", dMap);
-    		addPropertyFromNode(d, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), "name", dMap);
-    		addPropertyFromNode(d, TaxonomyProperty.REASON.propertyName(), dMap);
-    		addPropertyFromNode(d, TaxonomyProperty.SOURCE_INFO.propertyName(), dMap);
-    		deprecatedTaxa.add(dMap);
-    	}
-
-    	return OTRepresentationConverter.convert(deprecatedTaxa);
-    }
-
     static int SUBTREE_LIMIT = 50000;
 
     @Description("Extract and return the inclusive taxonomic subtree i.e. (a subset of the taxonomy) below a given taxon. "
@@ -85,11 +58,13 @@ public class taxonomy_v3 extends ServerPlugin {
 
     		@Description("The format for the labels. If provided, this must be one of the options: [\"name\", "
     				+ "\"id\", \"name_and_id\",\"original_name\"], indicating whether the node labels should contain "
-    				+ "(respecitvely) just the cleaned name (i.e. with punctuation and whitespace replaced with underscores), "
+    				+ "(respectively) just the cleaned name (i.e. with punctuation and whitespace replaced with underscores), "
     				+ "just the ott id, the cleaned name and as well as the ott id (default), or the original name without "
     				+ "punctuation removed.")
     		@Parameter(name="label_format", optional=true)
-    		String labelFormatStr) {
+    		String labelFormatStr)
+        throws BadInputException
+    {
 
     	labelFormatStr = labelFormatStr == null ? LabelFormat.NAME_AND_ID.toString() : labelFormatStr;
 
@@ -104,21 +79,19 @@ public class taxonomy_v3 extends ServerPlugin {
     	}
 
     	if (format == null) {
-            // Should be a 400
-    		results.put("error", "The specified label type '" + labelFormatStr + "' was not recognized.");
+            throw new BadInputException("The specified label type '" + labelFormatStr + "' was not recognized.");
 
     	} else {
     		Taxon match = taxonomy.getTaxonForOTTId(ottId);
             if (match == null)
                 // Should be a 400
-                results.put("error",
+                throw new BadInputException(
                             String.format("The specified taxon %s was not found.", ottId));
             else {
                 JadeTree tree = match.getTaxonomySubtree(format);
                 int count = tree.nodeCount();
                 if (count > SUBTREE_LIMIT)
-                    // Should be a 4xx or 5xx
-                    results.put("error",
+                    throw new BadInputException(
                                 String.format("The requested subtree exceeds the limit of %s taxa.",
                                               count));
                 else
@@ -144,14 +117,14 @@ public class taxonomy_v3 extends ServerPlugin {
 				+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
 				+ "with the least inclusive taxa at lower indices (i.e. higher indices are higher taxa).")
     	@Parameter(name="include_lineage", optional=true)
-    	Boolean includeLineage) {
-
+    	Boolean includeLineage) 
+        throws BadInputException
+    {
     	Taxonomy taxonomy = new Taxonomy(graphDb);
     	HashMap<String,Object> results = new HashMap<String, Object>();
 
     	if (ottIds.length < 1) {
-    		results.put("error","You must provide at least one ott id");
-    		return OTRepresentationConverter.convert(results);
+    		throw new BadInputException("You must provide at least one ott id");
     	}
 
     	LinkedList<Taxon> taxa = new LinkedList<Taxon>();
@@ -172,7 +145,7 @@ public class taxonomy_v3 extends ServerPlugin {
                 // TBD: 400 if any ott ids not found
                 results.put("ott_ids_not_found", ottIdsNotFound);
     	} else {
-    		results.put("error","None of the ott ids provided could be matched to known taxa.");
+    		throw new BadInputException("None of the OTT ids provided could be matched to known taxa");
     	}
 
     	return OTRepresentationConverter.convert(results);
@@ -199,7 +172,9 @@ public class taxonomy_v3 extends ServerPlugin {
     		@Description("Whether or not to include information about all the children of this taxon. "
     		+ "By default, this option is set to false. If it is set to true, the children will be provided in an array.")
     		@Parameter(name="include_children", optional=true)
-    		Boolean includeChildren) {
+    		Boolean includeChildren)
+        throws BadInputException
+    {
 
     	listDescendants = listDescendants == null ? false : listDescendants;
 
@@ -210,15 +185,14 @@ public class taxonomy_v3 extends ServerPlugin {
 
     	if (match != null) {
     		results = (HashMap<String, Object>) getTaxonInfo(match, includeLineage, includeChildren);
-
     		if (listDescendants) {
                         LabelFormat tipFormat = LabelFormat.ID;  //API specifies ids; could support alternate labels
-                        Taxonomy taxonomy = new Taxonomy(graphDb);
-                        results.put("terminal_descendants",taxonomy.getTaxonForOTTId(ottId).getTaxonomyTerminals(tipFormat));
+                        results.put("terminal_descendants",
+                                    match.getTaxonomyTerminals(tipFormat));
     	    	}
 
     	} else {
-    		results.put("error", "the ott id " + String.valueOf(ottId) + " could not be found.");
+    		throw new BadInputException("The OTT id " + String.valueOf(ottId) + " could not be found");
     	}
 
     	return OTRepresentationConverter.convert(results);
