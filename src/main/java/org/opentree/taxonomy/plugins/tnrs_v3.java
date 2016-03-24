@@ -191,7 +191,7 @@ public class tnrs_v3 extends ServerPlugin {
 
             @Description("The name of the taxonomic context to be searched")
             	@Parameter(name = "context_name", optional = true) String contextName,
-        	@Description("An array of taxon names to be queried. Currently limited to 1000 names.")
+        	@Description("An array of taxon names to be queried. Currently limited to 10,000 names for exact matches, or 250 names when inexact matches are requested.")
         		@Parameter(name="names", optional = false) String[] names,
         	@Description("An array of ids to use for identifying names. These will be assigned to each name in the `names` array. If `ids` is provided, then `ids` and `names` must be identical in length.")
     			@Parameter(name="ids", optional = true) String[] ids,
