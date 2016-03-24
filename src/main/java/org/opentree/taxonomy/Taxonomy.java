@@ -3,6 +3,8 @@ package org.opentree.taxonomy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.opentree.exceptions.MultipleHitsException;
 import org.neo4j.graphdb.Direction;
@@ -269,8 +271,11 @@ public class Taxonomy {
 		return i;
 	}
 
+    private final static Pattern deversioner = Pattern.compile("([^0-9\\.]+)\\.?(([0-9]+(\\.[0-9]+)?).*)");
+
 	/**
-	 * provide information about the taxonomy stored in the db
+	 * Provide information about the taxonomy stored in the db.  See 
+     * https://github.com/OpenTreeOfLife/germinator/issues/61
 	 * @return
 	 */
 	public Map<String, Object> getMetadataMap() {
@@ -279,6 +284,23 @@ public class Taxonomy {
 		for (String key : metaNode.getPropertyKeys()) {
 			metadata.put(key, metaNode.getProperty(key));
 		}
+
+        // As of 2016-03-24, we have source, author, and weburl fields.
+        // Source is something like "ott2.9draft12".
+        // In treemachine, taxonomy metadata in treemachine has "name" and "version" fields which 
+        // concatenated would be the "source" field.
+        String source = (String) metadata.get("source");
+        Matcher m = deversioner.matcher(source);
+        if (m.matches()) {
+            String name = m.group(1);
+            String version = m.group(2); // e.g. 2.9draft5
+            String majorminor = m.group(3); // e.g. 2.9
+            metadata.put("name", name);
+            metadata.put("version", m.group(3));
+            String weburl = (String) metadata.get("weburl");
+            if (weburl.equals("https://github.com/OpenTreeOfLife/opentree/wiki/Open-Tree-Taxonomy"))
+                metadata.put("weburl", "https://tree.opentreeoflife.org/about/taxonomy-version/" + name + majorminor);
+        }
 		return metadata;
 	}
 

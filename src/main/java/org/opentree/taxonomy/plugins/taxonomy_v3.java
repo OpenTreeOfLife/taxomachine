@@ -42,7 +42,8 @@ public class taxonomy_v3 extends ServerPlugin {
     		+ "includes (at least) the version, and the location from which the complete taxonomy source files can be downloaded.")
     @PluginTarget(GraphDatabaseService.class)
     public Representation about (@Source GraphDatabaseService graphDb) {
-    	return OTRepresentationConverter.convert(new Taxonomy(graphDb).getMetadataMap());
+        Map<String, Object> meta = new Taxonomy(graphDb).getMetadataMap();
+    	return OTRepresentationConverter.convert(meta);
     }
 
     static int SUBTREE_LIMIT = 50000;
