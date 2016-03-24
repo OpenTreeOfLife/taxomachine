@@ -312,12 +312,10 @@ public class Taxonomy {
 	    
 	    // generate the node label
 	    String label = "";
-	    if (name != null) {
-	    	if (ottId != null) {
-	    		label = name + "_ott" + ottId;
-	    	} else {
-	    		label = name;
-	    	}
+	    if (name != null && ottId != null) {
+	    	label = name + "_ott" + ottId;
+	    } else if (ottId == null) {
+	    	label = name;
 	    } else {
 	    	label = ottId;
 	    }

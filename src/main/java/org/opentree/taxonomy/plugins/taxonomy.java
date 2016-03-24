@@ -164,9 +164,18 @@ public class taxonomy extends ServerPlugin {
     		@Parameter(name="ott_id", optional=false)
     		Long ottId,
 
-    		@Description("Provide a list of terminal OTT ids contained by this taxon.")
+    		@Description("Whether to provide a list of terminal taxa contained by this taxon. The returned list can be provided "
+    		+ "in one of several formats, which can be specified using the `terminal_descendant_list_format` parameter.")
     		@Parameter(name="list_terminal_descendants", optional=true)
     		Boolean listDescendants,
+
+    		@Description("The format for the list of terminal descendant taxa. This parameter is used only if "
+    		+ "`list_terminal_descendants` == `true`. One of the following format choices may be specified: 'name' "
+    		+ "(which returns a list of OTT taxon names), 'id' (which returns a list of OTT ids), or 'name_and_id'. "
+    		+ "(which returns a list of names concatenated with their OTT ids). If no format is specified or if the "
+    		+ "specified format is not recognized, The default format of 'id' will be used.")
+    		@Parameter(name="terminal_descendants_format", optional=true)
+    		String listDescendantsFormat,
 
     		@Description("Whether or not to include information about all the higher level taxa that include this one. "
     		+ "By default, this option is set to false. If it is set to true, the lineage will be provided in an ordered array, "
@@ -190,9 +199,15 @@ public class taxonomy extends ServerPlugin {
     		results = (HashMap<String, Object>) getTaxonInfo(match, includeLineage, includeChildren);
 
     		if (listDescendants) {
-                        LabelFormat tipFormat = LabelFormat.ID;  //API specifies ids; could support alternate labels
+                        LabelFormat tipFormat = LabelFormat.ID;
+                        if (listDescendantsFormat != null && listDescendantsFormat == "name") {
+                        	tipFormat = LabelFormat.NAME;
+                        } else if (listDescendantsFormat != null && listDescendantsFormat == "name_and_id") {
+                        	tipFormat = LabelFormat.NAME_AND_ID;
+                        }                        
+                        
                         Taxonomy taxonomy = new Taxonomy(graphDb);
-                        results.put("terminal_descendants",taxonomy.getTaxonForOTTId(ottId).getTaxonomyTerminals(tipFormat));
+                        results.put("terminal_descendants", taxonomy.getTaxonForOTTId(ottId).getTaxonomyTerminals(tipFormat));
     	    	}
 
     	} else {

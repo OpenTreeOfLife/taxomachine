@@ -271,7 +271,7 @@ public class Taxon {
      * Return a list terminal taxa below this taxon.
      * @return
      */
-    public List<Integer> getTaxonomyTerminals(LabelFormat labelFormat) {
+    public List<Object> getTaxonomyTerminals(LabelFormat labelFormat) {
 
         TraversalDescription CHILDOF_TRAVERSAL = Traversal.description()
                 .relationships(TaxonomyRelType.PREFTAXCHILDOF, Direction.INCOMING);
@@ -308,11 +308,11 @@ public class Taxon {
 
         }
         List<TreeNode> tips = root.getTips();
-        List<Integer> result = new ArrayList<Integer>();
+        List<Object> result = new ArrayList<Object>();
         for(TreeNode tip : tips){
             JadeNode j = (JadeNode)tip;
         	
-        	result.add(Integer.parseInt(j.getLabel().toString()));
+        	result.add(j.getLabel());
         }
         return result;
     }
