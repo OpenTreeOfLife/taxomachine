@@ -279,7 +279,10 @@ public class Taxonomy {
 	 * @return
 	 */
 	public Map<String, Object> getMetadataMap() {
-		Node metaNode = this.getTaxonomyRootNode().getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.INCOMING).getStartNode();
+        Node rootNode = this.getTaxonomyRootNode();
+        if (rootNode == null)
+            throw new RuntimeException("no root node");
+		Node metaNode = rootNode.getSingleRelationship(TaxonomyRelType.METADATAFOR, Direction.INCOMING).getStartNode();
 		Map<String, Object> metadata = new HashMap<String, Object>();
 		for (String key : metaNode.getPropertyKeys()) {
 			metadata.put(key, metaNode.getProperty(key));
