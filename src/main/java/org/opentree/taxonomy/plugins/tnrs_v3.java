@@ -45,8 +45,11 @@ public class tnrs_v3 extends ServerPlugin {
 
     public final static int apiVersion = 3;
 
-    // Reduced from 1000 to 400.  See https://github.com/OpenTreeOfLife/feedback/issues/242
-	public static int MAX_QUERY_STRINGS = 400;
+    // Limit in v2 was 1000.  See https://github.com/OpenTreeOfLife/feedback/issues/242
+    // 10,000 queries at .0016 second per query = 16 seconds
+	public static int MAX_NONFUZZY_QUERY_STRINGS = 10000;
+    // 250 queries at .3 second per query = 75 seconds
+	public static int MAX_FUZZY_QUERY_STRINGS = 250;
 	    
     @Description("Taxonomic contexts are available to limit the scope of TNRS searches. These contexts correspond to uncontested higher "
     		+ "taxa such as 'Animals' or 'Land plants'. This service returns a list containing all available taxonomic context "
@@ -233,8 +236,9 @@ public class tnrs_v3 extends ServerPlugin {
         	idNameMap.put(ids[i], names[i]);
         }
                 
-    	if (idNameMap.keySet().size() > MAX_QUERY_STRINGS) {
-    		throw new BadInputException("Queries containing more than "+MAX_QUERY_STRINGS+" strings are not supported. You may submit multiple"
+        int limit = doFuzzyMatching ? MAX_FUZZY_QUERY_STRINGS : MAX_NONFUZZY_QUERY_STRINGS;
+    	if (idNameMap.keySet().size() > limit) {
+    		throw new BadInputException("Queries containing more than "+limit+" strings are not supported. You may submit multiple"
     				+ "smaller queries to avoid this limit.");
     	}
     	
