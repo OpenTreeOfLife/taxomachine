@@ -195,7 +195,7 @@ public class tnrs_v3 extends ServerPlugin {
         		@Parameter(name="names", optional = false) String[] names,
         	@Description("An array of ids to use for identifying names. These will be assigned to each name in the `names` array. If `ids` is provided, then `ids` and `names` must be identical in length.")
     			@Parameter(name="ids", optional = true) String[] ids,
-    		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, however, it is on (true).")
+    		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, it is off (false).")
             	@Parameter(name="do_approximate_matching", optional = true) Boolean doFuzzyMatching,
     		@Description("Ordinarily, some quasi-taxa, such as incertae sedis buckets and other non-OTUs, are suppressed from TNRS results.  If this parameter is true, these quasi-taxa are allowed as possible TNRS results.")
             	@Parameter(name="include_suppressed", optional=true) Boolean includeSuppressed)
@@ -210,7 +210,7 @@ public class tnrs_v3 extends ServerPlugin {
         includeSuppressed = includeSuppressed == null ? false : includeSuppressed;
 
         // fuzzy matching is turned ON by default
-        doFuzzyMatching = doFuzzyMatching == null ? true : doFuzzyMatching;
+        doFuzzyMatching = doFuzzyMatching == null ? false : doFuzzyMatching;
 
         HashMap<String, Object> errorResults = new HashMap<String, Object>();
         if (ids == null) {

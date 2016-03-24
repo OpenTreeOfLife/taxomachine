@@ -200,7 +200,9 @@ check_extended_taxon_blob = check_blob(extended_taxon_blob_fields)
 
 check_taxonomy_description_blob = check_blob([field(u'source', check_string),
                                               field(u'author', check_string),
-                                              field(u'weburl', check_string)])
+                                              field(u'weburl', check_string),
+                                              field(u'name', check_string),
+                                              field(u'version', check_string)])
 
 check_match_names_result = (
             check_blob([field(u'governing_code', check_string),  # e.g. "ICN"
