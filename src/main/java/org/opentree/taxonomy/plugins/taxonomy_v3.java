@@ -138,12 +138,20 @@ public class taxonomy_v3 extends ServerPlugin {
     		}
     	}
 
+        if (ottIdsNotFound.size() > 0) {
+            java.io.StringWriter sw = new java.io.StringWriter();
+            sw.write("No taxa found with these OTT ids: ");
+            try {
+                org.json.simple.JSONArray.writeJSONString(ottIdsNotFound, sw);
+            } catch (java.io.IOException e) {
+                throw new RuntimeException(e);
+            }
+            throw new BadInputException(sw.toString());
+            // was: results.put("ott_ids_not_found", ottIdsNotFound);
+        }
     	if (taxa.size() > 0) {
     		TaxonSet ts = new TaxonSet(taxa);
         	results.put("mrca", getTaxonInfo(ts.getLICA(), includeLineage, false));
-            if (ottIdsNotFound.size() > 0)
-                // TBD: 400 if any ott ids not found
-                results.put("ott_ids_not_found", ottIdsNotFound);
     	} else {
     		throw new BadInputException("None of the OTT ids provided could be matched to known taxa");
     	}

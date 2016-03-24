@@ -192,11 +192,9 @@ public class tnrs_v3 extends ServerPlugin {
         		@Parameter(name="names", optional = false) String[] names,
         	@Description("An array of ids to use for identifying names. These will be assigned to each name in the `names` array. If `ids` is provided, then `ids` and `names` must be identical in length.")
     			@Parameter(name="ids", optional = true) String[] ids,
-        	@Description("A boolean indicating whether or not to include deprecated taxa in the search.")
-    			@Parameter(name="include_deprecated", optional = true) Boolean includeDeprecated,
     		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, however, it is on (true).")
             	@Parameter(name="do_approximate_matching", optional = true) Boolean doFuzzyMatching,
-    		@Description("Whether to include so-called 'suppressed' taxa--those which are not accepted by OTT.")
+    		@Description("Ordinarily, some quasi-taxa, such as incertae sedis buckets and other non-OTUs, are suppressed from TNRS results.  If this parameter is true, these quasi-taxa are allowed as possible TNRS results.")
             	@Parameter(name="include_suppressed", optional=true) Boolean includeSuppressed)
         throws BadInputException
     {
@@ -205,7 +203,7 @@ public class tnrs_v3 extends ServerPlugin {
         Taxonomy taxonomy = new Taxonomy(gdb);
 
         // including deprecated and suppressed names are turned OFF by default
-        includeDeprecated = includeDeprecated == null ? false : includeDeprecated;
+        boolean includeDeprecated = false;
         includeSuppressed = includeSuppressed == null ? false : includeSuppressed;
 
         // fuzzy matching is turned ON by default
