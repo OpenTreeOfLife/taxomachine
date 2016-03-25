@@ -169,7 +169,7 @@ public class taxonomy_v3 extends ServerPlugin {
     		Long ottId,
 
     		@Description("Provide a list of terminal OTT ids contained by this taxon.")
-    		@Parameter(name="list_terminal_descendants", optional=true)
+    		@Parameter(name="include_terminal_descendants", optional=true)
     		Boolean listDescendants,
 
     		@Description("Whether or not to include information about all the higher level taxa that include this one. "
