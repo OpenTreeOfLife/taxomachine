@@ -325,9 +325,6 @@ public class Taxonomy {
 	    String name = null;
 	    if (format == LabelFormat.NAME || format == LabelFormat.NAME_AND_ID || format == LabelFormat.ORIGINAL_NAME) {
 	    	name = (String) n.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName());
-	    	if (format != LabelFormat.ORIGINAL_NAME) {
-	    		name = GeneralUtils.newickName(name);
-	    	}
 	    }
 	    
 	    String ottId = null;
@@ -342,6 +339,9 @@ public class Taxonomy {
 	    		label = name + "_ott" + ottId;
 	    	} else {
 	    		label = name;
+	    	}
+	    	if (format != LabelFormat.ORIGINAL_NAME) {
+	    		label = generalutils.newickName(label);
 	    	}
 	    } else {
 	    	label = ottId;
