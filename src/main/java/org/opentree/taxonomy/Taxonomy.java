@@ -341,7 +341,7 @@ public class Taxonomy {
 	    		label = name;
 	    	}
 	    	if (format != LabelFormat.ORIGINAL_NAME) {
-	    		label = generalutils.newickName(label);
+	    		label = GeneralUtils.newickName(label);
 	    	}
 	    } else {
 	    	label = ottId;
