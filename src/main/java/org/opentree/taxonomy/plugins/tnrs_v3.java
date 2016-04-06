@@ -23,6 +23,7 @@ import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
 import org.neo4j.server.rest.repr.TNRSResultsRepresentation;
+import org.neo4j.server.rest.repr.BadInputException;
 import org.opentree.properties.OTPropertyPredicate;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.graphdb.GraphDatabaseAgent;
@@ -40,11 +41,15 @@ import org.opentree.tnrs.TNRSResults;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.tnrs.queries.SingleNamePrefixQuery;
 
-public class tnrs_v2 extends ServerPlugin {
+public class tnrs_v3 extends ServerPlugin {
 
-    public final static int apiVersion = 2;
+    public final static int apiVersion = 3;
 
-	public static int MAX_QUERY_STRINGS = 1000;
+    // Limit in v2 was 1000.  See https://github.com/OpenTreeOfLife/feedback/issues/242
+    // 10,000 queries at .0016 second per query = 16 seconds
+	public static int MAX_NONFUZZY_QUERY_STRINGS = 10000;
+    // 250 queries at .3 second per query = 75 seconds
+	public static int MAX_FUZZY_QUERY_STRINGS = 250;
 	    
     @Description("Taxonomic contexts are available to limit the scope of TNRS searches. These contexts correspond to uncontested higher "
     		+ "taxa such as 'Animals' or 'Land plants'. This service returns a list containing all available taxonomic context "
@@ -130,14 +135,15 @@ public class tnrs_v2 extends ServerPlugin {
     		
             @Description("A boolean indicating whether or not suppressed taxa should be included in the results. Defaults to false "
             		+ "(suppressed taxa are not included).")
-            @Parameter(name="include_dubious", optional = true)
-            Boolean includeDubious) {
+            @Parameter(name="include_suppressed", optional = true)
+            Boolean includeSuppressed)
+        throws BadInputException
+    {
 
-    	includeDubious = includeDubious == null ? false : includeDubious;
+    	includeSuppressed = includeSuppressed == null ? false : includeSuppressed;
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
-        HashMap<String, Object> errorResults = new HashMap<String, Object>();
         
         // attempt to get the named context, return an error if a name is supplied but no corresponding context can be found
         TaxonomyContext context = null;
@@ -145,13 +151,12 @@ public class tnrs_v2 extends ServerPlugin {
         	try {
         		context = taxonomy.getContextByName(contextName);
         	} catch (ContextNotFoundException ex) {
-        		errorResults.put("error", "The context '" + contextName + " could not be found.");
-        		return OTRepresentationConverter.convert(errorResults);
+        		throw new BadInputException("The context '" + contextName + " could not be found.");
         	}
         }
 
         SingleNamePrefixQuery query = new SingleNamePrefixQuery(taxonomy, context);
-        query.setIncludeDubious(includeDubious);
+        query.setIncludeDubious(includeSuppressed);
         TNRSResults results = query.setQueryString(queryString).runQuery().getResults();
 
         // return results if they exist
@@ -186,42 +191,40 @@ public class tnrs_v2 extends ServerPlugin {
 
             @Description("The name of the taxonomic context to be searched")
             	@Parameter(name = "context_name", optional = true) String contextName,
-        	@Description("An array of taxon names to be queried. Currently limited to 1000 names.")
+        	@Description("An array of taxon names to be queried. Currently limited to 10,000 names for exact matches, or 250 names when inexact matches are requested.")
         		@Parameter(name="names", optional = false) String[] names,
         	@Description("An array of ids to use for identifying names. These will be assigned to each name in the `names` array. If `ids` is provided, then `ids` and `names` must be identical in length.")
     			@Parameter(name="ids", optional = true) String[] ids,
-        	@Description("A boolean indicating whether or not to include deprecated taxa in the search.")
-    			@Parameter(name="include_deprecated", optional = true) Boolean includeDeprecated,
-    		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, however, it is on (true).")
+    		@Description("A boolean indicating whether or not to perform approximate string (a.k.a. \"fuzzy\") matching. Will greatly improve speed if this is turned OFF (false). By default, it is off (false).")
             	@Parameter(name="do_approximate_matching", optional = true) Boolean doFuzzyMatching,
-    		@Description("Whether to include so-called 'dubious' taxa--those which are not accepted by OTT.")
-            	@Parameter(name="include_dubious", optional=true) Boolean includeDubious) {
+    		@Description("Ordinarily, some quasi-taxa, such as incertae sedis buckets and other non-OTUs, are suppressed from TNRS results.  If this parameter is true, these quasi-taxa are allowed as possible TNRS results.")
+            	@Parameter(name="include_suppressed", optional=true) Boolean includeSuppressed)
+        throws BadInputException
+    {
     	
         GraphDatabaseAgent gdb = new GraphDatabaseAgent(graphDb);
         Taxonomy taxonomy = new Taxonomy(gdb);
 
-        // including deprecated and dubious names are turned OFF by default
-        includeDeprecated = includeDeprecated == null ? false : includeDeprecated;
-        includeDubious = includeDubious == null ? false : includeDubious;
+        // including deprecated and suppressed names are turned OFF by default
+        boolean includeDeprecated = false;
+        includeSuppressed = includeSuppressed == null ? false : includeSuppressed;
 
         // fuzzy matching is turned ON by default
-        doFuzzyMatching = doFuzzyMatching == null ? true : doFuzzyMatching;
+        doFuzzyMatching = doFuzzyMatching == null ? false : doFuzzyMatching;
 
         HashMap<String, Object> errorResults = new HashMap<String, Object>();
         if (ids == null) {
         	ids = names;
 
         } else if (ids.length != names.length) {
-        	errorResults.put("error", "The number of names and ids does not match. If you provide ids, then you "
+            throw new BadInputException("The number of names and ids does not match. If you provide ids, then you "
         			+ "must provide exactly as many ids as names.");
-			return OTRepresentationConverter.convert(errorResults);
         
         } else {
         	HashSet<String> idSet = new HashSet<String>();
         	for (String id : ids) {
         		if (idSet.contains(id)) {
-        			errorResults.put("error", "The id " + id + " is not unique. If you provide ids, they must be unique.");
-        			return OTRepresentationConverter.convert(errorResults);
+        			throw new BadInputException("The id " + id + " is not unique. If you provide ids, they must be unique.");
         		}
         		idSet.add(id);
         	}
@@ -233,10 +236,10 @@ public class tnrs_v2 extends ServerPlugin {
         	idNameMap.put(ids[i], names[i]);
         }
                 
-    	if (idNameMap.keySet().size() > MAX_QUERY_STRINGS) {
-    		errorResults.put("error", "Queries containing more than "+MAX_QUERY_STRINGS+" strings are not supported. You may submit multiple"
+        int limit = doFuzzyMatching ? MAX_FUZZY_QUERY_STRINGS : MAX_NONFUZZY_QUERY_STRINGS;
+    	if (idNameMap.keySet().size() > limit) {
+    		throw new BadInputException("Queries containing more than "+limit+" strings are not supported. You may submit multiple"
     				+ "smaller queries to avoid this limit.");
-            return OTRepresentationConverter.convert(errorResults);
     	}
     	
         // attempt to get the named context, return an error if a name is supplied but no corresponding context can be found
@@ -246,8 +249,7 @@ public class tnrs_v2 extends ServerPlugin {
         	try {
         		context = taxonomy.getContextByName(contextName);
         	} catch (ContextNotFoundException ex) {
-        		errorResults.put("error", "The context '" + contextName + " could not be found.");
-        		return OTRepresentationConverter.convert(errorResults);
+        		throw new BadInputException("The context '" + contextName + " could not be found.");
         	}
         	useAutoInference = false;
         }
@@ -257,7 +259,7 @@ public class tnrs_v2 extends ServerPlugin {
         		.setSearchStrings(idNameMap)
         		.setContext(context)
         		.setAutomaticContextInference(useAutoInference)
-        		.setIncludeDubious(includeDubious)
+        		.setIncludeDubious(includeSuppressed)
         		.setIncludeDeprecated(includeDeprecated)
         		.setDoFuzzyMatching(doFuzzyMatching)
         		.runQuery()

@@ -44,6 +44,7 @@ public enum OTTFlag {
 	 * container.
      * 2014-04-26 DEPRECATED, these are now just labeled "not_otu".
 	 */
+    @Deprecated
 	UNCLASSIFIED_DIRECT ("unclassified_direct", false),
 
 	 /**
@@ -159,11 +160,13 @@ public enum OTTFlag {
 	 * have been).  It's a work in progress; I'm thinking about other ways of handling these taxa. (E.g. Mark had suggested putting the remaining
 	 * children in the taxon that's the MRCA of all the NCBI children.)
 	 */
+    @Deprecated
 	TATTERED ("tattered", true),
 
 	/**
 	 * Taxa that are descendants of a TATTERED taxon.
 	 */
+    @Deprecated
 	TATTERED_INHERITED("tattered_inherited", true),
 
 	/**
