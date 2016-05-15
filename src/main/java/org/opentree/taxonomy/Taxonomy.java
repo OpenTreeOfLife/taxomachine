@@ -45,6 +45,7 @@ public class Taxonomy {
 	public GraphDatabaseAgent graphDb;
 	public final static String LIFE_NODE_NAME = "life";
 	public TaxonomyContext ALLTAXA;
+	public Index<Node> taxaBySourceId;
 	public Index<Node> taxaByOTTId;
 	public Index<Node> taxaByFlag;
 	public Index<Node> deprecatedTaxa;
@@ -64,6 +65,7 @@ public class Taxonomy {
 	private void initIndexes() {
 		ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
 		taxaByOTTId = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_OTT_ID);
+		taxaBySourceId = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SOURCE_ID);
 		deprecatedTaxa = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
 		taxaByFlag = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_FLAG);
 	}
@@ -201,6 +203,33 @@ public class Taxonomy {
 		        } else if (hits.size() > 1) {
 		        	throw new MultipleHitsException(ottId);
 		        }
+	        }
+        } finally {
+        	if (hits != null) {
+        		hits.close();
+        	}
+        }
+        
+        return match != null ? new Taxon(match, this) : null;
+	}
+	
+	/**
+	 * Search for a taxon matching the supplied source id. If more than one hit is found (bad) throws
+     * MultipleHitsException. If no hit is found, returns null.
+	 * @return taxNode
+	 * @throws MultipleHitsException
+	 */
+    public Taxon getTaxonForSourceId(final String sourceId) {
+        IndexHits<Node> hits = null;
+        Node match = null;
+        
+        try {
+        	// first check the standard index
+        	hits = taxaBySourceId.get(TaxonomyProperty.SOURCE_ID.propertyName(), sourceId);
+	        if (hits.size() == 1) {
+	        	match = hits.getSingle();
+	        } else if (hits.size() > 1) {
+	        	throw new MultipleHitsException(sourceId);
 	        }
         } finally {
         	if (hits != null) {

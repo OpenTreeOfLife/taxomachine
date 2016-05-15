@@ -207,6 +207,28 @@ public class taxonomy_v3 extends ServerPlugin {
     	return OTRepresentationConverter.convert(results);
     }
 
+    @Description("TEMPORARY - look up by source id.")
+    @PluginTarget(GraphDatabaseService.class)
+    public Representation get_by_source_id (@Source GraphDatabaseService graphDb,
+
+    		@Description("The source id of the taxon of interest, e.g. ncbi:417950.")
+    		@Parameter(name="source_id", optional=false)
+    		String sourceId)
+        throws BadInputException
+    {
+    	HashMap<String, Object> results = new HashMap<String, Object>();
+
+    	Taxonomy tax = new Taxonomy(graphDb);
+    	Taxon match = tax.getTaxonForSourceId(sourceId);
+
+    	if (match != null) {
+    		results = (HashMap<String, Object>) getTaxonInfo(match, false, false);
+    	} else {
+    		throw new BadInputException("The source id " + sourceId + " could not be found");
+    	}
+    	return OTRepresentationConverter.convert(results);
+    }
+
     @Description("Return a list of all taxonomic flags used in this database, including the number of taxa to which each flag "
     		+ "has been assigned.")
     @PluginTarget(GraphDatabaseService.class)

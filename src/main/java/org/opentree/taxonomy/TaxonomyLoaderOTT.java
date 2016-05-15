@@ -50,6 +50,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 
 	// all taxa by other info
 	Index<Node> taxaByOTTId;
+	Index<Node> taxaBySourceId;
 	Index<Node> taxaByFlag;
 
 	// all taxa rank-based
@@ -100,6 +101,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	private boolean buildPreferredIndexes = true; // requires that preferred rels are also built.
 	private boolean buildPreferredRels = true;
 	private boolean createOTTIdIndexes = true;
+	private boolean createSourceIdIndexes = true;
 	
 	// ========================================
 	
@@ -543,6 +545,14 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			taxaByOTTId.add(tnode, OTVocabularyPredicate.OT_OTT_ID.propertyName(), Long.valueOf(inputId));
 		}
 		
+		if (createSourceIdIndexes) {
+            for (String source : inputSources.split(","))
+                if (source.contains(":") &&
+                    !source.endsWith(":") &&
+                    !source.startsWith("http"))
+                    taxaBySourceId.add(tnode, TaxonomyProperty.SOURCE_ID.propertyName(), source);
+		}
+		
 		if (addSynonyms) {
 			taxaByNameOrSynonym.add(tnode, OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName(), inputName);
 //			taxaByNameOrSynonym.add(tnode, TaxonomyProperty.NAME.propertyName(), inputName);
@@ -687,6 +697,11 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		// only for ott id option
 		if (createOTTIdIndexes) {
 			taxaByOTTId = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_OTT_ID);
+		}
+
+		// only for ott id option
+		if (createSourceIdIndexes) {
+			taxaBySourceId = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SOURCE_ID);
 		}
 
 		// only for preferred option
