@@ -239,7 +239,8 @@ public class MainRunner {
         System.out.println("life node: " + lifeNode);
 
         if (args[0].equals("loadtaxsyn")) { 
-            System.out.println("loading taxonomy from " + filename + " and synonym file " + synonymfile + " to " + graphname);
+            System.out.format("loading taxonomy %s from %s and synonym file %s to %s\n",
+                              sourcename, filename, synonymfile, graphname);
             //this will create the ott relationships
             tlo.setAddSynonyms(true);
             tlo.setCreateOTTIdIndexes(true);

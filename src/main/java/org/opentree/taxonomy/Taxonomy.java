@@ -317,9 +317,8 @@ public class Taxonomy {
 			metadata.put(key, metaNode.getProperty(key));
 		}
 
-        // As of 2016-03-24, we have source, author, and weburl fields.
         // Source is something like "ott2.9draft12".
-        // In treemachine, taxonomy metadata in treemachine has "name" and "version" fields which 
+        // In treemachine, taxonomy metadata has "name" and "version" fields which 
         // concatenated would be the "source" field.
         String source = (String) metadata.get("source");
         Matcher m = deversioner.matcher(source);
@@ -328,11 +327,13 @@ public class Taxonomy {
             String version = m.group(2); // e.g. 2.9draft5
             String majorminor = m.group(3); // e.g. 2.9
             metadata.put("name", name);
-            metadata.put("version", m.group(3));
+            metadata.put("version", majorminor);
             String weburl = (String) metadata.get("weburl");
             if (weburl.equals("https://github.com/OpenTreeOfLife/opentree/wiki/Open-Tree-Taxonomy"))
                 metadata.put("weburl", "https://tree.opentreeoflife.org/about/taxonomy-version/" + name + majorminor);
-        }
+        } else
+            // shouldn't happen
+            metadata.put("name", source);
 		return metadata;
 	}
 

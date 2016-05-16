@@ -239,6 +239,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		setupIndexes(); // have to call this here instead of on construction so that we don't make indexes we're not going to use
 		
 		this.sourceName = sourcename;
+        System.out.format("sourcename = %s\n", sourcename);
 		String str = "";
 		int count = 0;
 		ArrayList<String> templines = new ArrayList<String>();
