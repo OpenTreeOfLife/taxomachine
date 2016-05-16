@@ -15,7 +15,7 @@ db: taxomachine.db
 TAXONOMY=ott
 $(TAXONOMY):
 	curl http://files.opentreeoflife.org/ott/current/ott.tgz >ott.tgz
-	rmdir -f ott.tmp; mkdir ott.tmp && tar xzf ../ott.tgz && mv * ../$(TAXONOMY)
+	rm -rf ott.tmp && mkdir ott.tmp && cd ott.tmp && tar xzf ../ott.tgz && mv * ../$(TAXONOMY)
 
 SOURCES=$(shell echo `find src -name "*.java"`)
 STANDALONE=target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar
@@ -38,7 +38,7 @@ TARBALL=$(shell echo "taxomachine-`date '+%Y%m%d%n'`.db.tgz")
 tarball: $(TARBALL)
 $(TARBALL): taxomachine.db
 	echo $(TARBALL)
-	tar -C $< -czf $@ .
+	tar -czf $@ -C $< .
 
 push-devapi: $(TARBALL)
 	scp $< devapi:downloads/$(TARBALL)
