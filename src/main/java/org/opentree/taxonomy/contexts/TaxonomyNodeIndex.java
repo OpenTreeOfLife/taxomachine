@@ -38,6 +38,9 @@ public enum TaxonomyNodeIndex implements NodeIndexDescription {
 	/** Records all taxa. Field is OTVocabularyPredicate.OT_OTT_ID and key is ott id. */
     TAXON_BY_OTT_ID 			("taxNodesByOTTId"),
 
+	/** Records all taxa. Field is OTVocabularyPredicate.OT_OTT_ID and key is ott id. */
+    TAXON_BY_SOURCE_ID 			("taxNodesBySourceId"),
+
 	/** Records all taxa. Field is OTVocabularyPredicate.OT_OTT_TAXON_NAME and key is synonymous name. */
     TAXON_BY_SYNONYM            ("taxNodesBySyn"),
     

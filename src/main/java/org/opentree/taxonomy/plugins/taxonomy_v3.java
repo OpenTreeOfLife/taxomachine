@@ -165,8 +165,13 @@ public class taxonomy_v3 extends ServerPlugin {
     public Representation taxon_info (@Source GraphDatabaseService graphDb,
 
     		@Description("The OTT id of the taxon of interest.")
-    		@Parameter(name="ott_id", optional=false)
+    		@Parameter(name="ott_id", optional=true)
     		Long ottId,
+
+    		@Description("The source id of the taxon of interest, e.g. ncbi:417950. "
+                         + "Either ott_id or source_id, but not both, must be supplied.")
+    		@Parameter(name="source_id", optional=true)
+    		String sourceId,
 
     		@Description("Provide a list of terminal OTT ids contained by this taxon.")
     		@Parameter(name="include_terminal_descendants", optional=true)
@@ -186,11 +191,17 @@ public class taxonomy_v3 extends ServerPlugin {
     {
 
     	listDescendants = listDescendants == null ? false : listDescendants;
+        if ((ottId == null) == (sourceId == null))
+            throw new BadInputException("Please provide either ott_id or source source_id, but not both.");
 
     	HashMap<String, Object> results = new HashMap<String, Object>();
 
     	Taxonomy tax = new Taxonomy(graphDb);
-    	Taxon match = tax.getTaxonForOTTId(ottId);
+    	Taxon match;
+        if (ottId != null)
+            match = tax.getTaxonForOTTId(ottId);
+        else
+            match = tax.getTaxonForSourceId(sourceId);
 
     	if (match != null) {
     		results = (HashMap<String, Object>) getTaxonInfo(match, includeLineage, includeChildren);
@@ -200,9 +211,10 @@ public class taxonomy_v3 extends ServerPlugin {
                                     match.getTaxonomyTerminals(tipFormat));
     	    	}
 
-    	} else {
+    	} else if (ottId != null)
     		throw new BadInputException("The OTT id " + String.valueOf(ottId) + " could not be found");
-    	}
+        else
+    		throw new BadInputException("The source id " + sourceId + " could not be found");
 
     	return OTRepresentationConverter.convert(results);
     }

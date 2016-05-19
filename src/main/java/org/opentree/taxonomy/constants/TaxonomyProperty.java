@@ -27,6 +27,16 @@ public enum TaxonomyProperty implements OTPropertyPredicate {
 	SOURCE ("source", String.class),
 
 	/**
+	 * A taxonomic source of this taxon.
+	 */
+	SOURCE_ID ("source_id", String.class),
+
+	/**
+	 * The current property for taxonomic sources
+	 */
+	INPUT_SOURCES ("input_sources", String.class),
+	
+	/**
 	 * A unique taxonomic name for this taxon, determined during taxonomy compilation.
 	 */
 	UNIQUE_NAME ("uniqname", String.class),
@@ -45,11 +55,6 @@ public enum TaxonomyProperty implements OTPropertyPredicate {
 	 * The original source information for this deprecated taxon.
 	 */
 	SOURCE_INFO ("source_info", String.class),
-	
-	/**
-	 * The current property for taxonomic sources
-	 */
-	INPUT_SOURCES ("input_sources", String.class),
 	
 	/**
 	 * Whether or not this node represents a deprecated taxon. Assumed to be false if absent.

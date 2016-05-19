@@ -45,6 +45,7 @@ public class Taxonomy {
 	public GraphDatabaseAgent graphDb;
 	public final static String LIFE_NODE_NAME = "life";
 	public TaxonomyContext ALLTAXA;
+	public Index<Node> taxaBySourceId;
 	public Index<Node> taxaByOTTId;
 	public Index<Node> taxaByFlag;
 	public Index<Node> deprecatedTaxa;
@@ -64,6 +65,7 @@ public class Taxonomy {
 	private void initIndexes() {
 		ALLTAXA = new TaxonomyContext(ContextDescription.ALLTAXA, this);
 		taxaByOTTId = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_OTT_ID);
+		taxaBySourceId = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_SOURCE_ID);
 		deprecatedTaxa = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.DEPRECATED_TAXA);
 		taxaByFlag = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXON_BY_FLAG);
 	}
@@ -212,6 +214,33 @@ public class Taxonomy {
 	}
 	
 	/**
+	 * Search for a taxon matching the supplied source id. If more than one hit is found (bad) throws
+     * MultipleHitsException. If no hit is found, returns null.
+	 * @return taxNode
+	 * @throws MultipleHitsException
+	 */
+    public Taxon getTaxonForSourceId(final String sourceId) {
+        IndexHits<Node> hits = null;
+        Node match = null;
+        
+        try {
+        	// first check the standard index
+        	hits = taxaBySourceId.get(TaxonomyProperty.SOURCE_ID.propertyName(), sourceId);
+	        if (hits.size() == 1) {
+	        	match = hits.getSingle();
+	        } else if (hits.size() > 1) {
+	        	throw new MultipleHitsException(sourceId);
+	        }
+        } finally {
+        	if (hits != null) {
+        		hits.close();
+        	}
+        }
+        
+        return match != null ? new Taxon(match, this) : null;
+	}
+	
+	/**
 	 * Just get the recognized taxon node that is associated with a given synonym node. Deprecated since the synonym nodes are now only accessible via
 	 * traversals that must pass through the associated taxon nodes anyway, but left in case it is becomes useful.
 	 * 
@@ -288,9 +317,8 @@ public class Taxonomy {
 			metadata.put(key, metaNode.getProperty(key));
 		}
 
-        // As of 2016-03-24, we have source, author, and weburl fields.
         // Source is something like "ott2.9draft12".
-        // In treemachine, taxonomy metadata in treemachine has "name" and "version" fields which 
+        // In treemachine, taxonomy metadata has "name" and "version" fields which 
         // concatenated would be the "source" field.
         String source = (String) metadata.get("source");
         Matcher m = deversioner.matcher(source);
@@ -299,11 +327,13 @@ public class Taxonomy {
             String version = m.group(2); // e.g. 2.9draft5
             String majorminor = m.group(3); // e.g. 2.9
             metadata.put("name", name);
-            metadata.put("version", m.group(3));
+            metadata.put("version", majorminor);
             String weburl = (String) metadata.get("weburl");
             if (weburl.equals("https://github.com/OpenTreeOfLife/opentree/wiki/Open-Tree-Taxonomy"))
                 metadata.put("weburl", "https://tree.opentreeoflife.org/about/taxonomy-version/" + name + majorminor);
-        }
+        } else
+            // shouldn't happen
+            metadata.put("name", source);
 		return metadata;
 	}
 
