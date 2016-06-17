@@ -10,6 +10,9 @@ import java.util.Map;
 
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.mortbay.log.Log;
+import org.json.simple.parser.JSONParser; 
+import org.json.simple.parser.ParseException;
+
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -23,6 +26,8 @@ import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.repr.OTRepresentationConverter;
 import org.neo4j.server.rest.repr.Representation;
 import org.neo4j.server.rest.repr.BadInputException;
+
+import jade.tree.JadeTree;
 import org.opentree.graphdb.GraphDatabaseAgent;
 import org.opentree.properties.OTVocabularyPredicate;
 import org.opentree.taxonomy.LabelFormat;
@@ -33,8 +38,7 @@ import org.opentree.taxonomy.Taxonomy;
 import org.opentree.taxonomy.constants.TaxonomyProperty;
 import org.opentree.taxonomy.constants.TaxonomyRelType;
 import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
-
-import jade.tree.JadeTree;
+import org.opentree.taxonomy.Addition;
 
 public class taxonomy_v3 extends ServerPlugin {
 
@@ -347,5 +351,20 @@ public class taxonomy_v3 extends ServerPlugin {
         }
     }
  
+    @Description("Add some taxa to the taxonomy.")
+    @PluginTarget(GraphDatabaseService.class)
+
+    public Representation process_additions (@Source GraphDatabaseService graphDb,
+
+    		@Description("The taxon addition document, as a string.")
+    		@Parameter(name="addition_document", optional=false)
+    		String addition_document)
+
+        throws BadInputException, ParseException
+    {
+        Addition.processAdditionDocument(addition_document, graphDb);
+    	return OTRepresentationConverter.convert(new HashMap<String, Object>());
+    }
+
 
 }
