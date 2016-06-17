@@ -482,6 +482,12 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		// the last token is the flags. don't try parsing them unless they exist
 		String[] flags = tokens[i] != null ? tokens[i].split("\\,") : null;
 		
+        processOTTData(inputId, inputParentId, inputName, rank, inputSources, uniqname, flags);
+    }
+
+    public void processOTTData(Long inputId, Long inputParentId, String inputName,
+                               String rank, String inputSources, String uniqname, String[] flags) {
+
 		// we determine these bits later based on flags
 		boolean dubious = false;
 		boolean forceVisible = false;
