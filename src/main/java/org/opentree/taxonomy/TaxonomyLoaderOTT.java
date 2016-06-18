@@ -678,7 +678,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	/**
 	 * Set up indexes according to the loading options set
 	 */
-	private void setupIndexes() {
+	public void setupIndexes() {
 		
 		// always set up
 		taxSources = ALLTAXA.getNodeIndex(TaxonomyNodeIndex.TAXONOMY_SOURCES);

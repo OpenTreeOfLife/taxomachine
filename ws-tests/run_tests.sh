@@ -11,6 +11,7 @@ then
     echo 'peyotl must be installed to run tests'
     exit 1
 fi
+export PYTHONPATH=lib
 num_t=0
 num_p=0
 failed=''

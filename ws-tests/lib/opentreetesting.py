@@ -100,9 +100,10 @@ def summarize_gzipped_json_response(resp):
         return False
 
 def get_obj_from_http(url,
-                     verb='GET',
-                     data=None,
-                     headers=None):
+                      verb='GET',
+                      data=None,
+                      params=None,
+                      headers=None):
     '''Call `url` with the http method of `verb`. 
     If specified `data` is passed using json.dumps
     returns the json content of the web service or raise an HTTP error
@@ -117,11 +118,13 @@ def get_obj_from_http(url,
                                 translate(url),
                                 headers=headers,
                                 data=json.dumps(data),
+                                params=params,
                                 allow_redirects=True)
     else:
         resp = requests.request(verb,
                                 translate(url),
                                 headers=headers,
+                                params=params,
                                 allow_redirects=True)
     debug('Sent {v} to {s}\n'.format(v=verb, s=resp.url))
     debug('Got status code {c}\n'.format(c=resp.status_code))
@@ -129,6 +132,9 @@ def get_obj_from_http(url,
         debug('Full response: {r}\n'.format(r=resp.text))
         raise_for_status(resp)
     return resp.json()
+
+# Returns two results if return_bool_data.
+# Otherwise returns one result.
 
 def test_http_json_method(url,
                      verb='GET',
@@ -144,7 +150,7 @@ def test_http_json_method(url,
          has the expected status code, AND
          has the expected content (if expected_response is not None)
     '''
-    fail_return = (False, None, False) if return_bool_data else False
+    fail_return = (False, None) if return_bool_data else False
     if headers is None:
         headers = {
             'content-type' : 'application/json',
@@ -171,7 +177,7 @@ def test_http_json_method(url,
         return fail_return
     if expected_response is not None:
         if not is_json:
-             return (True, resp.text, True) if return_bool_data else True
+             return (True, resp.text) if return_bool_data else True
         try:
             results = resp.json()
             if results != expected_response:
@@ -185,8 +191,8 @@ def test_http_json_method(url,
     elif _VERBOSITY_LEVEL > 1:
         debug('Full response: {r}\n'.format(r=resp.text))
     if not is_json:
-             return (True, resp.text, True) if return_bool_data else True
-    return (True, resp.json(), True) if return_bool_data else True
+             return (True, resp.text) if return_bool_data else True
+    return (True, resp.json()) if return_bool_data else True
 
 def raise_for_status(resp):
     try:
@@ -213,17 +219,19 @@ def exit_if_api_is_readonly(fn):
         debug('Running in read-only mode. Skipped {}'.format(fn))
     else:
         sys.stderr.write('s')
-    sys.exit(0)
+    # This coordinates with run_tests.sh
+    sys.exit(3)
 
 
 # Mimic the behavior of apache so that services can be tested without
-# having apache running.  See opentree/deploy/setup/opentree-shared.conf
+# having apache running.  See deploy/setup/opentree-shared.conf
 
 translations = [('/v2/study/', '/phylesystem/v1/study/'),
                 ('/cached/', '/phylesystem/default/cached/'),
                 # treemachine
-                ('/v2/tree_of_life/', '/db/data/ext/tree_of_life/graphdb/'),
                 ('/v2/graph/', '/db/data/ext/graph/graphdb/'),
+                ('/v2/tree_of_life/', '/db/data/ext/tree_of_life/graphdb/'),
+                ('/v3/tree_of_life/', '/db/data/ext/tree_of_life_v3/graphdb/'),
                 # taxomachine
                 ('/taxomachine/v1/', '/db/data/ext/TNRS/graphdb/'),
                 ('/v2/tnrs/', '/db/data/ext/tnrs_v2/graphdb/'),
@@ -231,7 +239,10 @@ translations = [('/v2/study/', '/phylesystem/v1/study/'),
                 ('/v3/tnrs/', '/db/data/ext/tnrs_v3/graphdb/'),
                 ('/v3/taxonomy/', '/db/data/ext/taxonomy_v3/graphdb/'),
                 # oti
+                ('/v3/studies/', '/db/data/ext/studies/graphdb/'),
                 ('/v2/studies/', '/db/data/ext/studies/graphdb/'),
+                # smasher (port 8081)
+                ('/v2/conflict/', '/')
 ]
 
 def translate(s):
