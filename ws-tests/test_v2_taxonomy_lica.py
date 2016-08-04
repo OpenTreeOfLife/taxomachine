@@ -3,7 +3,7 @@ import sys, os
 from opentreetesting import test_http_json_method, config
 DOMAIN = config('host', 'apihost')
 SUBMIT_URI = DOMAIN + '/v2/taxonomy/lica'
-test, result, _ = test_http_json_method(SUBMIT_URI, "POST",
+test, result = test_http_json_method(SUBMIT_URI, "POST",
                                         data={"ott_ids":[515698,590452,409712,643717]},
                                         expected_status=200,
                                         return_bool_data=True)

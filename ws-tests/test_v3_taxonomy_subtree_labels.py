@@ -14,6 +14,6 @@ status += \
 simple_test('/v3/taxonomy/subtree',
             {u'ott_id': TEST_ID},
             check_blob([field(u'newick', check_string)]),
-            check_result)
+            is_right=check_result)
 
 sys.exit(status)

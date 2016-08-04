@@ -25,6 +25,6 @@ status += \
 simple_test('/v3/taxonomy/taxon_info',
             {u'ott_id': TEST_ID},
             check_extended_taxon_blob,
-            check_result)
+            is_right=check_result)
 
 sys.exit(status)

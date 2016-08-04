@@ -36,6 +36,6 @@ status += \
 simple_test('/v3/tnrs/match_names',
             {u'names': TEST_LIST, u'context_name': 'All life'},
             check_match_names_result,
-            check_result)
+            is_right=check_result)
 
 sys.exit(status)
