@@ -3,7 +3,15 @@ See ws-tests/README.md in the phylesystem-api repo for information on the test h
 ws-tests/README.md in the germinator talks about the super-tester that
 calls this.
 
-To run against devapi, do
+You can use python modules from this repo or from germinator:
+
+    export PYTHONPATH=lib
+
+or
+
+    export PYTHONPATH=../../germinator/ws-tests
+
+To run the tests against devapi, do
 
     ./run_tests.sh host:apihost=https://devapi.opentreeoflife.org
 
