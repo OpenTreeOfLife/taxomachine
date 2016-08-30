@@ -22,3 +22,8 @@ target
 *.ear
 
 .DS_Store
+neo4j-community-1.9.5
+*.tgz
+ott
+aster
+.running
