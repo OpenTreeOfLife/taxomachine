@@ -8,6 +8,8 @@
 
 # 1. Create database
 
+all: $(TARBALL)
+
 db: taxomachine.db
 
 # This one will have to be configured manually for development versions of the taxonomy.
