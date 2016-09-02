@@ -6,6 +6,6 @@ status = 0
 status += \
 simple_test('/v3/taxonomy/about',
             {},
-            check_taxonomy_description_blob)
+            is_right=check_taxonomy_description_blob)
 
 sys.exit(status)

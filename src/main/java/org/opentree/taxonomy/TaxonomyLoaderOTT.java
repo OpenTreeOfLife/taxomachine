@@ -414,11 +414,12 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 
 	/**
 	 * add relationships for a processed taxon
-	 * @param childId
+	 * @param childId OTT id of node whose relationships are to be added
 	 */
-	private void processOTTRels(Long childId) {
+	void processOTTRels(Long childId) {
 		
-		Node parentNode = dbNodeForOTTIdMap.get(parentOTTIdByChildOTTIdMap.get(childId));
+        Long parentId = parentOTTIdByChildOTTIdMap.get(childId);
+		Node parentNode = dbNodeForOTTIdMap.get(parentId);
 		if (parentNode == null) {
 
 			Node graphRootNode = dbNodeForOTTIdMap.get(childId);
@@ -432,15 +433,16 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 			Relationship rel = dbNodeForOTTIdMap.get(childId).createRelationshipTo(parentNode, TaxonomyRelType.TAXCHILDOF);
 			rel.setProperty("source", sourceName);
 			rel.setProperty("childid", childId);
-			rel.setProperty("parentid", parentOTTIdByChildOTTIdMap.get(childId));
+			rel.setProperty("parentid", parentId);
 
 			if (buildPreferredRels) {
 				// don't need to wait to makeottol anymore
 				if (!dubiousNodes.contains(dbNodeForOTTIdMap.get(childId))) {
-					Relationship prefRel = dbNodeForOTTIdMap.get(childId).createRelationshipTo(dbNodeForOTTIdMap.get(parentOTTIdByChildOTTIdMap.get(childId)), TaxonomyRelType.PREFTAXCHILDOF);
+                    // isn't this just parentNode ? why recompute ?
+					Relationship prefRel = dbNodeForOTTIdMap.get(childId).createRelationshipTo(dbNodeForOTTIdMap.get(parentId), TaxonomyRelType.PREFTAXCHILDOF);
 					prefRel.setProperty("source", sourceName);
 					prefRel.setProperty("childid", childId);
-					prefRel.setProperty("parentid", parentOTTIdByChildOTTIdMap.get(childId));
+					prefRel.setProperty("parentid", parentId);
 				}
 			}
 		}
@@ -660,10 +662,13 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		for (OTTFlag f : OTTFlag.values()) {
 			ottFlags.put(f.label, f);
 		}
-		System.out.println("\nUsing flags:");
-		for (String flag : ottFlags.keySet()) {
-			System.out.println(flag);
-		}
+        if (false) {
+            // this was useful for debugging once, but we don't need to dump all this on every addition service call
+            System.out.println("\nUsing flags:");
+            for (String flag : ottFlags.keySet()) {
+                System.out.println(flag);
+            }
+        }
 		System.out.println("");
 	}
 	
@@ -731,3 +736,4 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	}
 }
 
+ 

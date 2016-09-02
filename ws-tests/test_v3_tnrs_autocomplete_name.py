@@ -32,6 +32,6 @@ simple_test('/v3/tnrs/autocomplete_name',
                                    field(u'unique_name', check_string),
                                    field(u'is_suppressed', check_boolean),
                                    field(u'is_higher', check_boolean)])),
-            check_result)
+            is_right=check_result)
 
 sys.exit(status)

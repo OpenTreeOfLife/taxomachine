@@ -7,7 +7,7 @@ status = 0
 status += \
 simple_test('/v3/taxonomy/mrca',
             {u'ott_ids': [901642, 55033]},
-            check_blob([field('mrca', check_extended_taxon_blob)]))
+            is_right=check_blob([field('mrca', check_extended_taxon_blob)]))
 
 if False:
     expectedId = 637370

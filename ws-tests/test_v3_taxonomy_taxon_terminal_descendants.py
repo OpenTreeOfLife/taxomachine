@@ -21,6 +21,6 @@ simple_test('/v3/taxonomy/taxon_info',
             {u'ott_id': taxon, u'include_terminal_descendants': True},
             check_blob(extended_taxon_blob_fields +
                        [field(u'terminal_descendants', check_list(check_integer))]),
-            check_result)
+            is_right=check_result)
 
 sys.exit(status)

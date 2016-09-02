@@ -24,21 +24,24 @@ while True:
     if response.status_code != 200:
         print 'id %s is unused' % id
         break
-    print 'id %s is in use' % id
+    # print 'id %s is in use' % id
     id += 10
 
 name1 = "Test taxon 1"
 name2 = "Test taxon 2"
 
+# Menyanthaceae, which is in Asterales
+parent = 694622
+
 additions_doc = {
     "taxa": [{"ott_id": id,
               "name": name1,
               "rank": "species",
-              "parent": 4133636},
+              "parent": parent},
              {"ott_id": id+1,
-              "name": "Test taxon 2",
+              "name": name2,
               "rank": "genus",
-              "parent": 4133636}],
+              "parent": parent}],
     "study_id": "no study, testing",
     "id": "additions-%s-%s" % (id, id+1)}
 
@@ -47,6 +50,6 @@ status = simple_test('/v3/taxonomy/process_additions',
 if status != 0: sys.exit(status)
 
 status = simple_test('/v3/taxonomy/taxon_info',
-                     {"ott_id": id},
-                     is_right=(lambda r:r[u"name"] == name1))
+                     {"ott_id": id, "include_lineage": True},
+                     is_right=(lambda r:r[u"name"] == name1 and len(r[u"lineage"]) > 0))
 if status != 0: sys.exit(status)

@@ -22,6 +22,6 @@ simple_test('/v3/tnrs/infer_context',
             check_blob([field(u'context_name', check_string),
                         field(u'context_ott_id', check_integer),
                         field(u'ambiguous_names', check_list(check_string))]),
-            check_result)
+            is_right=check_result)
 
 sys.exit(status)

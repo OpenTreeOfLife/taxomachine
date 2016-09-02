@@ -362,7 +362,8 @@ public class taxonomy_v3 extends ServerPlugin {
 
         throws BadInputException, ParseException
     {
-        Addition.processAdditionDocument(addition_document, graphDb);
+        Map<String, Long> tagToId = Addition.processAdditionDocument(addition_document, graphDb);
+        // ignore it - client already has the map via phylesystem-api - just return nothing
     	return OTRepresentationConverter.convert(new HashMap<String, Object>());
     }
 

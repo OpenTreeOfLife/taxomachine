@@ -60,31 +60,34 @@ public class Addition {
 		}
 	};
 
-    public static void processAdditionDocument(File file, GraphDatabaseService gdb)
+    public static Map<String, Long> processAdditionDocument(File file, GraphDatabaseService gdb)
         throws IOException, ParseException, BadInputException
     {
         BufferedReader fr = new BufferedReader(new InputStreamReader(new FileInputStream(file),
                                                                      "UTF-8"));
 		JSONParser parser = new JSONParser();
         Object obj = parser.parse(fr);
-        processAdditionDocument(obj, gdb);
+        return processAdditionDocument(obj, gdb);
     }
 
-    public static void processAdditionDocument(String doc, GraphDatabaseService gdb)
+    public static Map<String, Long> processAdditionDocument(String doc, GraphDatabaseService gdb)
         throws ParseException, BadInputException
     {
 		JSONParser parser = new JSONParser();
         Object obj = parser.parse(doc);
-        processAdditionDocument(obj, gdb);
+        return processAdditionDocument(obj, gdb);
     }
 
 
-    public static void processAdditionDocument(Object json, GraphDatabaseService gdb)
+    public static Map<String, Long> processAdditionDocument(Object json, GraphDatabaseService gdb)
         throws BadInputException
     {
+        Map<String, Long> tagToId = new HashMap<String, Long>();
+        List<Long> ids = new ArrayList<Long>();
+        TaxonomyLoaderOTT tlo = new TaxonomyLoaderOTT(gdb);
+
         Transaction tx = gdb.beginTx();
 		try {
-            TaxonomyLoaderOTT tlo = new TaxonomyLoaderOTT(gdb);
             tlo.setupIndexes();
             Taxonomy taxonomy = new Taxonomy(gdb);
             if (json instanceof Map) {
@@ -92,7 +95,6 @@ public class Addition {
                 Object taxaObj = top.get("taxa");
                 String docId = (String)(top.get("id")); // addition document id
                 List taxa = (List)taxaObj;
-                Map<String, Long> tagToId = new HashMap<String, Long>();
                 for (Object descriptionObj : taxa) {
                     Map description = (Map)descriptionObj;
                     Long ott_id = toId(description.get("ott_id"));
@@ -109,16 +111,17 @@ public class Addition {
                         continue;
 
                     if (ott_id == null)
-                        throw new BadInputException("missing ott_id");
+                        throw new BadInputException(String.format("missing ott_id for %s", tag));
+                    ids.add(ott_id);
 
                     if (name == null)
-                        throw new BadInputException("missing name");
+                        throw new BadInputException(String.format("missing name for %s", tag));
 
                     // Get parent taxon id
                     if (parentId == null)
                         parentId = tagToId.get(parentTag);
                     if (parentId == null)
-                        throw new BadInputException("missing parent");
+                        throw new BadInputException(String.format("missing parent id %s for %s", tag));
 
                     if (rank == null) rank = "";
 
@@ -157,6 +160,18 @@ public class Addition {
                     // For backward references
                     if (tag != null)
                         tagToId.put(tag, ott_id);
+
+                    // Prepare for the relationship-creation pass
+                    if (tlo.dbNodeForOTTIdMap.get(parentId) == null) {
+                        Taxon match = tlo.getTaxonForOTTId(parentId); // neo4j query
+                        if (match != null) {
+                            // shows up in data/log/console.log
+                            //System.out.format("Parent id %s -> node %s (for %s)\n", parentId, match.getName(), name);
+                            tlo.dbNodeForOTTIdMap.put(parentId, match.getNode());
+                        } else
+                            throw new BadInputException(String.format("no taxon with OTT id %s (parent of %s)",
+                                                                      parentId, name));
+                    }
                 }
             } else
                 throw new BadInputException("bad json for addition");
@@ -164,6 +179,18 @@ public class Addition {
         } finally {
             tx.finish();
         }
+
+		// process taxon ids for relationships (mainly parent node)
+		tx = gdb.beginTx();
+		try {
+			for (Long id : ids)
+				tlo.processOTTRels(id);
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+		
+        return tagToId;
     }
 
     static Long toId(Object ottIdObj) {
