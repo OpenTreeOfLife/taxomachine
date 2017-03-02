@@ -27,13 +27,7 @@ $(STANDALONE): $(SOURCES)
 	./compile_standalone.sh -q
 
 taxomachine.db: $(STANDALONE) $(TAXONOMY)/version.txt
-	if [ -e $@ ]; then rm -rf $@.previous; mv -f $@ $@.previous; fi
-	echo sourcename = $(TAXONOMY)`cat $(TAXONOMY)/version.txt`
-	java $(MEM) -XX:-UseConcMarkSweepGC -jar $(STANDALONE) \
-	  loadtaxsyn $(TAXONOMY)`cat $(TAXONOMY)/version.txt` \
-	     $(TAXONOMY)/taxonomy.tsv $(TAXONOMY)/synonyms.tsv $@
-	java $(MEM) -XX:-UseConcMarkSweepGC -jar $(STANDALONE) makecontexts $@
-	java $(MEM) -XX:-UseConcMarkSweepGC -jar $(STANDALONE) makegenusindexes $@
+	taxonomy_to_graphdb.sh $(TAXONOMY) $@ $(STANDALONE) $(MEM)
 
 TARBALL=$(shell echo "taxomachine-`date '+%Y%m%d%n'`.db.tgz")
 
