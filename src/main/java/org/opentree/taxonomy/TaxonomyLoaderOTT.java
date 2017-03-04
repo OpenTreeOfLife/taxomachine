@@ -1,6 +1,8 @@
 package org.opentree.taxonomy;
 
 import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
@@ -167,7 +169,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		int n = 0;
 		boolean observedHeaderLine = false;
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(deprecatedFile));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(deprecatedFile),
+																			 "UTF-8"));
 			String curStr;
 			while ((curStr = reader.readLine()) != null) {
 				
@@ -287,7 +290,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		
 		// process the incoming lines in batches
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(filename));
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename),
+																		 "UTF-8"));
 			while ((str = br.readLine()) != null) {
 				count += 1;
 				templines.add(str);
@@ -401,7 +405,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		System.out.println("getting synonyms");
 		ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
 		try {
-			BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
+			BufferedReader sbr = new BufferedReader(new InputStreamReader(new FileInputStream(synonymfile),
+																		  "UTF-8"));
 			String str;
 			while ((str = sbr.readLine()) != null) {
 						
