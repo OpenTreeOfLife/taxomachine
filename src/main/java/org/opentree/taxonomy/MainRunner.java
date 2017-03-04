@@ -54,6 +54,8 @@ public class MainRunner {
      *  1. taxonomy.tsv
      *  2. synonyms.tsv
      *  3. version.txt
+     * Optional:
+	 *  4. forwads.tsv  (synonyms and version should be optional as well)
      *  Will create a DB called 'ott_v[ottVersion].db' e.g. 'ott_v2.8draft5.db'
      *  Finally, it will build the contexts
     */
@@ -78,6 +80,7 @@ public class MainRunner {
         String ottVersion = "";
         String taxFile = ottDir + File.separator + "taxonomy.tsv";
         String synFile = ottDir + File.separator + "synonyms.tsv";
+        String aliasFile = ottDir + File.separator + "forwards.tsv";
         String versionFile = ottDir + File.separator + "version.txt";
         String graphName = "";
         
@@ -126,7 +129,7 @@ public class MainRunner {
         tlo.setAddSynonyms(true);
         tlo.setCreateOTTIdIndexes(true);
         tlo.setbuildPreferredIndexes(true);
-        tlo.loadOTTIntoGraph(ottVersion, taxFile, synFile);
+        tlo.loadOTTIntoGraph(ottVersion, taxFile, synFile, aliasFile);
         
         // Build contexts
         TaxonomySynthesizer te = null;
@@ -139,12 +142,15 @@ public class MainRunner {
         return 0;
     }
     
+	// Parse command line argument sequence
+
     public void taxonomyLoadParser(String[] args) throws FileNotFoundException, IOException {
 
         String graphname = "";
         String sourcename = "";
         String filename = "";
         String synonymfile = "";
+        String aliasfile = null;
         if (args[0].equals("adddeprecated")) {
             if (args.length != 3) {
                 System.out
@@ -164,15 +170,21 @@ public class MainRunner {
                 graphname = args[3];
             } */
         } else if (args[0].equals("inittaxsyn") || args[0].equals("addtaxsyn") || args[0].equals("loadtaxsyn")) {
-            if (args.length != 5) {
+			switch(args.length) {
+			case 6:
+				aliasfile = args[4];
+                graphname = args[5];
+				break;
+			case 5:
+                graphname = args[4];
+				break;
+            default:
                 System.out.println("arguments should be: sourcename filename synonymfile graphdbfolder");
                 return;
-            } else {
-                sourcename = args[1];
-                filename = args[2];
-                synonymfile = args[3];
-                graphname = args[4];
             }
+			sourcename = args[1];
+			filename = args[2];
+			synonymfile = args[3];
         }
 
         taxdb = new GraphDatabaseAgent(graphname);
@@ -238,14 +250,15 @@ public class MainRunner {
         Node lifeNode = tlo.getTaxonomyRootNode();
         System.out.println("life node: " + lifeNode);
 
-        if (args[0].equals("loadtaxsyn")) { 
+        if (args[0].equals("loadtaxsyn")) {
             System.out.format("loading taxonomy %s from %s and synonym file %s to %s\n",
                               sourcename, filename, synonymfile, graphname);
             //this will create the ott relationships
             tlo.setAddSynonyms(true);
+            tlo.setAddAliases(aliasfile != null);
             tlo.setCreateOTTIdIndexes(true);
             tlo.setbuildPreferredIndexes(true);
-            tlo.loadOTTIntoGraph(sourcename, filename, synonymfile);
+            tlo.loadOTTIntoGraph(sourcename, filename, synonymfile, aliasfile);
 
         } else if (args[0].equals("adddeprecated")) { 
             System.out.println("adding deprecated taxa from " + filename + " to " + graphname);

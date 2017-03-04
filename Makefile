@@ -8,6 +8,8 @@
 
 # 1. Create database
 
+TARBALL=$(shell echo "taxomachine-`date '+%Y%m%d%n'`.db.tgz")
+
 all: $(TARBALL)
 
 db: taxomachine.db
@@ -23,6 +25,8 @@ SOURCES=$(shell echo `find src -name "*.java"`)
 STANDALONE=target/taxomachine-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 MEM=-Xmx30g
 
+standalone: $(STANDALONE)
+
 $(STANDALONE): $(SOURCES)
 	./compile_standalone.sh -q
 
@@ -35,8 +39,6 @@ taxomachine.db: $(STANDALONE) $(TAXONOMY)/version.txt
 	java $(MEM) -XX:-UseConcMarkSweepGC -jar $(STANDALONE) makecontexts $@
 	java $(MEM) -XX:-UseConcMarkSweepGC -jar $(STANDALONE) makegenusindexes $@
 
-TARBALL=$(shell echo "taxomachine-`date '+%Y%m%d%n'`.db.tgz")
-
 tarball: $(TARBALL)
 $(TARBALL): taxomachine.db
 	echo $(TARBALL)
@@ -48,22 +50,28 @@ push-devapi: $(TARBALL)
 # 2. Local testing
 # maybe should be NEO=../../neo4j-taxomachine ?
 
-NEO=neo4j-community-1.9.5
+NEO_ROOT=neo4j-community-1.9.5
 PLUGIN=target/taxomachine-neo4j-plugins-0.0.1-SNAPSHOT.jar
 SETTINGS=host:apihost=http://localhost:7476 host:translate=true
+NEOFOO=$(NEO_ROOT)/conf/neo4j-server.properties
+NEOTAR=neo4j-community-1.9.5-unix.tar.gz
 
-neo4j: $(NEO)
-$(NEO):
-	curl http://files.opentreeoflife.org/neo4j/neo4j-community-1.9.5.tar.gz >neo4j-community-1.9.5.tar.gz
-	tar xzvf neo4j-community-1.9.5.tar.gz
-	sed -i ".bak" -e s+7474+7476+ -e s+7473+7475+ $(NEO)/conf/neo4j-server.properties
+neo4j: $(NEOFOO)
+$(NEOFOO): $(NEOTAR)
+	tar xzf $(NEOTAR)
+	cp -p $(NEO_ROOT)/conf/neo4j-server.properties $(NEO_ROOT)/conf/neo4j-server.properties.orig
+	sed -e s+7474+7476+ -e s+7473+7475+ $(NEO_ROOT)/conf/neo4j-server.properties >sed.tmp
+	mv sed.tmp $(NEO_ROOT)/conf/neo4j-server.properties
 
-push-local: $(TARBALL) $(NEO)
-	if [ -e $(NEO)/data/graph.db ]; then \
-	  rm -rf $(NEO)/data/graph.db.previous; \
-	  mv -f $(NEO)/data/graph.db $(NEO)/data/graph.db.previous; fi
-	mkdir $(NEO)/data/graph.db
-	(cd $(NEO)/data/graph.db; pwd; tar xzf ../../../$(TARBALL))
+$(NEOTAR):
+	curl http://files.opentreeoflife.org/neo4j/neo4j-community-1.9.5.tar.gz >$(NEOTAR)
+
+push-local: $(TARBALL) $(NEOFOO)
+	if [ -e $(NEO_ROOT)/data/graph.db ]; then \
+	  rm -rf $(NEO_ROOT)/data/graph.db.previous; \
+	  mv -f $(NEO_ROOT)/data/graph.db $(NEO_ROOT)/data/graph.db.previous; fi
+	mkdir $(NEO_ROOT)/data/graph.db
+	(cd $(NEO_ROOT)/data/graph.db; pwd; tar xzf ../../../$(TARBALL))
 
 compile: $(PLUGIN)
 
@@ -73,14 +81,14 @@ $(PLUGIN): $(SOURCES)
 run: .running
 
 .running: $(PLUGIN)
-	$(NEO)/bin/neo4j stop
+	$(NEO_ROOT)/bin/neo4j stop
 	rm -f .running
-	cp -p $(PLUGIN) $(NEO)/plugins/
-	$(NEO)/bin/neo4j start
+	cp -p $(PLUGIN) $(NEO_ROOT)/plugins/
+	$(NEO_ROOT)/bin/neo4j start
 	touch .running
 
 stop:
-	$(NEO)/bin/neo4j stop
+	$(NEO_ROOT)/bin/neo4j stop
 	rm -f .running
 
 test-v3: .running
