@@ -27,7 +27,7 @@ public enum ContextDescription {
     SAR                 ("SAR group",       ContextGroup.MICROBES,  "SAR",              "SAR",              5246039L,   Nomenclature.Undefined),
     ARCHAEA             ("Archaea",         ContextGroup.MICROBES,  "Archaea",          "Archaea",          996421L,    Nomenclature.ICNP),
     EXCAVATA            ("Excavata",        ContextGroup.MICROBES,  "Excavata",         "Excavata",         2927065L,   Nomenclature.Undefined),
-    AMOEBAE             ("Amoebae",         ContextGroup.MICROBES,  "Amoebae",          "Amoebozoa",        1064655L,   Nomenclature.ICZN),
+    AMOEBAE             ("Amoebozoa",       ContextGroup.MICROBES,  "Amoebae",          "Amoebozoa",        1064655L,   Nomenclature.ICZN),
     CENTROHELIDA        ("Centrohelida",    ContextGroup.MICROBES,  "Centrohelida",     "Centrohelida",     755852L,    Nomenclature.ICZN),
     HAPTOPHYTA          ("Haptophyta",      ContextGroup.MICROBES,  "Haptophyta",       "Haptophyta",       151014L,    Nomenclature.Undefined),
     APUSOZOA            ("Apusozoa",        ContextGroup.MICROBES,  "Apusozoa",         "Apusozoa",         671092L,    Nomenclature.ICZN),
@@ -48,7 +48,7 @@ public enum ContextDescription {
     PLATYHELMINTHES     ("Platyhelminthes", ContextGroup.ANIMALS,   "Platyhelminthes",  "Platyhelminthes",  555379L,    Nomenclature.ICZN),
     ANNELIDS            ("Annelids",        ContextGroup.ANIMALS,   "Annelids",         "Annelida",         941620L,    Nomenclature.ICZN),
     CNIDARIA            ("Cnidarians",      ContextGroup.ANIMALS,   "Cnidarians",       "Cnidaria",         641033L,    Nomenclature.ICZN),
-    ARACHNIDES          ("Arachnides",      ContextGroup.ANIMALS,   "Arachnids",        "Arachnida",        511967L,    Nomenclature.ICZN),
+    ARACHNIDES          ("Arachnids",       ContextGroup.ANIMALS,   "Arachnids",        "Arachnida",        511967L,    Nomenclature.ICZN),
     INSECTS             ("Insects",         ContextGroup.ANIMALS,   "Insects",          "Insecta",          1062253L,   Nomenclature.ICZN),
 
     // FUNGI group
