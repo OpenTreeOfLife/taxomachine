@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Convert a smasher taxonomy file set into a neo4j graphdb suitable
 # for use with taxomachine.
 # Hmm, taxonomy path should not end with /
@@ -29,6 +31,6 @@ TV=`basename $TAXONOMY`
 JAVA="java $MEM -XX:-UseConcMarkSweepGC -jar $STANDALONE"
 
 # Build new graphdb from scratch
-$JAVA loadtaxsyn $TV $TAXONOMY/taxonomy.tsv $TAXONOMY/synonyms.tsv $GRAPHDB
+$JAVA loadtaxsyn $TV $TAXONOMY/taxonomy.tsv $TAXONOMY/synonyms.tsv $TAXONOMY/forwards.tsv $GRAPHDB
 $JAVA makecontexts $GRAPHDB
 $JAVA makegenusindexes $GRAPHDB
