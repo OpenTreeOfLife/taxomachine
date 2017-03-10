@@ -1,9 +1,13 @@
 package org.opentree.taxonomy;
 
 import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -94,9 +98,13 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	HashMap<Long, ArrayList<String>> ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
 	boolean synFileExists = false;
 	
+	Map<Long, ArrayList<Long>> ottIdToAliasesMap = new HashMap<Long, ArrayList<Long>>();
+	boolean aliasFileExists = false;
+
 	// ===== install options
 	
 	private boolean addSynonyms = true;
+	private boolean addAliases = true;
 	private boolean addBarrierNodes = true;
 	private boolean buildPreferredIndexes = true; // requires that preferred rels are also built.
 	private boolean buildPreferredRels = true;
@@ -125,6 +133,10 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	
 	public void setAddSynonyms(boolean addSynonyms) {
 		this.addSynonyms = addSynonyms;
+	}
+
+	public void setAddAliases(boolean addAliases) {
+		this.addAliases = addAliases;
 	}
 
 	public void setAddBarrierNodes (boolean addBarrierNodes) {
@@ -157,7 +169,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		int n = 0;
 		boolean observedHeaderLine = false;
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(deprecatedFile));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(deprecatedFile),
+																			 "UTF-8"));
 			String curStr;
 			while ((curStr = reader.readLine()) != null) {
 				
@@ -203,13 +216,14 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	}
 	
 	/**
-	 * Just a wrapper for the no synonyms case. See javadoc for this method with the synonyms option for full description.
+	 * Just a wrapper for the no synonyms or aliases case. See javadoc for this method with the synonyms option for full description.
 	 * @param sourcename
 	 * @param filename
 	 */
 	public void loadOTTIntoGraph(String sourcename, String filename) {
 		setAddSynonyms(false);
-		loadOTTIntoGraph(sourcename, filename, "");
+		setAddAliases(false);
+		loadOTTIntoGraph(sourcename, filename, "", "");
 	}
 	
 	/**
@@ -232,9 +246,10 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 	 * 
 	 * @param sourcename this becomes the value of a "source" property in every relationship between the taxonomy nodes
 	 * @param filename file path to the taxonomy file
-	 * @param synonymfile file that holds the synonym
+	 * @param synonymfile file that holds the synonyms
+	 * @param aliasfile file that holds the id aliases (null if none)
 	 */
-	public void loadOTTIntoGraph(String sourcename, String filename, String synonymfile) {
+	public void loadOTTIntoGraph(String sourcename, String filename, String synonymfile, String aliasfile) {
 		
 		setupIndexes(); // have to call this here instead of on construction so that we don't make indexes we're not going to use
 		
@@ -245,47 +260,17 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		ArrayList<String> templines = new ArrayList<String>();
 
 		if (addSynonyms) {
-			if (synonymfile.length() > 0) {
+			if (synonymfile.length() > 0)
 				synFileExists = true;
-			}
-
-			// preprocess the synonym file
-			// key is the id from the taxonomy, the array has the synonym and the type of synonym
-			if (synFileExists) {
-				System.out.println("getting synonyms");
-				ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
-				try {
-					BufferedReader sbr = new BufferedReader(new FileReader(synonymfile));
-					while ((str = sbr.readLine()) != null) {
-						
-						StringTokenizer st = new StringTokenizer(str, "\t|\t");
-						String name = st.nextToken();
-						String idStr = st.nextToken();
-
-						Long id = null;
-						if (idStr != null && idStr.length() > 0 && !idStr.equals("uid")) {
-							id = Long.valueOf(idStr);
-						}
-
-						if (id == null && !idStr.equals("uid")) {
-							System.out.println("During synonym import, could not interpret id: " + idStr + " for synonym name " + name);
-							continue;
-						}
-						
-						if (ottIdToSynonymNamesMap.get(id) == null) {
-							ottIdToSynonymNamesMap.put(id, new ArrayList<String>());
-						}
-
-						ottIdToSynonymNamesMap.get(id).add(name);
-					}
-					sbr.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.exit(0);
-				}
-				System.out.println("found " + ottIdToSynonymNamesMap.size() + " synonyms");
-			}
-			//finished processing synonym file
+			if (synFileExists)
+				loadSynonyms(synonymfile);
+		}
+		
+		if (addAliases) {
+			if (aliasfile != null)
+				aliasFileExists = true;
+			if (aliasFileExists)
+				loadAliases(aliasfile);
 		}
 		
 		if (buildPreferredIndexes && !buildPreferredRels) {
@@ -305,7 +290,8 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		
 		// process the incoming lines in batches
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(filename));
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename),
+																		 "UTF-8"));
 			while ((str = br.readLine()) != null) {
 				count += 1;
 				templines.add(str);
@@ -410,6 +396,90 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 		} finally {
 			tx.finish();
 		}
+	}
+
+	// preprocess the synonym file
+	// key is the id from the taxonomy, the array has the synonym and the type of synonym
+
+	private void loadSynonyms(String synonymfile) {
+		System.out.println("getting synonyms");
+		ottIdToSynonymNamesMap = new HashMap<Long, ArrayList<String>>();
+		try {
+			BufferedReader sbr = new BufferedReader(new InputStreamReader(new FileInputStream(synonymfile),
+																		  "UTF-8"));
+			String str;
+			while ((str = sbr.readLine()) != null) {
+						
+				StringTokenizer st = new StringTokenizer(str, "\t|\t");
+				String name = st.nextToken();
+				String idStr = st.nextToken();
+
+				Long id = null;
+				if (idStr != null && idStr.length() > 0 && !idStr.equals("uid")) {
+					id = Long.valueOf(idStr);
+				}
+
+				if (id == null && !idStr.equals("uid")) {
+					System.out.println("** During synonym import, could not interpret id: " + idStr + " for synonym name " + name);
+					continue;
+				}
+						
+				if (ottIdToSynonymNamesMap.get(id) == null) {
+					ottIdToSynonymNamesMap.put(id, new ArrayList<String>());
+				}
+
+				ottIdToSynonymNamesMap.get(id).add(name);
+			}
+			sbr.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+		System.out.println("found " + ottIdToSynonymNamesMap.size() + " synonyms");
+	}
+
+	private void loadAliases(String aliasfile) {
+		System.out.println("getting aliases");
+		ottIdToAliasesMap = new HashMap<Long, ArrayList<Long>>();
+		try {
+			BufferedReader sbr = new BufferedReader(new FileReader(aliasfile));
+			String str;
+			while ((str = sbr.readLine()) != null) {
+						
+				StringTokenizer st = new StringTokenizer(str, "\t");
+				String aliasString = st.nextToken();
+				String idString = st.nextToken();
+
+				if (aliasString.equals("id"))
+					;
+				else {
+					Long alias = null, id = null; // columns are labeled id and replacement
+					try {
+						alias = Long.valueOf(aliasString);
+					} catch (NumberFormatException e) {
+						System.out.println("** During alias import, could not interpret alias: " + aliasString);
+						continue;
+					}
+					try {
+						id = Long.valueOf(idString);
+					} catch (NumberFormatException e) {
+						System.out.println("** During alias import, could not interpret id: " + idString);
+						continue;
+					}
+					ArrayList<Long> aliases = ottIdToAliasesMap.get(id);
+					if (aliases == null) {
+						aliases = new ArrayList<Long>();
+						ottIdToAliasesMap.put(id, aliases);
+					}
+					aliases.add(alias);
+				}
+			}
+			sbr.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+		System.out.println("found " + ottIdToAliasesMap.size() + " ids with aliases");
 	}
 
 	/**
@@ -536,7 +606,7 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 							dubiousNodes.add(tnode);
 						}
 					} else {
-						System.out.println("WARNING: found unrecognized flag: " + label);
+						System.out.println("** WARNING: found unrecognized flag: " + label);
 					}
 				}
 			}
@@ -652,6 +722,14 @@ public class TaxonomyLoaderOTT extends TaxonomyLoaderBase {
 				}
 			}
 		}
+
+		ArrayList<Long> aliases = ottIdToAliasesMap.get(inputId);
+		if (aliases != null)
+			for (Long alias : aliases) {
+				taxaByOTTId.add(tnode, OTVocabularyPredicate.OT_OTT_ID.propertyName(), Long.valueOf(alias));
+				if (inputId.longValue() == 10914)
+					System.out.format("# Indexed alias %s for %s\n", alias, inputId);
+			}
 	}
 
 	/**

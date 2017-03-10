@@ -23,6 +23,7 @@ target
 
 .DS_Store
 neo4j-community-1.9.5
+neo4j-community-1.9.5-unix.tar.gz
 *.tgz
 ott
 aster
