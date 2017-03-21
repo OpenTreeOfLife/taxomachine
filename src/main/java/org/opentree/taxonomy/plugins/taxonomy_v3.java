@@ -98,7 +98,7 @@ public class taxonomy_v3 extends ServerPlugin {
                 if (count > SUBTREE_LIMIT)
                     throw new BadInputException(
                                 String.format("The requested subtree exceeds the limit of %s taxa.",
-                                              count));
+                                              SUBTREE_LIMIT));
                 else
                     results.put("newick", tree.getRoot().getNewick(false)+";");
             }
