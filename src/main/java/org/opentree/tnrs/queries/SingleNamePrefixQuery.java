@@ -180,12 +180,17 @@ public class SingleNamePrefixQuery extends AbstractBaseQuery {
 	    				
 		    				String genusName = String.valueOf(genusMatch.getMatchedTaxon().getNode().getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
 		    				char[] searchEpithet = parts[1].trim().toCharArray();
-		    				
+		    				//System.err.println("genusName = " + genusName);
 		    				// add any species to the results whose name matches the second search term prefix
 		    				for (Node sp : speciesHits) {
-		    					
+		    					String hitTaxonNameStr = String.valueOf(sp.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName()));
+                                // System.err.println("hitTaxonNameStr = " + hitTaxonNameStr);
 		    					// use substring position to get just the epithet of this species match
-		    					char[] hitName = String.valueOf(sp.getProperty(OTVocabularyPredicate.OT_OTT_TAXON_NAME.propertyName())).substring(genusName.length()+1).toCharArray();
+                                if (hitTaxonNameStr.length() <= genusName.length()) {
+                                    // System.err.println("skipping short hit " + hitTaxonNameStr);
+                                    continue;
+                                }
+		    					char[] hitName = hitTaxonNameStr.substring(genusName.length()+1).toCharArray();
 
 		    					// check if the epithet matches
 		    					boolean prefixMatch = true;
