@@ -80,7 +80,10 @@ public class MultiNameContextQuery extends AbstractBaseQuery {
     public MultiNameContextQuery setSearchStrings(Map<Object, String> idNameMap) {
         clear();
         for (Object id : idNameMap.keySet()) {
-        	queriedNames.put(id, QueryParser.escape(idNameMap.get(id)).toLowerCase());
+            queriedNames.put(id,
+                           //QueryParser.escape(idNameMap.get(id)).toLowerCase()
+                           idNameMap.get(id).toLowerCase()
+                           );
         }
         return this;
     }
