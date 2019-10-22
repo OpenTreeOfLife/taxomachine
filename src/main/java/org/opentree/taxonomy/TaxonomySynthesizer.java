@@ -34,6 +34,8 @@ import org.opentree.taxonomy.contexts.TaxonomyNodeIndex;
 import org.opentree.exceptions.MultipleHitsException;
 import org.opentree.tnrs.queries.MultiNameContextQuery;
 import org.opentree.graphdb.GraphDatabaseAgent;
+import org.opentree.taxonomy.contexts.ContextNotFoundException;
+
 
 /**
  * TaxonomySynthesize functions
@@ -491,7 +493,7 @@ public class TaxonomySynthesizer extends Taxonomy {
      * 
      * @return root of the ContextTreeNode hierarchy
      */
-    public void makeContexts() {
+    public void makeContexts() throws ContextNotFoundException {
         
         // make map of ContextTreeNode objects for all taxonomic contexts, indexed by root node name
         HashMap<String, ContextTreeNode> contextNodesByRootName = new HashMap<String, ContextTreeNode>();
@@ -514,6 +516,7 @@ public class TaxonomySynthesizer extends Taxonomy {
             // traverse back up the taxonomy tree from the root of this context toward life
             Node cr = contextNode.context.getRootNode();
             if (cr != null) {
+                boolean found = false;
 	            for (Node parentNode : prefTaxParentOfTraversal.traverse(cr).nodes()) {
 	
 	                // if/when we find a more inclusive (i.e. parent) context
@@ -531,11 +534,18 @@ public class TaxonomySynthesizer extends Taxonomy {
 	                    	deepestContext = p;
 	                    	p = p.parent;
 	                    }
-
+                        found = true;
 	                    break;
-	
 	                }
 	            }
+                if (!found) {
+                    String errmessage = "context \"" + childName + "\" has no children.";
+                    System.out.println(errmessage);
+                }
+            } else {
+                String errmessage = contextNode.context.getDescription().toString() + " root not found!";
+                System.out.println(errmessage);
+                throw new ContextNotFoundException(errmessage);
             }
         }
         

@@ -60,7 +60,7 @@ public class MainRunner {
      *  Finally, it will build the contexts
     */
     // @returns 0 for success, 1 for poorly formed command, -1 for failure to complete well-formed command
-    public int buildOTT(String [] args) throws FileNotFoundException, IOException {
+    public int buildOTT(String [] args) throws FileNotFoundException, IOException, ContextNotFoundException {
         if (args.length != 2 && args.length != 3) {
             System.out.println("arguments should be: ott_directory [graph_name (defaults to 'ott_v[ottVersion].db')]");
             return 1;
@@ -275,7 +275,7 @@ public class MainRunner {
         taxdb.shutdownDb();
     }
 
-    public void taxonomyQueryParser(String[] args) {
+    public void taxonomyQueryParser(String[] args) throws ContextNotFoundException {
 
         if (args[0].equals("getsubtree")) {
             if (args.length != 3) {
