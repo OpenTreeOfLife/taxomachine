@@ -66,7 +66,7 @@ public enum ContextDescription {
     LYCOPHYTES          ("Club mosses",     ContextGroup.PLANTS,    "Lycopodiopsida",   "Lycopodiopsida",   144795L,    Nomenclature.ICN),
     FERNS               ("Ferns",           ContextGroup.PLANTS,    "Moniliformopses",  "Moniliformopses",  166292L,    Nomenclature.ICN),
     SEED_PLANTS         ("Seed plants",     ContextGroup.PLANTS,    "Spermatophyta",    "Spermatophyta",    10218L,     Nomenclature.ICN),
-    FLOWERING_PLANTS    ("Flowering plants",ContextGroup.PLANTS,    "Magnoliophyta",    "Magnoliophyta",    99252L,     Nomenclature.ICN),
+    FLOWERING_PLANTS    ("Flowering plants",ContextGroup.PLANTS,    "Magnoliopsida",    "Magnoliopsida",    99252L,     Nomenclature.ICN),
     MONOCOTS            ("Monocots",        ContextGroup.PLANTS,    "Monocots",         "Liliopsida",       1058517L,   Nomenclature.ICN),
     EUDICOTS            ("Eudicots",        ContextGroup.PLANTS,    "Eudicots",         "eudicotyledons",   431495L,    Nomenclature.ICN),
     ROSIDS              ("Rosids",          ContextGroup.PLANTS,    "Rosids",           "rosids",           1008296L,   Nomenclature.ICN),
