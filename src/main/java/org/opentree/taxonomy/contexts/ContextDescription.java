@@ -62,7 +62,8 @@ public enum ContextDescription {
     MOSSES              ("Mosses",          ContextGroup.PLANTS,    "Bryophyta",        "Bryophyta",        246594L,    Nomenclature.ICN),
     LIVERWORTS          ("Liverworts",      ContextGroup.PLANTS,    "Marchantiophyta",  "Marchantiophyta",  56601L,     Nomenclature.ICN),
     VASCULAR_PLANTS     ("Vascular plants", ContextGroup.PLANTS,    "Tracheophyta",     "Tracheophyta",     10210L,     Nomenclature.ICN),
-    LYCOPHYTES          ("Club mosses",     ContextGroup.PLANTS,    "Lycopodiophyta",   "Lycopodiophyta",   144803L,    Nomenclature.ICN),
+    // In OTT 3.1 we lost Lycopodiophyta, so we can't really deal with extinct Lycopodiophyta that aren't Lycopodiopsida ...
+    LYCOPHYTES          ("Club mosses",     ContextGroup.PLANTS,    "Lycopodiopsida",   "Lycopodiopsida",   144795L,    Nomenclature.ICN),
     FERNS               ("Ferns",           ContextGroup.PLANTS,    "Moniliformopses",  "Moniliformopses",  166292L,    Nomenclature.ICN),
     SEED_PLANTS         ("Seed plants",     ContextGroup.PLANTS,    "Spermatophyta",    "Spermatophyta",    10218L,     Nomenclature.ICN),
     FLOWERING_PLANTS    ("Flowering plants",ContextGroup.PLANTS,    "Magnoliophyta",    "Magnoliophyta",    99252L,     Nomenclature.ICN),
