@@ -57,7 +57,7 @@ public enum ContextDescription {
     ASCOMYCOTA          ("Ascomycetes",     ContextGroup.FUNGI,     "Ascomycota",       "Ascomycota",       439373L,    Nomenclature.ICN),
     
     // PLANTS group
-    LAND_PLANTS         ("Land plants",     ContextGroup.PLANTS,    "Plants",           "Embryophyta",      5342313L,   Nomenclature.ICN),
+    LAND_PLANTS         ("Land plants",     ContextGroup.PLANTS,    "Plants",           "Embryophyta",      56610L,   Nomenclature.ICN),
     HORNWORTS           ("Hornworts",       ContextGroup.PLANTS,    "Anthocerotophyta", "Anthocerotophyta", 738980L,    Nomenclature.ICN),
     MOSSES              ("Mosses",          ContextGroup.PLANTS,    "Bryophyta",        "Bryophyta",        246594L,    Nomenclature.ICN),
     LIVERWORTS          ("Liverworts",      ContextGroup.PLANTS,    "Marchantiophyta",  "Marchantiophyta",  56601L,     Nomenclature.ICN),
